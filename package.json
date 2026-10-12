@@ -1,0 +1,20 @@
+{
+  "name": "shortflow",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "check": "node --check assets/app.js && node --check assets/controllers/studio_controller.js"
+  },
+  "dependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "@hotwired/stimulus": "^3.2.2",
+    "gsap": "^3.13.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^6.4.0"
+  }
+}

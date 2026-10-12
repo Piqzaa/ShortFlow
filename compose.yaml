@@ -1,0 +1,31 @@
+services:
+  php:
+    build: ./docker/php
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: [".:/app"]
+    environment:
+      DATABASE_URL: postgresql://shortflow:localdev@database:5432/shortflow?serverVersion=16&charset=utf8
+    depends_on:
+      database:
+        condition: service_healthy
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shortflow
+      POSTGRES_USER: shortflow
+      POSTGRES_PASSWORD: localdev
+    volumes: ["database_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shortflow -d shortflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  node:
+    image: node:22-alpine
+    working_dir: /app
+    volumes: [".:/app", "node_modules:/app/node_modules"]
+    profiles: ["tools"]
+    command: sh -c "npm ci && npm run build"
+volumes:
+  database_data:
+  node_modules:
