@@ -1,15 +1,21 @@
 import { Controller } from '@hotwired/stimulus';
-
-const CHAPTERS = ['01 — L’IMPULSION', '01 — L’IMPULSION', '02 — LA RÉSONANCE', '03 — LE STUDIO', '04 — L’HORIZON', '05 — À TOI DE CRÉER'];
+import { loadFrames, drawSequence } from '../horizon-sequence.js';
+import { loadEditFrames, drawEditScreen, editState } from '../edit-sequence.js';
 
 export default class extends Controller {
-  static targets = ['canvas', 'stage', 'fallback', 'counter', 'progress', 'toggle', 'framing'];
+  static targets = ['canvas', 'stage', 'fallback', 'toggle', 'framing', 'horizon', 'timecode', 'edit', 'editLabel'];
 
   connect() {
     this.element.dataset.studioState = 'connecting';
     this.connected = true;
     this.paused = false;
     this.generation = 0;
+    this.controlsVisible = false; this.controlsAvailable = false;
+    this.controlsObserver = new IntersectionObserver(entries => {
+      this.controlsVisible = entries[0].isIntersecting;
+      this.toggleTarget.hidden = !this.controlsVisible || !this.controlsAvailable;
+    });
+    this.controlsObserver.observe(this.element);
     this.motion = matchMedia('(prefers-reduced-motion: reduce)');
     this.mobile = matchMedia('(max-width: 1000px)');
     this.onPreference = () => this.restart();
@@ -20,7 +26,7 @@ export default class extends Controller {
 
   restart() {
     this.cleanup();
-    if (!this.connected || this.paused || this.motion.matches || navigator.connection?.saveData) return;
+    if (!this.connected || this.paused || this.motion.matches || navigator.connection?.saveData) { this.element.dataset.studioState = 'static'; return; }
     this.element.dataset.studioState = 'observing';
     const generation = this.generation;
     this.observer = new IntersectionObserver(entries => {
@@ -38,7 +44,11 @@ export default class extends Controller {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([import('gsap'), import('gsap/ScrollTrigger')]);
       if (generation !== this.generation) return;
       gsap.registerPlugin(ScrollTrigger);
-      this.toggleTarget.hidden = false;
+      this.gsap = gsap;
+      this.setupHorizon(gsap, generation);
+      this.setupEdit(gsap, generation);
+      this.controlsAvailable = true;
+      this.toggleTarget.hidden = !this.controlsVisible;
       const scenes = [...this.element.querySelectorAll('[data-scene]')];
       this.animationContext = gsap.context(() => {
         this.element.querySelectorAll('.destination').forEach((card, index) => {
@@ -58,17 +68,10 @@ export default class extends Controller {
           scrollTrigger: { trigger: '.ai-output', start: 'top 92%', end: 'top 58%', scrub: .7 } });
         gsap.from('.timeline-preview', { y: 35, rotationZ: 3, ease: 'none',
           scrollTrigger: { trigger: '.timeline-preview', start: 'top 95%', end: 'top 75%', scrub: .7 } });
-        gsap.to('.timeline-track b', { left: '94%', ease: 'none',
-          scrollTrigger: { trigger: '.ai-composition', start: 'top 75%', end: 'bottom 40%', scrub: .5 } });
-        if (this.mobile.matches) {
-          gsap.fromTo('.mobile-editor-phone', { rotationZ: 5, y: 15 }, { rotationZ: -4, y: -15, ease: 'none',
-            scrollTrigger: { trigger: '.mobile-edit-showcase', start: 'top 80%', end: 'bottom 35%', scrub: .5 } });
-          gsap.to('.edit-scrub b', { left: '95%', ease: 'none',
-            scrollTrigger: { trigger: '.mobile-edit-showcase', start: 'top 75%', end: 'bottom 35%', scrub: .5 } });
-        }
+
       }, this.element);
       this.setupPreviews(generation);
-      if (this.mobile.matches) { this.element.dataset.studioState = 'mobile'; return; }
+      if (this.mobile.matches) { this.element.dataset.studioState = 'mobile'; ScrollTrigger.refresh(); return; }
       const [THREE, { RoomEnvironment }, composer] = await Promise.all([import('three'), import('three/addons/environments/RoomEnvironment.js'), import('../screen-composer.js')]);
       this.composer = composer;
       this.screenAssets = await composer.loadMedia();
@@ -86,7 +89,7 @@ export default class extends Controller {
           { px: -3, py: 0, pz: .2, rx: .04, ry: -.25, rz: -.14, scale: .96, orbit: 4.4, light: 6 },
         ];
         const atmospheres = [{cool:0, lift:-.3, spread:1}, {cool:.2, lift:0, spread:1}, {cool:0, lift:0, spread:1}, {cool:.8, lift:-1.8, spread:.55}, {cool:1, lift:0, spread:.8}, {cool:.1, lift:0, spread:1}];
-        poses.forEach((pose, index) => Object.assign(pose, atmospheres[index], { capture: index === 1 ? 1 : 0, ribbon: [.42, .06, .14, .05, 0, .08][index] }));
+        poses.forEach((pose, index) => Object.assign(pose, atmospheres[index], { freedom: index === 0 ? 1 : 0, capture: index === 1 ? 1 : 0, ribbon: [.42, .06, .14, .05, 0, .08][index] }));
         Object.assign(this.pose, poses[0]);
         // One scroll clock owns every pose: fast reverse scrolling cannot leave a later tween in control.
         const scrollState = { progress: 0 };
@@ -97,14 +100,12 @@ export default class extends Controller {
           while (index < poses.length - 2 && position > stops[index + 1]) index++;
           const raw = Math.max(0, Math.min(1, (position - stops[index]) / (stops[index + 1] - stops[index])));
           // Hold the edit inside its framing rig before starting the next journey.
-          const fraction = index === 1 ? Math.max(0, (raw - .28) / .72) : raw;
+          const fraction = index === 1 ? Math.max(0, (raw - .6) / .4) : index === 4 ? Math.max(0, (raw - .78) / .22) : raw;
           const eased = (1 - Math.cos(fraction * Math.PI)) / 2;
           Object.keys(poses[0]).forEach(key => { this.pose[key] = poses[index][key] + (poses[index + 1][key] - poses[index][key]) * eased; });
           this.screenPhase = index + Math.max(0, Math.min(1, (fraction - .5) / .25));
           this.element.dataset.screen = String(Math.round(this.screenPhase));
           this.syncFilm?.();
-          this.progressTarget.style.transform = 'scaleX(' + scrollState.progress + ')';
-          this.counterTarget.textContent = CHAPTERS[Math.min(5, index + (fraction > .5 ? 1 : 0))];
           this.render();
         };
         const measure = () => {
@@ -221,12 +222,16 @@ export default class extends Controller {
     const cool = new THREE.DirectionalLight(0xbed4ff, 2); cool.position.set(4, -2, 2); scene.add(cool);
     this.pose = { px: 0, py: -1.45, pz: 0, rx: .04, ry: -.28, rz: -.09, scale: .78, orbit: -.45, light: 5 };
     this.cursor = { x: 0, y: 0 };
+    this.cursorTweenX = this.gsap.quickTo(this.cursor, 'x', { duration: .75, ease: 'power3.out', onUpdate: () => this.render() });
+    this.cursorTweenY = this.gsap.quickTo(this.cursor, 'y', { duration: .75, ease: 'power3.out', onUpdate: () => this.render() });
     this.onPointer = event => {
-      this.cursor.x = (event.clientX / innerWidth - .5) * .12;
-      this.cursor.y = (event.clientY / innerHeight - .5) * .08;
-      this.render();
+      this.cursorTweenX((event.clientX / innerWidth - .5) * .34);
+      this.cursorTweenY((event.clientY / innerHeight - .5) * .2);
     };
     if (matchMedia('(pointer:fine)').matches) window.addEventListener('pointermove', this.onPointer, { passive: true });
+    this.onPointerLeave = event => { if (!event.relatedTarget) { this.cursorTweenX(0); this.cursorTweenY(0); } };
+    window.addEventListener('pointerout', this.onPointerLeave);
+    window.addEventListener('blur', this.onPointerLeave);
     this.resizeObserver = new ResizeObserver(() => this.resizeWorld());
     this.resizeObserver.observe(this.stageTarget);
     this.onContextLost = event => { event.preventDefault(); this.cleanup(); };
@@ -250,9 +255,9 @@ export default class extends Controller {
     const p = this.pose;
     // Compress horizontal staging on smaller desktop viewports, preserving the text columns.
     const widthFactor = Math.min(1, this.camera.aspect / 1.65);
-    this.phone.position.set(p.px * widthFactor, p.py, p.pz);
-    const cursorWeight = 1 - (p.capture || 0);
-    this.phone.rotation.set(p.rx + this.cursor.y * cursorWeight, p.ry + this.cursor.x * cursorWeight, p.rz);
+    const cursorWeight = p.freedom || 0;
+    this.phone.position.set(p.px * widthFactor + this.cursor.x * 1.65 * cursorWeight, p.py - this.cursor.y * 1.6 * cursorWeight, p.pz);
+    this.phone.rotation.set(p.rx + this.cursor.y * cursorWeight, p.ry + this.cursor.x * cursorWeight, p.rz - this.cursor.x * .12 * cursorWeight);
     this.phone.scale.setScalar(p.scale);
     this.captureRig.position.set(2.55 * widthFactor, 0, .6);
     this.captureMaterial.opacity = p.capture || 0;
@@ -278,13 +283,84 @@ export default class extends Controller {
     const phase = Math.max(0, Math.min(5, this.screenPhase || 0));
     const first = Math.floor(phase), blend = phase - first;
     const c = this.screenContext;
-    this.composer.drawScreen(this.screenBuffers[0].getContext('2d'), this.screenAssets, first, phase % 1, this.video);
+    this.composer.drawScreen(this.screenBuffers[0].getContext('2d'), this.screenAssets, first, phase % 1, this.video, this.horizonFrames || [], this.horizonProgress || 0, this.editFrames || [], this.editProgress || 0);
     c.clearRect(0, 0, 540, 960); c.globalAlpha = 1; c.drawImage(this.screenBuffers[0], 0, 0);
     if (blend > 0) {
-      this.composer.drawScreen(this.screenBuffers[1].getContext('2d'), this.screenAssets, Math.min(5, first + 1), blend, this.video);
+      this.composer.drawScreen(this.screenBuffers[1].getContext('2d'), this.screenAssets, Math.min(5, first + 1), blend, this.video, this.horizonFrames || [], this.horizonProgress || 0, this.editFrames || [], this.editProgress || 0);
       c.globalAlpha = blend; c.drawImage(this.screenBuffers[1], 0, 0); c.globalAlpha = 1;
     }
     this.screenTexture.needsUpdate = true;
+  }
+
+  setupEdit(gsap, generation) {
+    this.element.classList.add('has-edit-motion');
+    this.editProgress = 0;
+    this.editContext = this.editTarget.getContext('2d');
+    const clock = { progress: 0 };
+    this.editAnimation = gsap.context(() => {
+      gsap.to(clock, { progress: 1, ease: 'none', onUpdate: () => {
+        this.editProgress = clock.progress; this.drawEdit(); this.render();
+      }, scrollTrigger: { trigger: this.mobile.matches ? '.mobile-edit-showcase' : '#studio',
+        start: this.mobile.matches ? 'top 65%' : 'top 15%',
+        end: this.mobile.matches ? 'bottom 85%' : 'bottom 75%', scrub: .35 } });
+    }, this.element);
+    this.editObserver = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      this.editObserver.disconnect();
+      loadEditFrames().then(frames => {
+        if (generation !== this.generation) return;
+        this.editFrames = frames; this.drawEdit(); this.render();
+      });
+    }, { rootMargin: '600px' });
+    this.editObserver.observe(this.element.querySelector('#studio'));
+    this.drawEdit();
+  }
+
+  drawEdit() {
+    const ready = this.editFrames?.length === 4 && this.editFrames.every(Boolean);
+    const state = editState(ready ? this.editProgress : 0);
+    if (ready && this.editContext && drawEditScreen(this.editContext, this.editFrames, state.progress)) this.editTarget.classList.add('is-ready');
+    this.editTarget.dataset.frame = String(state.index);
+    this.element.dataset.editFrame = String(state.index);
+    this.editLabelTarget.textContent = 'PLAN 0' + (state.index + 1) + ' · ' + ['PRÉPARATION', 'LE GESTE', 'LA FORME', 'LE RÉSULTAT'][state.index] + ' · ' + state.timecode;
+    this.element.querySelector('.edit-scrub b').style.left = (state.progress * 100) + '%';
+    this.element.querySelectorAll('[data-edit-frame]').forEach((frame, i) => frame.classList.toggle('is-current', i === state.index));
+  }
+
+  setupHorizon(gsap, generation) {
+    this.element.classList.add('has-horizon-motion');
+    this.horizonProgress = 0;
+    this.horizonContext = this.horizonTarget.getContext('2d');
+    const sequence = { progress: 0 };
+    // Keep the image clock separate from the phone's journey, shared by both render surfaces.
+    this.horizonAnimation = gsap.context(() => {
+      gsap.to(sequence, { progress: 1, ease: 'none', onUpdate: () => {
+        this.horizonProgress = sequence.progress;
+        this.drawHorizon();
+        this.render();
+      }, scrollTrigger: { trigger: '.horizon-runway', start: 'top 65%', end: 'bottom 85%', scrub: .35 } });
+    }, this.element);
+    this.horizonObserver = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      this.horizonObserver.disconnect();
+      loadFrames().then(frames => {
+        if (generation !== this.generation) return;
+        this.horizonFrames = frames;
+        this.drawHorizon();
+        this.render();
+      });
+    }, { rootMargin: '600px' });
+    this.horizonObserver.observe(this.horizonTarget);
+  }
+
+  drawHorizon() {
+    const progress = this.horizonProgress || 0;
+    if (this.horizonContext && this.horizonFrames && drawSequence(this.horizonContext, this.horizonFrames, progress)) this.horizonTarget.classList.add('is-ready');
+    this.timecodeTarget.textContent = '00:0' + Math.min(6, Math.floor(progress * 6));
+    const index = Math.min(5, Math.floor(progress * 6));
+    this.element.dataset.horizonFrame = String(index);
+    this.element.querySelector('.timeline-track b').style.left = (progress * 99) + '%';
+    this.element.querySelectorAll('.timeline-track i').forEach((frame, i) => frame.classList.toggle('is-current', i === index));
   }
 
   setupPreviews(generation) {
@@ -345,6 +421,22 @@ export default class extends Controller {
 
   cleanup() {
     this.generation++;
+    this.controlsAvailable = this.paused;
+    this.toggleTarget.hidden = !this.controlsVisible || !this.controlsAvailable;
+    this.element.classList.remove('has-edit-motion');
+    this.editObserver?.disconnect();
+    this.editAnimation?.revert(); this.editAnimation = null;
+    this.editFrames = null; this.editContext = null; this.editProgress = 0;
+    this.editTarget.classList.remove('is-ready');
+    this.drawEdit();
+    this.element.classList.remove('has-horizon-motion');
+    this.horizonObserver?.disconnect();
+    this.horizonAnimation?.revert(); this.horizonAnimation = null;
+    this.horizonFrames = null; this.horizonContext = null;
+    this.horizonTarget.classList.remove('is-ready');
+    this.timecodeTarget.textContent = '00:00';
+    this.element.querySelector('.timeline-track b').style.left = '0%';
+    this.element.querySelectorAll('.timeline-track i').forEach(frame => frame.classList.remove('is-current'));
     this.observer?.disconnect();
     this.resizeObserver?.disconnect();
     this.visibilityObserver?.disconnect();
@@ -355,6 +447,10 @@ export default class extends Controller {
     this.animationContext?.revert();
     this.animationContext = null;
     window.removeEventListener('pointermove', this.onPointer);
+    window.removeEventListener('pointerout', this.onPointerLeave);
+    window.removeEventListener('blur', this.onPointerLeave);
+    this.cursorTweenX?.tween.kill(); this.cursorTweenY?.tween.kill();
+    this.cursorTweenX = null; this.cursorTweenY = null;
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.canvasTarget.removeEventListener('webglcontextlost', this.onContextLost);
     this.renderer?.setAnimationLoop(null);
@@ -374,6 +470,7 @@ export default class extends Controller {
   disconnect() {
     this.connected = false;
     this.cleanup();
+    this.controlsObserver?.disconnect();
     this.motion.removeEventListener('change', this.onPreference);
     this.mobile.removeEventListener('change', this.onPreference);
   }

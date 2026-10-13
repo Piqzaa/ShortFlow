@@ -1,4 +1,4 @@
-# VydFlow — expérience visuelle, passe 3
+# VydFlow — expérience visuelle, passe 5
 
 ## Objectif
 Faire découvrir le futur studio par ses contenus : chaque chapitre apporte un nouvel écran et un nouvel usage. La bibliothèque, le calendrier, les montages et le studio IA restent des illustrations. Seule la liste d’attente est fonctionnelle.
@@ -48,3 +48,48 @@ Images verticales WebP 720×1279, miniatures dans une boîte maximale de 270×48
 
 Le script scripts/render-flow-film.html est synchronisé avec le compositeur. Les posters 4 et 5 ont été régénérés depuis ce compositeur dans le navigateur ; les quatre films existants restent identiques.
 Aucun service Symfony supplémentaire : Twig rend toujours les aperçus et le formulaire, Stimulus ne fait qu’améliorer la présentation. Le cadre 3D est libéré avec les autres géométries et matériaux lors de cleanup().
+
+## Passe 4 : séquence illustrée et continuité
+Sauvegarde avant travaux : f821430. Les nouvelles retouches restent séparées de ce commit.
+
+### Objectif et médias
+Treize nouvelles images originales ont été produites avec l’outil imagegen intégré :
+- public/media/horizon/horizon-0.webp à horizon-5.webp : six plans de la même raie de verre, avec six miniatures. Apparition, approche, déploiement, passage dans la lumière, virage, éloignement. Images 540×960 au maximum ; miniatures 135×240.
+- public/media/creators/craft.webp, surf.webp, street.webp, sound.webp, taste.webp, botanic.webp et kinetic.webp, avec leurs miniatures : céramique, surf à l’aube, ville après la pluie, studio musical, cuisine, botanique et ruban métallique violet.
+Les six couvertures de la bibliothèque sont désormais propres à ce chapitre. Le hero utilise exclusivement le ruban, dans public/media/films/hero-v2.webm (montage de photographie rendu localement). Le paysage de rivière reste uniquement dans le téléphone final : le bandeau HTML a été supprimé.
+Les prompts exacts sont versionnés dans docs/media-prompts-pass-4.json. Les PNG source restent dans output/media/source, ignoré par Git. Les fichiers WebP sont les livrables de production.
+
+### Composants et flux
+- assets/horizon-sequence.js : charge les six images et dessine un fondu entre deux plans voisins. Il ne dépend ni de Three.js ni de Symfony et n’implémente aucune génération IA métier.
+- studio_controller.js : attend la proximité de l’aperçu avant de charger les plans (IntersectionObserver, marge 600 px). Une progression GSAP avec scrub pilote simultanément le canvas HTML, la timeline, le timecode et l’écran 3D. Le scroll arrière suit la même progression. Le téléphone attend la fin de ce chapitre avant d’entamer sa pose finale.
+- screen-composer.js : reçoit les mêmes plans et la même progression pour dessiner l’aperçu IA dans le téléphone. Les écrans 0, 3 et 4 ont été régénérés pour les fallbacks HTML.
+- Twig : conserve une image initiale et six miniatures lisibles sans JavaScript. Le canvas est décoratif (aria-hidden) ; les textes de disponibilité restent en HTML. Le formulaire existant est inchangé.
+- experience.css : le lecteur reste visible dans une courte zone sticky, adaptée au mobile. Cette zone n’est allongée qu’après activation JS. En pause, en mouvement réduit, en économie de données ou après échec WebGL, elle redevient compacte et statique.
+- Mouvement du hero : rotations limitées à environ ±10° en Y et ±6° en X, translation maximale de .28/.16 unité, amortissement .75 s. La liberté diminue jusqu’à zéro en quittant le hero. Les tweens et écouteurs sont nettoyés lors de cleanup().
+
+### Comprendre et tester
+Symfony continue de rendre Twig sur la même route, avec la même validation et le même CSRF. Le canvas est seulement une amélioration visuelle gérée par le cycle de vie Stimulus connect/disconnect. Aucun service PHP, entité ou migration ajouté.
+Exécuter npm run check (inclut le nouveau module), npm run build et php scripts/check.php dans le conteneur. Dans le navigateur, suivre La vision, défiler lentement puis à rebours : le timecode et le plan actif doivent suivre le scroll. Vérifier mobile 360/390, tablette 768, retour desktop, pause/reprise, mouvement réduit et sans WebGL. Les images clés créent une impression de séquence ; il ne s’agit pas d’une vraie vidéo calculée par une IA.
+
+## Passe 5 : montage synchronisé et contenus créateurs
+### Objectif
+Faire défiler cinq contenus variés dans le hero, et faire réellement avancer le montage de la section 01 avec sa timeline. Supprimer les indications flottantes devenues inutiles et étendre la navigation et le footer.
+
+### Fichiers et responsabilités
+- public/media/creators/hero-fashion.webp, hero-cat.webp, hero-fiction.webp, hero-cars.webp et hero-football.webp (avec miniatures) : cinq créations imagegen originales réservées au hero. Mode, chat, fiction à compteur frontal, convoi automobile et football. Personnages et situations fictifs ; aucune vidéo concurrente reprise.
+- public/media/edit/edit-0.webp à edit-3.webp (avec miniatures) : quatre étapes originales d’un oiseau en papier irisé, exclusivement utilisées dans la section 01.
+- public/media/films/hero-v4.webm : boucle locale de 15 secondes, cinq plans avec recadrages et fondus. Les textes correspondent aux thèmes. C’est un montage d’images générées, pas une prise de vue ni une génération vidéo métier. Les anciens essais abstraits et films sont conservés pour comparaison mais ne sont plus chargés par le hero.
+- assets/edit-sequence.js : charge les quatre images, calcule le plan actif et le timecode, puis dessine le même écran de montage pour le téléphone HTML et le téléphone 3D.
+- studio_controller.js : une progression GSAP pilote image, miniature, curseur et texte. Les quatre images sont chargées à proximité de la section ; avant leur disponibilité complète, affiche et curseur restent sur le premier plan. L’espace desktop est réservé avant l’activation 3D pour conserver la position lors d’un rechargement.
+- screen-composer.js : réutilise drawEditScreen au lieu de dessiner une interface différente. Le hero présente cinq médias distincts ; les affiches 0 et 1 ont été régénérées.
+- Twig et experience.css : navbar et footer à 100 % de largeur, avec 32 px de marge intérieure desktop / 20 px mobile. Indication scroll, flèche, compteur flottant et barre associée supprimés. Les titres numérotés des chapitres restent présents. Le bouton d’animation est masqué lorsque l’expérience sort du viewport, pour libérer le footer.
+
+### Flux et accessibilité
+Symfony rend toujours le même HTML et le même formulaire CSRF sur les routes existantes. Stimulus connecte les aperçus ; GSAP convertit la progression du scroll en une valeur de 0 à 1. editState choisit un des quatre plans (coupes franches comme une timeline de montage), et drawEditScreen dessine ce plan dans les deux téléphones.
+Sur mobile, téléphone et timeline restent ensemble dans une zone sticky, puis quittent naturellement la section. En pause, en mouvement réduit, en économie de données ou en fallback, cette zone redevient compacte. Observateurs, contextes GSAP, images référencées et canvas sont nettoyés lors de cleanup().
+Cette interface est une illustration, pas une fonctionnalité d’édition ajoutée au SaaS. Aucun nouveau service PHP, contrôleur, entité ou migration.
+
+### Tester et comprendre
+Exécuter npm run check (inclut edit-sequence.js), npm run build et php scripts/check.php dans le conteneur. Sur mobile, défiler dans L’impulsion : image, plan actif et timecode doivent avancer ensemble puis revenir en arrière. Vérifier le dernier plan avant La résonance et constater que leurs médias diffèrent.
+Contrôler la boucle de 15 secondes dans le hero, la navigation pleine largeur, la pause/reprise, les largeurs 360/390/768/1280, le mouvement réduit et le rechargement au milieu du montage.
+Prompts exacts : docs/media-prompts-creator-hero.json pour le hero final et docs/media-prompts-pass-5.json pour le montage et l’essai abstrait précédent. Génération via l’outil imagegen intégré. Sources PNG dans output/media/source (ignoré), images WebP dans public/media/edit et public/media/creators.

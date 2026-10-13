@@ -28,3 +28,9 @@ Voir landing-experience.md pour le flux et la provenance. scripts/render-flow-fi
 
 ## Passe 3 — chapitres exclusifs
 Le cadre de cadrage appartient à la scène Three.js, avec une marge autour du téléphone presque frontal et un arrêt au scroll. Les rubans métalliques passent de .42 dans le hero à .06 en montage et 0 dans le concept IA. La raie de verre est exclusive au studio IA ; la rivière ouvre la conclusion. Sur le dernier écran, la typographie occupe un panneau anthracite opaque sous la photographie, sans texte préexistant. La conclusion mobile utilise un téléphone HTML séparé du titre et du CTA.
+
+## Passe 4 — diversité et séquence
+Le hero reçoit un ruban métallique exclusif et un suivi du curseur amorti, qui diminue jusqu’à zéro avant le cadrage. La bibliothèque possède six couvertures inédites. Le concept IA comporte six plans cohérents, une timeline de vraies miniatures et un timecode pilotés par une progression unique sur desktop et mobile. La zone sticky reste compacte lorsque les animations sont inactives. Aucun paysage HTML ne recouvre le téléphone avant le CTA final.
+
+## Passe 5 — contenu créateur et lecture précise
+Le hero montre cinq thèmes de contenus courts, de la mode au football, avec leur propre typographie et des transitions cohérentes. La section de montage possède quatre images originales de pliage, et une progression partagée entre le téléphone 3D, le téléphone mobile, le curseur et la miniature active. Navbar et footer occupent 100 % de la largeur avec des marges intérieures. Les indications flottantes de scroll et de chapitre sont retirées.

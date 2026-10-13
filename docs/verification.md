@@ -1,3 +1,48 @@
+# Vérification — 14 octobre 2026, passe visuelle 5
+
+## Résultats exécutés
+- npm run check et npm run build : sortie 0 après intégration des cinq nouveaux visuels créateurs. Avertissement de taille du chunk Three.js (705 kB, 181 kB gzip), chargé dynamiquement sur desktop.
+- lint:twig templates via Docker : 3 templates valides.
+- Suite PHP complète exécutée le 13 octobre pendant cette passe : sortie 0, migrations shortflow_test avant PHPUnit, 4 tests / 26 assertions, schémas valides, PHPStan niveau 5, CS-Fixer, YAML et conteneur valides. Aucun changement PHP depuis.
+- Hero : cinq plans originaux distincts contrôlés dans le rendu intermédiaire (mode, chat, fiction IA, voitures, football), puis film final installé. WebM : 1 123 508 octets ; durée native observée 14,960 s, muet, lecture mobile active. Téléphone WebGL desktop observé avec le nouveau contenu ; console sans erreur.
+- Montage section 01 : quatre plans originaux exclusifs, canvas et timeline synchronisés aux plans 0 → 2 → 1 → 3. Même composite utilisé dans le téléphone desktop. Rechargement desktop en plan 2 : plan et position de section restaurés (top -259 px avant/après).
+- Desktop 1280×720, mobile 360×740 et 390×844, tablette 768×844 : contrôles locaux par iframe, aucun débordement horizontal. Dernier contrôle à 390 : largeur utile 375 px, scrollWidth 375 px.
+- Navbar/footer pleine largeur mesurée. Hint de scroll et compteur flottant absents. Bouton de pause masqué hors du récit, footer dégagé.
+- Redimensionnement 390 → 1280 → 390 : états mobile → webgl → mobile. Pause/reprise au clavier, mouvement réduit et absence de WebGL simulés : fallback conservé, montage statique compact, aucune vidéo chargée en mouvement réduit.
+- Captures : output/visual-qa/v5-hero-desktop.png, v5-hero-mobile.png, v4-edit-mobile.png, v4-edit-desktop.png, v4-footer-desktop.png.
+
+## Périmètre et limites
+Les plans sont des images originales animées par cadrage et fondus, pas des clips générés avec mouvement des sujets. Pas de test sur appareil physique, benchmark FPS, Lighthouse ou campagne multi-navigateurs. Backend inchangé. Changements non commités depuis f821430. Pages temporaires de QA retirées de public en fin de passe.
+
+---
+
+# Vérification — 13 octobre 2026, passe visuelle 4
+
+## Sauvegarde avant travaux
+Commit f821430 : refine VydFlow framing, chapter artwork and mobile finale. Toutes les retouches préexistantes ont été sauvegardées avant les nouveaux travaux ; les changements ci-dessous restent non commités.
+
+## Contrôles exécutés
+- npm run check : sortie 0, inclut désormais horizon-sequence.js.
+- npm run build : sortie 0 après les six nouvelles couvertures. URLs /media résolues au runtime ; avertissement Three.js 705 kB / 181 kB gzip, importé uniquement en mode desktop.
+- php scripts/check.php via Docker Compose : sortie 0. Migrations shortflow_test appliquées avant PHPUnit ; schémas dev/test conformes ; 17 YAML, 3 Twig et conteneur valides ; PHPStan sans erreur ; CS-Fixer 0 correction sur 11 fichiers ; PHPUnit 4 tests, 26 assertions.
+- lint:twig templates relancé après les dernières couvertures : 3 templates valides.
+- git diff --check : sortie 0 après retrait des espaces résiduels.
+- Navigateur intégré desktop 1280×720 : séquence observée aux plans 0, 3, 4, 5, et retour au plan 1 ; écran 3D maintenu sur le concept IA pendant la séquence. Le timecode et la timeline suivent le scroll. Rechargement en cours de séquence : état restauré.
+- Nouvelle bibliothèque : six couvertures originales distinctes chargées. Conclusion : aucun bandeau creative-transition dans le DOM ; écran final 5 et CTA visibles ensemble.
+- Hero : nouveau film observé et déplacement gauche/droite du téléphone vérifié ; aucune erreur de console desktop. Film natif mobile : durée observée 7.964 s, muet.
+- Responsive dans iframe locale : 360×740, 390×844, 768×844, sans débordement horizontal mesuré. Lecteur mobile sticky de 567 px, contenu dans le viewport ; passage plan 0 → 3 → 1 au scroll arrière.
+- Redimensionnement 390 → 1280 → 390 : états mobile → webgl → mobile confirmés.
+- Pause puis reprise par Entrée : suppression des scènes et de la zone de scroll allongée, puis réactivation contrôlée.
+- Mouvement réduit simulé : état static, aucun src vidéo, séquence désactivée, zone compacte. Sans WebGL simulé : état fallback, zone compacte et poster conservé.
+- Treize nouvelles images imagegen, 26 WebP (1023 KiB au total, images + miniatures), chargement des six plans à proximité de la section. Nouveau film hero-v2.webm : 647 KiB. Posters 0, 3 et 4 régénérés.
+- Captures : output/visual-qa/v3-horizon-desktop.png, v3-horizon-mobile.png, v3-library-desktop.png, v3-hero-desktop.png et v3-finale-desktop.png.
+
+## Limites
+Séquence de six images originales reliées par fondus ; aucune génération vidéo métier disponible. Pas de benchmark FPS, Lighthouse, téléphone physique ni campagne multi-navigateurs. Les contrôles responsive et de préférences sont des simulations locales.
+Aucun changement de backend, route, entité ou migration, aucune donnée du développeur supprimée. Pages de QA temporaires retirées de public en fin de travail.
+
+---
+
 # Vérification — 13 octobre 2026, passe visuelle 3
 
 ## Sauvegarde

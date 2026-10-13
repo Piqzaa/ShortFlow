@@ -1,9 +1,77 @@
-<!doctype html><html lang="fr"><meta charset="utf-8"><title>VydFlow · rendu des médias locaux</title><style>body{background:#111019;color:white;font:16px Arial;padding:25px}button{padding:15px}canvas{width:135px;height:240px;margin-top:15px;display:block}</style><h1>Rendu des médias VydFlow</h1><p>6 écrans et 4 montages originaux, calculés localement.</p><button id="render">Rendre la collection</button><p id="status">Prêt</p><canvas width="540" height="960"></canvas><script type="module">// Presentation assets only. This module does not implement editing or publishing.
-const MEDIA = ['dance', 'object', 'architecture', 'backstage', 'portrait', 'landscape'];
+<!doctype html><html lang="fr"><meta charset="utf-8"><title>VydFlow · rendu des médias locaux</title><style>body{background:#111019;color:white;font:16px Arial;padding:25px}button{padding:15px}canvas{width:135px;height:240px;margin-top:15px;display:block}</style><h1>Rendu des médias VydFlow</h1><p>6 écrans et 4 montages originaux, calculés localement.</p><button id="render">Rendre la collection</button><p id="status">Prêt</p><canvas width="540" height="960"></canvas><script type="module">// Six original keyframes, not a live generation feature.
+const FRAME_NAMES = Array.from({ length: 6 }, (_, i) => 'horizon-' + i);
+function loadFrames() {
+  return Promise.all(FRAME_NAMES.map(name => new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = '/media/horizon/' + name + '.webp';
+  })));
+}
+function drawSequence(c, frames, progress, x = 0, y = 0, w = 540, h = 960) {
+  const position = Math.max(0, Math.min(1, progress)) * 5;
+  const index = Math.floor(position), blend = position - index;
+  const first = frames[index] || frames.find(Boolean), next = frames[Math.min(5, index + 1)];
+  if (!first) return false;
+  c.save();
+  c.fillStyle = '#041322'; c.fillRect(x, y, w, h);
+  c.drawImage(first, x, y, w, h);
+  if (next && blend > 0) { c.globalAlpha = blend; c.drawImage(next, x, y, w, h); }
+  c.restore();
+  return true;
+}
+
+// Presentation only: one clock selects the phone image and both timelines.
+const EDIT_NAMES = ['edit-0', 'edit-1', 'edit-2', 'edit-3'];
+function loadEditFrames() {
+  return Promise.all(EDIT_NAMES.map(name => new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => resolve(image); image.onerror = () => resolve(null);
+    image.src = '/media/edit/' + name + '.webp';
+  })));
+}
+function editState(progress) {
+  const value = Math.max(0, Math.min(1, progress));
+  const index = Math.min(3, Math.floor(value * 4));
+  return { progress: value, index, local: value === 1 ? 1 : value * 4 - index,
+    timecode: '00:0' + Math.min(8, Math.floor(value * 8)) };
+}
+function crop(c, image, x, y, w, h, zoom = 1) {
+  if (!image?.naturalWidth) return;
+  const scale = Math.max(w / image.naturalWidth, h / image.naturalHeight) * zoom;
+  c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
+  c.drawImage(image, x + (w - image.naturalWidth * scale) / 2, y + (h - image.naturalHeight * scale) / 2, image.naturalWidth * scale, image.naturalHeight * scale);
+  c.restore();
+}
+function drawEditScreen(c, frames, progress = 0, fallback = null) {
+  const ready = frames.length === 4 && frames.every(Boolean);
+  const state = editState(ready ? progress : 0), image = ready ? frames[state.index] : fallback || frames.find(Boolean);
+  if (!image) return false;
+  c.clearRect(0, 0, 540, 960); c.fillStyle = '#101118'; c.fillRect(0, 0, 540, 960);
+  const label = (value, x, y, size, color = '#eeeaf5', weight = 400) => { c.fillStyle = color; c.font = weight + ' ' + size + 'px Arial'; c.fillText(value, x, y); };
+  label('vydflow /', 30, 82, 28, '#f0ebfa', 700);
+  label('APERÇU DU MONTAGE · 4 PLANS', 30, 112, 12, '#aaa0b9');
+  crop(c, image, 26, 145, 488, 560, 1 + state.local * .035);
+  c.strokeStyle = '#d9c7ff'; c.lineWidth = 2; c.strokeRect(58, 180, 424, 480);
+  c.fillStyle = '#08090cdd'; c.fillRect(60, 610, 420, 48);
+  label(['Tout part d’une idée.', 'Trouve le geste.', 'Donne-lui forme.', 'Laisse-la prendre son envol.'][state.index], 76, 641, 23, '#fff', 700);
+  label('TON HISTOIRE / 9:16', 30, 747, 16, '#cab5ef');
+  for (let i = 0; i < 4; i++) {
+    crop(c, frames[i] || fallback, 28 + i * 121, 776, 116, 85);
+    if (i === state.index) { c.strokeStyle = '#d4bbff'; c.lineWidth = 3; c.strokeRect(28 + i * 121, 776, 116, 85); }
+  }
+  c.strokeStyle = '#f1e4ff'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(28 + state.progress * 484, 766); c.lineTo(28 + state.progress * 484, 872); c.stroke();
+  label('Sous-titres', 30, 914, 16); label('Cadrage', 240, 914, 16); label(state.timecode, 440, 914, 16);
+  return true;
+}
+
+// Presentation assets only. This module does not implement editing or publishing.
+const MEDIA = ['craft', 'surf', 'street', 'sound', 'taste', 'botanic'];
 async function loadMedia() {
-  const pairs = await Promise.all([...MEDIA, 'manta', 'river'].map(name => new Promise(resolve => {
+  const pairs = await Promise.all([...MEDIA, 'dance', 'object', 'architecture', 'backstage', 'portrait', 'landscape', 'manta', 'river', 'hero-fashion', 'hero-cat', 'hero-fiction', 'hero-cars', 'hero-football', 'edit-0'].map(name => new Promise(resolve => {
     const image = new Image(); image.onload = () => resolve([name, image]); image.onerror = () => resolve([name, null]);
-    image.src = '/media/creators/' + name + '.webp';
+    image.src = (name.startsWith('edit-') ? '/media/edit/' : '/media/creators/') + name + '.webp';
   })));
   return Object.fromEntries(pairs);
 }
@@ -20,15 +88,20 @@ const text = (c, value, x, y, size = 18, color = '#eeeaf5', weight = 400) => {
 function shade(c, y = 550) { const g = c.createLinearGradient(0, y, 0, 960); g.addColorStop(0, '#08090c00'); g.addColorStop(1, '#08090cf5'); c.fillStyle = g; c.fillRect(0, y, 540, 960 - y); }
 function drawFilm(c, images, seconds, variant = 'hero') {
   c.fillStyle = '#09090d'; c.fillRect(0, 0, 540, 960);
-  const sequences = { hero: ['dance', 'object', 'architecture'], tiktok: ['dance', 'backstage'], reels: ['object', 'portrait'], shorts: ['architecture', 'landscape'] };
-  const sequence = sequences[variant] || sequences.hero, duration = variant === 'hero' ? 8 : 5;
+  const sequences = { hero: ['hero-fashion', 'hero-cat', 'hero-fiction', 'hero-cars', 'hero-football'], tiktok: ['dance', 'backstage'], reels: ['object', 'portrait'], shorts: ['architecture', 'landscape'] };
+  const sequence = sequences[variant] || sequences.hero, duration = variant === 'hero' ? 15 : 5;
   const time = Math.max(0, seconds) % duration, index = Math.min(sequence.length - 1, Math.floor(time / duration * sequence.length));
   const local = time / duration * sequence.length - index;
   cover(c, images[sequence[index]], 0, 0, 540, 960, 1.02 + local * .09, Math.sin(local * Math.PI) * 7);
+  if (variant === 'hero' && local > .82) {
+    c.save(); c.globalAlpha = (local - .82) / .18;
+    cover(c, images[sequence[(index + 1) % sequence.length]], 0, 0, 540, 960, 1.02);
+    c.restore();
+  }
   shade(c);
   text(c, 'VYDFLOW / CREATOR FILMS', 34, 80, 13);
   if (variant === 'hero') {
-    const titles = [['Le mouvement.', 'À ta façon.'], ['Une autre', 'perspective.'], ['Ouvre', 'le cadre.']];
+    const titles = [['Ton style.', 'Ta signature.'], ['Un instant.', 'Un sourire.'], ['Imagine.', 'La suite.'], ['Le rythme.', 'L’adrénaline.'], ['Le geste.', 'Qui change tout.']];
     text(c, titles[index][0], 32, 765, 52, '#fff', 700); text(c, titles[index][1], 32, 825, 52, '#fff', 700);
   } else if (variant === 'tiktok') {
     text(c, 'LE RYTHME AVANT TOUT', 34, 700, 17, '#e3c7ff');
@@ -43,11 +116,11 @@ function drawFilm(c, images, seconds, variant = 'hero') {
   }
   text(c, 'CRÉATION ORIGINALE · FILM DE DÉMONSTRATION', 34, 918, 10, '#d5ccd9');
 }
-function drawScreen(c, images, mode, phase = 0, video = null) {
+function drawScreen(c, images, mode, phase = 0, video = null, frames = [], horizonProgress = 0, editFrames = [], editProgress = 0) {
   c.clearRect(0, 0, 540, 960); c.fillStyle = '#101118'; c.fillRect(0, 0, 540, 960);
   if (mode === 0) {
     if (video?.readyState >= 2) cover(c, video, 0, 0, 540, 960);
-    else drawFilm(c, images, phase * 8, 'hero');
+    else drawFilm(c, images, phase * 15, 'hero');
 
     return;
   }
@@ -63,13 +136,7 @@ function drawScreen(c, images, mode, phase = 0, video = null) {
   }
   text(c, 'vydflow /', 30, 82, 28, '#f0ebfa', 700);text(c, 'APERÇU CONCEPTUEL', 30, 112, 12, '#aaa0b9');
   if (mode === 1) {
-    cover(c, images.dance, 26, 145, 488, 560, 1.03);
-    c.strokeStyle = '#d9c7ff'; c.lineWidth = 2; c.strokeRect(58, 180, 424, 480);
-    c.fillStyle = '#08090cbd'; c.fillRect(84, 578, 372, 45);text(c, 'Trouve ton propre rythme.', 99, 608, 23, '#fff', 700);
-    text(c, 'LE MONTAGE / 9:16', 30, 747, 16, '#cab5ef');
-    for (let i = 0; i < 6; i++) cover(c, images[i < 4 ? 'dance' : 'backstage'], 28 + i * 81, 776, 77, 85);
-    c.strokeStyle = '#d4bbff';c.beginPath();c.moveTo(195 + phase * 150, 766);c.lineTo(195 + phase * 150, 872);c.stroke();
-    text(c, 'Sous-titres', 30, 914, 16);text(c, 'Cadrage', 240, 914, 16);text(c, '00:08', 440, 914, 16);
+    drawEditScreen(c, editFrames, editProgress, images['edit-0']);
   } else if (mode === 2) {
     text(c, 'UNE IDÉE, TROIS VERSIONS.', 30, 165, 24, '#ddd0f5', 700);
     ['dance', 'object', 'architecture'].forEach((name, i) => {
@@ -80,16 +147,17 @@ function drawScreen(c, images, mode, phase = 0, video = null) {
     c.fillStyle = '#b59aff';c.fillRect(30, 839, 480, 57);text(c, 'PRÉPARER LES VERSIONS ↗', 55, 875, 20, '#15101e', 700);
   } else if (mode === 3) {
     text(c, 'Ta bibliothèque', 30, 174, 35, '#fff', 700);text(c, '6 idées. Un seul studio.', 30, 214, 18, '#b6afc2');
-    MEDIA.forEach((name, i) => {const x = 29 + i % 3 * 170, y = 255 + Math.floor(i / 3) * 260;cover(c, images[name], x, y, 145, 220);text(c, ['Mouvement', 'Matière', 'Perspective', 'Coulisses', 'Portrait', 'Évasion'][i], x, y + 244, 16);});
-    c.fillStyle = '#201b2e';c.fillRect(29, 813, 482, 98);text(c, 'MARDI / 18:00', 47, 850, 17, '#cbb2f8');text(c, 'Mouvement · Reel à préparer', 47, 884, 21);
+    MEDIA.forEach((name, i) => {const x = 29 + i % 3 * 170, y = 255 + Math.floor(i / 3) * 260;cover(c, images[name], x, y, 145, 220);text(c, ['Le geste', 'À l’aube', 'Après la pluie', 'Le son', 'À table', 'Respire'][i], x, y + 244, 16);});
+    c.fillStyle = '#201b2e';c.fillRect(29, 813, 482, 98);text(c, 'MARDI / 18:00', 47, 850, 17, '#cbb2f8');text(c, 'Le geste · Reel à préparer', 47, 884, 21);
   } else {
     text(c, 'STUDIO IA', 30, 172, 34, '#fff', 700);text(c, 'BIENTÔT DISPONIBLE', 30, 213, 17, '#c5a9ff');
     c.fillStyle = '#242030';c.fillRect(28, 250, 484, 112);text(c, '« Une raie de verre,', 45, 293, 24);text(c, 'dans un océan de nuit. »', 45, 331, 24);
-    cover(c, images.manta, 28, 390, 484, 380, 1.12);
-    text(c, 'IMAGINER → EXPLORER → CRÉER', 30, 823, 17, '#c5a9ff');
-    for(let i = 0; i < 6; i++)cover(c, images.manta, 28 + i * 81, 850, 76, 51, 1 + i * .06);
+    if (!drawSequence(c, frames, horizonProgress, 145, 375, 249, 443)) cover(c, images.manta, 137, 375, 266, 443);
+    text(c, 'IMAGINER → EXPLORER → CRÉER', 30, 842, 17, '#c5a9ff');
+    for(let i = 0; i < 6; i++) { if (frames[i]) c.drawImage(frames[i], 28 + i * 81, 863, 76, 45); }
+    c.fillStyle = '#d8c8ff'; c.fillRect(28 + horizonProgress * 481, 858, 2, 56);
     text(c, 'Illustration du futur studio', 30, 932, 14, '#9d93ac');
   }
 }
 
-const canvas=document.querySelector('canvas'),c=canvas.getContext('2d'),status=document.querySelector('#status');const images=await loadMedia();drawFilm(c,images,0);const save=async(name,blob)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.textContent='Télécharger '+name;a.style.display='block';document.body.appendChild(a);};document.querySelector('#render').onclick=async()=>{document.querySelector('#render').disabled=true;try{for(let i=0;i<6;i++){drawScreen(c,images,i,.2);await save('screen-'+i+'.webp',await new Promise(r=>canvas.toBlob(r,'image/webp',.86)));status.textContent='Écran '+(i+1)+' / 6';}for(const variant of ['hero','tiktok','reels','shorts']){const duration=variant==='hero'?8:5,stream=canvas.captureStream(24),type=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm',recorder=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:900000}),chunks=[];recorder.ondataavailable=e=>chunks.push(e.data);const done=new Promise(r=>recorder.onstop=r);recorder.start();const start=performance.now();await new Promise(resolve=>{function frame(now){let t=(now-start)/1000;drawFilm(c,images,Math.min(duration-.01,t),variant);status.textContent=variant+' : '+Math.min(duration,t).toFixed(1)+' / '+duration+' s';if(t<duration)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});recorder.stop();await done;stream.getTracks().forEach(t=>t.stop());await save(variant+'.webm',new Blob(chunks,{type:'video/webm'}));}status.textContent='TERMINÉ : 6 écrans + 4 films enregistrés.';}catch(e){status.textContent='ERREUR : '+e.message;}document.querySelector('#render').disabled=false};</script></html>
+const canvas=document.querySelector('canvas'),c=canvas.getContext('2d'),status=document.querySelector('#status');const images=await loadMedia(),frames=await loadFrames(),editFrames=await loadEditFrames();drawFilm(c,images,0);const save=async(name,blob)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.textContent='Télécharger '+name;a.style.display='block';document.body.appendChild(a);};document.querySelector('#render').onclick=async()=>{document.querySelector('#render').disabled=true;try{for(let i=0;i<6;i++){drawScreen(c,images,i,0,null,frames,.5,editFrames,0);await save('screen-'+i+'.webp',await new Promise(r=>canvas.toBlob(r,'image/webp',.86)));status.textContent='Écran '+(i+1)+' / 6';}for(const variant of ['hero','tiktok','reels','shorts']){const duration=variant==='hero'?15:5,stream=canvas.captureStream(24),type=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm',recorder=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:900000}),chunks=[];recorder.ondataavailable=e=>chunks.push(e.data);const done=new Promise(r=>recorder.onstop=r);recorder.start();const start=performance.now();await new Promise(resolve=>{function frame(now){let t=(now-start)/1000;drawFilm(c,images,Math.min(duration-.01,t),variant);status.textContent=variant+' : '+Math.min(duration,t).toFixed(1)+' / '+duration+' s';if(t<duration)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});recorder.stop();await done;stream.getTracks().forEach(t=>t.stop());await save(variant==='hero'?'hero-v4.webm':variant+'.webm',new Blob(chunks,{type:'video/webm'}));}status.textContent='TERMINÉ : 6 écrans + 4 films enregistrés.';}catch(e){status.textContent='ERREUR : '+e.message;}document.querySelector('#render').disabled=false};</script></html>
