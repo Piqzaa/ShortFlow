@@ -11,7 +11,7 @@
     <div class="world-grid"></div><div class="world-orbit orbit-one"></div><div class="world-orbit orbit-two"></div>
     <div class="world-type">CREATE<br>IN FLOW.</div>
     <div class="fallback-phone" data-studio-target="fallback"><div class="phone-screen"><img src="/media/screens/screen-0.webp" alt="" width="540" height="960"><video class="preview-video hero-native" data-mobile-only data-preview-src="/media/films/hero.webm" muted loop playsinline preload="none" aria-hidden="true"></video><span class="island"></span></div></div>
-    <canvas data-studio-target="canvas"></canvas>
+    <canvas data-studio-target="canvas"></canvas><span class="capture-caption" data-studio-target="framing">TON IDÉE, PLEIN CADRE · 9:16</span>
     <div class="world-footer"><span>VYDFLOW / CREATIVE SYSTEM</span><span data-studio-target="counter">01 — L’IMPULSION</span><span class="world-progress"><i data-studio-target="progress"></i></span></div>
   </div>
   <button class="motion-toggle" data-studio-target="toggle" data-action="studio#toggleMotion" aria-pressed="false" hidden>Mettre les animations en pause</button>
@@ -25,7 +25,7 @@
   <section class="scene transformation wrap" id="studio" data-scene="transform" aria-labelledby="transform-title">
     <div class="scene-copy"><p class="section-label">01 / L’IMPULSION</p><h2 id="transform-title">Tout commence<br>par <em>ton idée.</em></h2><p>Un mouvement. Une histoire. Une vidéo.<br>Donne-lui l’espace qu’elle mérite.</p><div class="technical-label"><span class="record-dot"></span> FORMAT VERTICAL <span>9:16</span></div></div>
     <div class="mobile-edit-showcase"><div class="mobile-editor-phone"><img src="/media/screens/screen-1.webp" alt="Illustration du montage : cadrage vertical, sous-titres et timeline" width="540" height="960" loading="lazy"><span class="island"></span></div><div class="edit-annotation">01 / CADRE TON HISTOIRE<span>9:16 · Sous-titres · Montage</span></div><div class="edit-scrub" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div></div>
-    <div class="frame-marks" aria-hidden="true"><span>01:00:08</span><span>TA CRÉATIVITÉ, PLEIN CADRE.</span></div>
+    <div class="capture-fallback"><img src="/media/screens/screen-1.webp" alt="Aperçu du montage au format vertical" width="540" height="960" loading="lazy"></div>
   </section>
   <section class="scene distribution wrap" data-scene="distribute" aria-labelledby="distribution-title">
     <div class="scene-copy"><p class="section-label">02 / LA RÉSONANCE</p><h2 id="distribution-title">Un seul élan.<br><em>Trois horizons.</em></h2><p>Prépare une version pour chaque réseau.<br>Garde ta signature, trouve ton public.</p></div>
@@ -59,16 +59,16 @@
     </div><p class="scene-disclaimer">Bibliothèque et calendrier illustratifs. Ces fonctionnalités sont prévues pour la V1.</p>
   </section>
   <section class="scene vision wrap" id="vision" data-scene="vision" aria-labelledby="vision-title">
-    <div class="scene-copy"><p class="section-label">04 / L’HORIZON CRÉATIF</p><span class="pill">Bientôt disponible</span><h2 id="vision-title">De l’imagination<br><em>au mouvement.</em></h2><p>Et si une phrase devenait le début d’une vidéo ?<br>Le studio IA fait partie de notre vision.</p><p class="honest-note">Concept exploratoire. Aucune génération IA disponible actuellement.</p></div>
+    <div class="scene-copy"><p class="section-label">04 / L’HORIZON CRÉATIF</p><span class="pill">Bientôt disponible</span><h2 id="vision-title">De l’imagination<br><em>au mouvement.</em></h2><p>Et si une phrase devenait le début d’une vidéo&nbsp;?<br>Le studio IA fait partie de notre vision.</p><p class="honest-note">Concept exploratoire. Aucune génération IA disponible actuellement.</p></div>
     <div class="ai-composition" aria-label="Concept illustratif : instruction, génération, timeline et vidéo finale">
-      <div class="prompt-card"><span>01 / TON INSTRUCTION <b>✳</b></span><p>« Un objet en verre violet, en apesanteur.<br>Un éclairage de cinéma. Un mouvement fluide. »</p><small>CONCEPT · TEXTE VERS VIDÉO</small></div>
+      <div class="prompt-card"><span>01 / TON INSTRUCTION <b>✳</b></span><p>« Une raie de verre dans un océan de nuit.<br>Des reflets irisés. Un mouvement fluide. »</p><small>CONCEPT · TEXTE VERS VIDÉO</small></div>
       <div class="generation-line"><span>02 / EXPLORATION</span><i></i><span>↘</span></div>
-      <div class="ai-output"><img src="/media/creators/object.webp" alt="Objet en verre violet, illustration conceptuelle du futur studio IA" width="540" height="960" loading="lazy"><span>FLOW STUDY / 002<br><b>Une idée prend forme.</b></span></div>
+      <div class="ai-output"><img src="/media/creators/manta.webp" alt="Raie de verre irisée dans un océan de nuit, illustration conceptuelle du futur studio IA" width="540" height="960" loading="lazy"><span>FLOW STUDY / 002<br><b>Une idée prend forme.</b></span></div>
       <div class="timeline-preview"><div><span>03 / MONTAGE</span><span>00:00 — 00:06</span></div><div class="timeline-track">{% for frame in 1..6 %}<i style="--frame: {{ frame }}"></i>{% endfor %}<b></b></div><small>ILLUSTRATION DU FUTUR STUDIO</small></div>
     </div>
   </section>
-  <div class="creative-contact-sheet" aria-hidden="true">{% for media in ['dance', 'object', 'architecture', 'backstage', 'portrait', 'landscape'] %}<img src="/media/creators/{{ media }}-thumb.webp" alt="" width="270" height="480" loading="lazy">{% endfor %}</div>
-  <section class="scene finale wrap" data-scene="finale" aria-labelledby="finale-title"><p class="section-label">LA SUITE, ON L’ÉCRIT ENSEMBLE.</p><h2 id="finale-title">Fais de la place<br><em>à tes idées.</em></h2><a class="button" href="#rejoindre">Entrer dans l’aventure <span aria-hidden="true">↗</span></a><span class="finale-signature" aria-hidden="true">VYDFLOW /</span></section>
+  <div class="creative-transition" aria-hidden="true"><img src="/media/creators/river.webp" alt="" width="720" height="1280" loading="lazy"><span>LA SUITE EST À CRÉER /</span></div>
+  <section class="scene finale wrap" data-scene="finale" aria-labelledby="finale-title"><div class="finale-mobile-device"><img src="/media/screens/screen-5.webp" alt="Ton prochain mouvement commence ici, au-dessus d’un paysage de rivière" width="540" height="960" loading="lazy"></div><p class="section-label">LA SUITE, ON L’ÉCRIT ENSEMBLE.</p><h2 id="finale-title">Fais de la place<br><em>à tes idées.</em></h2><a class="button" href="#rejoindre">Entrer dans l’aventure <span aria-hidden="true">↗</span></a><span class="finale-signature" aria-hidden="true">VYDFLOW /</span></section>
 </div>
 <section class="join section" id="rejoindre" aria-labelledby="join-title"><div class="wrap join-inner"><span class="eyebrow"><i></i> EN DÉVELOPPEMENT · ACCÈS À VENIR</span><h2 id="join-title">Ton prochain flow<br><em>commence ici.</em></h2><p>VydFlow prend forme. Rejoins la liste d’attente<br>pour être informé de son ouverture.</p>{% for message in app.flashes('success') %}<div class="notice success" role="status">{{ message }}</div>{% endfor %}{% for message in app.flashes('error') %}<div class="notice" role="alert">{{ message }}</div>{% endfor %}{{ form_start(waitlist, {attr: {class: 'waitlist-form'}, action: path('app_home') ~ '#rejoindre'}) }}{{ form_errors(waitlist) }}<div class="email-field">{{ form_label(waitlist.email) }}<div class="input-row">{{ form_widget(waitlist.email) }}<button class="button" type="submit">Rejoindre la liste <span aria-hidden="true">↗</span></button></div>{{ form_errors(waitlist.email) }}</div><div class="honeypot" aria-hidden="true">{{ form_row(waitlist.website) }}</div>{{ form_end(waitlist) }}<small>Gratuit. Sans carte bancaire. Un email pour l’ouverture, rien de plus.<br>Ton email reste privé. <a href="{{ path('app_privacy') }}">Utilisation de tes données</a></small></div></section>
 </main>

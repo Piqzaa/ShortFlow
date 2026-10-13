@@ -3,7 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 const CHAPTERS = ['01 — L’IMPULSION', '01 — L’IMPULSION', '02 — LA RÉSONANCE', '03 — LE STUDIO', '04 — L’HORIZON', '05 — À TOI DE CRÉER'];
 
 export default class extends Controller {
-  static targets = ['canvas', 'stage', 'fallback', 'counter', 'progress', 'toggle'];
+  static targets = ['canvas', 'stage', 'fallback', 'counter', 'progress', 'toggle', 'framing'];
 
   connect() {
     this.element.dataset.studioState = 'connecting';
@@ -79,14 +79,14 @@ export default class extends Controller {
       this.animationContext.add(() => {
         const poses = [
           { px: 0, py: -1.45, pz: 0, rx: .04, ry: -.28, rz: -.09, scale: .78, orbit: -.45, light: 5 },
-          { px: 2.55, py: 0, pz: .7, rx: .22, ry: .62, rz: .14, scale: 1.02, orbit: .35, light: 9 },
+          { px: 2.55, py: 0, pz: .15, rx: .02, ry: -.08, rz: 0, scale: .86, orbit: .35, light: 9 },
           { px: -3.35, py: -.8, pz: 0, rx: -.08, ry: -.38, rz: -.16, scale: .82, orbit: 1.35, light: 7 },
           { px: 4.2, py: 1.5, pz: -2, rx: .32, ry: -.65, rz: .25, scale: .56, orbit: 2.4, light: 3 },
           { px: -3.4, py: -2.1, pz: -.8, rx: -.18, ry: .48, rz: -.25, scale: .48, orbit: 3.3, light: 8 },
           { px: -3, py: 0, pz: .2, rx: .04, ry: -.25, rz: -.14, scale: .96, orbit: 4.4, light: 6 },
         ];
         const atmospheres = [{cool:0, lift:-.3, spread:1}, {cool:.2, lift:0, spread:1}, {cool:0, lift:0, spread:1}, {cool:.8, lift:-1.8, spread:.55}, {cool:1, lift:0, spread:.8}, {cool:.1, lift:0, spread:1}];
-        poses.forEach((pose, index) => Object.assign(pose, atmospheres[index]));
+        poses.forEach((pose, index) => Object.assign(pose, atmospheres[index], { capture: index === 1 ? 1 : 0, ribbon: [.42, .06, .14, .05, 0, .08][index] }));
         Object.assign(this.pose, poses[0]);
         // One scroll clock owns every pose: fast reverse scrolling cannot leave a later tween in control.
         const scrollState = { progress: 0 };
@@ -95,7 +95,9 @@ export default class extends Controller {
           const position = scrollState.progress * distance;
           let index = 0;
           while (index < poses.length - 2 && position > stops[index + 1]) index++;
-          const fraction = Math.max(0, Math.min(1, (position - stops[index]) / (stops[index + 1] - stops[index])));
+          const raw = Math.max(0, Math.min(1, (position - stops[index]) / (stops[index + 1] - stops[index])));
+          // Hold the edit inside its framing rig before starting the next journey.
+          const fraction = index === 1 ? Math.max(0, (raw - .28) / .72) : raw;
           const eased = (1 - Math.cos(fraction * Math.PI)) / 2;
           Object.keys(poses[0]).forEach(key => { this.pose[key] = poses[index][key] + (poses[index + 1][key] - poses[index][key]) * eased; });
           this.screenPhase = index + Math.max(0, Math.min(1, (fraction - .5) / .25));
@@ -175,6 +177,19 @@ export default class extends Controller {
     mesh(new THREE.ShapeGeometry(rounded(.67, .15, .075)), new THREE.MeshBasicMaterial({ color: 0x030305 }), phone, 0, 1.8, .235);
     mesh(new THREE.BoxGeometry(.04, .42, .1), new THREE.MeshStandardMaterial({ color: 0xaaa1b6, metalness: 1, roughness: .2 }), phone, 1.17, .65, .08);
     mesh(new THREE.BoxGeometry(.04, .22, .1), new THREE.MeshStandardMaterial({ color: 0xaaa1b6, metalness: 1, roughness: .2 }), phone, -1.17, .9, .08);
+    // The framing rig shares the phone's camera and world units, so resize cannot misalign them.
+    this.captureRig = new THREE.Group();
+    this.captureMaterial = keep(new THREE.LineBasicMaterial({ color: 0xd9c7ff, transparent: true, opacity: 0, depthTest: false, depthWrite: false }));
+    const corners = [], halfW = 1.19, halfH = 2.05, arm = .28;
+    for (const x of [-1, 1]) for (const y of [-1, 1]) {
+      corners.push(x * halfW, y * (halfH - arm), 0, x * halfW, y * halfH, 0);
+      corners.push(x * halfW, y * halfH, 0, x * (halfW - arm), y * halfH, 0);
+    }
+    const framingGeometry = keep(new THREE.BufferGeometry());
+    framingGeometry.setAttribute('position', new THREE.Float32BufferAttribute(corners, 3));
+    this.captureRig.add(new THREE.LineSegments(framingGeometry, this.captureMaterial));
+    scene.add(this.captureRig);
+    this.captionPosition = new THREE.Vector3();
     // Film-strip sculptures: broad metallic ribbons with fine illuminated edit rails.
     this.ribbonMaterials = [];
     this.violet = new THREE.Color(0x7950c8);
@@ -236,11 +251,20 @@ export default class extends Controller {
     // Compress horizontal staging on smaller desktop viewports, preserving the text columns.
     const widthFactor = Math.min(1, this.camera.aspect / 1.65);
     this.phone.position.set(p.px * widthFactor, p.py, p.pz);
-    this.phone.rotation.set(p.rx + this.cursor.y, p.ry + this.cursor.x, p.rz);
+    const cursorWeight = 1 - (p.capture || 0);
+    this.phone.rotation.set(p.rx + this.cursor.y * cursorWeight, p.ry + this.cursor.x * cursorWeight, p.rz);
     this.phone.scale.setScalar(p.scale);
+    this.captureRig.position.set(2.55 * widthFactor, 0, .6);
+    this.captureMaterial.opacity = p.capture || 0;
+    this.captionPosition.set(2.55 * widthFactor, -2.35, .6).project(this.camera);
+    this.framingTarget.style.left = ((this.captionPosition.x + 1) / 2 * 100) + '%';
+    this.framingTarget.style.top = ((1 - this.captionPosition.y) / 2 * 100) + '%';
+    this.framingTarget.style.opacity = String(p.capture || 0);
+    this.element.dataset.capture = (p.capture || 0).toFixed(3);
     this.sculpture.position.y = p.lift || 0;
     this.sculpture.scale.y = p.spread || 1;
     this.ribbonMaterials.forEach((material, index) => {
+      material.opacity = p.ribbon ?? .42;
       material.color.lerpColors(this.violet, this.silver, p.cool || 0).multiplyScalar(index === 1 ? 1 : .55);
     });
     this.sculpture.rotation.z = p.orbit;
@@ -293,13 +317,13 @@ export default class extends Controller {
     };
     this.syncFilm = () => {
       const phase = this.screenPhase || 0;
-      const active = this.visible && !document.hidden && (phase < 1 || phase > 4);
+      const active = this.visible && !document.hidden && phase < 1;
       if (!active) { stop(); return; }
       if (!video.paused || requesting) return;
       requesting = true;
       video.play().then(() => {
         requesting = false;
-        if (generation !== this.generation || !this.visible || document.hidden || (this.screenPhase >= 1 && this.screenPhase <= 4)) { stop(); return; }
+        if (generation !== this.generation || !this.visible || document.hidden || this.screenPhase >= 1) { stop(); return; }
         if (video.requestVideoFrameCallback) this.frameCallback = video.requestVideoFrameCallback(frame);
         else this.renderer?.setAnimationLoop(() => this.render());
       }).catch(() => { requesting = false; this.render(); });
@@ -342,6 +366,7 @@ export default class extends Controller {
     this.resources?.clear();
     this.environment?.dispose(); this.environment = null;
     this.renderer?.dispose(); this.renderer = null;
+    this.framingTarget.style.opacity = '0';
     this.stageTarget.classList.remove('ready');
     this.element.classList.remove('is-immersive');
   }

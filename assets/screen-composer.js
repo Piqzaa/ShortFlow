@@ -1,7 +1,7 @@
 // Presentation assets only. This module does not implement editing or publishing.
 export const MEDIA = ['dance', 'object', 'architecture', 'backstage', 'portrait', 'landscape'];
 export async function loadMedia() {
-  const pairs = await Promise.all(MEDIA.map(name => new Promise(resolve => {
+  const pairs = await Promise.all([...MEDIA, 'manta', 'river'].map(name => new Promise(resolve => {
     const image = new Image(); image.onload = () => resolve([name, image]); image.onerror = () => resolve([name, null]);
     image.src = '/media/creators/' + name + '.webp';
   })));
@@ -45,10 +45,20 @@ export function drawFilm(c, images, seconds, variant = 'hero') {
 }
 export function drawScreen(c, images, mode, phase = 0, video = null) {
   c.clearRect(0, 0, 540, 960); c.fillStyle = '#101118'; c.fillRect(0, 0, 540, 960);
-  if (mode === 0 || mode === 5) {
+  if (mode === 0) {
     if (video?.readyState >= 2) cover(c, video, 0, 0, 540, 960);
     else drawFilm(c, images, phase * 8, 'hero');
-    if (mode === 5) {shade(c, 350);text(c, 'TON PROCHAIN', 34, 676, 24, '#dbc9ff');text(c, 'mouvement.', 30, 745, 61, '#fff', 700);text(c, 'commence ici /', 34, 807, 32);}
+
+    return;
+  }
+  if (mode === 5) {
+    cover(c, images.river, 0, 0, 540, 570);
+    c.fillStyle = '#101118'; c.fillRect(0, 570, 540, 390);
+    text(c, 'VYDFLOW / À TOI DE CRÉER', 34, 628, 15, '#bda9dd');
+    text(c, 'TON PROCHAIN', 34, 703, 22, '#dbc9ff');
+    text(c, 'mouvement.', 30, 774, 61, '#fff', 700);
+    text(c, 'commence ici /', 34, 835, 32);
+    c.fillStyle = '#bda9dd'; c.fillRect(34, 887, 62, 3);
     return;
   }
   text(c, 'vydflow /', 30, 82, 28, '#f0ebfa', 700);text(c, 'APERÇU CONCEPTUEL', 30, 112, 12, '#aaa0b9');
@@ -74,10 +84,10 @@ export function drawScreen(c, images, mode, phase = 0, video = null) {
     c.fillStyle = '#201b2e';c.fillRect(29, 813, 482, 98);text(c, 'MARDI / 18:00', 47, 850, 17, '#cbb2f8');text(c, 'Mouvement · Reel à préparer', 47, 884, 21);
   } else {
     text(c, 'STUDIO IA', 30, 172, 34, '#fff', 700);text(c, 'BIENTÔT DISPONIBLE', 30, 213, 17, '#c5a9ff');
-    c.fillStyle = '#242030';c.fillRect(28, 250, 484, 112);text(c, '« Un objet en verre violet,', 45, 293, 24);text(c, 'en apesanteur. »', 45, 331, 24);
-    cover(c, images.object, 28, 390, 484, 380, 1.12);
+    c.fillStyle = '#242030';c.fillRect(28, 250, 484, 112);text(c, '« Une raie de verre,', 45, 293, 24);text(c, 'dans un océan de nuit. »', 45, 331, 24);
+    cover(c, images.manta, 28, 390, 484, 380, 1.12);
     text(c, 'IMAGINER → EXPLORER → CRÉER', 30, 823, 17, '#c5a9ff');
-    for(let i = 0; i < 6; i++)cover(c, images.object, 28 + i * 81, 850, 76, 51, 1 + i * .06);
+    for(let i = 0; i < 6; i++)cover(c, images.manta, 28 + i * 81, 850, 76, 51, 1 + i * .06);
     text(c, 'Illustration du futur studio', 30, 932, 14, '#9d93ac');
   }
 }
