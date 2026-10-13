@@ -1,3 +1,15 @@
+# Vérification — 14 octobre 2026, clarification produit
+
+- npm run check : sortie 0.
+- npm run build : sortie 0, puis relancé après le dégagement des noms de réseaux dans le hero. Avertissement existant sur le chunk Three.js et chemins /media résolus au runtime.
+- lint:twig templates via Docker : 3 templates valides.
+- Navigateur desktop 1280×720 : hero, textes de distribution et parcours en trois colonnes observés. Mobile en iframe 390×844 : hero lisible, lien Explorer le studio fonctionnel ; largeur utile et scrollWidth 375 px. Pas de test sur téléphone physique.
+- Aucun JavaScript, backend, route, entité ni formulaire modifié ; suite PHP complète non relancée pour ces changements de texte et CSS.
+- Prompt V1 fourni dans docs/prompt-v1-codex.md ; aucune fonctionnalité V1 développée dans cette passe.
+- Capture du parcours : output/visual-qa/v6-product-desktop.png.
+
+---
+
 # Vérification — 14 octobre 2026, passe visuelle 5
 
 ## Résultats exécutés
