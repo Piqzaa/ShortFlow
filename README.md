@@ -1,4 +1,4 @@
-# ShortFlow — Phase 1
+# VydFlow — Phase 1
 
 Fondations d’un micro-SaaS Symfony, landing immersive et liste d’attente locale. Aucune bibliothèque métier, authentification, publication sociale, facturation ou génération IA. Aucun service cloud ni compte payant nécessaire.
 
@@ -46,6 +46,9 @@ Pour une nouvelle modification de schéma : doctrine:migrations:diff dans le con
 - templates/landing : HTML rendu par Twig.
 - assets/controllers/studio_controller.js : scène progressive Three.js/GSAP via Stimulus.
 - assets/styles/app.css : tokens, layout, responsive et états.
+- assets/screen-composer.js : six écrans illustratifs et composition des montages.
+- assets/styles/experience.css : compositions enrichies et version mobile dédiée.
+- docs/landing-experience.md : fonctionnement, provenance des médias et guide pédagogique.
 - docs : architecture, roadmap, design system, intégrations et décisions.
 - docs/verification.md : résultats réellement exécutés et limites.
 
@@ -60,6 +63,6 @@ Pour une nouvelle modification de schéma : doctrine:migrations:diff dans le con
 Un controller coordonne une requête ; un service porte un comportement réutilisable ; une entité décrit les données persistées ; une migration versionne le schéma ; Twig représente la page. Cette séparation reste volontairement simple.
 
 ## Limites avant production
-Le serveur PHP intégré et le debug sont locaux. Ne pas publier cette configuration. La confidentialité doit être finalisée (exploitant, contact, conservation) avant collecte publique. Aucun email automatique ni double opt-in. Le limiteur local est destiné à une instance et ne remplace pas une protection réseau de production. Le fichier de vidéo personnelle est facultatif : voir docs/design-system.md. Les licences des polices libres sont fournies dans node_modules/@fontsource ; aucun média de tiers utilisé.
+Le serveur PHP intégré et le debug sont locaux. Ne pas publier cette configuration. La confidentialité doit être finalisée (exploitant, contact, conservation) avant collecte publique. Aucun email automatique ni double opt-in. Le limiteur local est destiné à une instance et ne remplace pas une protection réseau de production. La landing inclut quatre montages de démonstration originaux, six visuels et six écrans narratifs : voir docs/landing-experience.md. Les licences des polices libres sont fournies dans node_modules/@fontsource ; aucun média de tiers utilisé.
 
 La phase 1 s’arrête ici. Prochaine étape recommandée après validation : authentification et parcours du studio, avant les uploads privés.

@@ -1,3 +1,4 @@
+name: vydflow
 services:
   php:
     build: ./docker/php
@@ -28,4 +29,6 @@ services:
     command: sh -c "npm ci && npm run build"
 volumes:
   database_data:
+    # Existing local volume retained to preserve all developer data.
+    name: shortflow_database_data
   node_modules:

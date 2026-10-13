@@ -1,76 +1,355 @@
 import { Controller } from '@hotwired/stimulus';
+
+const CHAPTERS = ['01 — L’IMPULSION', '01 — L’IMPULSION', '02 — LA RÉSONANCE', '03 — LE STUDIO', '04 — L’HORIZON', '05 — À TOI DE CRÉER'];
+
 export default class extends Controller {
-  static targets = ['canvas', 'stage', 'fallback'];
-  async connect() {
-    this.disposed = false;
+  static targets = ['canvas', 'stage', 'fallback', 'counter', 'progress', 'toggle'];
+
+  connect() {
+    this.element.dataset.studioState = 'connecting';
+    this.connected = true;
+    this.paused = false;
+    this.generation = 0;
     this.motion = matchMedia('(prefers-reduced-motion: reduce)');
-    this.onMotion = () => { if (this.motion.matches) this.cleanup(); };
-    this.motion.addEventListener('change', this.onMotion);
-    if (this.motion.matches || navigator.connection?.saveData) return;
+    this.mobile = matchMedia('(max-width: 1000px)');
+    this.onPreference = () => this.restart();
+    this.motion.addEventListener('change', this.onPreference);
+    this.mobile.addEventListener('change', this.onPreference);
+    this.restart();
+  }
+
+  restart() {
+    this.cleanup();
+    if (!this.connected || this.paused || this.motion.matches || navigator.connection?.saveData) return;
+    this.element.dataset.studioState = 'observing';
+    const generation = this.generation;
     this.observer = new IntersectionObserver(entries => {
-      if (entries.some(e => e.isIntersecting)) { this.observer.disconnect(); this.load(); }
-    }, { rootMargin: '150px' });
+      if (entries.some(entry => entry.isIntersecting)) {
+        this.observer.disconnect();
+        this.load(generation);
+      }
+    }, { rootMargin: '200px' });
     this.observer.observe(this.element);
   }
-  async load() {
+
+  async load(generation) {
+    this.element.dataset.studioState = 'loading';
     try {
-      const [THREE, { gsap }, { ScrollTrigger }] = await Promise.all([import('three'), import('gsap'), import('gsap/ScrollTrigger')]);
-      if (this.disposed || this.motion.matches) return;
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([import('gsap'), import('gsap/ScrollTrigger')]);
+      if (generation !== this.generation) return;
       gsap.registerPlugin(ScrollTrigger);
-      const canvas = this.canvasTarget;
-      const renderer = this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
-      renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-      camera.position.z = 10;
-      const phone = new THREE.Group();
-      scene.add(phone);
-      this.resources = [];
-      const roundedShape = (w,h,r) => {
-        const shape = new THREE.Shape(), x=-w/2,y=-h/2;
-        shape.moveTo(x+r,y);shape.lineTo(x+w-r,y);shape.quadraticCurveTo(x+w,y,x+w,y+r);shape.lineTo(x+w,y+h-r);shape.quadraticCurveTo(x+w,y+h,x+w-r,y+h);shape.lineTo(x+r,y+h);shape.quadraticCurveTo(x,y+h,x,y+h-r);shape.lineTo(x,y+r);shape.quadraticCurveTo(x,y,x+r,y);return shape;
-      };
-      const add = (geometry, material, x=0,y=0,z=0) => { const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);phone.add(mesh);this.resources.push(geometry,material);return mesh; };
-      const bodyGeo = new THREE.ExtrudeGeometry(roundedShape(2.45,4.85,.34),{depth:.16,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:.045,bevelThickness:.045,curveSegments:24});
-      add(bodyGeo,new THREE.MeshStandardMaterial({color:0x514a61,metalness:1,roughness:.28}));
-      const screenGeo = new THREE.ShapeGeometry(roundedShape(2.31,4.69,.29),32);
-      const uv=screenGeo.attributes.uv, pos=screenGeo.attributes.position;
-      for(let i=0;i<uv.count;i++) uv.setXY(i,(pos.getX(i)+1.155)/2.31,(pos.getY(i)+2.345)/4.69);
-      this.texture = new THREE.TextureLoader().load('/media/studio-poster.svg', () => { if (!this.disposed) this.renderOnce?.(); });
-      this.texture.colorSpace=THREE.SRGBColorSpace;
-      const screenMat=new THREE.MeshBasicMaterial({map:this.texture});
-      add(screenGeo,screenMat,0,0,.215);
-      add(new THREE.ShapeGeometry(roundedShape(.78,.19,.095)),new THREE.MeshBasicMaterial({color:0x050507}),0,2.13,.23);
-      add(new THREE.BoxGeometry(.045,.45,.1),new THREE.MeshStandardMaterial({color:0x71667d,metalness:1,roughness:.3}),1.27,.65,.08);
-      add(new THREE.BoxGeometry(.045,.26,.1),new THREE.MeshStandardMaterial({color:0x71667d,metalness:1,roughness:.3}),-1.27,.9,.08);
-      scene.add(new THREE.AmbientLight(0xffffff,2));
-      const key = new THREE.DirectionalLight(0xe2d8ff,5);key.position.set(3,4,5);scene.add(key);
-      const rim=new THREE.DirectionalLight(0x9664ff,6);rim.position.set(-3,-1,2);scene.add(rim);
-      phone.rotation.set(.06,-.27,-.12);
-      const pose={x:.06,y:-.27,z:-.12}; this.cursor={x:0,y:0};
-      this.renderOnce=()=>{if(this.disposed)return;phone.rotation.set(pose.x+this.cursor.y,pose.y+this.cursor.x,pose.z);renderer.render(scene,camera);};
-      this.resize=new ResizeObserver(()=>{ const {width,height}=this.stageTarget.getBoundingClientRect();renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();this.renderOnce(); });
-      this.resize.observe(this.stageTarget);
-      this.tween=gsap.to(pose,{y:.55,z:.18,x:.16,ease:'none',onUpdate:this.renderOnce,scrollTrigger:{trigger:this.element,start:'top top',end:'bottom top',scrub:1}});
-      this.onPointer=e=>{this.cursor.x=(e.clientX/innerWidth-.5)*.12;this.cursor.y=(e.clientY/innerHeight-.5)*.06;this.renderOnce();};
-      if(matchMedia('(pointer:fine)').matches) window.addEventListener('pointermove',this.onPointer,{passive:true});
-      this.onContextLost=e=>{e.preventDefault();this.cleanup();};canvas.addEventListener('webglcontextlost',this.onContextLost);
-      this.stageTarget.classList.add('ready');
-      this.renderOnce();
-      // Optional personal clip: only fetched when the scene is visible and motion is allowed.
-      const source=this.element.dataset.videoSrc;
-      if(source){this.video=document.createElement('video');Object.assign(this.video,{src:source,muted:true,loop:true,playsInline:true,preload:'none'});this.videoTexture=new THREE.VideoTexture(this.video);this.videoTexture.colorSpace=THREE.SRGBColorSpace;screenMat.map=this.videoTexture;this.video.play().then(()=>{if(!this.disposed)renderer.setAnimationLoop(this.renderOnce);}).catch(()=>{screenMat.map=this.texture;this.renderOnce();});}
-    } catch (error) { this.cleanup(); console.info('ShortFlow : aperçu statique activé.'); }
+      this.toggleTarget.hidden = false;
+      const scenes = [...this.element.querySelectorAll('[data-scene]')];
+      this.animationContext = gsap.context(() => {
+        this.element.querySelectorAll('.destination').forEach((card, index) => {
+          gsap.from(card, { x: this.mobile.matches ? 0 : -280 - index * 90, y: this.mobile.matches ? 45 : 100 + index * 35,
+            rotationY: this.mobile.matches ? 0 : -55, rotationZ: this.mobile.matches ? 3 : -20,
+            scale: this.mobile.matches ? .96 : .72, opacity: this.mobile.matches ? .8 : .15,
+            ease: 'power2.out', scrollTrigger: { trigger: this.mobile.matches ? card : '.destinations',
+              start: 'top 92%', end: this.mobile.matches ? 'top 55%' : 'center 53%', scrub: .65 } });
+        });
+        if (!this.mobile.matches) gsap.from('.studio-preview', { y: 180, rotationX: 24, rotationY: -16, scale: .86,
+          ease: 'power2.out', scrollTrigger: { trigger: '.studio-preview', start: 'top 95%', end: 'center 66%', scrub: .8 } });
+        this.element.querySelectorAll('.calendar-block').forEach(block => gsap.from(block, { x: 35, opacity: .3, ease: 'power2.out',
+          scrollTrigger: { trigger: block, start: 'top 96%', end: 'top 76%', scrub: .6 } }));
+        gsap.from('.prompt-card', { x: this.mobile.matches ? -12 : -55, y: 30, rotationZ: -5, ease: 'none',
+          scrollTrigger: { trigger: '.ai-composition', start: 'top 90%', end: 'top 55%', scrub: .7 } });
+        gsap.from('.ai-output', { x: this.mobile.matches ? 12 : 65, rotationY: this.mobile.matches ? 0 : -22, scale: .94, ease: 'none',
+          scrollTrigger: { trigger: '.ai-output', start: 'top 92%', end: 'top 58%', scrub: .7 } });
+        gsap.from('.timeline-preview', { y: 35, rotationZ: 3, ease: 'none',
+          scrollTrigger: { trigger: '.timeline-preview', start: 'top 95%', end: 'top 75%', scrub: .7 } });
+        gsap.to('.timeline-track b', { left: '94%', ease: 'none',
+          scrollTrigger: { trigger: '.ai-composition', start: 'top 75%', end: 'bottom 40%', scrub: .5 } });
+        if (this.mobile.matches) {
+          gsap.fromTo('.mobile-editor-phone', { rotationZ: 5, y: 15 }, { rotationZ: -4, y: -15, ease: 'none',
+            scrollTrigger: { trigger: '.mobile-edit-showcase', start: 'top 80%', end: 'bottom 35%', scrub: .5 } });
+          gsap.to('.edit-scrub b', { left: '95%', ease: 'none',
+            scrollTrigger: { trigger: '.mobile-edit-showcase', start: 'top 75%', end: 'bottom 35%', scrub: .5 } });
+        }
+      }, this.element);
+      this.setupPreviews(generation);
+      if (this.mobile.matches) { this.element.dataset.studioState = 'mobile'; return; }
+      const [THREE, { RoomEnvironment }, composer] = await Promise.all([import('three'), import('three/addons/environments/RoomEnvironment.js'), import('../screen-composer.js')]);
+      this.composer = composer;
+      this.screenAssets = await composer.loadMedia();
+      if (generation !== this.generation) return;
+      this.createWorld(THREE, RoomEnvironment);
+      this.element.classList.add('is-immersive');
+      this.element.dataset.studioState = 'webgl';
+      this.animationContext.add(() => {
+        const poses = [
+          { px: 0, py: -1.45, pz: 0, rx: .04, ry: -.28, rz: -.09, scale: .78, orbit: -.45, light: 5 },
+          { px: 2.55, py: 0, pz: .7, rx: .22, ry: .62, rz: .14, scale: 1.02, orbit: .35, light: 9 },
+          { px: -3.35, py: -.8, pz: 0, rx: -.08, ry: -.38, rz: -.16, scale: .82, orbit: 1.35, light: 7 },
+          { px: 4.2, py: 1.5, pz: -2, rx: .32, ry: -.65, rz: .25, scale: .56, orbit: 2.4, light: 3 },
+          { px: -3.4, py: -2.1, pz: -.8, rx: -.18, ry: .48, rz: -.25, scale: .48, orbit: 3.3, light: 8 },
+          { px: -3, py: 0, pz: .2, rx: .04, ry: -.25, rz: -.14, scale: .96, orbit: 4.4, light: 6 },
+        ];
+        const atmospheres = [{cool:0, lift:-.3, spread:1}, {cool:.2, lift:0, spread:1}, {cool:0, lift:0, spread:1}, {cool:.8, lift:-1.8, spread:.55}, {cool:1, lift:0, spread:.8}, {cool:.1, lift:0, spread:1}];
+        poses.forEach((pose, index) => Object.assign(pose, atmospheres[index]));
+        Object.assign(this.pose, poses[0]);
+        // One scroll clock owns every pose: fast reverse scrolling cannot leave a later tween in control.
+        const scrollState = { progress: 0 };
+        let stops = [], distance = 1;
+        const updatePose = () => {
+          const position = scrollState.progress * distance;
+          let index = 0;
+          while (index < poses.length - 2 && position > stops[index + 1]) index++;
+          const fraction = Math.max(0, Math.min(1, (position - stops[index]) / (stops[index + 1] - stops[index])));
+          const eased = (1 - Math.cos(fraction * Math.PI)) / 2;
+          Object.keys(poses[0]).forEach(key => { this.pose[key] = poses[index][key] + (poses[index + 1][key] - poses[index][key]) * eased; });
+          this.screenPhase = index + Math.max(0, Math.min(1, (fraction - .5) / .25));
+          this.element.dataset.screen = String(Math.round(this.screenPhase));
+          this.syncFilm?.();
+          this.progressTarget.style.transform = 'scaleX(' + scrollState.progress + ')';
+          this.counterTarget.textContent = CHAPTERS[Math.min(5, index + (fraction > .5 ? 1 : 0))];
+          this.render();
+        };
+        const measure = () => {
+          const height = this.stageTarget.clientHeight;
+          distance = Math.max(1, this.element.scrollHeight - height);
+          stops = scenes.map((section, index) => index ? Math.max(1, section.offsetTop - height * .12) : 0);
+          updatePose();
+        };
+        measure();
+        gsap.to(scrollState, { progress: 1, ease: 'none', onUpdate: updatePose,
+          scrollTrigger: { trigger: this.element, start: 'top top', end: 'bottom bottom', scrub: .65, onRefresh: measure } });
+        gsap.to('.hero-heading', { y: -90, opacity: 0, ease: 'none',
+          scrollTrigger: { trigger: scenes[0], start: 'top top', end: '65% top', scrub: .5 } });
+      });
+      this.resizeWorld();
+      ScrollTrigger.refresh();
+      this.render();
+      this.playVideo(generation);
+    } catch (error) {
+      this.cleanup();
+      this.element.dataset.studioState = 'fallback';
+      console.info('VydFlow : aperçu statique activé.', error.message);
+    }
   }
+
+  createWorld(THREE, RoomEnvironment) {
+    this.resources = new Set();
+    const keep = resource => { this.resources.add(resource); return resource; };
+    const renderer = this.renderer = new THREE.WebGLRenderer({ canvas: this.canvasTarget, alpha: true, antialias: true, powerPreference: 'low-power' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    const scene = this.scene = new THREE.Scene();
+    const camera = this.camera = new THREE.PerspectiveCamera(38, 1, .1, 80);
+    camera.position.z = 11.5;
+    const room = new RoomEnvironment();
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    this.environment = pmrem.fromScene(room, .04);
+    scene.environment = this.environment.texture;
+    room.dispose();
+    pmrem.dispose();
+    const phone = this.phone = new THREE.Group();
+    scene.add(phone);
+    const rounded = (w, h, r) => {
+      const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+      s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+      s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+      s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); return s;
+    };
+    const mesh = (geometry, material, parent, x = 0, y = 0, z = 0) => {
+      const object = new THREE.Mesh(keep(geometry), keep(material));
+      object.position.set(x, y, z); parent.add(object); return object;
+    };
+    mesh(new THREE.ExtrudeGeometry(rounded(2.25, 4.18, .3), { depth: .17, bevelEnabled: true, bevelSegments: 3, bevelSize: .045, bevelThickness: .045, curveSegments: 24 }),
+      new THREE.MeshStandardMaterial({ color: 0x7e788b, metalness: 1, roughness: .22 }), phone);
+    mesh(new THREE.ShapeGeometry(rounded(2.2, 4.12, .28)), new THREE.MeshStandardMaterial({ color: 0x15131a, metalness: .7, roughness: .3, side: THREE.DoubleSide }), phone, 0, 0, -.05);
+    const screen = new THREE.ShapeGeometry(rounded(2.12, 3.99, .25), 32);
+    const uv = screen.attributes.uv, position = screen.attributes.position;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, .5 + position.getX(i) / 2.12 * (2.12 / 3.99) / (9 / 16), (position.getY(i) + 1.995) / 3.99);
+    this.screenCanvas = document.createElement('canvas');
+    this.screenCanvas.width = 540; this.screenCanvas.height = 960;
+    this.screenContext = this.screenCanvas.getContext('2d');
+    this.screenBuffers = [0, 1].map(() => { const canvas = document.createElement('canvas'); canvas.width = 540; canvas.height = 960; return canvas; });
+    this.screenTexture = keep(new THREE.CanvasTexture(this.screenCanvas));
+    this.screenTexture.colorSpace = THREE.SRGBColorSpace;
+    this.screenPhase = 0;
+    this.screenMaterial = new THREE.MeshBasicMaterial({ map: this.screenTexture });
+    mesh(screen, this.screenMaterial, phone, 0, 0, .22);
+    mesh(new THREE.ShapeGeometry(rounded(.67, .15, .075)), new THREE.MeshBasicMaterial({ color: 0x030305 }), phone, 0, 1.8, .235);
+    mesh(new THREE.BoxGeometry(.04, .42, .1), new THREE.MeshStandardMaterial({ color: 0xaaa1b6, metalness: 1, roughness: .2 }), phone, 1.17, .65, .08);
+    mesh(new THREE.BoxGeometry(.04, .22, .1), new THREE.MeshStandardMaterial({ color: 0xaaa1b6, metalness: 1, roughness: .2 }), phone, -1.17, .9, .08);
+    // Film-strip sculptures: broad metallic ribbons with fine illuminated edit rails.
+    this.ribbonMaterials = [];
+    this.violet = new THREE.Color(0x7950c8);
+    this.silver = new THREE.Color(0x617a8d);
+    this.sculpture = new THREE.Group();
+    scene.add(this.sculpture);
+    for (let j = 0; j < 3; j++) {
+      const vertices = [], indices = [], segments = 180;
+      for (let i = 0; i <= segments; i++) {
+        const angle = i / segments * Math.PI * 2;
+        for (const edge of [-1, 1]) {
+          const radius = 4.6 + j * .53 + edge * .12;
+          vertices.push(Math.cos(angle) * radius, Math.sin(angle) * radius * .55, Math.sin(angle * 2 + j * .7) * .75);
+        }
+        if (i < segments) { const n = i * 2; indices.push(n, n + 1, n + 2, n + 1, n + 3, n + 2); }
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      geometry.setIndex(indices); geometry.computeVertexNormals();
+      const material = new THREE.MeshStandardMaterial({ color: j === 1 ? 0x7950c8 : 0x494152, metalness: .95, roughness: .32, envMapIntensity: .5, transparent: true, opacity: .42, depthWrite: false, side: THREE.DoubleSide });
+      this.ribbonMaterials.push(material);
+      mesh(geometry, material, this.sculpture);
+    }
+    this.sculpture.position.z = -2.5;
+    this.sculpture.rotation.x = -.32;
+    scene.add(new THREE.AmbientLight(0xbfc7ff, .45));
+    const key = new THREE.DirectionalLight(0xf2edff, 4); key.position.set(3, 5, 5); scene.add(key);
+    this.rim = new THREE.PointLight(0x9a60ff, 8, 30, 1); this.rim.position.set(-4, 1, 4); scene.add(this.rim);
+    const cool = new THREE.DirectionalLight(0xbed4ff, 2); cool.position.set(4, -2, 2); scene.add(cool);
+    this.pose = { px: 0, py: -1.45, pz: 0, rx: .04, ry: -.28, rz: -.09, scale: .78, orbit: -.45, light: 5 };
+    this.cursor = { x: 0, y: 0 };
+    this.onPointer = event => {
+      this.cursor.x = (event.clientX / innerWidth - .5) * .12;
+      this.cursor.y = (event.clientY / innerHeight - .5) * .08;
+      this.render();
+    };
+    if (matchMedia('(pointer:fine)').matches) window.addEventListener('pointermove', this.onPointer, { passive: true });
+    this.resizeObserver = new ResizeObserver(() => this.resizeWorld());
+    this.resizeObserver.observe(this.stageTarget);
+    this.onContextLost = event => { event.preventDefault(); this.cleanup(); };
+    this.canvasTarget.addEventListener('webglcontextlost', this.onContextLost);
+    this.stageTarget.classList.add('ready');
+  }
+
+  resizeWorld() {
+    if (!this.renderer) return;
+    const { width, height } = this.stageTarget.getBoundingClientRect();
+    if (!width || !height) return;
+    this.renderer.setSize(width, height, false);
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.render();
+  }
+
+  render() {
+    if (!this.renderer || !this.pose) return;
+    this.drawPhoneScreen();
+    const p = this.pose;
+    // Compress horizontal staging on smaller desktop viewports, preserving the text columns.
+    const widthFactor = Math.min(1, this.camera.aspect / 1.65);
+    this.phone.position.set(p.px * widthFactor, p.py, p.pz);
+    this.phone.rotation.set(p.rx + this.cursor.y, p.ry + this.cursor.x, p.rz);
+    this.phone.scale.setScalar(p.scale);
+    this.sculpture.position.y = p.lift || 0;
+    this.sculpture.scale.y = p.spread || 1;
+    this.ribbonMaterials.forEach((material, index) => {
+      material.color.lerpColors(this.violet, this.silver, p.cool || 0).multiplyScalar(index === 1 ? 1 : .55);
+    });
+    this.sculpture.rotation.z = p.orbit;
+    this.sculpture.rotation.y = Math.sin(p.orbit) * .45;
+    this.rim.intensity = p.light;
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  drawPhoneScreen() {
+    if (!this.screenContext || !this.composer) return;
+    const phase = Math.max(0, Math.min(5, this.screenPhase || 0));
+    const first = Math.floor(phase), blend = phase - first;
+    const c = this.screenContext;
+    this.composer.drawScreen(this.screenBuffers[0].getContext('2d'), this.screenAssets, first, phase % 1, this.video);
+    c.clearRect(0, 0, 540, 960); c.globalAlpha = 1; c.drawImage(this.screenBuffers[0], 0, 0);
+    if (blend > 0) {
+      this.composer.drawScreen(this.screenBuffers[1].getContext('2d'), this.screenAssets, Math.min(5, first + 1), blend, this.video);
+      c.globalAlpha = blend; c.drawImage(this.screenBuffers[1], 0, 0); c.globalAlpha = 1;
+    }
+    this.screenTexture.needsUpdate = true;
+  }
+
+  setupPreviews(generation) {
+    this.previewVideos = [...this.element.querySelectorAll('[data-preview-src]')].filter(video => !video.hasAttribute('data-mobile-only') || this.mobile.matches);
+    const update = video => {
+      if (generation !== this.generation) return;
+      if (video.dataset.inView !== 'true' || document.hidden) { video.pause(); return; }
+      if (!video.getAttribute('src')) video.src = video.dataset.previewSrc;
+      video.play().then(() => {
+        if (generation !== this.generation || document.hidden || video.dataset.inView !== 'true') { video.pause(); return; }
+        video.classList.add('is-playing');
+      }).catch(() => video.classList.remove('is-playing'));
+    };
+    this.previewObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+      entry.target.dataset.inView = String(entry.isIntersecting); update(entry.target);
+    }), { threshold: .25 });
+    this.previewVideos.forEach(video => this.previewObserver.observe(video));
+    this.onPreviewVisibility = () => this.previewVideos?.forEach(update);
+    document.addEventListener('visibilitychange', this.onPreviewVisibility);
+  }
+
+  playVideo(generation) {
+    const video = this.video = document.createElement('video');
+    Object.assign(video, { src: this.element.dataset.videoSrc, muted: true, loop: true, playsInline: true, preload: 'metadata' });
+    let requesting = false;
+    const stop = () => { video.pause(); video.cancelVideoFrameCallback?.(this.frameCallback); this.frameCallback = null; this.renderer?.setAnimationLoop(null); };
+    const frame = () => {
+      if (generation !== this.generation || video.paused) return;
+      this.render(); this.frameCallback = video.requestVideoFrameCallback(frame);
+    };
+    this.syncFilm = () => {
+      const phase = this.screenPhase || 0;
+      const active = this.visible && !document.hidden && (phase < 1 || phase > 4);
+      if (!active) { stop(); return; }
+      if (!video.paused || requesting) return;
+      requesting = true;
+      video.play().then(() => {
+        requesting = false;
+        if (generation !== this.generation || !this.visible || document.hidden || (this.screenPhase >= 1 && this.screenPhase <= 4)) { stop(); return; }
+        if (video.requestVideoFrameCallback) this.frameCallback = video.requestVideoFrameCallback(frame);
+        else this.renderer?.setAnimationLoop(() => this.render());
+      }).catch(() => { requesting = false; this.render(); });
+    };
+    this.onVisibility = () => this.syncFilm?.();
+    document.addEventListener('visibilitychange', this.onVisibility);
+    this.visibilityObserver = new IntersectionObserver(entries => {
+      this.visible = entries[0].isIntersecting; this.syncFilm?.();
+    });
+    this.visibilityObserver.observe(this.element);
+  }
+
+  toggleMotion() {
+    this.paused = !this.paused;
+    this.toggleTarget.setAttribute('aria-pressed', String(this.paused));
+    this.toggleTarget.textContent = this.paused ? 'Activer les animations' : 'Mettre les animations en pause';
+    this.restart();
+  }
+
   cleanup() {
-    this.disposed=true;this.observer?.disconnect();this.resize?.disconnect();
-    this.tween?.scrollTrigger?.kill();this.tween?.kill();
-    window.removeEventListener('pointermove',this.onPointer);
-    this.canvasTarget.removeEventListener('webglcontextlost',this.onContextLost);
+    this.generation++;
+    this.observer?.disconnect();
+    this.resizeObserver?.disconnect();
+    this.visibilityObserver?.disconnect();
+    this.previewObserver?.disconnect();
+    document.removeEventListener('visibilitychange', this.onPreviewVisibility);
+    this.previewVideos?.forEach(video => { video.pause(); video.classList.remove('is-playing'); video.removeAttribute('src'); video.load(); });
+    this.previewVideos = null;
+    this.animationContext?.revert();
+    this.animationContext = null;
+    window.removeEventListener('pointermove', this.onPointer);
+    document.removeEventListener('visibilitychange', this.onVisibility);
+    this.canvasTarget.removeEventListener('webglcontextlost', this.onContextLost);
     this.renderer?.setAnimationLoop(null);
-    this.video?.pause();if(this.video){this.video.removeAttribute('src');this.video.load();}
-    this.videoTexture?.dispose();this.texture?.dispose();this.resources?.forEach(r=>r.dispose());this.renderer?.dispose();
+    if (this.video) { this.video.cancelVideoFrameCallback?.(this.frameCallback); this.video.pause(); this.video.removeAttribute('src'); this.video.load(); this.video = null; }
+    this.syncFilm = null; this.frameCallback = null;
+    this.screenContext = null; this.screenCanvas = null; this.screenBuffers = null; this.screenTexture = null;
+    this.screenAssets = null; this.composer = null;
+    this.resources?.forEach(resource => resource.dispose());
+    this.resources?.clear();
+    this.environment?.dispose(); this.environment = null;
+    this.renderer?.dispose(); this.renderer = null;
     this.stageTarget.classList.remove('ready');
+    this.element.classList.remove('is-immersive');
   }
-  disconnect(){this.cleanup();this.motion?.removeEventListener('change',this.onMotion);}
+
+  disconnect() {
+    this.connected = false;
+    this.cleanup();
+    this.motion.removeEventListener('change', this.onPreference);
+    this.mobile.removeEventListener('change', this.onPreference);
+  }
 }

@@ -13,6 +13,7 @@ final class WaitlistTest extends WebTestCase
         $client->request('GET', '/');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Tes vidéos.');
+        self::assertSelectorTextContains('title', 'VydFlow');
         self::assertSelectorExists('input[name="waitlist[_token]"]');
         $client->request('GET', '/confidentialite');
         self::assertResponseIsSuccessful();
@@ -22,6 +23,7 @@ final class WaitlistTest extends WebTestCase
     {
         $client = static::createClient([], ['REMOTE_ADDR' => '192.0.2.10']);
         $db = static::getContainer()->get(Connection::class);
+        self::assertSame('shortflow_test', $db->fetchOne('SELECT current_database()'));
         $db->executeStatement('DELETE FROM waitlist_entry');
         foreach (['Creator@example.fr', 'creator@example.fr'] as $email) {
             $crawler = $client->request('GET', '/');

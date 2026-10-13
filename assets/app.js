@@ -4,6 +4,7 @@ import '@fontsource/dm-sans/latin-600.css';
 import '@fontsource/dm-sans/latin-700.css';
 import '@fontsource/space-grotesk/latin-500.css';
 import './styles/app.css';
+import './styles/experience.css';
 import { Application } from '@hotwired/stimulus';
 import StudioController from './controllers/studio_controller.js';
 const app = Application.start();

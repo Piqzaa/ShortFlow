@@ -1,6 +1,6 @@
-# ShortFlow — instructions de travail
+# VydFlow — instructions de travail
 
-ShortFlow est un futur micro-SaaS français pour les créateurs de vidéos courtes. Positionnement : « Crée, prépare et publie tes vidéos courtes depuis un seul studio. » Internationalisation anglaise ultérieure.
+VydFlow est un futur micro-SaaS français pour les créateurs de vidéos courtes. Positionnement : « Crée, prépare et publie tes vidéos courtes depuis un seul studio. » Internationalisation anglaise ultérieure.
 
 ## Périmètre actuel
 Phase 1 uniquement : fondations Symfony, Docker, landing immersive et liste d’attente locale. Arrêt obligatoire après cette phase. Les aperçus bibliothèque et calendrier sont des illustrations HTML, pas des fonctionnalités métier.

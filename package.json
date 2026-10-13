@@ -1,11 +1,11 @@
 {
-  "name": "shortflow",
+  "name": "vydflow",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check": "node --check assets/app.js && node --check assets/controllers/studio_controller.js"
+    "check": "node --check assets/app.js && node --check assets/controllers/studio_controller.js && node --check assets/screen-composer.js"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",
