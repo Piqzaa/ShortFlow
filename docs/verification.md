@@ -1,3 +1,36 @@
+# Ajustement — confirmation email obligatoire avant connexion
+
+- UserChecker Symfony ajouté : compte non confirmé refusé après validation du mot de passe ; message dédié avec lien de renvoi. Un mot de passe incorrect garde une erreur générique. `/studio` exige ROLE_VERIFIED, y compris pour une ancienne session.
+- Aucun changement de schéma ni migration supplémentaire. Mailpit local déjà configuré reste utilisé pour les confirmations. Guide comptes, README, architecture, décisions et AGENTS mis à jour.
+- `docker compose exec php php scripts/check.php` : sortie 0 ; migrations test à jour, schémas dev/test conformes, 18 YAML / 7 Twig / conteneur valides, PHPStan niveau 5 sans erreur, CS-Fixer 0 correction sur 23 fichiers, **16 tests / 145 assertions** réussis sous PHP 8.4.26.
+- Nouveaux tests : refus avant confirmation, statut non révélé avec un mot de passe incorrect, reset ne confirmant pas l’adresse, connexion réussie après confirmation, ancienne session non confirmée refusée (403 attendu). Les tests existants restent passants ; les fixtures de connexion utilisent maintenant des comptes confirmés.
+- `npm run check` et `npm run build` : sortie 0 ; mêmes avertissements de ressources publiques et taille Three.js que la passe précédente. Lint Twig final relancé après ajout du style de lien : 7 templates valides. `git diff --check` : sortie 0.
+- Pas de nouveau parcours navigateur exécuté pour cet ajustement : validation du parcours et du lien via les tests HTTP Symfony. Aucune fonction bibliothèque ajoutée ; le studio conserve son écran vide.
+
+---
+
+# Vérification — 14 octobre 2026, V1 lot comptes et curseur
+
+## Résultats exécutés
+- Migration Version20261014211700 relue puis appliquée en dev et dans shortflow_test : tables app_user/account_token et index, sans SQL modifiant waitlist_entry. Bases/volume historiques conservés ; aucune suppression de données dev.
+- `docker compose exec php php scripts/check.php` : sortie 0 après correction d’une assertion trop stricte sur la chaîne Cache-Control. Schémas dev/test conformes ; 18 YAML, 7 Twig et conteneur valides ; PHPStan niveau 5 sans erreur ; CS-Fixer dry-run : 0 correction sur 22 fichiers ; PHPUnit : **14 tests / 120 assertions**, PHP 8.4.26. L’erreur CSRF journalisée pendant le test de logout invalide est attendue (403).
+- Tests comptes : accès anonyme interdit, email normalisé, mot de passe haché, doublon neutre, validation/CSRF, connexion insensible à la casse, logout CSRF, throttling, confirmation explicite unique, usage distinct reset/verify, expiration, récupération neutre, reset limité au propriétaire, invalidation des liens et session, origine de confiance des emails et stockage par empreinte. Tests uniquement sur shortflow_test, migration appliquée avant PHPUnit.
+- `npm run check` : sortie 0, inclut les contrôleurs account-token et cursor. `npm run build` : sortie 0, relancé après les derniers styles. Avertissements : chemins publics /media et /cursor*.svg résolus au runtime ; chunk Three.js existant 704,89 kB / 181,19 kB gzip, chargé dynamiquement.
+- `composer audit` : aucune vulnérabilité connue signalée. `npm audit` : sortie 0, aucune vulnérabilité ; première tentative bloquée par DNS sandbox, seconde avec accès réseau autorisé réussie.
+- `lint:twig templates` relancé après les derniers titres et textes : 7 templates valides. `git diff --check` : sortie 0.
+- Navigateur : inscription fictive locale, email effectivement reçu dans Mailpit, connexion, état vide, confirmation, disparition du bandeau après reconnexion et déconnexion vers la landing vérifiés. Le fragment du lien est transféré dans le formulaire et effacé de l’URL ; code masqué une fois rempli.
+- Rendus observés desktop (viewport initial 963 px) et mobile 390×844 : aucun débordement mesuré. Dashboard mobile : scrollWidth 375 px pour 390 px de viewport avec barre de défilement ; connexion : 390 px. Console sans erreur/warning au contrôle du studio.
+- Curseur : SVG original anthracite avec contour clair, halo violet dont la position suit la souris observée, curseur texte conservé dans les champs. Tab déplace le focus et masque le halo. Aucun élément du halo n’intercepte les clics.
+- Docker en fin de lot : PHP sur 127.0.0.1:8000, Mailpit sur 127.0.0.1:8025, PostgreSQL sans port hôte. Service superflu ajouté par la recette Mailer arrêté et retiré ; aucune donnée existante concernée.
+
+## Limites et périmètre
+- Intermittences de l’outil navigateur (timeouts de navigation/capture) ; les actions concernées ont été vérifiées ensuite via l’état de page. Pas de campagne multi-navigateurs, appareil physique ou benchmark de performance. Halo tactile/mouvement réduit désactivé dans le code ; ces préférences n’ont pas été simulées de bout en bout dans cette passe.
+- Compte fictif qa-studio@example.test créé dans la base dev pour le parcours navigateur et conservé. Mailpit est non persistant et réservé au local ; aucun email extérieur, service payant, compte fournisseur ou publication réelle.
+- Bibliothèque, calendrier, IA, OAuth et Stripe non implémentés. Pas de suppression de compte autonome ni de purge automatique des codes dans ce lot ; exigences de production documentées. Aucun commit, push ou déploiement.
+- Guide pédagogique : docs/accounts.md. Roadmap/architecture/décisions/AGENTS cohérents avec V1 progressive et génération BYOK. L’hybride reste une piste future.
+
+---
+
 # Vérification — 14 octobre 2026, clarification produit
 
 - npm run check : sortie 0.

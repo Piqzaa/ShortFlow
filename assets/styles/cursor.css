@@ -1,0 +1,10 @@
+/* The arrow remains native-sized and usable even before JavaScript is ready. */
+@media (hover:hover) and (pointer:fine) {
+  html,body { cursor:url('/cursor.svg') 3 3,auto; }
+  a,button,label[for],summary,[role="button"] { cursor:url('/cursor-active.svg') 3 3,pointer; }
+  input,textarea,[contenteditable="true"] { cursor:text; }
+  button:disabled,[aria-disabled="true"] { cursor:not-allowed; }
+}
+.cursor-halo { position:fixed;left:-95px;top:-95px;width:190px;height:190px;z-index:10000;pointer-events:none;border-radius:50%;opacity:0;background:radial-gradient(circle,#b59aff25 0%,#9b6dff12 26%,#9b6dff06 46%,transparent 70%);transition:opacity .2s ease;contain:strict; }
+.cursor-halo.is-visible { opacity:1; }
+@media (prefers-reduced-motion:reduce),(hover:none),(pointer:coarse) { .cursor-halo { display:none; } }

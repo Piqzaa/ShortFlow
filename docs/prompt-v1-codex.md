@@ -1,5 +1,7 @@
 # Prompt de lancement — VydFlow V1
 
+> Document historique remplacé le 14 octobre 2026 par docs/roadmap.md, docs/decisions.md et AGENTS.md. Les instructions ci-dessous ne sont plus une autorisation active. Le lot courant couvre les comptes et l’espace privé ; la cible V1 inclut ensuite calendrier et IA BYOK. Aucun système de crédits IA VydFlow.
+
 Tu travailles dans le projet Symfony existant VydFlow. Inspecte AGENTS.md, README.md, docs/architecture.md, docs/decisions.md, docs/roadmap.md, les tests, les routes et les fichiers existants avant de modifier le projet.
 
 ## Autorisation et objectif

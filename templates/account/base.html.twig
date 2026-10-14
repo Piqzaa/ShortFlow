@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ton compte — VydFlow{% endblock %}
+{% block body %}
+<div class="account-page">
+  <header class="account-header"><a class="wordmark" href="{{ path('app_home') }}" aria-label="VydFlow, accueil">vydflow<span class="brand-dot">/</span></a><a href="{{ path('app_home') }}">← Retour à l’accueil</a></header>
+  <main id="contenu" class="account-layout">
+    <aside class="account-story" aria-label="Le studio VydFlow"><span class="eyebrow">TON ESPACE CRÉATIF</span><h2>Garde l’élan.<br><span>Retrouve ton flow.</span></h2><p>Un espace à toi, pour donner une suite à tes idées.</p><div class="account-art" aria-hidden="true"><div class="account-art-frame"><img src="/media/creators/hero-fashion.webp" alt="" width="540" height="960"><span>UNE IDÉE PREND FORME.</span></div><div class="account-art-line"></div><span class="account-art-caption">VYDFLOW / STUDIO</span></div><small>VydFlow est en développement. Import, génération IA et publication arrivent progressivement.</small></aside>
+    <section class="account-panel" aria-labelledby="account-title">
+      {% for label, messages in app.flashes %}{% for message in messages %}<div class="account-notice {{ label }}" role="{{ label == 'error' ? 'alert' : 'status' }}">{{ message }}</div>{% endfor %}{% endfor %}
+      {% block account_content %}{% endblock %}
+      <p class="account-privacy"><a href="{{ path('app_privacy') }}">Confidentialité</a> · Prototype local</p>
+    </section>
+  </main>
+</div>
+{% endblock %}

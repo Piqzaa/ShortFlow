@@ -4,3 +4,11 @@ framework:
             policy: fixed_window
             limit: 5
             interval: '15 minutes'
+        account:
+            policy: fixed_window
+            limit: 5
+            interval: '15 minutes'
+        account_email:
+            policy: fixed_window
+            limit: 3
+            interval: '15 minutes'

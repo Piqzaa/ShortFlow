@@ -1,0 +1,19 @@
+{% extends 'account/base.html.twig' %}
+{% set copy = {
+  register: {title: 'Fais place à tes idées.', intro: 'Crée ton compte pour découvrir ton espace privé.', action: 'Créer mon compte'},
+  forgot: {title: 'On reprend l’accès.', intro: 'Indique ton email pour recevoir un lien de récupération valable 30 minutes.', action: 'Recevoir un lien'},
+  resend: {title: 'Confirme ton email.', intro: 'Demande un nouveau lien de confirmation, valable 24 heures.', action: 'Renvoyer un lien'},
+  verify: {title: 'C’est bien toi.', intro: 'Confirme ton adresse email pour préparer la suite dans ton studio.', action: 'Confirmer mon adresse'},
+  reset: {title: 'Un nouveau départ.', intro: 'Choisis un nouveau mot de passe pour retrouver ton espace.', action: 'Enregistrer mon mot de passe'}
+}[mode] %}
+{% block title %}{{ copy.title }} — VydFlow{% endblock %}
+{% block account_content %}
+<span class="eyebrow">TON COMPTE VYDFLOW</span><h1 id="account-title">{{ copy.title }}</h1><p>{{ copy.intro }}</p>
+{{ form_start(form, {attr: {class: 'account-form', 'data-controller': 'account-token'}}) }}
+  {{ form_errors(form) }}
+  {% for field in form %}{% if field.vars.name != '_token' %}{{ form_row(field) }}{% endif %}{% endfor %}
+  <button class="button" type="submit">{{ copy.action }} <span aria-hidden="true">↗</span></button>
+{{ form_end(form) }}
+{% if mode in ['verify', 'reset'] %}<p class="account-switch">Lien expiré ? <a href="{{ path(mode == 'reset' ? 'app_forgot_password' : 'app_resend_verification') }}">Recevoir un nouveau lien</a></p>{% endif %}
+<p class="account-switch">{% if mode == 'register' %}Déjà un compte ? {% endif %}<a href="{{ path('app_login') }}">{{ mode == 'register' ? 'Se connecter' : 'Revenir à la connexion' }}</a></p>
+{% endblock %}

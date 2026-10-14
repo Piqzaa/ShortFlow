@@ -1,0 +1,9 @@
+framework:
+    mailer:
+        dsn: '%env(MAILER_DSN)%'
+        message_bus: false
+
+when@test:
+    framework:
+        mailer:
+            dsn: 'null://null'

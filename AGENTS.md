@@ -3,8 +3,8 @@
 VydFlow est un futur micro-SaaS français pour les créateurs de vidéos courtes. Positionnement : « Crée, prépare et publie tes vidéos courtes depuis un seul studio. » Internationalisation anglaise ultérieure.
 
 ## Périmètre actuel
-Phase 1 uniquement : fondations Symfony, Docker, landing immersive et liste d’attente locale. Arrêt obligatoire après cette phase. Les aperçus bibliothèque et calendrier sont des illustrations HTML, pas des fonctionnalités métier.
-Ne pas démarrer OAuth, publication automatique, bibliothèque, calendrier métier, FFmpeg, Stripe ou génération IA sans demande explicite. Ne pas créer de classes futures spéculatives.
+Passage à la V1 autorisé le 14 octobre 2026. Lot courant : cadrage, comptes utilisateurs, vérification email, récupération de mot de passe et espace privé. Préserver la landing et la liste d’attente. Arrêt après ce lot pour bilan avant la bibliothèque.
+La V1 cible ensuite bibliothèque/import privé, génération IA BYOK (un fournisseur/un modèle), préparation/calendrier, intégrations sociales officielles et abonnement logiciel. Créer ces fonctions uniquement dans leur lot, sans classes futures spéculatives. Aucun wallet ni revente de générations IA : l’utilisateur finance directement son fournisseur. Une offre hybride reste une possibilité future non autorisée pour l’implémentation actuelle.
 
 ## Stack et architecture
 Monolithe Symfony 7.4 LTS ; PHP 8.4 Docker ; Doctrine ORM et PostgreSQL 16 ; Twig ; Stimulus ; Vite ; Three.js ; GSAP/ScrollTrigger. Aucun React, microservice, CQRS ou DDD complexe.
@@ -17,6 +17,7 @@ PHP : types explicites, conventions Symfony, injection de dépendances, attribut
 ## Sécurité
 Secrets exclusivement dans .env.local ignoré ou variables d’environnement. Les identifiants Compose sont exclusivement locaux. Serveur sur loopback, base sans port public. Formulaires avec CSRF, validation serveur, réponses neutres pour doublons et limiteur IP/honeypot. Aucun email dans les logs applicatifs. Ne pas exposer debug publiquement.
 À l’ajout d’authentification : Symfony Security, hashage password auto, autorisations et propriété des ressources. Futurs uploads privés : format réel, limite de taille, noms sûrs, prévention de traversée, autorisation propriétaire, arguments FFmpeg sécurisés, nettoyage temporaire. Futurs tokens OAuth chiffrés et absents des logs/front. Publications traçables et idempotentes, adaptateur par réseau.
+Confirmation d’email obligatoire avant connexion ; contrôler l’état avec le UserChecker Symfony après validation du mot de passe et protéger le studio par ROLE_VERIFIED. Les tests reçoivent les emails dans Mailpit local. Une récupération de mot de passe ne confirme pas l’adresse.
 
 ## Qualité
 Voir README pour les commandes. Exécuter les contrôles disponibles et rapporter exactement les résultats. Ne jamais annoncer un test non exécuté. Tests fonctionnels utilisant exclusivement shortflow_test, migrations appliquées avant PHPUnit. Ne pas supprimer les données du développeur. Analyse PHPStan niveau 5, CS-Fixer et lint Symfony. npm run check et npm run build pour le frontend. Vérifier desktop/mobile, boutons, clavier, console et fallback lorsque le navigateur le permet.

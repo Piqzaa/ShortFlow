@@ -6,9 +6,15 @@ services:
     volumes: [".:/app"]
     environment:
       DATABASE_URL: postgresql://shortflow:localdev@database:5432/shortflow?serverVersion=16&charset=utf8
+      MAILER_DSN: smtp://mailpit:1025
     depends_on:
       database:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+  mailpit:
+    image: axllent/mailpit:v1.27.8
+    ports: ["127.0.0.1:8025:8025"]
   database:
     image: postgres:16-alpine
     environment:

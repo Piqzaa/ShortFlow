@@ -2,7 +2,7 @@
 {% block body %}
 <header class="nav wrap">
   <a href="/" class="wordmark" aria-label="VydFlow, accueil"><span class="brand-symbol" aria-hidden="true">∨</span>vydflow<span class="brand-dot">/</span></a>
-  <nav aria-label="Navigation principale"><a href="#studio">L’expérience</a><a href="#organisation">Le studio</a><a href="#vision">La vision</a></nav>
+  <nav aria-label="Navigation principale"><a href="#studio">L’expérience</a><a href="#organisation">Le studio</a><a href="#vision">La vision</a><a href="{{ path('app_login') }}">Se connecter</a></nav>
   <a class="button small" href="#rejoindre">Rejoindre l’aventure <span aria-hidden="true">↗</span></a>
 </header>
 <main id="contenu">
@@ -40,7 +40,7 @@
       </article>
       {% endfor %}
     </div>
-    <p class="scene-disclaimer">Objectif V1 : publication immédiate sur les réseaux sélectionnés, sous réserve des autorisations des plateformes. Produit en développement ; aucune publication disponible actuellement.</p>
+    <p class="scene-disclaimer">Objectif V1 : préparation, programmation et publication sur les réseaux sélectionnés, sous réserve des autorisations des plateformes. Produit en développement ; aucune publication disponible actuellement.</p>
   </section>
   <section class="scene organization wrap" id="organisation" data-scene="organize" aria-labelledby="organization-title">
     <div class="scene-copy"><p class="section-label">03 / LE STUDIO</p><h2 id="organization-title">Tes idées en liberté.<br><em>Tout le reste, en place.</em></h2><p>Connecte-toi à ton espace, retrouve tes vidéos<br>et suis le résultat de chaque publication.</p></div>
@@ -59,10 +59,10 @@
       </div></div>
       <div class="preview-calendar"><div class="panel-heading"><span>Ta prochaine semaine</span><small>APERÇU</small></div><div class="week"><b>L</b><b>M</b><b>M</b><b>J</b><b>V</b><b>S</b><b>D</b></div><div class="calendar-date">MARDI <strong>14</strong></div><div class="calendar-block"><img src="/media/creators/craft-thumb.webp" alt="" width="270" height="480" loading="lazy"><div>Le geste<small>Reel · 18:00 · À préparer</small></div></div><div class="calendar-block muted"><img src="/media/creators/sound-thumb.webp" alt="" width="270" height="480" loading="lazy"><div>Le son<small>Short · Jeudi / 12:00</small></div></div><div class="calendar-empty">+ La prochaine idée</div><p class="calendar-note">Ton rythme, en un regard.</p></div>
       </div><div class="preview-bottom"><span>6 créations de démonstration</span><span>IMPORTER → PRÉPARER → PUBLIER</span></div></div>
-    </div><p class="scene-disclaimer">Aperçu illustratif du futur studio. Bibliothèque et brouillons prévus pour la V1 ; calendrier et programmation prévus ensuite.</p>
+    </div><p class="scene-disclaimer">Aperçu illustratif du futur studio. Bibliothèque, brouillons, calendrier et programmation prévus pour la V1.</p>
   </section>
   <section class="scene vision wrap" id="vision" data-scene="vision" aria-labelledby="vision-title">
-    <div class="scene-copy"><p class="section-label">04 / L’HORIZON CRÉATIF</p><span class="pill">Bientôt disponible</span><h2 id="vision-title">De l’imagination<br><em>au mouvement.</em></h2><p>Et si une phrase devenait le début d’une vidéo&nbsp;?<br>Le studio IA fait partie de notre vision.</p><p class="honest-note">Concept exploratoire. Aucune génération IA disponible actuellement.</p></div>
+    <div class="scene-copy"><p class="section-label">04 / L’HORIZON CRÉATIF</p><span class="pill">Bientôt disponible</span><h2 id="vision-title">De l’imagination<br><em>au mouvement.</em></h2><p>Et si une phrase devenait le début d’une vidéo&nbsp;?<br>Le studio IA fait partie de notre vision.</p><p class="honest-note">Studio IA prévu pour la V1. Aucune génération IA disponible actuellement.</p></div>
     <div class="ai-composition" aria-label="Concept illustratif : instruction, génération, timeline et vidéo finale">
       <div class="prompt-card"><span>01 / TON INSTRUCTION <b>✳</b></span><p>« Une raie de verre dans un océan de nuit.<br>Des reflets irisés. Un mouvement fluide. »</p><small>CONCEPT · TEXTE VERS VIDÉO</small></div>
       <div class="generation-line"><span>02 / EXPLORATION</span><i></i><span>↘</span></div>
@@ -74,5 +74,5 @@
 </div>
 <section class="join section" id="rejoindre" aria-labelledby="join-title"><div class="wrap join-inner"><span class="eyebrow"><i></i> EN DÉVELOPPEMENT · ACCÈS À VENIR</span><h2 id="join-title">Ton prochain flow<br><em>commence ici.</em></h2><p>VydFlow prend forme. Rejoins la liste d’attente<br>pour découvrir le studio à son ouverture.</p>{% for message in app.flashes('success') %}<div class="notice success" role="status">{{ message }}</div>{% endfor %}{% for message in app.flashes('error') %}<div class="notice" role="alert">{{ message }}</div>{% endfor %}{{ form_start(waitlist, {attr: {class: 'waitlist-form'}, action: path('app_home') ~ '#rejoindre'}) }}{{ form_errors(waitlist) }}<div class="email-field">{{ form_label(waitlist.email) }}<div class="input-row">{{ form_widget(waitlist.email) }}<button class="button" type="submit">Rejoindre la liste <span aria-hidden="true">↗</span></button></div>{{ form_errors(waitlist.email) }}</div><div class="honeypot" aria-hidden="true">{{ form_row(waitlist.website) }}</div>{{ form_end(waitlist) }}<small>Gratuit. Sans carte bancaire. Un email pour l’ouverture, rien de plus.<br>Ton email reste privé. <a href="{{ path('app_privacy') }}">Utilisation de tes données</a></small></div></section>
 </main>
-<footer class="wrap footer"><a href="/" class="wordmark">vydflow /</a><span>IMPORTE. PRÉPARE. PUBLIE.</span><a href="{{ path('app_privacy') }}">Confidentialité</a><small>© {{ 'now'|date('Y') }} VydFlow</small></footer>
+<footer class="wrap footer"><a href="/" class="wordmark">vydflow /</a><span>IMPORTE. PRÉPARE. PUBLIE.</span><a href="{{ path('app_login') }}">Se connecter</a><a href="{{ path('app_privacy') }}">Confidentialité</a><small>© {{ 'now'|date('Y') }} VydFlow</small></footer>
 {% endblock %}

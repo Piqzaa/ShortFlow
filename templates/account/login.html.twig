@@ -1,0 +1,15 @@
+{% extends 'account/base.html.twig' %}
+{% block title %}Connexion — VydFlow{% endblock %}
+{% block account_content %}
+<span class="eyebrow">HEUREUX DE TE RETROUVER</span><h1 id="account-title">Reprends le fil.</h1><p>Connecte-toi à ton espace VydFlow.</p>
+{% if confirmation_required %}<div class="account-notice error" role="alert">Confirme ton adresse email avant de te connecter. Consulte le message reçu ou <a class="account-secondary" href="{{ path('app_resend_verification') }}">demande un nouveau lien de confirmation</a>.</div>{% elseif login_error %}<div class="account-notice error" role="alert">Connexion impossible. Vérifie tes informations ou réessaie dans 15 minutes après plusieurs tentatives.</div>{% endif %}
+<form method="post" action="{{ path('app_login') }}" class="account-form">
+  <div><label for="login-email">Adresse email</label><input id="login-email" type="email" name="_username" value="{{ last_email }}" autocomplete="email" required maxlength="254"></div>
+  <div><label for="login-password">Mot de passe</label><input id="login-password" type="password" name="_password" autocomplete="current-password" required></div>
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+  <a class="account-secondary" href="{{ path('app_forgot_password') }}">Mot de passe oublié ?</a>
+  <button class="button" type="submit">Se connecter <span aria-hidden="true">↗</span></button>
+</form>
+<p class="account-switch">Pas encore de compte ? <a href="{{ path('app_register') }}">Créer mon compte</a></p>
+<a class="account-secondary" href="{{ path('app_resend_verification') }}">Renvoyer un lien de confirmation</a>
+{% endblock %}
