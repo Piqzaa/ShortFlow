@@ -51,11 +51,17 @@ La clé doit provenir de random_bytes(32) et être encodée en base64. Générer
 
 Scopes demandés : youtube.upload pour envoyer et youtube.readonly pour afficher la chaîne et suivre les traitements. VydFlow ne demande pas de mot de passe Google. Le compte est choisi chez Google. La déconnexion efface les tokens de la base VydFlow ; elle n’annule pas les vidéos déjà reçues et ne révoque pas automatiquement l’autorisation Google. Le lien vers les connexions Google permet de retirer celle-ci.
 
-Démarrer le worker dans un terminal séparé :
+Le worker est désormais un service Docker démarré par `docker compose up -d`. Après une mise à jour de l’image : `docker compose build php` puis `docker compose up -d`. Aucune commande de consommation dans un terminal séparé n’est nécessaire. Dès que la connexion est configurée et qu’une publication est confirmée, son traitement commence automatiquement.
 
-    docker compose exec php php bin/console messenger:consume publications --time-limit=3600 --memory-limit=256M
+### Le worker et ses composants
 
-Sans worker, les demandes restent En attente. Ne jamais lancer un worker test pendant PHPUnit.
+- `compose.yaml` : service worker sans port public, partageant l’image PHP, les fichiers privés et la base dev. `restart: unless-stopped` assure sa relance après sortie, notamment après sa limite d’une heure. Un arrêt explicite reste respecté.
+- `docker/php/worker.sh` : attend Composer et la table Messenger avant de lancer la consommation. Il n’installe rien et n’applique pas de migration implicitement. Si l’attente échoue, Docker relance le service.
+- `docker/php/Dockerfile` : extension pcntl pour recevoir les signaux d’arrêt. Docker laisse cinq minutes au processus pour terminer l’étape en cours ; la session reprenable reste conservée en cas d’interruption.
+
+Le transport Doctrine est la boîte des tâches à effectuer ; le worker est le processus permanent qui appelle le handler Symfony. Le navigateur peut être fermé pendant le transfert. Les limites mémoire/temps évitent un processus vieillissant sans borne ; Docker reprend ensuite la consommation. APP_ENV=dev est fixé pour éviter toute consommation de la base de test.
+
+Comment vérifier : `docker compose ps`, `docker compose logs --tail 30 worker`, puis actualiser Publications. Sans worker, les demandes restent En attente. Après un changement de code PHP ou de secrets .env.local, `docker compose restart worker` recharge la configuration. Ne jamais lancer un worker test pendant PHPUnit. Déploiement futur : traiter les messages techniques échoués et surveiller la file ; cette configuration reste locale.
 
 ## Comment tester
 
