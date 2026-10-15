@@ -105,6 +105,49 @@ final class YouTubePublicationTest extends WebTestCase
         return $job;
     }
 
+    public function testPublishedBadgeRequiresSuccessAndKeepsOwnerIsolation(): void
+    {
+        $video = $this->video($this->alice);
+        $foreign = $this->video($this->bob);
+        $job = $this->job($video);
+        $repository = static::getContainer()->get(\App\Repository\VideoAssetRepository::class);
+        self::assertSame([], $repository->publishedPlatforms($this->alice, []));
+        $this->client->loginUser($this->alice);
+        $this->client->request('GET', '/studio/bibliotheque');
+        self::assertSelectorNotExists('.video-published');
+        $job->uploaded('abcdefghijk');
+        $this->em()->flush();
+        self::assertSame([], $repository->publishedPlatforms($this->alice, [$video]));
+        $job->change('published');
+        $connection = $this->em()->getRepository(YouTubeConnection::class)->findOneBy(['owner' => $this->alice]);
+        $duplicate = new YouTubePublication($this->alice, $video, $connection, bin2hex(random_bytes(32)), 'Clip bis', '', 'private', false, false);
+        $duplicate->uploaded('bcdefghijkl');
+        $duplicate->change('published');
+        $this->em()->persist($duplicate);
+        // Even an inconsistent owner/source record must never leak a badge.
+        $inconsistent = new YouTubePublication($this->alice, $foreign, $connection, bin2hex(random_bytes(32)), 'Foreign', '', 'private', false, false);
+        $inconsistent->uploaded('cdefghijklm');
+        $inconsistent->change('published');
+        $this->em()->persist($inconsistent);
+        $this->em()->remove($connection);
+        $this->em()->flush();
+        self::assertSame([$video->getId() => ['youtube']], $repository->publishedPlatforms($this->alice, [$video, $foreign]));
+        foreach (['/studio', '/studio/bibliotheque', '/studio/bibliotheque/'.$video->getId()] as $url) {
+            $this->client->request('GET', $url);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorCount(1, '.video-published');
+            self::assertSelectorTextContains('.video-published', 'Déjà publiée');
+            self::assertSelectorExists('.video-published svg[role="img"][aria-label="YouTube"]');
+        }
+        $this->client->loginUser($this->bob);
+        $this->client->request('GET', '/studio/bibliotheque');
+        self::assertSelectorNotExists('.video-published');
+        $this->em()->find(YouTubePublication::class, $job->getId())->change('failed');
+        $this->em()->find(YouTubePublication::class, $duplicate->getId())->change('cancelled');
+        $this->em()->flush();
+        self::assertSame([], $repository->publishedPlatforms($this->alice, [$video]));
+    }
+
     public function testAuthenticationSelectionOwnershipAndCsrf(): void
     {
         $own = $this->video($this->alice);
@@ -361,6 +404,6 @@ final class YouTubePublicationTest extends WebTestCase
         self::assertSame(0, $this->em()->getRepository(YouTubeConnection::class)->count([]));
         $fresh = $this->em()->find(YouTubePublication::class, $job->getId());
         static::getContainer()->get(PublishYouTubeHandler::class)(new PublishYouTube((int) $job->getId()));
-        self::assertSame('paused',$fresh->getStatus());
+        self::assertSame('paused', $fresh->getStatus());
     }
 }

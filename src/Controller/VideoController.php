@@ -36,7 +36,9 @@ final class VideoController extends AbstractController
         $pages = max(1, (int) ceil($usage['count'] / 12));
         $page = max(1, min($pages, $request->query->getInt('page', 1)));
 
-        return $this->page('library/index.html.twig', ['videos' => $this->videos->page($user, $page), 'usage' => $usage, 'page' => $page, 'pages' => $pages]);
+        $videos = $this->videos->page($user, $page);
+
+        return $this->page('library/index.html.twig', ['videos' => $videos, 'usage' => $usage, 'page' => $page, 'pages' => $pages, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, $videos)]);
     }
 
     #[Route('/importer', name: 'app_video_upload', methods: ['GET', 'POST'])]
@@ -83,7 +85,7 @@ final class VideoController extends AbstractController
             }
         }
 
-        return $this->page('library/show.html.twig', ['video' => $video, 'form' => $form], $form->isSubmitted() ? 422 : 200);
+        return $this->page('library/show.html.twig', ['video' => $video, 'form' => $form, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, [$video])], $form->isSubmitted() ? 422 : 200);
     }
 
     #[Route('/{id}/lecture', name: 'app_video_stream', requirements: ['id' => '\d+'], methods: ['GET', 'HEAD'])]

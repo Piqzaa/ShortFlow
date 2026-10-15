@@ -1,3 +1,10 @@
+# Vérification — 16 octobre 2026, repère de publication réussie
+
+- Mention « Déjà publiée » et icône YouTube accessible dans la bibliothèque, le dashboard et la fiche vidéo. Une requête groupée par page, succès avec identifiant distant uniquement, double filtre propriétaire, déduplication des icônes. Historique indépendant de la connexion actuelle ; aucune nouvelle publication externe.
+- Test fonctionnel ciblé : sortie 0, 1 test / 24 assertions. Couvre les trois vues, queued/processing/failed/cancelled, doublons, déconnexion et dossier d’un autre propriétaire. Base shortflow_test déjà migrée au contrôle complet précédent. Le premier passage a révélé une entité de test détachée entre requêtes HTTP ; le test recharge désormais les entités avant leur modification.
+- PHPStan : sans erreur ; lint Twig bibliothèque : 6 templates valides ; npm run check/build : sorties 0 avec les avertissements Vite déjà documentés ; git diff --check sans erreur de contenu. Contrôle visuel navigateur tenté, navigation locale interrompue par expiration CDP ; aucun résultat visuel desktop/mobile annoncé pour ce badge. Aucun nouveau contrôle complet de 46 tests annoncé.
+- Décision du propriétaire pour la suite : passer son Instagram personnel en Créateur puis intégrer Reels avant TikTok. Le changement réel du compte et les identifiants Meta ne sont pas encore confirmés ; aucun code ni compte Instagram/TikTok connecté dans cette étape.
+
 # Vérification — 16 octobre 2026, rangement des commits
 
 - Contrôle complet `docker compose exec -T php php scripts/check.php` : sortie 0 ; migrations shortflow_test à jour, schémas dev/test valides, 19 YAML et 18 Twig valides, conteneur valide, PHPStan sans erreur, CS-Fixer 0/51, PHPUnit 45 tests / 436 assertions en 5 min 45 s. Les erreurs HTTP affichées correspondent aux scénarios négatifs attendus.

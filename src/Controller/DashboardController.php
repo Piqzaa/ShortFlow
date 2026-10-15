@@ -14,7 +14,8 @@ final class DashboardController extends AbstractController
     #[Route('/studio', name: 'app_dashboard', methods: ['GET'])]
     public function index(#[CurrentUser] User $user, VideoAssetRepository $videos): Response
     {
-        $response = $this->render('studio/index.html.twig', ['videos' => $videos->page($user, 1, 4), 'usage' => $videos->usage($user)]);
+        $recent = $videos->page($user, 1, 4);
+        $response = $this->render('studio/index.html.twig', ['videos' => $recent, 'usage' => $videos->usage($user), 'publishedPlatforms' => $videos->publishedPlatforms($user, $recent)]);
         $response->headers->set('Cache-Control', 'no-store, private');
 
         return $response;

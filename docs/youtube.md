@@ -80,6 +80,14 @@ Sources officielles consultées : https://developers.google.com/youtube/data/ref
 
 ## Navigation dans l’application
 
+### Repère des vidéos déjà publiées — 16 octobre 2026
+
+Objectif : repérer une vidéo déjà envoyée avec succès sans ouvrir son historique. La bibliothèque, les dernières vidéos du dashboard et la fiche vidéo affichent « Déjà publiée » avec l’icône YouTube accessible. Ce repère indique un succès enregistré par VydFlow, y compris pour une vidéo privée/non répertoriée ; il ne vérifie pas en permanence si la vidéo distante existe encore.
+
+`VideoAssetRepository::publishedPlatforms()` interroge les publications réussies des vidéos affichées en une seule requête, filtrée sur le propriétaire de la vidéo et de l’envoi. `DISTINCT` évite de répéter l’icône après plusieurs envois. Les contrôleurs transmettent la correspondance vidéo/plateformes à Twig ; `templates/library/_published.html.twig` produit le repère commun, et `assets/styles/library.css` le dispose avec un espacement de 9 px et un retour à la ligne possible. Aucun champ ou migration supplémentaire, aucune requête Google à l’affichage, aucune icône TikTok/Instagram anticipée.
+
+Flux Symfony : requête autorisée → vidéos du propriétaire → requête Doctrine des succès correspondants → variables du contrôleur → composant Twig échappé. Le succès historique persiste après déconnexion de YouTube ; queued/processing/failed/cancelled ne créent pas de repère. Test ciblé : `docker compose exec -T -e SHELL_VERBOSITY=-1 php php vendor/bin/phpunit --filter testPublishedBadgeRequiresSuccessAndKeepsOwnerIsolation`. Il couvre les trois vues, l’absence avant succès, les doublons, la déconnexion et l’isolation propriétaire avec données synthétiques dans shortflow_test.
+
 Un compte confirmé connecté arrive directement au studio en ouvrant /. Le logo du studio mène à sa vue d’ensemble ; le footer conserve seulement Confidentialité. Se déconnecter ramène à la landing. Les cases de sélection et de préparation gardent 14 px d’espace avec leur libellé, même sur plusieurs lignes.
 
 ## Essai de configuration réelle — 15 octobre 2026
