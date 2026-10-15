@@ -12,3 +12,7 @@ framework:
             policy: fixed_window
             limit: 3
             interval: '15 minutes'
+        video_upload:
+            policy: fixed_window
+            limit: 10
+            interval: '15 minutes'

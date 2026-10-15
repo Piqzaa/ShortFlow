@@ -1,0 +1,8 @@
+<div class="video-grid">
+{% for video in videos %}
+<article class="video-card">
+  <a class="video-card-preview" href="{{ path('app_video_show', {id: video.id}) }}" aria-label="Ouvrir {{ video.title }}"><video src="{{ path('app_video_stream', {id: video.id}) }}#t=0.1" preload="metadata" muted playsinline aria-hidden="true"></video><span class="video-card-play" aria-hidden="true">▶</span><span class="video-card-duration">{{ (video.duration / 60)|round(0, 'floor') }}:{{ '%02d'|format(video.duration|round(0, 'floor') % 60) }}</span><span class="video-card-format">{{ video.width == video.height ? 'Carré' : (video.height > video.width ? 'Vertical' : 'Horizontal') }}</span></a>
+  <div class="video-card-meta"><h3><a href="{{ path('app_video_show', {id: video.id}) }}">{{ video.title }}</a></h3><p>{{ video.width }} × {{ video.height }} · {{ (video.byteSize / 1048576)|number_format(1, ',', ' ') }} Mo</p><small>Importée le {{ video.createdAt|date('d/m/Y') }}</small></div>
+</article>
+{% endfor %}
+</div>

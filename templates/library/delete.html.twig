@@ -1,0 +1,5 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Supprimer une vidéo — VydFlow{% endblock %}
+{% block studio_content %}
+<section class="video-delete-panel"><span class="eyebrow">FAIRE DE LA PLACE</span><h1>Supprimer cette vidéo ?</h1><p><strong>{{ video.title }}</strong> sera retirée de ta bibliothèque et son fichier supprimé. Cette action est définitive.</p><form method="post" action="{{ path('app_video_delete', {id: video.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('delete_video_' ~ video.id) }}"><div class="video-delete-actions"><a class="button button-outline" href="{{ path('app_video_show', {id: video.id}) }}">Garder ma vidéo</a><button class="button button-danger" type="submit">Supprimer définitivement</button></div></form></section>
+{% endblock %}

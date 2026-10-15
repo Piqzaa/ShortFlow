@@ -1,22 +1,6 @@
-{% extends 'base.html.twig' %}
-{% block title %}Mon studio — VydFlow{% endblock %}
-{% block body %}
-<div class="studio-shell">
-  <aside class="studio-sidebar">
-    <a class="wordmark" href="{{ path('app_home') }}" aria-label="VydFlow, accueil">vydflow<span class="brand-dot">/</span></a>
-    <span class="studio-nav-label">ESPACE CRÉATIF</span>
-    <nav aria-label="Navigation du studio"><a href="{{ path('app_dashboard') }}" aria-current="page"><span aria-hidden="true">▦</span> Vue d’ensemble</a><span class="studio-nav-soon">Bibliothèque <small>À venir</small></span><span class="studio-nav-soon">Studio IA <small>À venir</small></span><span class="studio-nav-soon">Calendrier <small>À venir</small></span><span class="studio-nav-soon">Connexions <small>À venir</small></span></nav>
-    <div class="studio-profile"><span class="studio-avatar" aria-hidden="true">{{ app.user.email|first|upper }}</span><div><strong>Mon espace</strong><small>{{ app.user.email }}</small></div></div>
-    <form method="post" action="{{ path('app_logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}"><button class="studio-logout" type="submit">Se déconnecter ↗</button></form>
-  </aside>
-  <main id="contenu" class="studio-main">
-    <header class="studio-topbar"><span>MON STUDIO <span aria-hidden="true">/</span> Vue d’ensemble</span><span class="pill">Version en développement</span></header>
-    {% for label, messages in app.flashes %}{% for message in messages %}<div class="account-notice {{ label }}" role="{{ label == 'error' ? 'alert' : 'status' }}">{{ message }}</div>{% endfor %}{% endfor %}
-    {% if not app.user.verified %}<section class="studio-verification" aria-label="Confirmation de ton compte"><div><strong>Une dernière étape pour ton compte.</strong><p>Confirme ton adresse avec le lien reçu par email.</p></div><a href="{{ path('app_resend_verification') }}">Renvoyer un lien ↗</a></section>{% endif %}
-    <div class="studio-heading"><div><span class="eyebrow">LE POINT DE DÉPART DE TES CRÉATIONS</span><h1>Ton studio.<br><span>Tout commence ici.</span></h1><p>Ton compte est prêt. La suite se construit, une étape à la fois.</p></div><span class="studio-status">{{ app.user.verified ? 'Email confirmé' : 'Email à confirmer' }}</span></div>
-    <section class="studio-library" aria-labelledby="library-title"><div class="studio-section-heading"><h2 id="library-title">Ta bibliothèque</h2><span>Import disponible au prochain lot</span></div><div class="studio-empty"><div class="studio-empty-art" aria-hidden="true"><span>+</span></div><h3>Une place pour tes prochaines vidéos.</h3><p>Tu retrouveras ici tes imports et tes clips générés.<br>La bibliothèque n’est pas encore disponible.</p><span class="studio-future-action">Import vidéo · À venir</span></div></section>
-    <section class="studio-next" aria-labelledby="next-title"><h2 id="next-title">Le parcours de tes idées</h2><div class="studio-steps"><article><span>01 / RASSEMBLER</span><h3>Tes vidéos, au même endroit.</h3><p>Une bibliothèque privée pour importer et retrouver tes créations.</p><small>Prochaine étape</small></article><article><span>02 / CRÉER</span><h3>Donne vie à ton idée.</h3><p>Un studio IA connecté à ton fournisseur, qui te facture directement.</p><small>Prévu dans la V1</small></article><article><span>03 / PARTAGER</span><h3>Prépare leur prochaine scène.</h3><p>Calendrier et publication sur les réseaux, selon les accès autorisés.</p><small>Prévu dans la V1</small></article></div></section>
-    <footer class="studio-footer"><a href="{{ path('app_home') }}">← Découvrir VydFlow</a><a href="{{ path('app_privacy') }}">Confidentialité</a></footer>
-  </main>
-</div>
+{% extends 'studio/base.html.twig' %}
+{% block studio_content %}
+<div class="studio-heading dashboard-intro"><div><span class="eyebrow">LE POINT DE DÉPART DE TES CRÉATIONS</span><h1>Ton studio.<br><span>Garde l’élan.</span></h1><p>Importe tes vidéos, retrouve tes idées et prépare la suite.</p><a class="button small" href="{{ path('app_video_upload') }}">Importer une vidéo <span aria-hidden="true">+</span></a></div></div>
+<section class="studio-library" aria-labelledby="library-title"><div class="studio-section-heading"><h2 id="library-title">Tes dernières vidéos</h2><a class="dashboard-library-link" href="{{ path('app_library') }}">Toute la bibliothèque · {{ usage.count }} ↗</a></div>
+{% if videos %}{% include 'library/_cards.html.twig' %}{% else %}<div class="studio-empty"><div class="studio-empty-art" aria-hidden="true"><span>+</span></div><h3>Une place pour tes prochaines vidéos.</h3><p>Importe ta première création dans ta bibliothèque privée.</p><a class="button small" href="{{ path('app_video_upload') }}">Importer ma première vidéo <span aria-hidden="true">↗</span></a></div>{% endif %}</section>
 {% endblock %}
