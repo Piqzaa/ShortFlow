@@ -1,6 +1,6 @@
-# Intégrations plateformes — aucune active
+# Intégrations plateformes — premier envoi YouTube validé localement
 
-> Mise à jour V1 du 14 octobre 2026 : intégrations officielles prévues progressivement dans la V1 commerciale, après les comptes, la bibliothèque, l’IA BYOK et le calendrier. L’ancienne répartition V1 manuelle/V2 API ci-dessous est historique. Aucun accès social ou fournisseur n’est configuré dans le lot comptes.
+> Mise à jour du 16 octobre 2026 : publication immédiate prioritaire après comptes/bibliothèque. Connexion OAuth et premier transfert YouTube réels autorisés : traitement réussi, visibilité demandée non répertoriée, sans vérification visuelle dans YouTube Studio (docs/verification.md). Le worker Docker est automatique. Arrêt pour bilan avant Instagram/TikTok/IA. La cible du lancement comprend ensuite calendrier, IA BYOK, montage guidé et séries récurrentes avec validation par défaut et automatisation explicitement activée selon les capacités autorisées. docs/roadmap.md fait référence pour l’ordre et la vision. L’ancienne répartition V1 manuelle/V2 API ci-dessous est historique ; les capacités externes restent à revalider dans chaque lot.
 
 ## Étude préliminaire et points à résoudre
 - TikTok : le Direct Post non audité reste privé. Vérifier audit, scope video.publish, UX de consentement, capacités du créateur et restrictions de planification avant implémentation : https://developers.tiktok.com/docs/en/content-posting-api-get-started et https://developers.tiktok.com/docs/en/content-sharing-guidelines.
