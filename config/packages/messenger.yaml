@@ -1,3 +1,22 @@
 framework:
     messenger:
-        transports: {}
+        failure_transport: publication_failures
+        transports:
+            publications:
+                dsn: 'doctrine://default'
+                options:
+                    queue_name: publications
+                    auto_setup: false
+                    redeliver_timeout: 300
+                    use_notify: false
+                retry_strategy:
+                    max_retries: 5
+                    delay: 30000
+            publication_failures:
+                dsn: 'doctrine://default'
+                options:
+                    queue_name: publication_failures
+                    auto_setup: false
+                    use_notify: false
+        routing:
+            App\Message\PublishYouTube: publications

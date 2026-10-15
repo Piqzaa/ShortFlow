@@ -18,3 +18,7 @@ app.register('studio', StudioController);
 app.register('account-token', AccountTokenController);
 app.register('cursor', CursorController);
 app.register('upload', UploadController);
+
+import './styles/publication.css';
+import SelectionController from './controllers/selection_controller.js';
+app.register('selection', SelectionController);

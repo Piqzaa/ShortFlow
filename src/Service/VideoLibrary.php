@@ -74,6 +74,10 @@ final class VideoLibrary
             $this->em->wrapInTransaction(function () use ($video, &$trash): void {
                 $this->em->lock($video->getOwner(), LockMode::PESSIMISTIC_WRITE);
                 $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
+                $active = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM youtube_publication WHERE source_id = ? AND status IN ('queued', 'uploading', 'processing', 'paused')", [$video->getId()]);
+                if ((int) $active > 0) {
+                    throw new VideoLibraryException('Cette vidéo a un envoi en cours ou suspendu. Termine cet envoi avant de la supprimer.');
+                }
                 $trash = $this->storage->stageDeletion($video->getStorageName());
                 $this->em->remove($video);
             });

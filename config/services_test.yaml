@@ -1,0 +1,4 @@
+services:
+    youtube.http:
+        class: Symfony\Component\HttpClient\MockHttpClient
+        public: true
