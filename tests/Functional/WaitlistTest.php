@@ -10,9 +10,9 @@ final class WaitlistTest extends WebTestCase
     public function testLandingAndPrivacyAreAccessible(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/');
+        $client->request('GET', '/liste-attente');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1', 'Tes vidéos.');
+        self::assertSelectorTextContains('h1', 'La suite de VydFlow.');
         self::assertSelectorTextContains('title', 'VydFlow');
         self::assertSelectorExists('input[name="waitlist[_token]"]');
         $client->request('GET', '/confidentialite');
@@ -26,9 +26,9 @@ final class WaitlistTest extends WebTestCase
         self::assertSame('shortflow_test', $db->fetchOne('SELECT current_database()'));
         $db->executeStatement('DELETE FROM waitlist_entry');
         foreach (['Creator@example.fr', 'creator@example.fr'] as $email) {
-            $crawler = $client->request('GET', '/');
+            $crawler = $client->request('GET', '/liste-attente');
             $client->submit($crawler->selectButton('Rejoindre la liste')->form(['waitlist[email]' => $email]));
-            self::assertResponseRedirects('/#rejoindre', 303);
+            self::assertResponseRedirects('/liste-attente#rejoindre', 303);
             $client->followRedirect();
             self::assertSelectorExists('.notice.success');
         }
@@ -38,10 +38,10 @@ final class WaitlistTest extends WebTestCase
     public function testInvalidEmailAndMissingCsrfAreRejected(): void
     {
         $client = static::createClient([], ['REMOTE_ADDR' => '192.0.2.20']);
-        $crawler = $client->request('GET', '/');
+        $crawler = $client->request('GET', '/liste-attente');
         $client->submit($crawler->selectButton('Rejoindre la liste')->form(['waitlist[email]' => 'bad']));
         self::assertResponseStatusCodeSame(422);
-        $client->request('POST', '/', ['waitlist' => ['email' => 'valid@example.fr', 'website' => '']]);
+        $client->request('POST', '/liste-attente', ['waitlist' => ['email' => 'valid@example.fr', 'website' => '']]);
         self::assertResponseStatusCodeSame(422);
     }
 
@@ -49,7 +49,7 @@ final class WaitlistTest extends WebTestCase
     {
         $client = static::createClient([], ['REMOTE_ADDR' => '192.0.2.30']);
         for ($i = 0; $i < 6; ++$i) {
-            $crawler = $client->request('GET', '/');
+            $crawler = $client->request('GET', '/liste-attente');
             $client->submit($crawler->selectButton('Rejoindre la liste')->form(['waitlist[email]' => 'bot@example.fr', 'waitlist[website]' => 'spam']));
             self::assertResponseStatusCodeSame(5 === $i ? 429 : 303);
         }

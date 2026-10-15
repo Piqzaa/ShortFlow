@@ -1,9 +1,11 @@
 {% extends 'base.html.twig' %}
+{% set entry_route = is_granted('ROLE_VERIFIED') ? 'app_dashboard' : 'app_register' %}
+{% set entry_label = is_granted('ROLE_VERIFIED') ? 'Ouvrir mon studio' : 'Créer mon compte' %}
 {% block body %}
 <header class="nav wrap">
   <a href="/" class="wordmark" aria-label="VydFlow, accueil"><span class="brand-symbol" aria-hidden="true">∨</span>vydflow<span class="brand-dot">/</span></a>
   <nav aria-label="Navigation principale"><a href="#studio">L’expérience</a><a href="#organisation">Le studio</a><a href="#vision">La vision</a><a href="{{ path('app_login') }}">Se connecter</a></nav>
-  <a class="button small" href="#rejoindre">Rejoindre l’aventure <span aria-hidden="true">↗</span></a>
+  <a class="button small" href="{{ path(entry_route) }}">{{ entry_label }} <span aria-hidden="true">↗</span></a>
 </header>
 <main id="contenu">
 <div class="story" data-controller="studio" data-video-src="/media/films/hero-v4.webm">
@@ -15,9 +17,9 @@
   </div>
   <button class="motion-toggle" data-studio-target="toggle" data-action="studio#toggleMotion" aria-pressed="false" hidden>Mettre les animations en pause</button>
   <section class="scene hero" data-scene="hero" aria-labelledby="hero-title">
-    <div class="hero-top wrap"><span class="eyebrow"><i></i> LE FUTUR STUDIO DES CRÉATEURS</span><span class="edition">IMPORTE · PRÉPARE · PUBLIE</span></div>
+    <div class="hero-top wrap"><span class="eyebrow"><i></i> LE STUDIO DES CRÉATEURS · BÊTA</span><span class="edition">IMPORTE · PRÉPARE · PUBLIE</span></div>
     <div class="hero-heading"><p class="micro-label">UN SEUL STUDIO POUR TES VIDÉOS COURTES.</p><h1 id="hero-title">Tes vidéos.<br><span>Trois réseaux.</span></h1></div>
-    <div class="hero-mobile-cta"><p>Importe et prépare tes vidéos pour TikTok,<br>Instagram Reels et YouTube Shorts.</p><a class="button" href="#rejoindre">Rejoindre l’aventure <span aria-hidden="true">↗</span></a><a class="mobile-explore" href="#studio">Explorer le studio ↓</a></div>
+    <div class="hero-mobile-cta"><p>Importe et prépare tes vidéos pour TikTok,<br>Instagram Reels et YouTube Shorts.</p><a class="button" href="{{ path(entry_route) }}">{{ entry_label }} <span aria-hidden="true">↗</span></a><a class="mobile-explore" href="#studio">Explorer le studio ↓</a></div>
     <div class="hero-bottom wrap"><div><p>Importe tes vidéos, prépare tes publications<br>et choisis tes réseaux depuis un seul studio.</p><a class="text-link" href="#studio">Explorer l’expérience <span aria-hidden="true">↘</span></a></div><div class="hero-note"><span class="cross" aria-hidden="true">✳</span><p>TikTok · Instagram Reels<br>YouTube Shorts</p></div></div>
   </section>
   <section class="scene transformation wrap" id="studio" data-scene="transform" aria-labelledby="transform-title">
@@ -43,13 +45,13 @@
     <p class="scene-disclaimer">Objectif V1 : préparation, programmation et publication sur les réseaux sélectionnés, sous réserve des autorisations des plateformes. Produit en développement ; aucune publication disponible actuellement.</p>
   </section>
   <section class="scene organization wrap" id="organisation" data-scene="organize" aria-labelledby="organization-title">
-    <div class="scene-copy"><p class="section-label">03 / LE STUDIO</p><h2 id="organization-title">Tes idées en liberté.<br><em>Tout le reste, en place.</em></h2><p>Connecte-toi à ton espace, retrouve tes vidéos<br>et suis le résultat de chaque publication.</p></div>
+    <div class="scene-copy"><p class="section-label">03 / LE STUDIO</p><h2 id="organization-title">Tes idées en liberté.<br><em>Tout le reste, en place.</em></h2><p>Connecte-toi à ton espace, retrouve tes vidéos<br>et garde tes créations à portée de main.</p></div>
     <ol class="product-steps" aria-label="Le parcours prévu dans VydFlow">
       <li><span>01</span><div><strong>Importe</strong><p>Retrouve tes vidéos dans ta bibliothèque privée.</p></div></li>
       <li><span>02</span><div><strong>Prépare</strong><p>Adapte tes textes et sélectionne jusqu’à trois réseaux.</p></div></li>
       <li><span>03</span><div><strong>Publie</strong><p>Lance l’envoi et suis le résultat pour chaque plateforme.</p></div></li>
     </ol>
-    <div class="studio-preview" aria-label="Illustration du futur studio : bibliothèque et calendrier non disponibles">
+    <div class="studio-preview" aria-label="Illustration du studio : brouillons et calendrier à venir">
       <aside><span class="wordmark">vydflow /</span><span class="preview-active">▦ &nbsp; Bibliothèque</span><span>▤ &nbsp; Brouillons</span><span>▦ &nbsp; Calendrier</span><small>TON ESPACE CRÉATIF</small></aside>
       <div class="preview-content"><div class="preview-title"><span>La suite s’écrit ici.</span><span class="pill">Aperçu du futur produit</span></div>
       <div class="preview-workspace"><div class="library-panel"><div class="panel-heading"><span>Ta bibliothèque</span><small>06 / CRÉATIONS</small></div><div class="library-grid">
@@ -59,7 +61,7 @@
       </div></div>
       <div class="preview-calendar"><div class="panel-heading"><span>Ta prochaine semaine</span><small>APERÇU</small></div><div class="week"><b>L</b><b>M</b><b>M</b><b>J</b><b>V</b><b>S</b><b>D</b></div><div class="calendar-date">MARDI <strong>14</strong></div><div class="calendar-block"><img src="/media/creators/craft-thumb.webp" alt="" width="270" height="480" loading="lazy"><div>Le geste<small>Reel · 18:00 · À préparer</small></div></div><div class="calendar-block muted"><img src="/media/creators/sound-thumb.webp" alt="" width="270" height="480" loading="lazy"><div>Le son<small>Short · Jeudi / 12:00</small></div></div><div class="calendar-empty">+ La prochaine idée</div><p class="calendar-note">Ton rythme, en un regard.</p></div>
       </div><div class="preview-bottom"><span>6 créations de démonstration</span><span>IMPORTER → PRÉPARER → PUBLIER</span></div></div>
-    </div><p class="scene-disclaimer">Aperçu illustratif du futur studio. Bibliothèque, brouillons, calendrier et programmation prévus pour la V1.</p>
+    </div><p class="scene-disclaimer">Aperçu illustratif du futur studio. Bibliothèque disponible dans la bêta ; brouillons, calendrier et programmation à venir.</p>
   </section>
   <section class="scene vision wrap" id="vision" data-scene="vision" aria-labelledby="vision-title">
     <div class="scene-copy"><p class="section-label">04 / L’HORIZON CRÉATIF</p><span class="pill">Bientôt disponible</span><h2 id="vision-title">De l’imagination<br><em>au mouvement.</em></h2><p>Et si une phrase devenait le début d’une vidéo&nbsp;?<br>Le studio IA fait partie de notre vision.</p><p class="honest-note">Studio IA prévu pour la V1. Aucune génération IA disponible actuellement.</p></div>
@@ -70,9 +72,9 @@
       <div class="timeline-preview"><div><span>03 / MONTAGE</span><span>00:00 — 00:06</span></div><div class="timeline-track">{% for frame in 0..5 %}<i><img src="/media/horizon/horizon-{{ frame }}-thumb.webp" alt="" width="135" height="240" loading="lazy"></i>{% endfor %}<b></b></div><small>FAIS DÉFILER POUR EXPLORER LES 6 PLANS ↓</small></div></div></div>
     </div>
   </section>
-  <section class="scene finale wrap" data-scene="finale" aria-labelledby="finale-title"><div class="finale-mobile-device"><img src="/media/screens/screen-5.webp" alt="Ton prochain mouvement commence ici, au-dessus d’un paysage de rivière" width="540" height="960" loading="lazy"></div><p class="section-label">LA SUITE, ON L’ÉCRIT ENSEMBLE.</p><h2 id="finale-title">Fais de la place<br><em>à tes idées.</em></h2><a class="button" href="#rejoindre">Entrer dans l’aventure <span aria-hidden="true">↗</span></a><span class="finale-signature" aria-hidden="true">VYDFLOW /</span></section>
+  <section class="scene finale wrap" data-scene="finale" aria-labelledby="finale-title"><div class="finale-mobile-device"><img src="/media/screens/screen-5.webp" alt="Ton prochain mouvement commence ici, au-dessus d’un paysage de rivière" width="540" height="960" loading="lazy"></div><p class="section-label">LA SUITE, ON L’ÉCRIT ENSEMBLE.</p><h2 id="finale-title">Fais de la place<br><em>à tes idées.</em></h2><a class="button" href="{{ path(entry_route) }}">{{ entry_label }} <span aria-hidden="true">↗</span></a><span class="finale-signature" aria-hidden="true">VYDFLOW /</span></section>
 </div>
-<section class="join section" id="rejoindre" aria-labelledby="join-title"><div class="wrap join-inner"><span class="eyebrow"><i></i> EN DÉVELOPPEMENT · ACCÈS À VENIR</span><h2 id="join-title">Ton prochain flow<br><em>commence ici.</em></h2><p>VydFlow prend forme. Rejoins la liste d’attente<br>pour découvrir le studio à son ouverture.</p>{% for message in app.flashes('success') %}<div class="notice success" role="status">{{ message }}</div>{% endfor %}{% for message in app.flashes('error') %}<div class="notice" role="alert">{{ message }}</div>{% endfor %}{{ form_start(waitlist, {attr: {class: 'waitlist-form'}, action: path('app_home') ~ '#rejoindre'}) }}{{ form_errors(waitlist) }}<div class="email-field">{{ form_label(waitlist.email) }}<div class="input-row">{{ form_widget(waitlist.email) }}<button class="button" type="submit">Rejoindre la liste <span aria-hidden="true">↗</span></button></div>{{ form_errors(waitlist.email) }}</div><div class="honeypot" aria-hidden="true">{{ form_row(waitlist.website) }}</div>{{ form_end(waitlist) }}<small>Gratuit. Sans carte bancaire. Un email pour l’ouverture, rien de plus.<br>Ton email reste privé. <a href="{{ path('app_privacy') }}">Utilisation de tes données</a></small></div></section>
+<section class="join section" id="rejoindre" aria-labelledby="join-title"><div class="wrap join-inner"><span class="eyebrow"><i></i> ACCÈS BÊTA</span><h2 id="join-title">Ton prochain flow<br><em>commence ici.</em></h2><p>Crée ton compte, confirme ton email<br>et importe ta première vidéo dans ton studio privé.</p><a class="button" href="{{ path(entry_route) }}">{{ entry_label }} <span aria-hidden="true">↗</span></a><p class="honest-note">Bibliothèque disponible. Studio IA, calendrier et publication à venir.</p><small>Sans carte bancaire. <a href="{{ path('app_privacy') }}">Utilisation de tes données</a></small></div></section>
 </main>
 <footer class="wrap footer"><a href="/" class="wordmark">vydflow /</a><span>IMPORTE. PRÉPARE. PUBLIE.</span><a href="{{ path('app_login') }}">Se connecter</a><a href="{{ path('app_privacy') }}">Confidentialité</a><small>© {{ 'now'|date('Y') }} VydFlow</small></footer>
 {% endblock %}

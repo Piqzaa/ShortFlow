@@ -1,7 +1,7 @@
 # Comptes VydFlow — guide du lot 1
 
 ## Objectif et périmètre
-Un créateur crée son compte, confirme son email, puis se connecte à son espace privé. Il peut aussi récupérer l’accès. La confirmation est obligatoire avant toute connexion ; une récupération ne confirme pas l’adresse. La landing et la liste d’attente sont conservées. Le dashboard présente des états vides et des fonctions à venir, sans contenu utilisateur fictif. Import, calendrier, IA et publication ne fonctionnent pas encore.
+Un créateur crée son compte, confirme son email, puis se connecte à son espace privé. Il peut aussi récupérer l’accès. La confirmation est obligatoire avant toute connexion ; une récupération ne confirme pas l’adresse. Ce guide décrit le lot comptes. La bibliothèque et l’import sont ajoutés au lot suivant, décrit dans docs/library.md ; IA, calendrier et publication restent à venir. La landing bêta va désormais à l’inscription, la liste d’attente historique reste sur /liste-attente.
 
 ## Fichiers et responsabilités
 - src/Entity/User.php : données du compte, identifiant Security, rôles et empreinte de session. Le mot de passe brut ne fait pas partie de l’entité.

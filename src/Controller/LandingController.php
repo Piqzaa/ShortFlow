@@ -13,8 +13,21 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class LandingController extends AbstractController
 {
-    #[Route('/', name: 'app_home', methods: ['GET', 'POST'])]
-    public function index(Request $request, WaitlistRegistration $registration, #[Autowire(service: 'limiter.waitlist')] RateLimiterFactory $limiter): Response
+    #[Route('/', name: 'app_home', methods: ['GET'])]
+    public function index(): Response
+    {
+        if ($this->isGranted('ROLE_VERIFIED')) {
+            $response = $this->redirectToRoute('app_dashboard');
+            $response->headers->set('Cache-Control', 'no-store, private');
+
+            return $response;
+        }
+
+        return $this->render('landing/index.html.twig');
+    }
+
+    #[Route('/liste-attente', name: 'app_waitlist', methods: ['GET', 'POST'])]
+    public function waitlist(Request $request, WaitlistRegistration $registration, #[Autowire(service: 'limiter.waitlist')] RateLimiterFactory $limiter): Response
     {
         $form = $this->createForm(WaitlistType::class);
         $form->handleRequest($request);
@@ -30,12 +43,12 @@ final class LandingController extends AbstractController
                 }
                 $this->addFlash('success', 'Merci ! Ta demande a bien été prise en compte.');
 
-                return $this->redirectToRoute('app_home', ['_fragment' => 'rejoindre'], Response::HTTP_SEE_OTHER);
+                return $this->redirectToRoute('app_waitlist', ['_fragment' => 'rejoindre'], Response::HTTP_SEE_OTHER);
             } else {
                 $status = Response::HTTP_UNPROCESSABLE_ENTITY;
             }
         }
 
-        return $this->render('landing/index.html.twig', ['waitlist' => $form], new Response(status: $status));
+        return $this->render('landing/waitlist.html.twig', ['waitlist' => $form], new Response(status: $status));
     }
 }
