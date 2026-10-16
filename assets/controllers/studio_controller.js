@@ -246,6 +246,9 @@ export default class extends Controller {
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    // Leave room below the headline on short laptop viewports; fade this offset
+    // with the hero pose so the following chapters keep their original framing.
+    this.heroHeightOffset = Math.max(0, Math.min(1, (850 - height) / 200)) * .5;
     this.render();
   }
 
@@ -256,7 +259,7 @@ export default class extends Controller {
     // Compress horizontal staging on smaller desktop viewports, preserving the text columns.
     const widthFactor = Math.min(1, this.camera.aspect / 1.65);
     const cursorWeight = p.freedom || 0;
-    this.phone.position.set(p.px * widthFactor + this.cursor.x * 1.65 * cursorWeight, p.py - this.cursor.y * 1.6 * cursorWeight, p.pz);
+    this.phone.position.set(p.px * widthFactor + this.cursor.x * 1.65 * cursorWeight, p.py - ((this.heroHeightOffset || 0) + this.cursor.y * 1.6) * cursorWeight, p.pz);
     this.phone.rotation.set(p.rx + this.cursor.y * cursorWeight, p.ry + this.cursor.x * cursorWeight, p.rz - this.cursor.x * .12 * cursorWeight);
     this.phone.scale.setScalar(p.scale);
     this.captureRig.position.set(2.55 * widthFactor, 0, .6);
@@ -461,6 +464,13 @@ export default class extends Controller {
     this.resources?.forEach(resource => resource.dispose());
     this.resources?.clear();
     this.environment?.dispose(); this.environment = null;
+    // The same canvas is reused after pause; restore upload flags before the
+    // next renderer allocates its default 3D textures on the existing context.
+    const context = this.renderer?.getContext();
+    if (context && !context.isContextLost()) {
+      context.pixelStorei(context.UNPACK_FLIP_Y_WEBGL, false);
+      context.pixelStorei(context.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    }
     this.renderer?.dispose(); this.renderer = null;
     this.framingTarget.style.opacity = '0';
     this.stageTarget.classList.remove('ready');

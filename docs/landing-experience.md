@@ -31,6 +31,10 @@ Les vidéos sont des montages de photos avec recadrages animés et typographie, 
 ## Comprendre Symfony
 Twig garde le contenu lisible et le formulaire utilisable avant le JavaScript. Stimulus se connecte à un élément data-controller et améliore sa présentation. Les fichiers JS ne deviennent pas des services PHP : les validations, le CSRF et la persistance restent du côté de Symfony. Cette passe ne change ni les routes ni les entités ni les migrations.
 
+## Hero sur les écrans de portable — 16 octobre 2026
+
+Sur ordinateur de plus de 1 000 px de large et au plus 850 px de haut, le hero réduit progressivement la taille du titre et remonte sa marge. `resizeWorld()` calcule un décalage vertical du téléphone selon la hauteur disponible ; `render()` le pondère par la liberté de mouvement du hero, qui disparaît au passage vers le chapitre suivant. Les écrans plus hauts et la composition mobile conservent leur cadrage. Vérifier notamment 1 366 × 650, 1 366 × 768, 1 920 × 1 080 et 390 × 844, ainsi que le redimensionnement et le mouvement réduit.
+
 ## Tester
 Exécuter npm run check et npm run build, puis docker compose exec php php scripts/check.php. Ce dernier applique les migrations de la base de test avant PHPUnit. Les tests destructifs vérifient shortflow_test, le nom historique conservé pour les données locales.
 Ouvrir http://localhost:8000, vérifier 360/390/768/1440 px, suivre chaque chapitre et regarder le changement du contenu du téléphone. Tester les trois vidéos, les ancres, la pause, le clavier, un aller-retour rapide, le redimensionnement et un rechargement sur #organisation. Vérifier aussi le poster si autoplay ou WebGL est refusé et le contenu statique en mouvement réduit.

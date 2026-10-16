@@ -193,7 +193,7 @@ final class YouTubeApi
                 throw new PublicationException('La demande YouTube n’a pas abouti. Vérifie ta connexion puis réessaie.');
             }
 
-return $response->toArray(false);
+            return $response->toArray(false);
         } catch (\Throwable) {
             throw new PublicationException('La demande YouTube n’a pas abouti. Vérifie ta connexion puis réessaie.');
         }
