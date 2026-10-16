@@ -30,7 +30,7 @@ Un créateur crée son compte, confirme son email, puis se connecte à son espac
 ## Tester en local
 1. `docker compose up -d`, puis `docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction` et `npm run build`.
 2. Ouvrir http://localhost:8000/inscription et créer un compte de test avec une adresse fictive du domaine example.test.
-3. Dans http://localhost:8025, ouvrir l’email, suivre le lien et cliquer « Confirmer mon adresse ». Rien n’est envoyé à un fournisseur email externe.
+3. Dans http://localhost:8026, ouvrir l’email, suivre le lien et cliquer « Confirmer mon adresse ». Rien n’est envoyé à un fournisseur email externe.
 4. Se connecter ; vérifier l’espace vide et la disparition du bandeau de confirmation. Se déconnecter ; /studio doit renvoyer à la connexion.
 5. Demander un mot de passe oublié, suivre le nouvel email, choisir un mot de passe puis essayer une seconde fois le même lien : il doit être refusé. Les anciennes sessions doivent être invalidées.
 6. Tester email invalide, mots de passe différents, lien invalide et saisie manuelle du code sans JS. Après plusieurs tentatives, attendre le délai du limiteur local.

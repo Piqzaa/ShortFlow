@@ -9,3 +9,5 @@
 .publication-form .publication-checkbox>input[type=checkbox]{grid-column:1;grid-row:1;width:18px;height:18px;margin:2px 0 0;padding:0}
 .publication-form .publication-checkbox>label{grid-column:2;grid-row:1;display:block;margin:0;font-size:12px;line-height:1.7}
 .publication-form .publication-checkbox>ul{grid-column:2;margin-top:8px}
+
+.instagram-connection{margin-top:24px}.instagram-brand{background:linear-gradient(135deg,#7527d033,#ed466633);color:#e7b5ff}.connection-panel .connection-warning{color:#ffb3c2}.connection-actions .library-note{max-width:240px}

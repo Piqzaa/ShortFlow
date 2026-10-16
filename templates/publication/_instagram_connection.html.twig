@@ -1,0 +1,19 @@
+<section class="connection-panel instagram-connection" aria-labelledby="instagram-title">
+  <div class="connection-brand instagram-brand" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none"/></svg></div>
+  <div><h2 id="instagram-title">Instagram</h2>
+    {% if instagramConnection %}
+      <p>Compte : <strong>@{{ instagramConnection.username }}</strong></p>
+      {% if instagramConnection.expired %}<p class="connection-warning" role="status">Autorisation expirée. Reconnecte ton compte.</p>
+      {% elseif instagramConnection.expiring %}<p class="connection-warning" role="status">Autorisation valable jusqu’au {{ instagramConnection.expiresAt|date('d/m/Y') }}. Reconnecte ton compte pour la renouveler.</p>
+      {% else %}<p>Compte connecté · {{ instagramConnection.accountType == 'MEDIA_CREATOR' ? 'Créateur' : 'Entreprise' }}</p>{% endif %}
+      <a class="account-secondary" href="https://www.instagram.com/{{ instagramConnection.username }}/" target="_blank" rel="noopener noreferrer">Voir le profil ↗</a>
+    {% else %}<p>Connecte ton compte Créateur ou Entreprise avec Instagram.</p>{% endif %}
+    <p class="library-note">La publication de Reels arrive prochainement.</p>
+  </div>
+  <div class="connection-actions">
+    {% if instagramReady %}<form action="{{ path('app_instagram_connect') }}" method="post"><input type="hidden" name="_token" value="{{ csrf_token('instagram_connect') }}"><button class="button small" type="submit">{{ instagramConnection ? 'Reconnecter Instagram' : 'Connecter Instagram' }} ↗</button></form>
+    {% else %}<button class="button small" type="button" disabled>Connecter Instagram ↗</button><p class="library-note">La connexion Instagram est momentanément indisponible.</p>{% endif %}
+    {% if instagramConnection %}<form action="{{ path('app_instagram_disconnect') }}" method="post"><input type="hidden" name="_token" value="{{ csrf_token('instagram_disconnect') }}"><button class="account-secondary" type="submit">Déconnecter Instagram de VydFlow</button></form>{% endif %}
+  </div>
+</section>
+{% if instagramConnection %}<p class="library-note">La déconnexion efface les accès enregistrés dans VydFlow. Elle ne supprime aucun contenu de ton compte Instagram.</p>{% endif %}

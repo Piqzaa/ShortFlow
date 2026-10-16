@@ -2,3 +2,7 @@ services:
     youtube.http:
         class: Symfony\Component\HttpClient\MockHttpClient
         public: true
+
+    instagram.http:
+        class: Symfony\Component\HttpClient\MockHttpClient
+        public: true

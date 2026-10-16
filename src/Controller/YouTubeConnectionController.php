@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\InstagramConnection;
 use App\Entity\User;
 use App\Entity\YouTubeConnection;
+use App\Service\InstagramApi;
 use App\Service\PublicationException;
 use App\Service\PublicationLock;
 use App\Service\TokenVault;
@@ -22,9 +24,9 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class YouTubeConnectionController extends AbstractController
 {
     #[Route('', name: 'app_connections', methods: ['GET'])]
-    public function index(#[CurrentUser] User $user, YouTubePublishing $publishing, YouTubeApi $api): Response
+    public function index(#[CurrentUser] User $user, YouTubePublishing $publishing, YouTubeApi $api, InstagramApi $instagram, EntityManagerInterface $em): Response
     {
-        return $this->render('publication/connections.html.twig', ['connection' => $publishing->connection($user), 'ready' => $api->isReady()], new Response(headers: ['Cache-Control' => 'no-store, private']));
+        return $this->render('publication/connections.html.twig', ['connection' => $publishing->connection($user), 'ready' => $api->isReady(), 'instagramConnection' => $em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $user]), 'instagramReady' => $instagram->isReady()], new Response(headers: ['Cache-Control' => 'no-store, private']));
     }
 
     #[Route('/youtube', name: 'app_youtube_connect', methods: ['POST'])]
@@ -102,10 +104,10 @@ final class YouTubeConnectionController extends AbstractController
             });
             $this->addFlash('success', 'Chaîne déconnectée de VydFlow. Les prochains envois sont suspendus.');
         } catch (PublicationException $error) {
-            $this->addFlash('error',$error->getMessage());
+            $this->addFlash('error', $error->getMessage());
         }
         $request->getSession()->remove('youtube_oauth');
 
-        return $this->redirectToRoute('app_connections',status: 303);
+        return $this->redirectToRoute('app_connections', status: 303);
     }
 }
