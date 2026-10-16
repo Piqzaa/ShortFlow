@@ -8,6 +8,7 @@ use App\Form\YouTubePublishType;
 use App\Repository\VideoAssetRepository;
 use App\Service\PublicationException;
 use App\Service\PublicationLock;
+use App\Service\PublicationOverview;
 use App\Service\YouTubeApi;
 use App\Service\YouTubePublishing;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,9 +25,14 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class PublicationController extends AbstractController
 {
     #[Route('', name: 'app_publications', methods: ['GET'])]
-    public function index(#[CurrentUser] User $user, EntityManagerInterface $em, YouTubePublishing $publishing): Response
+    public function index(Request $request, #[CurrentUser] User $user, PublicationOverview $publications): Response
     {
-        return $this->page('publication/index.html.twig', ['jobs' => $em->getRepository(YouTubePublication::class)->findBy(['owner' => $user], ['id' => 'DESC'], 100), 'instagramJobs' => $em->getRepository(\App\Entity\InstagramPublication::class)->findBy(['owner' => $user], ['id' => 'DESC'], 100), 'connection' => $publishing->connection($user)]);
+        $network = $request->query->getString('network');
+        $state = $request->query->getString('state');
+        $network = in_array($network, ['youtube', 'instagram'], true) ? $network : '';
+        $state = isset(PublicationOverview::STATES[$state]) ? $state : '';
+
+        return $this->page('publication/index.html.twig', ['feed' => $publications->page($user, $request->query->getInt('page', 1), $network, $state), 'network' => $network, 'state' => $state]);
     }
 
     #[Route('/preparer', name: 'app_publication_prepare', methods: ['GET', 'POST'])]

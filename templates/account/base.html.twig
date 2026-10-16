@@ -8,9 +8,8 @@
     <section class="account-panel" aria-labelledby="account-title">
       {% for label, messages in app.flashes %}{% for message in messages %}<div class="account-notice {{ label }}" role="{{ label == 'error' ? 'alert' : 'status' }}">{{ message }}</div>{% endfor %}{% endfor %}
       {% block account_content %}{% endblock %}
-      <p class="account-privacy"><a href="{{ path('app_privacy') }}">Confidentialité</a></p>
     </section>
   </main>
-  {% include 'legal/_links.html.twig' %}
+  {% include 'legal/_links.html.twig' with {compact:true} %}
 </div>
 {% endblock %}

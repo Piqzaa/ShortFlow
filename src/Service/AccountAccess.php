@@ -37,6 +37,20 @@ final class AccountAccess
         $this->sendToken($user, AccountToken::VERIFY);
     }
 
+    public function changePassword(User $user, #[\SensitiveParameter] string $currentPassword, #[\SensitiveParameter] string $newPassword): bool
+    {
+        return $this->em->wrapInTransaction(function () use ($user, $currentPassword, $newPassword): bool {
+            $this->em->refresh($user, LockMode::PESSIMISTIC_WRITE);
+            if (!$this->hasher->isPasswordValid($user, $currentPassword)) {
+                return false;
+            }
+            $user->setPassword($this->hasher->hashPassword($user, $newPassword));
+            $this->em->getConnection()->executeStatement('UPDATE account_token SET consumed_at = CURRENT_TIMESTAMP WHERE owner_id = :owner AND purpose = :purpose', ['owner' => $user->getId(), 'purpose' => AccountToken::RESET]);
+
+            return true;
+        });
+    }
+
     public function requestToken(string $email, string $purpose): void
     {
         $user = $this->users->findByEmail($email);

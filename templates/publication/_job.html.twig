@@ -1,0 +1,14 @@
+{% set instagram = job.network == 'instagram' %}
+{% set labels = {queued:'En attente', uploading:'Transfert en cours', processing: instagram ? 'Traitement Instagram' : 'Traitement YouTube', publishing:'Confirmation Instagram', published: instagram ? 'Disponible sur Instagram' : 'Disponible sur YouTube', paused:'Envoi suspendu', failed:'En échec', review:'À vérifier sur le réseau', cancelled:'Suivi arrêté'} %}
+<article class="publication-item" data-network="{{ job.network }}">
+  <div><span class="eyebrow">{{ instagram ? 'INSTAGRAM · @' : 'YOUTUBE · ' }}{{ job.account }}</span><h2>{{ job.title }}</h2><p>{{ job.created_at|date('d/m/Y à H:i') }}{% if not instagram %} · Visibilité demandée : {{ {private:'Privée',unlisted:'Non répertoriée',public:'Publique'}[job.privacy]|default(job.privacy) }}{% else %} · Reel{% endif %}</p>
+    {% if job.notice %}<p class="publication-notice">{{ job.notice }}</p>{% endif %}
+    {% if job.source_id %}<a class="account-secondary" href="{{ path('app_video_show', {id: job.source_id}) }}">Ouvrir la vidéo source ↗</a>{% endif %}
+  </div>
+  <div class="publication-result"><strong class="publication-state state-{{ job.status }}">{{ labels[job.status]|default(job.status) }}</strong>
+    {% if job.status == 'uploading' and job.byte_size %}<span>{{ (100 * job.sent_bytes / job.byte_size)|round }} % transférés</span>{% endif %}
+    {% if instagram %}<a class="account-secondary" href="https://www.instagram.com/{{ job.account }}/" target="_blank" rel="noopener noreferrer">Voir le profil ↗</a>{% elseif job.remote_id %}<a class="account-secondary" href="https://www.youtube.com/watch?v={{ job.remote_id }}" target="_blank" rel="noopener noreferrer">Voir sur YouTube ↗</a>{% endif %}
+    {% if job.status == 'paused' %}<form method="post" action="{{ instagram ? path('app_instagram_job_action', {id:job.id, action:'reprendre'}) : path('app_publication_resume', {id:job.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token(instagram ? 'instagram_reprendre_' ~ job.id : 'resume_' ~ job.id) }}"><button class="button small" type="submit">{{ instagram ? 'Reprendre le suivi ↻' : 'Reprendre ↻' }}</button></form>{% endif %}
+    {% if instagram and job.status in ['queued','processing','publishing','paused','review'] %}<form method="post" action="{{ path('app_instagram_job_action', {id:job.id, action:'arreter'}) }}"><input type="hidden" name="_token" value="{{ csrf_token('instagram_arreter_' ~ job.id) }}"><button class="account-secondary" type="submit">Arrêter le suivi</button></form>{% elseif not instagram and job.status in ['queued','uploading','processing','paused'] %}<a class="account-secondary" href="{{ path('app_publication_stop', {id:job.id}) }}">Arrêter l’envoi / le suivi</a>{% endif %}
+  </div>
+</article>

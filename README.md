@@ -39,6 +39,8 @@ Avec Node local : npm ci puis npm run build remplace le conteneur outils. Après
 
 ## Vérifications
 
+Studio : vue d'ensemble avec compteurs réels et envois à traiter, historique commun YouTube/Instagram filtrable et paginé, réseaux connectés et espace Mon compte (`/studio/mon-compte`) avec changement sécurisé du mot de passe. Les liens légaux généraux sont regroupés vers `/informations-legales`. Guide des composants, flux Symfony et tests : [docs/studio.md](docs/studio.md).
+
 ```sh
 docker compose exec php php scripts/check.php
 npm run check
