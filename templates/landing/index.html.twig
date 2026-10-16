@@ -76,5 +76,5 @@
 </div>
 <section class="join section" id="rejoindre" aria-labelledby="join-title"><div class="wrap join-inner"><span class="eyebrow"><i></i> ACCÈS BÊTA</span><h2 id="join-title">Ton prochain flow<br><em>commence ici.</em></h2><p>Crée ton compte, confirme ton email<br>et importe ta première vidéo dans ton studio privé.</p><a class="button" href="{{ path(entry_route) }}">{{ entry_label }} <span aria-hidden="true">↗</span></a><p class="honest-note">Bibliothèque disponible. Studio IA, calendrier et publication à venir.</p><small>Sans carte bancaire. <a href="{{ path('app_privacy') }}">Utilisation de tes données</a></small></div></section>
 </main>
-<footer class="wrap footer"><a href="/" class="wordmark">vydflow /</a><span>IMPORTE. PRÉPARE. PUBLIE.</span><a href="{{ path('app_login') }}">Se connecter</a><a href="{{ path('app_privacy') }}">Confidentialité</a><small>© {{ 'now'|date('Y') }} VydFlow</small></footer>
+<footer class="wrap footer"><a href="/" class="wordmark">vydflow /</a><span>IMPORTE. PRÉPARE. PUBLIE.</span><a href="{{ path('app_login') }}">Se connecter</a>{% include 'legal/_links.html.twig' %}<small>© {{ 'now'|date('Y') }} VydFlow</small></footer>
 {% endblock %}

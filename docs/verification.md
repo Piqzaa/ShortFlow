@@ -1,4 +1,14 @@
-# Vérification — 16 octobre 2026, publication Reels et barre des comptes
+# Vérification — 16 octobre 2026, base des documents légaux
+
+- Identité publique fournie par le propriétaire pour sa micro-entreprise, cible B2C + B2B ; contact retenu dev@alexbuild.fr. Pas de recherche sur son site ni de vérification du registre annoncée. Hébergeur, médiateur, TVA et offre commerciale non inventés.
+- Sept routes accessibles : index, mentions légales, CGU, CGV, confidentialité (URL préservée), cookies, instructions de suppression. Version de travail visible, X-Robots-Tag noindex/nofollow. Liens dans landing, compte, studio et liste d’attente. Coordonnées centralisées dans Twig, pages HTML sans dépendance au JavaScript. Aucune acceptation contractuelle ni purge inexistante annoncée ; aucune souscription payante ajoutée.
+- Sources officielles et inventaire du code dans docs/legal-audit.md. Le guide ux-flow-coding a servi au parcours ; aucun skill juridique spécialisé ni certification de conformité revendiquée. L’audit distingue pages rédigées et mesures techniques/organisationnelles restant à réaliser avant lancement.
+- `npm run check` et `npm run build` : codes 0 ; avertissements Vite préexistants sur références statiques et chunk Three.js. Contrôle final Twig après retrait de l’ancien template : **30 templates valides**, code 0. Diff sans erreur de contenu, avertissements LF/CRLF seulement.
+- Navigateur : index → Mentions légales, coordonnées et statut visibles sur ordinateur. Viewport mobile demandé 390 × 844, document visible 375 px / scrollWidth 375 px ; aucun débordement, passage Tab depuis CGU vers CGV, console sans erreur/avertissement. Captures ignorées : artifacts/legal-desktop.jpg et legal-mobile.jpg. Override viewport retiré. Plusieurs navigations ont nécessité une observation après expiration CDP ; les contrôles finaux cités ont réussi.
+- Aucun déploiement, inscription à un médiateur, paiement, changement de domaine ou suppression de données. La procédure RGPD complète, DPA, rétractation/résiliation et conformité API de production ne sont pas validées par ces pages.
+- `docker compose exec -T php php scripts/check.php` terminé avec **code 0** : base shortflow_test migrée à la version courante, schémas dev/test synchronisés, YAML/conteneur valides, PHPStan sans erreur, CS-Fixer sans changement et **70 tests / 712 assertions**, 8 min 11 s. Les erreurs 403/404 affichées sont les refus attendus des tests de sécurité. Le lint Twig complémentaire couvre les 30 templates finaux après retrait de l’ancienne confidentialité.
+
+# Historique — 16 octobre 2026, publication Reels et barre des comptes
 
 - Parcours Reels implémenté : préparation multi-vidéos par réseau, légende/options, confirmation/CSRF, jobs et messages atomiques, worker Docker existant, suivi/reprise/arrêt, liens média signés 24 h et badges cumulables. Aucun appel Meta réel ni accès public activé. La configuration HTTPS est vide par défaut et désactive l’envoi réel.
 - Migration additive Version20261016164818 générée, relue et appliquée à dev et shortflow_test, sans suppression des données du développeur.

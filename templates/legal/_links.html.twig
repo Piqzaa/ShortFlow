@@ -1,0 +1,7 @@
+<nav class="legal-links" aria-label="Informations légales">
+<a href="{{ path('app_legal_notices') }}"{% if app.request.attributes.get('_route') == 'app_legal_notices' %} aria-current="page"{% endif %}>Mentions légales</a>
+<a href="{{ path('app_terms') }}"{% if app.request.attributes.get('_route') == 'app_terms' %} aria-current="page"{% endif %}>CGU</a>
+<a href="{{ path('app_sales_terms') }}"{% if app.request.attributes.get('_route') == 'app_sales_terms' %} aria-current="page"{% endif %}>CGV</a>
+<a href="{{ path('app_privacy') }}"{% if app.request.attributes.get('_route') == 'app_privacy' %} aria-current="page"{% endif %}>Confidentialité</a>
+<a href="{{ path('app_cookies') }}"{% if app.request.attributes.get('_route') == 'app_cookies' %} aria-current="page"{% endif %}>Cookies</a>
+</nav>

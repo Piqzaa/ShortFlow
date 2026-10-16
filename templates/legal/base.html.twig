@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+{% block title %}{% block legal_title %}Informations légales{% endblock %} — VydFlow{% endblock %}
+{% block body %}
+<header class="account-header"><a class="wordmark" href="{{ path(is_granted('ROLE_VERIFIED') ? 'app_dashboard' : 'app_home') }}" aria-label="VydFlow">vydflow<span class="brand-dot">/</span></a><a href="{{ path(is_granted('ROLE_VERIFIED') ? 'app_dashboard' : 'app_home') }}">{{ is_granted('ROLE_VERIFIED') ? '← Retour au studio' : '← Retour à l’accueil' }}</a></header>
+<main id="contenu" class="legal-shell">
+<div class="legal-heading"><span class="eyebrow">VYDFLOW · CADRE ET TRANSPARENCE</span><h1>{{ block('legal_title') }}</h1><p>Version de travail du 16 octobre 2026.</p></div>
+<aside class="account-notice legal-draft" aria-label="Statut du document"><strong>Documents en préparation.</strong> VydFlow est en développement local. Ces pages comportent des éléments à finaliser avant ouverture publique et ne constituent pas des conditions commerciales définitives.</aside>
+{% include 'legal/_links.html.twig' %}
+<article class="legal-copy">{% block legal_content %}{% endblock %}</article>
+<footer class="legal-footer"><a href="{{ path('app_legal') }}">Tous les documents</a><a href="mailto:{{ legal_identity.email }}">{{ legal_identity.email }}</a></footer>
+</main>
+{% endblock %}

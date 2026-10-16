@@ -11,6 +11,6 @@ final class PrivacyController extends AbstractController
     #[Route('/confidentialite', name: 'app_privacy', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('landing/privacy.html.twig');
+        return $this->render('legal/privacy.html.twig', [], new Response(headers: ['X-Robots-Tag' => 'noindex, nofollow', 'Cache-Control' => 'private, no-store']));
     }
 }

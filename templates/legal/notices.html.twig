@@ -1,0 +1,10 @@
+{% extends 'legal/base.html.twig' %}
+{% block legal_title %}Mentions légales{% endblock %}
+{% block legal_content %}
+<h2>1. Éditeur et publication</h2>
+<dl class="legal-facts"><dt>Éditeur</dt><dd>{{ legal_identity.operator }}, sous le régime de la micro-entreprise.</dd><dt>Service</dt><dd>VydFlow</dd><dt>Adresse professionnelle</dt><dd>{{ legal_identity.address }}</dd><dt>SIREN</dt><dd>{{ legal_identity.siren }}</dd><dt>SIRET</dt><dd>{{ legal_identity.siret }}</dd><dt>Activité déclarée</dt><dd>{{ legal_identity.activity }}</dd><dt>Contact</dt><dd><a href="mailto:{{ legal_identity.email }}">{{ legal_identity.email }}</a> · {{ legal_identity.phone }}</dd><dt>Directeur de la publication</dt><dd>Alexandre Berrel</dd></dl>
+<p class="legal-pending">À finaliser : mention exacte du registre d’immatriculation et situation au regard de la TVA. Le régime micro-entrepreneur ne suffit pas à déterminer le régime de TVA.</p>
+<h2>2. Hébergement</h2><p>Cette version fonctionne sur un environnement local de développement et n’est pas hébergée publiquement.</p><p class="legal-pending">Avant ouverture : renseigner le nom légal, l’adresse et le numéro de téléphone de l’hébergeur de production. Le fournisseur du nom de domaine peut être différent de l’hébergeur.</p>
+<h2>3. Propriété intellectuelle</h2><p>Le nom, l’interface et les éléments de VydFlow sont protégés selon les droits applicables. Les marques YouTube, Instagram et TikTok appartiennent à leurs titulaires respectifs. Leur mention ne signifie pas que ceux-ci approuvent VydFlow. Les utilisateurs conservent les droits sur leurs propres vidéos.</p>
+<h2>4. Réclamations</h2><p>Pour une question ou une réclamation relative au service, écris à <a href="mailto:{{ legal_identity.email }}">{{ legal_identity.email }}</a>.</p><p class="legal-pending">Le médiateur de la consommation compétent et ses coordonnées seront renseignés après désignation, avant commercialisation auprès des particuliers. Aucun médiateur n’est annoncé comme déjà conventionné.</p>
+{% endblock %}

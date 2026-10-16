@@ -1,5 +1,14 @@
 twig:
     file_name_pattern: '*.twig'
+    globals:
+        legal_identity:
+            operator: 'Alexandre Berrel — Entrepreneur individuel'
+            siren: '108640418'
+            siret: '10864041800019'
+            activity: '6201Z — Programmation informatique'
+            address: "101a rue d’Adelshoffen, 67300 Schiltigheim, France"
+            email: 'dev@alexbuild.fr'
+            phone: '06 42 02 61 14'
     date:
         timezone: Europe/Paris
 

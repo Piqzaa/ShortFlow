@@ -16,7 +16,7 @@
     <nav class="studio-mobile-nav" aria-label="Navigation mobile du studio"><a href="{{ path('app_dashboard') }}"{% if app.request.attributes.get('_route') == 'app_dashboard' %} aria-current="page"{% endif %}>Vue d’ensemble</a><a href="{{ path('app_library') }}"{% if in_library %} aria-current="page"{% endif %}>Bibliothèque</a><a href="{{ path('app_video_upload') }}">+ Importer</a><a href="{{ path('app_publications') }}"{% if in_publications %} aria-current="page"{% endif %}>Publications</a><a href="{{ path('app_connections') }}"{% if app.request.attributes.get('_route') starts with 'app_youtube' or app.request.attributes.get('_route') == 'app_connections' %} aria-current="page"{% endif %}>Connexions</a></nav>
     {% for label, messages in app.flashes %}{% for message in messages %}<div class="account-notice {{ label }}" role="{{ label == 'error' ? 'alert' : 'status' }}">{{ message }}</div>{% endfor %}{% endfor %}
     {% block studio_content %}{% endblock %}
-    <footer class="studio-footer"><a href="{{ path('app_privacy') }}">Confidentialité</a></footer>
+    <footer class="studio-footer">{% include 'legal/_links.html.twig' %}</footer>
   </main>
 </div>
 {% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'legal/base.html.twig' %}
+{% block legal_title %}Un cadre clair.{% endblock %}
+{% block legal_content %}
+<p>Retrouve l’identité de l’éditeur, le fonctionnement du studio et les informations sur tes données. La version actuelle ne propose aucun abonnement payant.</p>
+<div class="legal-directory">
+<a href="{{ path('app_legal_notices') }}"><h2>Mentions légales ↗</h2><p>Qui édite VydFlow et comment le contacter.</p></a>
+<a href="{{ path('app_terms') }}"><h2>Conditions d’utilisation ↗</h2><p>Compte, contenus et publication sur les réseaux.</p></a>
+<a href="{{ path('app_sales_terms') }}"><h2>Conditions de vente ↗</h2><p>Cadre de la future offre pour particuliers et professionnels.</p></a>
+<a href="{{ path('app_privacy') }}"><h2>Confidentialité ↗</h2><p>Données utilisées, destinataires, conservation et droits.</p></a>
+<a href="{{ path('app_cookies') }}"><h2>Cookies ↗</h2><p>Sessions et protections nécessaires au studio.</p></a>
+<a href="{{ path('app_data_deletion') }}"><h2>Suppression des données ↗</h2><p>Actions disponibles et demande à l’éditeur.</p></a>
+</div>
+{% endblock %}

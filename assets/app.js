@@ -8,6 +8,7 @@ import './styles/experience.css';
 import './styles/studio.css';
 import './styles/cursor.css';
 import './styles/library.css';
+import './styles/legal.css';
 import { Application } from '@hotwired/stimulus';
 import StudioController from './controllers/studio_controller.js';
 import AccountTokenController from './controllers/account_token_controller.js';

@@ -12,6 +12,7 @@
 {{ form_start(form, {attr: {class: 'account-form', 'data-controller': 'account-token'}}) }}
   {{ form_errors(form) }}
   {% for field in form %}{% if field.vars.name != '_token' %}{{ form_row(field) }}{% endif %}{% endfor %}
+  {% if mode == 'register' %}<p class="help-text">Ton email sert à créer et sécuriser ton compte. Consulte les <a class="account-secondary" href="{{ path('app_terms') }}">conditions d’utilisation en préparation</a> et les <a class="account-secondary" href="{{ path('app_privacy') }}">informations sur tes données</a>. Aucun abonnement payant n’est souscrit.</p>{% endif %}
   <button class="button" type="submit">{{ copy.action }} <span aria-hidden="true">↗</span></button>
 {{ form_end(form) }}
 {% if mode in ['verify', 'reset'] %}<p class="account-switch">Lien expiré ? <a href="{{ path(mode == 'reset' ? 'app_forgot_password' : 'app_resend_verification') }}">Recevoir un nouveau lien</a></p>{% endif %}
