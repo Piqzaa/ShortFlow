@@ -3,11 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\InstagramConnection;
+use App\Entity\TikTokConnection;
 use App\Entity\User;
 use App\Entity\YouTubeConnection;
 use App\Service\InstagramApi;
 use App\Service\PublicationException;
 use App\Service\PublicationLock;
+use App\Service\TikTokApi;
 use App\Service\TokenVault;
 use App\Service\YouTubeApi;
 use App\Service\YouTubePublishing;
@@ -24,9 +26,9 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class YouTubeConnectionController extends AbstractController
 {
     #[Route('', name: 'app_connections', methods: ['GET'])]
-    public function index(#[CurrentUser] User $user, YouTubePublishing $publishing, YouTubeApi $api, InstagramApi $instagram, EntityManagerInterface $em): Response
+    public function index(#[CurrentUser] User $user, YouTubePublishing $publishing, YouTubeApi $api, InstagramApi $instagram, TikTokApi $tiktok, EntityManagerInterface $em): Response
     {
-        return $this->render('publication/connections.html.twig', ['connection' => $publishing->connection($user), 'ready' => $api->isReady(), 'instagramConnection' => $em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $user]), 'instagramReady' => $instagram->isReady()], new Response(headers: ['Cache-Control' => 'no-store, private']));
+        return $this->render('publication/connections.html.twig', ['connection' => $publishing->connection($user), 'ready' => $api->isReady(), 'instagramConnection' => $em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $user]), 'instagramReady' => $instagram->isReady(), 'tiktokConnection' => $em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $user]), 'tiktokReady' => $tiktok->isReady()], new Response(headers: ['Cache-Control' => 'no-store, private']));
     }
 
     #[Route('/youtube', name: 'app_youtube_connect', methods: ['POST'])]

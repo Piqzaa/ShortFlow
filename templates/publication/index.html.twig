@@ -3,7 +3,7 @@
 {% block studio_content %}
 <div class="studio-heading"><div><span class="eyebrow">TES ENVOIS, LEUR AVANCEMENT</span><h1>Publications.</h1><p>Un historique commun, un résultat par vidéo et par réseau.</p></div><a class="button small" href="{{ path('app_library') }}">Choisir des vidéos +</a></div>
 <form method="get" action="{{ path('app_publications') }}" class="publication-filters">
-  <div><label for="publication-network">Réseau</label><select id="publication-network" name="network"><option value="">Tous les réseaux</option>{% for value,label in {youtube:'YouTube',instagram:'Instagram'} %}<option value="{{ value }}"{{ network == value ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
+  <div><label for="publication-network">Réseau</label><select id="publication-network" name="network"><option value="">Tous les réseaux</option>{% for value,label in {youtube:'YouTube',instagram:'Instagram',tiktok:'TikTok'} %}<option value="{{ value }}"{{ network == value ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
   <div><label for="publication-state">État</label><select id="publication-state" name="state"><option value="">Tous les états</option>{% for value,label in {active:'En cours',attention:'À traiter',published:'Publiées',cancelled:'Arrêtées'} %}<option value="{{ value }}"{{ state == value ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
   <button class="button small" type="submit">Filtrer</button>{% if network or state %}<a class="account-secondary" href="{{ path('app_publications') }}">Effacer les filtres</a>{% endif %}
 </form>

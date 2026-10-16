@@ -12,3 +12,4 @@
 .publication-form .publication-checkbox>ul{grid-column:2;margin-top:8px}
 
 .instagram-connection{margin-top:24px}.instagram-brand{background:linear-gradient(135deg,#7527d033,#ed466633);color:#e7b5ff}.connection-panel .connection-warning{color:#ffb3c2}.connection-actions .library-note{max-width:240px}
+.connection-panel+.connection-panel{margin-top:24px}.publication-fields fieldset{min-width:0;margin:24px 0;padding:20px;border:1px solid var(--line);border-radius:8px}.publication-fields legend{padding:0 8px;font-size:13px}.publication-fields fieldset .publication-checkbox{margin:16px 0}.publication-checkbox:has(input:disabled){opacity:.55}

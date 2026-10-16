@@ -8,6 +8,8 @@ Vision de lancement élargie et validée le 15 octobre : vidéo importée ou gé
 
 Mise à jour du 16 octobre 2026 : premier transfert YouTube réel autorisé et réussi, worker Docker automatique. Repère des publications réussies autorisé dans la bibliothèque. Le propriétaire choisit pour la suite de passer son compte Instagram personnel en Créateur puis d’intégrer Reels avant TikTok ; cela autorise le prochain lot Instagram au-delà de l’arrêt YouTube précédent. La conversion réelle du compte, les accès Meta et les essais restent à confirmer séparément ; aucune activation implicite de TikTok, calendrier ou IA.
 
+Mise à jour du 17 octobre 2026 : le propriétaire autorise la préparation locale complète Instagram/TikTok sans créer ses comptes développeur ce soir. Lot TikTok : OAuth, préparation, publication asynchrone et suivi avec API simulée. Accès réels, HTTPS public et premiers essais sociaux restent à autoriser séparément. Calendrier, IA et statistiques restent hors du lot. Voir docs/tiktok.md.
+
 ## Stack et architecture
 Monolithe Symfony 7.4 LTS ; PHP 8.4 Docker ; Doctrine ORM et PostgreSQL 16 ; Twig ; Stimulus ; Vite ; Three.js ; GSAP/ScrollTrigger. Aucun React, microservice, CQRS ou DDD complexe.
 Controllers légers dans src/Controller ; formulaire/validation dans src/Form ; métier dans src/Service ; entités dans src/Entity ; migrations versionnées dans migrations ; templates dans templates ; contrôleurs Stimulus dans assets/controllers ; tokens/styles dans assets/styles ; documentation dans docs.

@@ -1,5 +1,9 @@
 framework:
     rate_limiter:
+        tiktok_init:
+            policy: sliding_window
+            limit: 5
+            interval: '1 minute'
         waitlist:
             policy: fixed_window
             limit: 5

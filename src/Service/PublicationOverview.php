@@ -27,6 +27,12 @@ final class PublicationOverview
                v.byte_size, v.id AS source_id
         FROM instagram_publication p
         LEFT JOIN video_asset v ON v.id = p.source_id AND v.owner_id = p.owner_id
+        UNION ALL
+        SELECT p.id, p.owner_id, 'tiktok' AS network, p.title, p.display_name AS account,
+               p.status, p.notice, p.created_at, p.remote_id, p.options->>'privacy_level' AS privacy, 0 AS sent_bytes,
+               v.byte_size, v.id AS source_id
+        FROM tiktok_publication p
+        LEFT JOIN video_asset v ON v.id = p.source_id AND v.owner_id = p.owner_id
         SQL;
 
     public function __construct(private Connection $db)
@@ -39,7 +45,7 @@ final class PublicationOverview
         $where = 'owner_id = :owner';
         $parameters = ['owner' => $owner->getId()];
         $types = [];
-        if (in_array($network, ['youtube', 'instagram'], true)) {
+        if (in_array($network, ['youtube', 'instagram', 'tiktok'], true)) {
             $where .= ' AND network = :network';
             $parameters['network'] = $network;
         }

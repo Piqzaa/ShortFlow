@@ -76,7 +76,8 @@ final class VideoLibrary
                 $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
                 $active = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM youtube_publication WHERE source_id = ? AND status IN ('queued', 'uploading', 'processing', 'paused')", [$video->getId()]);
                 $instagramActive = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM instagram_publication WHERE source_id = ? AND status IN ('queued', 'processing', 'publishing', 'paused', 'review')", [$video->getId()]);
-                if ((int) $active + (int) $instagramActive > 0) {
+                $tiktokActive = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM tiktok_publication WHERE source_id = ? AND status IN ('queued', 'processing', 'publishing', 'paused', 'review')", [$video->getId()]);
+                if ((int) $active + (int) $instagramActive + (int) $tiktokActive > 0) {
                     throw new VideoLibraryException('Cette vidéo a un envoi en cours ou suspendu. Termine cet envoi avant de la supprimer.');
                 }
                 $trash = $this->storage->stageDeletion($video->getStorageName());

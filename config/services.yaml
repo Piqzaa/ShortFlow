@@ -35,3 +35,12 @@ services:
         class: App\Service\TokenVault
         arguments:
             $key: '%env(INSTAGRAM_TOKEN_KEY)%'
+
+    tiktok.http:
+        class: Symfony\Contracts\HttpClient\HttpClientInterface
+        factory: ['Symfony\Component\HttpClient\HttpClient', 'create']
+
+    tiktok.vault:
+        class: App\Service\TokenVault
+        arguments:
+            $key: '%env(TIKTOK_TOKEN_KEY)%'

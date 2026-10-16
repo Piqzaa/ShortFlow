@@ -29,7 +29,7 @@ final class PublicationController extends AbstractController
     {
         $network = $request->query->getString('network');
         $state = $request->query->getString('state');
-        $network = in_array($network, ['youtube', 'instagram'], true) ? $network : '';
+        $network = in_array($network, ['youtube', 'instagram', 'tiktok'], true) ? $network : '';
         $state = isset(PublicationOverview::STATES[$state]) ? $state : '';
 
         return $this->page('publication/index.html.twig', ['feed' => $publications->page($user, $request->query->getInt('page', 1), $network, $state), 'network' => $network, 'state' => $state]);

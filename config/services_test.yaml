@@ -6,3 +6,7 @@ services:
     instagram.http:
         class: Symfony\Component\HttpClient\MockHttpClient
         public: true
+
+    tiktok.http:
+        class: Symfony\Component\HttpClient\MockHttpClient
+        public: true

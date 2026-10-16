@@ -61,6 +61,15 @@ final class VideoAssetRepository extends ServiceEntityRepository
             $platforms[(int) $row['videoId']][] = 'instagram';
         }
 
+        $tiktok = $this->getEntityManager()->createQueryBuilder()
+            ->select('DISTINCT IDENTITY(p.source) AS videoId')->from(\App\Entity\TikTokPublication::class, 'p')->join('p.source', 'v')
+            ->where('p.owner = :owner')->andWhere('v.owner = :owner')->andWhere('p.status = :status')->andWhere('p.publishId IS NOT NULL')
+            ->andWhere('v.id IN (:ids)')->setParameter('owner', $owner)->setParameter('status', 'published')
+            ->setParameter('ids', array_map(static fn (VideoAsset $video): ?int => $video->getId(), $videos))->getQuery()->getArrayResult();
+        foreach ($tiktok as $row) {
+            $platforms[(int) $row['videoId']][] = 'tiktok';
+        }
+
         return $platforms;
     }
 

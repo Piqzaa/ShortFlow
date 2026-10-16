@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Mon studio — VydFlow{% endblock %}
 {% block body %}
-{% set in_publications = app.request.attributes.get('_route') starts with 'app_publication' or app.request.attributes.get('_route') in ['app_instagram_prepare', 'app_instagram_job_action'] %}
+{% set in_publications = app.request.attributes.get('_route') starts with 'app_publication' or app.request.attributes.get('_route') in ['app_instagram_prepare', 'app_instagram_job_action', 'app_tiktok_prepare', 'app_tiktok_job_action'] %}
 {% set in_library = app.request.attributes.get('_route') starts with 'app_video' or app.request.attributes.get('_route') == 'app_library' %}
 <div class="studio-shell">
   <aside class="studio-sidebar">

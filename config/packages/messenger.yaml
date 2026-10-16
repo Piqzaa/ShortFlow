@@ -21,3 +21,4 @@ framework:
         routing:
             App\Message\PublishYouTube: publications
             App\Message\PublishInstagram: publications
+            App\Message\PublishTikTok: publications
