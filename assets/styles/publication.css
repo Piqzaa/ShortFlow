@@ -2,6 +2,7 @@
 @media(max-width:760px){.selection-bar,.selection-bar>div{align-items:flex-start;flex-direction:column;gap:14px}.selection-bar .button{width:100%;justify-content:center}.connection-panel{grid-template-columns:40px minmax(0,1fr);padding:20px;gap:16px}.connection-brand{width:40px;height:36px}.connection-actions{grid-column:1/-1}.publication-editor{grid-template-columns:1fr;padding:18px;gap:24px}.publication-preview{display:grid;grid-template-columns:90px minmax(0,1fr);gap:0 18px}.publication-preview video{grid-row:1/3;max-height:160px}.publication-preview h2{margin-top:4px}.publication-options{grid-template-columns:1fr}.publication-confirm{padding:18px}.publication-item{flex-direction:column;gap:12px}.publication-result{align-items:flex-start}.publication-confirm>.button{font-size:12px;justify-content:center;gap:14px}.studio-mobile-nav{flex-wrap:wrap}}
 
 /* Keep checkbox controls separate from wrapping labels, including long mobile copy. */
+.publication-destinations{justify-content:flex-start;gap:12px;flex-wrap:wrap}.publication-destinations>a,.publication-destinations>strong{padding:10px 16px;border:1px solid var(--line);border-radius:7px;font-weight:500}.publication-destinations>[aria-current=page]{background:#b59aff18;color:var(--ink);border-color:#b59aff66}
 .selection-bar label{display:inline-flex;align-items:flex-start;gap:14px;line-height:1.7}
 .selection-bar input[type=checkbox],.video-select input[type=checkbox]{flex:0 0 18px;width:18px;height:18px;margin:2px 0 0}
 .video-select{align-items:flex-start;line-height:1.7}

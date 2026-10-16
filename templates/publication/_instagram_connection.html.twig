@@ -8,7 +8,7 @@
       {% else %}<p>Compte connecté · {{ instagramConnection.accountType == 'MEDIA_CREATOR' ? 'Créateur' : 'Entreprise' }}</p>{% endif %}
       <a class="account-secondary" href="https://www.instagram.com/{{ instagramConnection.username }}/" target="_blank" rel="noopener noreferrer">Voir le profil ↗</a>
     {% else %}<p>Connecte ton compte Créateur ou Entreprise avec Instagram.</p>{% endif %}
-    <p class="library-note">La publication de Reels arrive prochainement.</p>
+    <p class="library-note">Sélectionne tes vidéos dans la bibliothèque pour préparer tes Reels.</p>
   </div>
   <div class="connection-actions">
     {% if instagramReady %}<form action="{{ path('app_instagram_connect') }}" method="post"><input type="hidden" name="_token" value="{{ csrf_token('instagram_connect') }}"><button class="button small" type="submit">{{ instagramConnection ? 'Reconnecter Instagram' : 'Connecter Instagram' }} ↗</button></form>

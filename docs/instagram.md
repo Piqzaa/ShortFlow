@@ -1,8 +1,8 @@
-# Instagram — connexion OAuth, 16 octobre 2026
+# Instagram — connexion OAuth et publication Reels, 16 octobre 2026
 
 ## Objectif et périmètre
 
-Connecter un compte Instagram Créateur/Entreprise directement depuis Connexions, sans demander de Facebook Login au créateur. Cette étape implémente uniquement connexion, reconnexion et déconnexion locale. Aucun transfert de Reel, publication, badge de succès Instagram, calendrier, TikTok, webhook ou révocation distante ajouté. L’essai réel attend le déblocage SMS de l’inscription Meta du propriétaire et la création de son application ; aucune connexion réelle annoncée.
+Connecter un compte Instagram Créateur/Entreprise directement depuis Connexions, puis préparer et publier des Reels depuis la bibliothèque. Le premier lot ci-dessous décrit OAuth ; le fonctionnement du second lot est détaillé dans [instagram-publication.md](instagram-publication.md). L’essai réel attend les accès Meta et un environnement HTTPS adapté ; aucune connexion ni publication Instagram réelle annoncée. TikTok, calendrier et IA restent hors de ce lot.
 
 ## Fichiers et composants
 
@@ -40,7 +40,7 @@ Utiliser les identifiants du produit Instagram, pas un jeton copié dans le chat
 
 Les scopes sont instagram_business_basic et instagram_business_content_publish ; aucun accès aux messages ou commentaires. Version v26.0 observée dans le guide Meta lors de cette étape ; vérifier sa disponibilité avec l’application créée avant l’essai réel. Le state est utilisé ; aucun PKCE non documenté n’est inventé.
 
-L’expiration renvoyée par Meta est conservée, limitée à 60 jours ; la page avertit sept jours avant. Une reconnexion renouvelle l’autorisation. Le renouvellement serveur automatique sera raccordé au lot publication Reels ; aucun worker de renouvellement inutilisé créé ici. Un jeton révoqué à distance peut paraître valide jusqu’au prochain appel API : la carte indique l’état local, sans appel réseau à chaque affichage.
+L’expiration renvoyée par Meta est conservée, limitée à 60 jours ; la page avertit sept jours avant. Une reconnexion renouvelle l’autorisation. Le lot Reels suspend les envois si le jeton est expiré ; le renouvellement automatique n’est pas implémenté. Un jeton révoqué à distance peut paraître valide jusqu’au prochain appel API : la carte indique l’état local, sans appel réseau à chaque affichage.
 
 ## Comment tester
 

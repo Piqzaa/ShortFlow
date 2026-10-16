@@ -20,3 +20,4 @@ framework:
                     use_notify: false
         routing:
             App\Message\PublishYouTube: publications
+            App\Message\PublishInstagram: publications

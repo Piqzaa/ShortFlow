@@ -26,7 +26,7 @@ final class PublicationController extends AbstractController
     #[Route('', name: 'app_publications', methods: ['GET'])]
     public function index(#[CurrentUser] User $user, EntityManagerInterface $em, YouTubePublishing $publishing): Response
     {
-        return $this->page('publication/index.html.twig', ['jobs' => $em->getRepository(YouTubePublication::class)->findBy(['owner' => $user], ['id' => 'DESC'], 100), 'connection' => $publishing->connection($user)]);
+        return $this->page('publication/index.html.twig', ['jobs' => $em->getRepository(YouTubePublication::class)->findBy(['owner' => $user], ['id' => 'DESC'], 100), 'instagramJobs' => $em->getRepository(\App\Entity\InstagramPublication::class)->findBy(['owner' => $user], ['id' => 'DESC'], 100), 'connection' => $publishing->connection($user)]);
     }
 
     #[Route('/preparer', name: 'app_publication_prepare', methods: ['GET', 'POST'])]

@@ -44,6 +44,45 @@ final class InstagramApi
         ], '', '&', PHP_QUERY_RFC3986);
     }
 
+    public function createReel(\App\Entity\InstagramConnection $connection, string $videoUrl, string $caption, bool $shareToFeed, bool $synthetic): string
+    {
+        $data = $this->json('POST', $this->endpoint($connection->getInstagramId().'/media'), ['auth_bearer' => $this->access($connection), 'body' => ['media_type' => 'REELS', 'video_url' => $videoUrl, 'caption' => $caption, 'share_to_feed' => $shareToFeed ? 'true' : 'false', 'is_ai_generated' => $synthetic ? 'true' : 'false']]);
+
+        return $this->identifier($data['id'] ?? null);
+    }
+
+    public function containerStatus(\App\Entity\InstagramConnection $connection, string $id): string
+    {
+        $data = $this->json('GET', $this->endpoint($this->identifier($id)), ['auth_bearer' => $this->access($connection), 'query' => ['fields' => 'status_code']]);
+        $status = $data['status_code'] ?? '';
+        if (!in_array($status, ['IN_PROGRESS', 'FINISHED', 'PUBLISHED', 'ERROR', 'EXPIRED'], true)) {
+            throw new PublicationException('Instagram n’a pas confirmé le traitement de la vidéo.');
+        }
+
+        return $status;
+    }
+
+    public function publishReel(\App\Entity\InstagramConnection $connection, string $container): string
+    {
+        $data = $this->json('POST', $this->endpoint($connection->getInstagramId().'/media_publish'), ['auth_bearer' => $this->access($connection), 'body' => ['creation_id' => $this->identifier($container)]]);
+
+        return $this->identifier($data['id'] ?? null);
+    }
+
+    private function endpoint(string $path): string
+    {
+        return 'https://graph.instagram.com/'.$this->version.'/'.$path;
+    }
+
+    private function access(\App\Entity\InstagramConnection $connection): string
+    {
+        if (!$this->isReady() || $connection->isExpired()) {
+            throw new PublicationException('Reconnecte ton compte Instagram avant de poursuivre.');
+        }
+
+        return $this->vault->decrypt($connection->getAccessToken());
+    }
+
     /** @return array{id: string, username: string, type: string, access: string, expires: int} */
     public function connect(#[\SensitiveParameter] string $code): array
     {
