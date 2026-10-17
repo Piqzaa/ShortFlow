@@ -30,7 +30,7 @@ final class TikTokPublishType extends AbstractType
         foreach ($options['videos'] as $video) {
             $row = $rows->create((string) $video->getId(), FormType::class, ['label' => false]);
             $row->add('caption', TextareaType::class, ['label' => 'Légende TikTok', 'required' => false, 'attr' => ['rows' => 4, 'maxlength' => 2200], 'constraints' => [new Assert\Length(max: 2200)]])
-                ->add('privacy', ChoiceType::class, ['label' => 'Qui peut voir cette vidéo ?', 'placeholder' => 'Choisir la visibilité', 'choices' => $choices, 'constraints' => [new Assert\NotBlank()]]);
+                ->add('privacy', ChoiceType::class, ['label' => 'Qui peut voir cette vidéo ?', 'placeholder' => 'Choisir la visibilité', 'choices' => $choices, 'required' => !$options['allow_missing_privacy'], 'constraints' => $options['allow_missing_privacy'] ? [] : [new Assert\NotBlank()]]);
             foreach (['comment' => 'Autoriser les commentaires', 'duet' => 'Autoriser les Duos', 'stitch' => 'Autoriser les Collages'] as $flag => $label) {
                 $row->add($flag, CheckboxType::class, ['label' => $label, 'required' => false, 'disabled' => $options['creator'][$flag.'_disabled'] ?? true, 'row_attr' => ['class' => 'publication-checkbox']]);
             }
@@ -46,5 +46,6 @@ final class TikTokPublishType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired(['videos', 'draft_key', 'creator'])->setAllowedTypes('videos', 'array')->setAllowedTypes('draft_key', 'string')->setAllowedTypes('creator', 'array');
+        $resolver->setDefault('allow_missing_privacy', false)->setAllowedTypes('allow_missing_privacy', 'bool');
     }
 }

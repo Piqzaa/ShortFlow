@@ -152,7 +152,7 @@ final class YouTubePublicationTest extends WebTestCase
     {
         $own = $this->video($this->alice);
         $foreign = $this->video($this->bob);
-        foreach (['/studio/connexions', '/studio/publications', '/studio/publications/preparer'] as $url) {
+        foreach (['/studio/connexions', '/studio/publications', '/studio/publications/youtube/preparer'] as $url) {
             $this->client->request('GET', $url);
             self::assertResponseRedirects('http://localhost/connexion');
         }
@@ -160,11 +160,11 @@ final class YouTubePublicationTest extends WebTestCase
         $this->client->request('GET', '/studio/bibliotheque');
         self::assertSelectorExists('input[name="videos[]"][value="'.$own->getId().'"]');
         self::assertSelectorNotExists('input[value="'.$foreign->getId().'"]');
-        $this->client->request('GET', '/studio/publications/preparer', ['videos' => [$foreign->getId()]]);
+        $this->client->request('GET', '/studio/publications/youtube/preparer', ['videos' => [$foreign->getId()]]);
         self::assertResponseStatusCodeSame(404);
         $this->client->request('POST', '/studio/connexions/youtube');
         self::assertResponseStatusCodeSame(403);
-        $this->client->request('GET', '/studio/publications/preparer', ['videos' => []]);
+        $this->client->request('GET', '/studio/publications/youtube/preparer', ['videos' => []]);
         self::assertResponseRedirects('/studio/bibliotheque', 303);
         $unverified = new User('unverified@example.test');
         $unverified->setPassword('unused');
@@ -181,7 +181,7 @@ final class YouTubePublicationTest extends WebTestCase
         $a = $this->video($this->alice);
         $b = $this->video($this->alice, 'Deuxième');
         $this->client->loginUser($this->alice);
-        $crawler = $this->client->request('GET', '/studio/publications/preparer', ['videos' => [$a->getId(), $b->getId()]]);
+        $crawler = $this->client->request('GET', '/studio/publications/youtube/preparer', ['videos' => [$a->getId(), $b->getId()]]);
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Prêtes à partager');
         self::assertStringNotContainsString('access-test', $this->client->getResponse()->getContent());
@@ -197,7 +197,7 @@ final class YouTubePublicationTest extends WebTestCase
         self::assertResponseRedirects('/studio/publications', 303);
         self::assertSame(2, $this->em()->getRepository(YouTubePublication::class)->count([]));
         self::assertSame(2, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
-        $this->client->request('POST', '/studio/publications/preparer', $payload);
+        $this->client->request('POST', '/studio/publications/youtube/preparer', $payload);
         self::assertResponseRedirects('/studio/bibliotheque', 303);
         self::assertSame(2, $this->em()->getRepository(YouTubePublication::class)->count([]));
         $this->client->request('GET', '/studio/publications');
@@ -210,12 +210,12 @@ final class YouTubePublicationTest extends WebTestCase
         $this->connect($this->alice);
         $video = $this->video($this->alice);
         $this->client->loginUser($this->alice);
-        $crawler = $this->client->request('GET', '/studio/publications/preparer', ['videos' => [$video->getId()]]);
+        $crawler = $this->client->request('GET', '/studio/publications/youtube/preparer', ['videos' => [$video->getId()]]);
         $form = $crawler->selectButton('Publier 1 vidéo sur YouTube')->form();
         $this->client->submit($form);
         self::assertResponseStatusCodeSame(422);
         self::assertSame(0, $this->em()->getRepository(YouTubePublication::class)->count([]));
-        $this->client->request('POST', '/studio/publications/preparer', ['you_tube_publish' => ['videos' => [$video->getId() => $this->row()], 'confirm' => '1']]);
+        $this->client->request('POST', '/studio/publications/youtube/preparer', ['you_tube_publish' => ['videos' => [$video->getId() => $this->row()], 'confirm' => '1']]);
         self::assertResponseStatusCodeSame(422);
         self::assertSame(0, $this->em()->getRepository(YouTubePublication::class)->count([]));
     }

@@ -36,7 +36,7 @@ final class PublicationController extends AbstractController
         return $this->page('publication/index.html.twig', ['feed' => $publications->page($user, $request->query->getInt('page', 1), $network, $state), 'network' => $network, 'state' => $state, 'statisticsNetworks' => $statisticsAccess->networks()]);
     }
 
-    #[Route('/preparer', name: 'app_publication_prepare', methods: ['GET', 'POST'])]
+    #[Route('/youtube/preparer', name: 'app_youtube_prepare', methods: ['GET', 'POST'])]
     public function prepare(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, YouTubePublishing $publishing, YouTubeApi $api, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
         if ($request->isMethod('GET')) {

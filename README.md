@@ -85,6 +85,8 @@ Publications permet aussi un aperçu repliable de la source privée. Le lot loca
 
 Studio : vue d'ensemble avec compteurs réels et envois à traiter, historique commun YouTube/Instagram/TikTok filtrable et paginé, réseaux connectés et espace Mon compte (`/studio/mon-compte`) avec changement sécurisé du mot de passe. Les liens légaux généraux sont regroupés vers `/informations-legales`. Guide des composants, flux Symfony et tests : [docs/studio.md](docs/studio.md).
 
+Publication multi-réseaux : sélectionner les vidéos, choisir une ou plusieurs destinations, adapter les textes puis vérifier un récapitulatif avant la confirmation unique. Une destination indisponible bloque la mise en file de tout le lot ; les envois ont ensuite des suivis indépendants. Préparation possible sans accès sociaux, sans faux compte ni publication simulée dans le studio. Guide, limites et pédagogie Symfony : [docs/publication-multireseaux.md](docs/publication-multireseaux.md).
+
 ```sh
 docker compose exec php php scripts/check.php
 npm run check

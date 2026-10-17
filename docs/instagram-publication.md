@@ -4,7 +4,7 @@
 
 Sélectionner une ou plusieurs vidéos privées, choisir Instagram Reels dans la préparation, modifier chaque légende puis confirmer. Chaque vidéo devient une publication distincte. La page Publications suit les envois Instagram et YouTube ; la bibliothèque affiche les deux icônes si la même source a réussi sur les deux réseaux.
 
-Une préparation cible actuellement un réseau : utiliser le lien de destination conserve la sélection de vidéos, mais démarre une nouvelle préparation et ne conserve pas les textes saisis sur l’autre réseau. L’envoi YouTube + Instagram en une seule confirmation n’est pas implémenté dans ce lot. Aucun recadrage, musique, montage, programmation ou génération IA.
+Le formulaire Instagram individuel décrit ici reste disponible. Depuis la bibliothèque, le parcours principal prépare désormais YouTube, Instagram et/ou TikTok avec une confirmation commune et conservation des textes enregistrés dans la session : voir [publication-multireseaux.md](publication-multireseaux.md). Aucun recadrage, musique, montage, programmation ou génération IA.
 
 ## Pourquoi HTTPS est nécessaire
 

@@ -4,7 +4,7 @@
 
 Connecter un compte TikTok puis préparer jusqu’à cinq vidéos, confirmer explicitement leurs réglages et suivre les publications dans le studio. Ce lot est autorisé sans créer de compte développeur ce soir. L’intégration est testée avec une API simulée ; aucune connexion, publication réelle ou exposition HTTPS du serveur local n’a eu lieu. Instagram possède déjà son parcours Reels local, décrit dans [instagram-publication.md](instagram-publication.md), avec la même attente des accès réels.
 
-La préparation reste par réseau : choisir TikTok, Instagram ou YouTube depuis la sélection de la bibliothèque. Une confirmation unique pour plusieurs réseaux à la fois reste à intégrer. Calendrier, IA et statistiques ne sont pas ajoutés dans ce lot.
+Le parcours principal depuis la bibliothèque prépare désormais plusieurs réseaux avec une confirmation commune ; voir [publication-multireseaux.md](publication-multireseaux.md). Le formulaire TikTok individuel reste disponible. Calendrier, IA et statistiques ne sont pas ajoutés dans ce lot.
 
 ## Fichiers et composants
 

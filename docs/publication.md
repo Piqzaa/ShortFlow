@@ -1,5 +1,7 @@
 # Publication immédiate — cadrage du 15 octobre 2026
 
+**État au 17 octobre 2026 :** les trois moteurs de publication sont implémentés ; YouTube a été essayé réellement, Instagram/TikTok attendent leurs accès et HTTPS. Le parcours commun (choix de plusieurs réseaux, textes distincts, récapitulatif et confirmation unique) est désormais implémenté localement et testé avec HTTP simulé : voir [publication-multireseaux.md](publication-multireseaux.md). Les paragraphes de cadrage initial ci-dessous décrivent l’ordre historique ; l’état courant et les limites sont dans ce guide et la roadmap. Aucun nouvel essai social réel dans ce lot.
+
 Le propriétaire place cette fonction avant le studio IA : sélectionner une ou plusieurs vidéos de sa bibliothèque et les publier depuis VydFlow vers un, deux ou trois réseaux parmi TikTok, YouTube et Instagram. Le nettoyage d’interface est réalisé. Le présent document reste le cadrage multi-réseaux ; le premier lot YouTube est implémenté et en validation locale. Sa configuration, ses limites et son guide pédagogique sont dans docs/youtube.md. Les essais réels restent à réaliser.
 
 ## Place dans la vision de lancement

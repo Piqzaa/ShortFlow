@@ -1,0 +1,18 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Préparer mes publications — VydFlow{% endblock %}
+{% block studio_content %}
+{% include 'publication/_batch_header.html.twig' %}
+{% include 'publication/_batch_issues.html.twig' %}
+<p class="library-note">Chaque réseau garde ses propres textes et réglages. Les textes enregistrés restent disponibles si tu modifies les destinations.</p>
+{{ form_start(form, {attr:{class:'publication-form account-form batch-form'}}) }}{{ form_errors(form) }}
+{% for network in networks %}{% set destination = destinations[network] %}{% set networkForm = attribute(form, network) %}
+<section class="batch-network" aria-labelledby="network-{{ network }}"><div class="batch-network-heading"><h2 id="network-{{ network }}">{{ destination.label }}</h2><p>{{ destination.name ?: 'Compte à connecter avant publication' }}</p></div>{{ form_errors(networkForm) }}
+{% for video in videos %}{% set row = attribute(networkForm.videos, video.id) %}
+<section class="publication-editor" aria-labelledby="video-{{ network }}-{{ video.id }}"><div class="publication-preview"><video controls playsinline preload="metadata" src="{{ path('app_video_stream', {id:video.id}) }}" aria-label="Aperçu de {{ video.title }} pour {{ destination.label }}"></video><h3 id="video-{{ network }}-{{ video.id }}">{{ video.title }}</h3><p>{{ video.width }} × {{ video.height }} · {{ video.duration|number_format(1, ',', ' ') }} s</p></div><div class="publication-fields">{{ form_errors(row) }}
+{% if network == 'youtube' %}{{ form_row(row.title) }}{{ form_row(row.description) }}<div class="publication-options">{{ form_row(row.privacy) }}{{ form_row(row.audience) }}</div>{{ form_row(row.synthetic) }}
+{% elseif network == 'instagram' %}{{ form_row(row.caption) }}{{ form_row(row.shareToFeed) }}{{ form_row(row.synthetic) }}
+{% else %}{{ form_row(row.caption) }}{{ form_row(row.privacy) }}{% if not creator %}<p class="library-note">Les visibilités et interactions proposées par TikTok apparaîtront après connexion. Aucun choix de visibilité n’est présélectionné.</p>{% endif %}{{ form_row(row.comment) }}{{ form_row(row.duet) }}{{ form_row(row.stitch) }}<fieldset><legend>Contenu commercial</legend>{{ form_row(row.disclosure) }}{{ form_row(row.ownBrand) }}{{ form_row(row.partnerBrand) }}<p class="library-note">Un partenariat rémunéré ne peut pas être privé.</p></fieldset>{{ form_row(row.synthetic) }}{% endif %}
+</div></section>{% endfor %}</section>{% endfor %}
+<div class="batch-actions"><button class="button" type="submit">Voir le récapitulatif ↗</button><a class="account-secondary" href="{{ path('app_publication_batch', {key:key}) }}">Modifier les réseaux</a></div><p class="library-note">Enregistre les textes avec « Voir le récapitulatif » avant de changer les réseaux. Aucun recadrage, musique ou montage ne sera ajouté.</p>
+{{ form_end(form) }}
+{% endblock %}

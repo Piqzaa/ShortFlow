@@ -1,0 +1,11 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Choisir mes réseaux — VydFlow{% endblock %}
+{% block studio_content %}
+{% include 'publication/_batch_header.html.twig' %}
+<p class="library-note">Choisis une ou plusieurs destinations. Tu peux préparer les textes même si un compte attend sa connexion. Aucun envoi ne démarre ici.</p>
+{{ form_start(form, {attr:{class:'publication-form account-form batch-form'}}) }}{{ form_errors(form) }}{{ form_errors(form.networks) }}
+<fieldset class="batch-destinations"><legend>Sur quels réseaux publier ?</legend>{% for choice in form.networks %}{% set destination = destinations[choice.vars.value] %}<div class="batch-destination">{{ form_widget(choice) }}<label for="{{ choice.vars.id }}"><strong>{{ destination.label }}</strong><span>{{ destination.name ?: 'Aucun compte connecté' }}</span><small>{{ destination.ready ? 'Envoi disponible' : 'Connexion ou activation nécessaire avant l’envoi' }}</small>{% if choice.vars.value == 'tiktok' %}<small>Jusqu’à 5 vidéos par lot</small>{% endif %}</label></div>{% endfor %}</fieldset>
+<div class="batch-selection"><h2>Les vidéos sélectionnées</h2><ul>{% for video in videos %}<li>{{ video.title }} <span>· {{ video.duration|number_format(1, ',', ' ') }} s</span></li>{% endfor %}</ul></div>
+<div class="batch-actions"><button class="button" type="submit">Adapter les publications ↗</button><a class="account-secondary" href="{{ path('app_library') }}">Modifier les vidéos</a></div>
+{{ form_end(form) }}
+{% endblock %}

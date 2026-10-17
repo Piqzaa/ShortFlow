@@ -3,7 +3,7 @@
 {% block studio_content %}
 <a class="account-secondary" href="{{ path('app_library') }}">← Revenir à la bibliothèque</a>
 <div class="studio-heading"><div><span class="eyebrow">LE PROCHAIN MOUVEMENT</span><h1>Prêtes à partager.</h1><p>{{ videos|length }} vidéo{{ videos|length > 1 ? 's' : '' }} · Instagram Reels{% if connection %} · <strong>@{{ connection.username }}</strong>{% endif %}</p></div></div>
-<nav class="publication-toolbar publication-destinations" aria-label="Destination"><a class="account-secondary" href="{{ path('app_publication_prepare', {videos: ids}) }}">YouTube</a><strong aria-current="page">Instagram Reels</strong><a class="account-secondary" href="{{ path('app_tiktok_prepare', {videos: ids}) }}">TikTok ↗</a></nav>
+<nav class="publication-toolbar publication-destinations" aria-label="Destination"><a class="account-secondary" href="{{ path('app_youtube_prepare', {videos: ids}) }}">YouTube</a><strong aria-current="page">Instagram Reels</strong><a class="account-secondary" href="{{ path('app_tiktok_prepare', {videos: ids}) }}">TikTok ↗</a></nav>
 {% if not connection or connection.expired %}<div class="account-notice" role="status">Connecte ton compte Instagram Créateur ou Entreprise. <a href="{{ path('app_connections') }}">Mes connexions ↗</a></div>{% endif %}
 {% if not mediaReady %}<div class="account-notice" role="status">L’envoi Instagram n’est pas encore activé. Tu peux préparer tes légendes ici.</div>{% endif %}
 {{ form_start(form, {attr: {class: 'publication-form account-form'}}) }}{{ form_errors(form) }}
