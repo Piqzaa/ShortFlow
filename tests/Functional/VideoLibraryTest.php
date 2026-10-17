@@ -299,6 +299,87 @@ final class VideoLibraryTest extends WebTestCase
         self::assertFileDoesNotExist($orphan);
     }
 
+    public function testBulkDeleteRequiresExactConfirmationOwnershipAndCsrf(): void
+    {
+        $this->asUser('alice@example.test');
+        $first = $this->upload('tests/Fixtures/library-valid.mp4', 'Premier clip');
+        $second = $this->upload('tests/Fixtures/library-valid.mp4', 'Deuxième clip');
+        $storage = static::getContainer()->get(PrivateVideoStorage::class);
+        $paths = [$storage->path($first->getStorageName()), $storage->path($second->getStorageName())];
+        $ids = [$first->getId(), $second->getId()];
+        $this->asUser('bob@example.test');
+        $foreign = $this->upload('tests/Fixtures/library-valid.mp4', 'Privé Bob');
+        $this->asUser('alice@example.test');
+        $this->client->request('GET', '/studio/bibliotheque/supprimer-selection', ['videos' => [$ids[0], $foreign->getId()]]);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/studio/bibliotheque/supprimer-selection', ['videos' => ['bad']]);
+        self::assertResponseStatusCodeSame(404);
+        $crawler = $this->client->request('GET', '/studio/bibliotheque/supprimer-selection', ['videos' => [$ids[1], $ids[0], $ids[0]]]);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(2, '.video-delete-list li');
+        foreach ($paths as $path) {
+            self::assertFileExists($path);
+        }
+        $form = $crawler->selectButton('Supprimer définitivement la sélection')->form();
+        $this->client->request('POST', '/studio/bibliotheque/supprimer-selection', ['videos' => $ids, '_token' => 'invalid']);
+        self::assertResponseStatusCodeSame(403);
+        $values = $form->getPhpValues();
+        $values['videos'] = [$ids[0]];
+        $this->client->request('POST', '/studio/bibliotheque/supprimer-selection', $values);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->submit($form);
+        self::assertResponseRedirects('/studio/bibliotheque', 303);
+        foreach ($paths as $path) {
+            self::assertFileDoesNotExist($path);
+        }
+        self::assertSame(1, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM video_asset'));
+        $this->asUser('bob@example.test');
+        $this->client->request('GET', '/studio/bibliotheque/'.$foreign->getId());
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testBulkDeleteWithActiveVideoPreservesEntireSelection(): void
+    {
+        $this->asUser('alice@example.test');
+        $first = $this->upload('tests/Fixtures/library-valid.mp4', 'À garder');
+        $second = $this->upload('tests/Fixtures/library-valid.mp4', 'En cours');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = $em->find(User::class, $second->getOwner()->getId());
+        $connection = new \App\Entity\YouTubeConnection($owner, 'UC'.str_repeat('a', 22), 'Test', 'unused', 'unused', 3600);
+        $job = new \App\Entity\YouTubePublication($owner, $second, $connection, bin2hex(random_bytes(32)), 'En cours', '', 'private', false, false);
+        $em->persist($connection);
+        $em->persist($job);
+        $em->flush();
+        $paths = array_map(fn ($video) => static::getContainer()->get(PrivateVideoStorage::class)->path($video->getStorageName()), [$first, $second]);
+        $crawler = $this->client->request('GET', '/studio/bibliotheque/supprimer-selection', ['videos' => [$first->getId(), $second->getId()]]);
+        $this->client->submit($crawler->selectButton('Supprimer définitivement la sélection')->form());
+        self::assertResponseStatusCodeSame(409);
+        self::assertSelectorTextContains('.account-notice', 'Aucune vidéo supprimée');
+        self::assertSame(2, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM video_asset'));
+        foreach ($paths as $path) {
+            self::assertFileExists($path);
+        }
+    }
+
+    public function testBulkDeleteRestoresStagedFilesWhenStorageFails(): void
+    {
+        $this->asUser('alice@example.test');
+        $first = $this->upload('tests/Fixtures/library-valid.mp4', 'Premier');
+        $second = $this->upload('tests/Fixtures/library-valid.mp4', 'Second');
+        $storage = static::getContainer()->get(PrivateVideoStorage::class);
+        $paths = [$storage->path($first->getStorageName()), $storage->path($second->getStorageName())];
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement('UPDATE video_asset SET storage_name = ? WHERE id = ?', ['../../invalid', $second->getId()]);
+        $crawler = $this->client->request('GET', '/studio/bibliotheque/supprimer-selection', ['videos' => [$first->getId(), $second->getId()]]);
+        $this->client->submit($crawler->selectButton('Supprimer définitivement la sélection')->form());
+        self::assertResponseStatusCodeSame(409);
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM video_asset'));
+        foreach ($paths as $path) {
+            self::assertFileExists($path);
+        }
+        self::assertCount(0, glob($storage->directory().'/*.deleted-*'));
+    }
+
     private function asUser(string $email): void
     {
         $this->client->loginUser(static::getContainer()->get(UserRepository::class)->findByEmail($email));

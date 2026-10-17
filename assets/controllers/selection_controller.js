@@ -10,7 +10,7 @@ export default class extends Controller {
   update() {
     const count = this.itemTargets.filter(input => input.checked).length;
     this.countTarget.textContent = `${count} vidéo${count > 1 ? 's' : ''} sélectionnée${count > 1 ? 's' : ''}`;
-    this.submitTarget.disabled = count === 0;
+    this.submitTargets.forEach(button => { button.disabled = count === 0; });
     this.allTarget.checked = count > 0 && count === this.itemTargets.length;
     this.allTarget.indeterminate = count > 0 && count < this.itemTargets.length;
   }

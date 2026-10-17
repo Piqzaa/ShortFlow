@@ -40,6 +40,15 @@ Exécuter `docker compose exec -T php php scripts/check.php` (migrations de shor
 Parcours manuel : vue d'ensemble → compteur À traiter → filtres → vidéo source ; Mon compte → mot de passe actuel incorrect puis nouveau valide ; vérifier la reconnexion demandée. Contrôler les états vides, desktop/mobile, Tab, formulaires et l'accès aux documents légaux depuis le lien unique. Aucun essai social réel n'est nécessaire.
 
 
-### Largeur du studio
+### Largeur et publications (17 octobre 2026)
 
-Le conteneur commun occupe la largeur disponible avec des marges internes et une limite de 2 200 px pour les très grands écrans. Les formulaires conservent leur largeur de lecture.
+Le conteneur commun du studio occupe la largeur disponible avec des marges internes et une limite de 2 200 px pour les très grands écrans. Les formulaires conservent leur largeur de lecture. Publications présente directement la vidéo source à côté des informations, sans lecture automatique. Les indications statistiques communes sont regroupées en haut de liste ; sans collecte active ni relevé, les compteurs vides ne s’affichent pas. Voir statistics.md.
+
+
+### Supprimer une sélection
+
+La barre de sélection de la bibliothèque propose Préparer la publication et Supprimer la sélection. Les deux boutons suivent le même compteur et se réactivent après retour navigateur. Le second mène par GET à une page de confirmation listant les titres ; aucune suppression à ce stade. Le POST de confirmation contient un jeton CSRF lié à la liste triée/dédupliquée des identifiants. Chaque vidéo doit appartenir au compte, sélection limitée à 20 (12 par page actuellement).
+
+`VideoController::deleteSelection` valide la sélection et affiche la confirmation ; `VideoLibrary::deleteMany` verrouille le propriétaire et vérifie tous les envois YouTube/Instagram/TikTok avant de déplacer un fichier. Une transaction unique retire les lignes ; les fichiers déplacés sont restaurés si une erreur survient, puis purgés uniquement après validation. La suppression individuelle réutilise ce service. Une vidéo active bloque toute la sélection. Les publications déjà effectuées sur les réseaux ne sont pas supprimées ; l’historique local garde ses destinations et perd seulement sa source.
+
+À tester avec des vidéos de test : sélectionner plusieurs fichiers → supprimer → annuler, puis confirmer ; contrôler les titres, les boutons sans sélection, le mobile et le retour arrière. Les scénarios automatisés couvrent isolation propriétaire, CSRF lié à la sélection exacte, déduplication, succès, vidéo active et restauration des fichiers après erreur de stockage. En Symfony, GET prépare une vue de confirmation ; seul un POST autorisé et validé déclenche la transaction métier.

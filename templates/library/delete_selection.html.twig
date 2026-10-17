@@ -1,0 +1,10 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Supprimer la sélection — VydFlow{% endblock %}
+{% block studio_content %}
+<section class="video-delete-panel"><span class="eyebrow">FAIRE DE LA PLACE</span><h1>Supprimer {{ videos|length }} vidéo{{ videos|length > 1 ? 's' : '' }} ?</h1>
+<p>Les fichiers seront supprimés définitivement de ta bibliothèque. Les vidéos déjà publiées sur les réseaux resteront en ligne.</p>
+<ul class="video-delete-list">{% for video in videos %}<li>{{ video.title }}</li>{% endfor %}</ul>
+<p class="library-note">Si une vidéo a un envoi en cours ou suspendu, aucune vidéo de cette sélection ne sera supprimée.</p>
+<form method="post" action="{{ path('app_videos_delete') }}"><input type="hidden" name="_token" value="{{ csrf_token(tokenId) }}">{% for video in videos %}<input type="hidden" name="videos[]" value="{{ video.id }}">{% endfor %}<div class="video-delete-actions"><a class="button button-outline" href="{{ path('app_library') }}">Garder mes vidéos</a><button class="button button-danger" type="submit">Supprimer définitivement la sélection</button></div></form>
+</section>
+{% endblock %}

@@ -57,6 +57,7 @@ test('history restoration synchronizes checked videos with the counter and prepa
   controller.itemTargets = [{ checked: false }, { checked: false }];
   controller.countTarget = {};
   controller.submitTarget = {};
+  controller.submitTargets = [controller.submitTarget, {}];
   controller.allTarget = {};
   controller.connect();
   assert.equal(controller.submitTarget.disabled, true);
@@ -64,6 +65,7 @@ test('history restoration synchronizes checked videos with the counter and prepa
   listeners.get('pageshow')();
   assert.equal(controller.countTarget.textContent, '2 vidéos sélectionnées');
   assert.equal(controller.submitTarget.disabled, false);
+  assert.equal(controller.submitTargets[1].disabled, false);
   assert.equal(controller.allTarget.checked, true);
   controller.disconnect();
   assert.equal(listeners.size, 0);

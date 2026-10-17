@@ -134,6 +134,46 @@ final class VideoController extends AbstractController
         return $this->page('library/delete.html.twig', ['video' => $video]);
     }
 
+    #[Route('/supprimer-selection', name: 'app_videos_delete', methods: ['GET', 'POST'])]
+    public function deleteSelection(Request $request, #[CurrentUser] User $user): Response
+    {
+        $parameters = $request->isMethod('POST') ? $request->request : $request->query;
+        $values = $parameters->all('videos');
+        if (!$values || count($values) > 20) {
+            $this->addFlash('error', 'Sélectionne entre 1 et 20 vidéos.');
+
+            return $this->redirectToRoute('app_library', status: 303);
+        }
+        $ids = [];
+        foreach ($values as $value) {
+            if (!is_scalar($value) || !ctype_digit((string) $value) || false === filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
+                throw $this->createNotFoundException('Sélection indisponible.');
+            }
+            $ids[] = (int) $value;
+        }
+        $ids = array_values(array_unique($ids));
+        sort($ids);
+        $videos = array_map(fn (int $id): VideoAsset => $this->owned($id, $user), $ids);
+        $tokenId = 'delete_videos_'.hash('sha256', implode(',', $ids));
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid($tokenId, $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException('La confirmation a expiré. Recharge la page.');
+            }
+            try {
+                $this->library->deleteMany($videos);
+                $this->addFlash('success', count($videos).' vidéo(s) supprimée(s).');
+
+                return $this->redirectToRoute('app_library', status: 303);
+            } catch (VideoLibraryException $error) {
+                $this->addFlash('error', $error->getMessage());
+
+                return $this->page('library/delete_selection.html.twig', ['videos' => $videos, 'tokenId' => $tokenId], 409);
+            }
+        }
+
+        return $this->page('library/delete_selection.html.twig', ['videos' => $videos, 'tokenId' => $tokenId]);
+    }
+
     private function owned(int $id, User $user): VideoAsset
     {
         return $this->videos->owned($id, $user) ?? throw $this->createNotFoundException('Vidéo introuvable.');
