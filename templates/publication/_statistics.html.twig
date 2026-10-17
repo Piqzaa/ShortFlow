@@ -1,0 +1,12 @@
+{% if statisticsEnabled|default(false) or job.statistics_updated_at|default(null) %}
+{% set counters = job.statistics_counts|default({}) %}
+<section class="publication-statistics" aria-label="Statistiques {{ networkName }} de {{ job.title }}">
+  <dl>{% for metric,label in {views:'Vues',likes:'J’aime',comments:'Commentaires'} %}<div><dt>{{ label }}</dt><dd>{{ counters[metric] is defined and counters[metric] is not null ? counters[metric]|number_format(0, ',', ' ') : '—' }}</dd></div>{% endfor %}</dl>
+  <p class="library-note">{% if job.statistics_updated_at|default(null) %}Dernier relevé : {{ job.statistics_updated_at|date('d/m/Y à H:i') }}.{% else %}Aucun relevé disponible.{% endif %}</p>
+  {% if job.statistics_status|default('') == 'queued' %}<p class="library-note" role="status">Mise à jour en attente. Actualise la liste dans quelques instants.</p>{% endif %}
+  {% if job.statistics_notice|default(null) %}<p class="library-note">{{ job.statistics_notice }} Le dernier relevé disponible est conservé.</p>{% endif %}
+  {% if not job.remote_id %}<p class="library-note">Le réseau n’a pas fourni d’identifiant vidéo permettant de lire les statistiques.</p>
+  {% elseif not statisticsEnabled|default(false) %}<p class="library-note">Actualisation désactivée.</p>
+  {% else %}<form method="post" action="{{ path('app_publication_statistics', {network:job.network,id:job.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('statistics_' ~ job.network ~ '_' ~ job.id) }}"><button class="account-secondary" type="submit"{% if job.statistics_can_refresh is defined and not job.statistics_can_refresh %} disabled{% endif %}>Actualiser les statistiques</button></form>{% if job.statistics_can_refresh is defined and not job.statistics_can_refresh %}<p class="library-note">Prochaine demande possible après cinq minutes.</p>{% endif %}{% endif %}
+</section>
+{% endif %}

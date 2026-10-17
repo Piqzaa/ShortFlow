@@ -25,7 +25,7 @@ final class InstagramApiTest extends TestCase
         self::assertStringStartsWith('https://www.instagram.com/oauth/authorize?', $url);
         parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
         self::assertSame('state-test', $query['state']);
-        self::assertSame('instagram_business_basic,instagram_business_content_publish', $query['scope']);
+        self::assertSame('instagram_business_basic,instagram_business_content_publish,instagram_business_manage_insights', $query['scope']);
         self::assertSame('false', $query['enable_fb_login']);
         self::assertSame('true', $query['force_reauth']);
         self::assertArrayNotHasKey('client_secret', $query);

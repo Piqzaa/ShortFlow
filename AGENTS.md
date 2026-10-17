@@ -10,6 +10,8 @@ Mise à jour du 16 octobre 2026 : premier transfert YouTube réel autorisé et r
 
 Mise à jour du 17 octobre 2026 : le propriétaire autorise la préparation locale complète Instagram/TikTok sans créer ses comptes développeur ce soir. Lot TikTok : OAuth, préparation, publication asynchrone et suivi avec API simulée. Accès réels, HTTPS public et premiers essais sociaux restent à autoriser séparément. Calendrier, IA et statistiques restent hors du lot. Voir docs/tiktok.md.
 
+Mise à jour du 17 octobre 2026 : lot statistiques de base autorisé localement pour les trois réseaux avec API simulées : vues, j’aime, nombre de commentaires et aperçu de la vidéo source dans Publications. Les compteurs sont distincts par destination, datés et collectés en arrière-plan ; aucune donnée manquante remplacée par zéro. La collecte réelle et les autorisations sociales supplémentaires restent à activer séparément. Aucun texte de commentaire, réponse, modération, historique analytique, calendrier ou IA ajouté dans ce lot. Voir docs/statistics.md.
+
 ## Stack et architecture
 Monolithe Symfony 7.4 LTS ; PHP 8.4 Docker ; Doctrine ORM et PostgreSQL 16 ; Twig ; Stimulus ; Vite ; Three.js ; GSAP/ScrollTrigger. Aucun React, microservice, CQRS ou DDD complexe.
 Controllers légers dans src/Controller ; formulaire/validation dans src/Form ; métier dans src/Service ; entités dans src/Entity ; migrations versionnées dans migrations ; templates dans templates ; contrôleurs Stimulus dans assets/controllers ; tokens/styles dans assets/styles ; documentation dans docs.
@@ -41,3 +43,5 @@ Lorsqu’une fonctionnalité importante est ajoutée, expliquer :
 
 ## Autonomie et limites
 Opérations habituelles locales autorisées : fichiers, dépendances, conteneurs, tests. Aucune dépense, publication, déploiement public, service cloud, identifiant réel ou suppression de données existantes sans demande explicite. Arrêter après la phase demandée et fournir un bilan pédagogique. Aucun commit requis automatiquement.
+
+Mise à jour du 17 octobre 2026 : lecture réelle des statistiques YouTube explicitement autorisée et premier relevé réussi, sans nouvel envoi ; Instagram/TikTok restent désactivés pour les statistiques réelles. Suppression multiple de la bibliothèque autorisée, confirmation explicite dans l’interface et blocage de tout le lot si un envoi est actif. Plusieurs commits locaux demandés ; aucun push demandé.

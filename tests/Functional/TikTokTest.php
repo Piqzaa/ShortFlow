@@ -135,7 +135,7 @@ final class TikTokTest extends WebTestCase
         $url = $this->client->getResponse()->headers->get('Location');
         self::assertStringStartsWith('https://www.tiktok.com/v2/auth/authorize/', $url);
         parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
-        self::assertSame('user.info.basic,video.publish', $query['scope']);
+        self::assertSame('user.info.basic,video.publish,video.list', $query['scope']);
 
         return $query['state'];
     }

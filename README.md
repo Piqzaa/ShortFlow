@@ -75,12 +75,14 @@ Avec Node local : npm ci puis npm run build remplace le conteneur outils. Après
 
 ## Vérifications
 
+Publications permet aussi un aperçu repliable de la source privée. Le lot local de compteurs vues/j’aime/nombre de commentaires est préparé pour YouTube, Instagram et TikTok, avec API simulées et collecte réelle désactivée par défaut (réglages `YOUTUBE_STATISTICS_ENABLED`, `INSTAGRAM_STATISTICS_ENABLED`, `TIKTOK_STATISTICS_ENABLED` à `0`). Les relevés sont privés, datés et actualisés en arrière-plan à la demande. Lecture réelle YouTube autorisée et vérifiée sur ce poste via `.env.local` ; Instagram/TikTok restent désactivés. Accès supplémentaires et essais réels restent distincts ; limites Instagram et guide Symfony : [docs/statistics.md](docs/statistics.md).
 
 Studio : vue d'ensemble avec compteurs réels et envois à traiter, historique commun YouTube/Instagram/TikTok filtrable et paginé, réseaux connectés et espace Mon compte (`/studio/mon-compte`) avec changement sécurisé du mot de passe. Les liens légaux généraux sont regroupés vers `/informations-legales`. Guide des composants, flux Symfony et tests : [docs/studio.md](docs/studio.md).
 
 ```sh
 docker compose exec php php scripts/check.php
 npm run check
+npm run test:ui
 npm run build
 docker compose exec php composer audit
 npm audit

@@ -79,6 +79,21 @@ final class YouTubeApi
         return $this->vault->decrypt($connection->getAccessToken());
     }
 
+    /** @return array{views: mixed, likes: mixed, comments: mixed} */
+    public function statistics(YouTubeConnection $connection, string $id): array
+    {
+        if (!preg_match('/^[A-Za-z0-9_-]{11}$/D', $id)) {
+            throw new PublicationException('Identifiant YouTube indisponible.');
+        }
+        $data = $this->json('GET', 'https://www.googleapis.com/youtube/v3/videos', ['auth_bearer' => $this->access($connection), 'timeout' => 10, 'max_duration' => 15, 'query' => ['part' => 'snippet,statistics', 'id' => $id, 'fields' => 'items(id,snippet/channelId,statistics)']]);
+        $video = $data['items'][0] ?? [];
+        if (($video['id'] ?? null) !== $id || ($video['snippet']['channelId'] ?? null) !== $connection->getChannelId() || !is_array($video['statistics'] ?? null)) {
+            throw new PublicationException('Statistiques YouTube indisponibles.');
+        }
+
+        return ['views' => $video['statistics']['viewCount'] ?? null, 'likes' => $video['statistics']['likeCount'] ?? null, 'comments' => $video['statistics']['commentCount'] ?? null];
+    }
+
     public function start(YouTubePublication $job, #[\SensitiveParameter] string $access): string
     {
         $source = $job->getSource() ?? throw new PublicationException('La vidéo source est indisponible.');

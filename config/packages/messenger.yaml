@@ -22,3 +22,4 @@ framework:
             App\Message\PublishYouTube: publications
             App\Message\PublishInstagram: publications
             App\Message\PublishTikTok: publications
+            App\Message\RefreshPublicationStatistics: publications

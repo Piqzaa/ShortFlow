@@ -23,5 +23,7 @@ app.register('upload', UploadController);
 import './styles/publication.css';
 import StudioNavigationController from './controllers/studio_navigation_controller.js';
 app.register('studio-navigation', StudioNavigationController);
+import PublicationPreviewController from './controllers/publication_preview_controller.js';
+app.register('publication-preview', PublicationPreviewController);
 import SelectionController from './controllers/selection_controller.js';
 app.register('selection', SelectionController);

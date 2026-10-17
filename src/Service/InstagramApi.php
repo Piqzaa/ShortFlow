@@ -8,7 +8,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class InstagramApi
 {
-    public const SCOPES = ['instagram_business_basic', 'instagram_business_content_publish'];
+    public const SCOPES = ['instagram_business_basic', 'instagram_business_content_publish', 'instagram_business_manage_insights'];
+    private const REQUIRED_SCOPES = ['instagram_business_basic', 'instagram_business_content_publish'];
 
     public function __construct(
         #[Autowire(service: 'instagram.http')] private HttpClientInterface $http,
@@ -69,6 +70,30 @@ final class InstagramApi
         return $this->identifier($data['id'] ?? null);
     }
 
+    /** @return array{views: mixed, likes: mixed, comments: mixed} */
+    public function statistics(\App\Entity\InstagramConnection $connection, string $id): array
+    {
+        $id = $this->identifier($id);
+        $options = ['auth_bearer' => $this->access($connection), 'timeout' => 10, 'max_duration' => 15];
+        $media = $this->json('GET', $this->endpoint($id), $options + ['query' => ['fields' => 'id,username']]);
+        if (($media['id'] ?? null) !== $id || !is_string($media['username'] ?? null) || strtolower($media['username']) !== strtolower($connection->getUsername())) {
+            throw new PublicationException('Statistiques Instagram indisponibles.');
+        }
+        $data = $this->json('GET', $this->endpoint($id.'/insights'), $options + ['query' => ['metric' => 'views,likes,comments']]);
+        if (!is_array($data['data'] ?? null)) {
+            throw new PublicationException('Statistiques Instagram indisponibles.');
+        }
+        $values = ['views' => null, 'likes' => null, 'comments' => null];
+        foreach ($data['data'] as $metric) {
+            if (!is_array($metric) || !is_string($metric['name'] ?? null) || !array_key_exists($metric['name'], $values)) {
+                continue;
+            }
+            $values[$metric['name']] = $metric['values'][0]['value'] ?? null;
+        }
+
+        return $values;
+    }
+
     private function endpoint(string $path): string
     {
         return 'https://graph.instagram.com/'.$this->version.'/'.$path;
@@ -97,7 +122,7 @@ final class InstagramApi
             'headers' => $form->getPreparedHeaders()->toArray(), 'body' => $form->bodyToIterable(),
         ]));
         $permissions = $short['permissions'] ?? null;
-        if (!is_string($permissions) || array_diff(self::SCOPES, preg_split('/[,\s]+/', $permissions) ?: [])) {
+        if (!is_string($permissions) || array_diff(self::REQUIRED_SCOPES, preg_split('/[,\s]+/', $permissions) ?: [])) {
             throw new PublicationException('Autorise le profil et la publication Instagram puis réessaie.');
         }
         $shortToken = $this->token($short);

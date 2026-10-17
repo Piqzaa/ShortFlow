@@ -3,9 +3,15 @@
 {% set networkName = {youtube:'YouTube',instagram:'Instagram',tiktok:'TikTok'}[job.network] %}
 {% set labels = {queued:'En attente', uploading:'Transfert en cours', processing:'Traitement ' ~ networkName, publishing:'Confirmation ' ~ networkName, published:'Disponible sur ' ~ networkName, paused:'Envoi suspendu', failed:'En échec', review:'À vérifier sur le réseau', cancelled:'Suivi arrêté'} %}
 <article class="publication-item" data-network="{{ job.network }}">
+  {% if job.source_id %}
+    <details open class="publication-preview publication-media" data-controller="publication-preview" data-action="toggle->publication-preview#toggle">
+      <summary>Aperçu vidéo</summary>
+      <video controls playsinline preload="metadata" src="{{ path('app_video_stream', {id:job.source_id}) }}" aria-label="Aperçu de {{ job.title }}">Ton navigateur ne permet pas de lire cette vidéo.</video>
+    </details>
+  {% else %}<div class="publication-media publication-media-missing"><span>Source supprimée</span></div>{% endif %}
   <div><span class="eyebrow">{{ networkName|upper }} · {{ instagram ? '@' : '' }}{{ job.account }}</span><h2>{{ job.title }}</h2><p>{{ job.created_at|date('d/m/Y à H:i') }}{% if not instagram %} · Visibilité demandée : {{ {private:'Privée',unlisted:'Non répertoriée',public:'Publique',SELF_ONLY:'Moi uniquement',PUBLIC_TO_EVERYONE:'Tout le monde',MUTUAL_FOLLOW_FRIENDS:'Amis',FOLLOWER_OF_CREATOR:'Abonnés'}[job.privacy]|default(job.privacy) }}{% else %} · Reel{% endif %}</p>
     {% if job.notice %}<p class="publication-notice">{{ job.notice }}</p>{% endif %}
-    {% if job.source_id %}<a class="account-secondary" href="{{ path('app_video_show', {id: job.source_id}) }}">Ouvrir la vidéo source ↗</a>{% endif %}
+    {% if job.status == 'published' %}{% include 'publication/_statistics.html.twig' with {statisticsEnabled: statisticsNetworks[job.network]|default(false)} %}{% endif %}
   </div>
   <div class="publication-result"><strong class="publication-state state-{{ job.status }}">{{ labels[job.status]|default(job.status) }}</strong>
     {% if job.status == 'uploading' and job.byte_size %}<span>{{ (100 * job.sent_bytes / job.byte_size)|round }} % transférés</span>{% endif %}

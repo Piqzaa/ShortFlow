@@ -42,24 +42,30 @@ final class PublicationOverview
     /** @return array{items: list<array<string, mixed>>, total: int, page: int, pages: int} */
     public function page(User $owner, int $page = 1, string $network = '', string $state = '', int $limit = 20): array
     {
-        $where = 'owner_id = :owner';
+        $where = 'feed.owner_id = :owner';
         $parameters = ['owner' => $owner->getId()];
         $types = [];
         if (in_array($network, ['youtube', 'instagram', 'tiktok'], true)) {
-            $where .= ' AND network = :network';
+            $where .= ' AND feed.network = :network';
             $parameters['network'] = $network;
         }
         if (isset(self::STATES[$state])) {
-            $where .= ' AND status IN (:statuses)';
+            $where .= ' AND feed.status IN (:statuses)';
             $parameters['statuses'] = self::STATES[$state];
             $types['statuses'] = ArrayParameterType::STRING;
         }
-        $from = ' FROM ('.self::FEED.') feed WHERE '.$where;
+        $from = ' FROM ('.self::FEED.') feed LEFT JOIN publication_statistic stats ON stats.owner_id = feed.owner_id AND stats.network = feed.network AND stats.publication_id = feed.id WHERE '.$where;
         $total = (int) $this->db->fetchOne('SELECT COUNT(*)'.$from, $parameters, $types);
         $limit = max(1, min(50, $limit));
         $pages = max(1, (int) ceil($total / $limit));
         $page = max(1, min($page, $pages));
-        $items = $this->db->fetchAllAssociative('SELECT *'.$from.' ORDER BY created_at DESC, network ASC, id DESC LIMIT '.$limit.' OFFSET '.(($page - 1) * $limit), $parameters, $types);
+        $items = $this->db->fetchAllAssociative('SELECT feed.*, stats.counts AS statistics_counts, stats.updated_at AS statistics_updated_at, stats.status AS statistics_status, stats.notice AS statistics_notice, stats.requested_at AS statistics_requested_at'.$from.' ORDER BY feed.created_at DESC, feed.network ASC, feed.id DESC LIMIT '.$limit.' OFFSET '.(($page - 1) * $limit), $parameters, $types);
+        foreach ($items as &$item) {
+            $item['statistics_counts'] = is_string($item['statistics_counts']) ? json_decode($item['statistics_counts'], true) : null;
+            $requested = $item['statistics_requested_at'];
+            $item['statistics_can_refresh'] = !$requested || strtotime($requested) <= time() - 300;
+        }
+        unset($item);
 
         return ['items' => $items, 'total' => $total, 'page' => $page, 'pages' => $pages];
     }

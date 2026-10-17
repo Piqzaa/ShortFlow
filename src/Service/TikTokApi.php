@@ -10,7 +10,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class TikTokApi
 {
-    public const SCOPES = ['user.info.basic', 'video.publish'];
+    public const SCOPES = ['user.info.basic', 'video.publish', 'video.list'];
+    private const REQUIRED_SCOPES = ['user.info.basic', 'video.publish'];
     public const PRIVACY = ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'FOLLOWER_OF_CREATOR', 'SELF_ONLY'];
 
     public function __construct(#[Autowire(service: 'tiktok.http')] private HttpClientInterface $http, #[Autowire(service: 'tiktok.vault')] private TokenVault $vault, private EntityManagerInterface $em,
@@ -78,6 +79,21 @@ final class TikTokApi
         }
 
         return $this->vault->decrypt($connection->getAccessToken());
+    }
+
+    /** @return array{views: mixed, likes: mixed, comments: mixed} */
+    public function statistics(TikTokConnection $connection, string $id): array
+    {
+        if (!preg_match('/^[1-9][0-9]{0,31}$/D', $id)) {
+            throw new PublicationException('Identifiant TikTok indisponible.');
+        }
+        $data = $this->request('POST', '/v2/video/query/', ['auth_bearer' => $this->access($connection), 'timeout' => 10, 'max_duration' => 15, 'query' => ['fields' => 'id,view_count,like_count,comment_count'], 'json' => ['filters' => ['video_ids' => [$id]]]]);
+        $video = $data['data']['videos'][0] ?? [];
+        if (($video['id'] ?? null) !== $id) {
+            throw new PublicationException('Statistiques TikTok indisponibles.');
+        }
+
+        return ['views' => $video['view_count'] ?? null, 'likes' => $video['like_count'] ?? null, 'comments' => $video['comment_count'] ?? null];
     }
 
     /** @return array<string, mixed> */
@@ -154,7 +170,7 @@ final class TikTokApi
                 throw new PublicationException('L’expiration TikTok est invalide.');
             }
         }
-        if (!is_string($data['scope'] ?? null) || array_diff(self::SCOPES, explode(',', $data['scope'])) || ($data['token_type'] ?? '') !== 'Bearer') {
+        if (!is_string($data['scope'] ?? null) || array_diff(self::REQUIRED_SCOPES, explode(',', $data['scope'])) || ($data['token_type'] ?? '') !== 'Bearer') {
             throw new PublicationException('Autorise le profil et la publication TikTok.');
         }
 

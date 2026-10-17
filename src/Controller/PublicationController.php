@@ -9,6 +9,7 @@ use App\Repository\VideoAssetRepository;
 use App\Service\PublicationException;
 use App\Service\PublicationLock;
 use App\Service\PublicationOverview;
+use App\Service\PublicationStatisticsAccess;
 use App\Service\YouTubeApi;
 use App\Service\YouTubePublishing;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,14 +26,14 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class PublicationController extends AbstractController
 {
     #[Route('', name: 'app_publications', methods: ['GET'])]
-    public function index(Request $request, #[CurrentUser] User $user, PublicationOverview $publications): Response
+    public function index(Request $request, #[CurrentUser] User $user, PublicationOverview $publications, PublicationStatisticsAccess $statisticsAccess): Response
     {
         $network = $request->query->getString('network');
         $state = $request->query->getString('state');
         $network = in_array($network, ['youtube', 'instagram', 'tiktok'], true) ? $network : '';
         $state = isset(PublicationOverview::STATES[$state]) ? $state : '';
 
-        return $this->page('publication/index.html.twig', ['feed' => $publications->page($user, $request->query->getInt('page', 1), $network, $state), 'network' => $network, 'state' => $state]);
+        return $this->page('publication/index.html.twig', ['feed' => $publications->page($user, $request->query->getInt('page', 1), $network, $state), 'network' => $network, 'state' => $state, 'statisticsNetworks' => $statisticsAccess->networks()]);
     }
 
     #[Route('/preparer', name: 'app_publication_prepare', methods: ['GET', 'POST'])]

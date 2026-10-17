@@ -83,6 +83,7 @@ final class StudioOverviewTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/publications');
         self::assertResponseIsSuccessful();
         self::assertSelectorCount(2, '.publication-item');
+        self::assertSelectorCount(2, '.publication-preview video[controls][preload="metadata"]');
         self::assertStringContainsString('Latest Instagram', $crawler->filter('.publication-item')->first()->text());
         self::assertStringNotContainsString('Other owner private', $this->client->getResponse()->getContent());
         self::assertStringNotContainsString('<script>Latest', $this->client->getResponse()->getContent());
