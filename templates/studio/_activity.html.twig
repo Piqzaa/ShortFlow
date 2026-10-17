@@ -1,0 +1,9 @@
+<section class="dashboard-activity {{ state == 'attention' ? 'dashboard-attention' : '' }}" aria-labelledby="{{ state }}-title">
+  <div class="studio-section-heading"><h2 id="{{ state }}-title">{{ state == 'attention' ? 'À reprendre' : 'En cours' }}</h2><a class="account-secondary" href="{{ path('app_publications', {state:state}) }}">Tout voir ↗</a></div>
+  {% for job in jobs %}
+    <a class="dashboard-activity-item" href="{{ path('app_publications', {state:state,network:job.network}) }}">
+      <div><span class="eyebrow">{{ {youtube:'YouTube',instagram:'Instagram',tiktok:'TikTok'}[job.network] }}</span><strong>{{ job.title }}</strong></div>
+      <span class="publication-state state-{{ job.status }}">{{ {queued:'En attente',uploading:'Transfert en cours',processing:'Traitement en cours',publishing:'Publication en cours',failed:'En échec',paused:'Envoi suspendu',review:'À vérifier sur le réseau'}[job.status] }} ↗</span>
+    </a>
+  {% endfor %}
+</section>

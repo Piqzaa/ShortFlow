@@ -95,7 +95,10 @@ final class StudioOverviewTest extends WebTestCase
         $this->client->request('GET', '/studio');
         self::assertSelectorTextContains('.dashboard-summary a.needs-attention strong', '2');
         self::assertSelectorTextNotContains('.dashboard-attention', 'Other owner private');
-        self::assertSelectorCount(1, '.studio-footer .legal-links a');
+        self::assertSelectorNotExists('.studio-footer');
+        self::assertSelectorNotExists('.studio-sidebar a[href="/informations-legales"]');
+        self::assertSelectorNotExists('.studio-topbar a[href="/informations-legales"]');
+        self::assertSelectorExists('.dashboard-actions a[href="/studio/bibliotheque#library-selection"]');
         self::assertSelectorExists('.studio-profile[href="/studio/mon-compte"]');
         $owner = $this->em()->find(User::class, $this->alice->getId());
         $overview = static::getContainer()->get(PublicationOverview::class);
@@ -105,6 +108,11 @@ final class StudioOverviewTest extends WebTestCase
         self::assertSame('instagram', $first['items'][0]['network']);
         self::assertSame('youtube', $second['items'][0]['network']);
         self::assertSame(2, $overview->page($owner, 999, limit: 1)['page']);
+        $this->publication($owner, 'youtube', 'queued', 'Waiting video');
+        $this->client->request('GET', '/studio');
+        self::assertSelectorTextContains('#active-title', 'En cours');
+        self::assertSelectorTextContains('.dashboard-activity[aria-labelledby="active-title"]', 'Waiting video');
+        self::assertSelectorTextContains('.dashboard-summary a[href="/studio/publications?state=active"] strong', '1');
     }
 
     public function testProfileRequiresVerifiedSessionAndRejectsWrongPasswordAndCsrf(): void
@@ -119,9 +127,16 @@ final class StudioOverviewTest extends WebTestCase
         $this->client->request('GET', '/studio/mon-compte');
         self::assertResponseStatusCodeSame(403);
         $this->client->loginUser($this->alice);
+        $this->client->request('GET', '/studio');
+        self::assertSelectorExists('.dashboard-actions a[href="/studio/bibliotheque/importer"]');
+        self::assertSelectorNotExists('#active-title');
+        self::assertSelectorNotExists('#attention-title');
         $crawler = $this->client->request('GET', '/studio/mon-compte');
         self::assertSelectorTextContains('.profile-panel', $this->alice->getEmail());
         self::assertSelectorTextNotContains('.profile-panel', $this->bob->getEmail());
+        self::assertSelectorExists('.profile-legal a[href="/confidentialite"]');
+        self::assertSelectorExists('.profile-legal a[href="/informations-legales"]');
+        self::assertSelectorExists('.profile-legal a[href="/suppression-donnees"]');
         $this->client->submit($crawler->selectButton('Modifier mon mot de passe ↗')->form($this->passwordData('wrong password')));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.account-form', 'actuel est incorrect');

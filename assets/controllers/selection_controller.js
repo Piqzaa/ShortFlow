@@ -1,7 +1,12 @@
 import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
   static targets = ['item', 'count', 'submit', 'all'];
-  connect() { this.update(); }
+  connect() {
+    this.restore = () => this.update();
+    window.addEventListener('pageshow', this.restore);
+    this.update();
+  }
+  disconnect() { window.removeEventListener('pageshow', this.restore); }
   update() {
     const count = this.itemTargets.filter(input => input.checked).length;
     this.countTarget.textContent = `${count} vidéo${count > 1 ? 's' : ''} sélectionnée${count > 1 ? 's' : ''}`;

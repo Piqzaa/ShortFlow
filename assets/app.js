@@ -21,5 +21,7 @@ app.register('cursor', CursorController);
 app.register('upload', UploadController);
 
 import './styles/publication.css';
+import StudioNavigationController from './controllers/studio_navigation_controller.js';
+app.register('studio-navigation', StudioNavigationController);
 import SelectionController from './controllers/selection_controller.js';
 app.register('selection', SelectionController);

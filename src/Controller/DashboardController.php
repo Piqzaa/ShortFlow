@@ -27,11 +27,12 @@ final class DashboardController extends AbstractController
         $instagramConnection = $em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $user]);
         $tiktokConnection = $em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $user]);
         $networks = [
-            'TikTok' => !$tiktok->isReady() ? 'Indisponible' : ($tiktokConnection ? ($tiktokConnection->isExpired() ? 'À reconnecter' : 'Connecté') : 'À connecter'),
-            'YouTube' => !$youtube->isReady() ? 'Indisponible' : ($youtubeConnection ? 'Connecté' : 'À connecter'),
-            'Instagram' => !$instagram->isReady() ? 'Indisponible' : ($instagramConnection ? ($instagramConnection->isExpired() ? 'À reconnecter' : ($instagramConnection->isExpiring() ? 'À renouveler' : 'Connecté')) : 'À connecter'),
+            'TikTok' => !$tiktok->isReady() ? 'À configurer' : ($tiktokConnection ? ($tiktokConnection->isExpired() ? 'À reconnecter' : 'Connecté') : 'À connecter'),
+            'YouTube' => !$youtube->isReady() ? 'À configurer' : ($youtubeConnection ? 'Connecté' : 'À connecter'),
+            'Instagram' => !$instagram->isReady() ? 'À configurer' : ($instagramConnection ? ($instagramConnection->isExpired() ? 'À reconnecter' : ($instagramConnection->isExpiring() ? 'À renouveler' : 'Connecté')) : 'À connecter'),
         ];
-        $response = $this->render('studio/index.html.twig', ['videos' => $recent, 'usage' => $videos->usage($user), 'publishedPlatforms' => $videos->publishedPlatforms($user, $recent), 'counts' => $publications->counts($user), 'attention' => $publications->page($user, state: 'attention', limit: 3)['items'], 'networks' => $networks]);
+        $counts = $publications->counts($user);
+        $response = $this->render('studio/index.html.twig', ['videos' => $recent, 'usage' => $videos->usage($user), 'publishedPlatforms' => $videos->publishedPlatforms($user, $recent), 'counts' => $counts, 'attention' => $counts['attention'] ? $publications->page($user, state: 'attention', limit: 3)['items'] : [], 'active' => $counts['active'] ? $publications->page($user, state: 'active', limit: 3)['items'] : [], 'networks' => $networks]);
         $response->headers->set('Cache-Control', 'no-store, private');
 
         return $response;

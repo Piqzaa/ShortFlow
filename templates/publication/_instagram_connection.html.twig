@@ -12,7 +12,7 @@
   </div>
   <div class="connection-actions">
     {% if instagramReady %}<form action="{{ path('app_instagram_connect') }}" method="post"><input type="hidden" name="_token" value="{{ csrf_token('instagram_connect') }}"><button class="button small" type="submit">{{ instagramConnection ? 'Reconnecter Instagram' : 'Connecter Instagram' }} ↗</button></form>
-    {% else %}<button class="button small" type="button" disabled>Connecter Instagram ↗</button><p class="library-note">La connexion Instagram est momentanément indisponible.</p>{% endif %}
+    {% else %}<button class="button small" type="button" disabled>Connecter Instagram ↗</button><p class="library-note">La connexion Instagram attend son activation.</p>{% endif %}
     {% if instagramConnection %}<form action="{{ path('app_instagram_disconnect') }}" method="post"><input type="hidden" name="_token" value="{{ csrf_token('instagram_disconnect') }}"><button class="account-secondary" type="submit">Déconnecter Instagram de VydFlow</button></form>{% endif %}
   </div>
 </section>
