@@ -184,6 +184,26 @@ final class PublicationStatisticsTest extends WebTestCase
         self::assertStringNotContainsString('<privée>', $this->client->getResponse()->getContent());
     }
 
+    public function testRefreshBecomesAvailableAfterOneMinute(): void
+    {
+        $job = $this->job('youtube');
+        self::assertTrue($this->stats()->queue($this->owner(), 'youtube', (int) $job->getId()));
+        $snapshot = $this->snapshot('youtube', (int) $job->getId());
+        $this->db()->executeStatement("UPDATE publication_statistic SET requested_at = CURRENT_TIMESTAMP - INTERVAL '30 seconds' WHERE id = ?", [$snapshot->getId()]);
+        $this->em()->refresh($snapshot);
+        self::assertFalse($this->stats()->queue($this->owner(), 'youtube', (int) $job->getId()));
+        $this->client->loginUser($this->owner());
+        $this->client->request('GET', '/studio/publications');
+        self::assertSelectorExists('.publication-statistics button[disabled]');
+        self::assertSelectorTextContains('.publication-statistics', 'après une minute');
+        $this->db()->executeStatement("UPDATE publication_statistic SET requested_at = CURRENT_TIMESTAMP - INTERVAL '61 seconds' WHERE id = ?", [$snapshot->getId()]);
+        $this->em()->refresh($snapshot);
+        $this->client->request('GET', '/studio/publications');
+        self::assertSelectorExists('.publication-statistics button:not([disabled])');
+        self::assertTrue($this->stats()->queue($this->owner(), 'youtube', (int) $job->getId()));
+        self::assertSame(2, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
     public function testYouTubeActivationDoesNotEnableOtherNetworks(): void
     {
         static::getContainer()->set(PublicationStatisticsAccess::class, new PublicationStatisticsAccess(true, false, false));

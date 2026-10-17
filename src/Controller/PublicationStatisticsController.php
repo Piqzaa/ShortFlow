@@ -32,7 +32,7 @@ final class PublicationStatisticsController extends AbstractController
         }
         try {
             $queued = $statistics->queue($user, $network, $id);
-            $this->addFlash('success', $queued ? 'La mise à jour des statistiques est en attente. Actualise la liste dans quelques instants.' : 'Une mise à jour a déjà été demandée récemment. Patiente cinq minutes entre deux demandes.');
+            $this->addFlash('success', $queued ? 'La mise à jour des statistiques est en attente. Actualise la liste dans quelques instants.' : 'Une mise à jour a déjà été demandée récemment. Patiente une minute entre deux demandes.');
         } catch (PublicationException $error) {
             $this->addFlash('error', $error->getMessage());
         }

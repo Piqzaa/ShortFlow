@@ -43,7 +43,7 @@ final class RefreshYouTubeStatisticsCommand extends Command
 
             return Command::FAILURE;
         }
-        $output->writeln($queued ? 'Relevé mis en file. Le worker récupérera les compteurs.' : 'Une demande récente existe déjà. Attends cinq minutes.');
+        $output->writeln($queued ? 'Relevé mis en file. Le worker récupérera les compteurs.' : 'Une demande récente existe déjà. Attends une minute.');
 
         return Command::SUCCESS;
     }

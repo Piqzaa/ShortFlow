@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\PublicationStatistic;
 use App\Entity\User;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -63,7 +64,7 @@ final class PublicationOverview
         foreach ($items as &$item) {
             $item['statistics_counts'] = is_string($item['statistics_counts']) ? json_decode($item['statistics_counts'], true) : null;
             $requested = $item['statistics_requested_at'];
-            $item['statistics_can_refresh'] = !$requested || strtotime($requested) <= time() - 300;
+            $item['statistics_can_refresh'] = !$requested || strtotime($requested) <= time() - PublicationStatistic::REQUEST_INTERVAL_SECONDS;
         }
         unset($item);
 

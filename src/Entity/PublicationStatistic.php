@@ -11,6 +11,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_publication_statistic', columns: ['network', 'publication_id'])]
 class PublicationStatistic
 {
+    public const REQUEST_INTERVAL_SECONDS = 60;
+
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -73,7 +75,7 @@ class PublicationStatistic
 
     public function canRequest(): bool
     {
-        return $this->requestedAt->getTimestamp() <= time() - 300;
+        return $this->requestedAt->getTimestamp() <= time() - self::REQUEST_INTERVAL_SECONDS;
     }
 
     public function request(): void

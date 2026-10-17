@@ -11,7 +11,7 @@ Les compteurs s’affichent uniquement pour les publications confirmées lorsque
 ## Fichiers et rôle des composants
 
 - `PublicationStatistic` et la migration additive `Version20261017133101` : un relevé privé par paire réseau/id de publication, propriétaire, compteurs JSON, date du relevé, date/key de demande, état et message neutre. Clé étrangère propriétaire avec cascade ; aucune modification des tables sociales existantes. Les publications gardent leur historique quand une source est supprimée, donc le relevé n’est pas lié au fichier source.
-- `PublicationStatistics` : vérifie propriété/publication/identifiant distant, limite à une demande toutes les cinq minutes, réserve le relevé et le message dans une transaction Doctrine. Le verrou propriétaire partagé évite les courses avec connexions/envois. Le worker vérifie de nouveau le compte destinataire avant lecture.
+- `PublicationStatistics` : vérifie propriété/publication/identifiant distant, limite à une demande par minute, réserve le relevé et le message dans une transaction Doctrine. Le verrou propriétaire partagé évite les courses avec connexions/envois. Le worker vérifie de nouveau le compte destinataire avant lecture.
 - `RefreshPublicationStatistics` / handler : tâche Messenger dans le transport existant, utilisant le worker local. Une clé de demande obsolète ou un message déjà traité ne relance pas la lecture. En cas d’erreur distante, aucun jeton/réponse brute n’est conservé ou chaîné dans une exception affichée ; le dernier relevé n’est pas écrasé.
 - `YouTubeApi::statistics`, `InstagramApi::statistics`, `TikTokApi::statistics` : petits adaptateurs du réseau, identifiant vérifié, jetons chiffrés déchiffrés côté serveur seulement, clients HTTP sans profiler existants. Réponse partielle autorisée ; compteur négatif, flottant ou dépassant PHP_INT_MAX refusé.
 - `PublicationStatisticsController` : POST propriétaire, CSRF propre à la vidéo/réseau et limiteur 20 demandes/minute/propriétaire. Il met en file puis redirige vers les publications de la destination, sans attendre l’API.
@@ -25,7 +25,7 @@ Les compteurs s’affichent uniquement pour les publications confirmées lorsque
 3. POST Actualiser les statistiques : CSRF, propriété et limiteur ; service + transaction Doctrine enregistrent demande et message Messenger atomiquement.
 4. Le worker prend le verrou propriétaire, ignore une ancienne clé, relit publication/connexion et compare le compte avec celui de la publication. Il ne publie rien.
 5. L’adaptateur récupère les seuls compteurs, le service valide les valeurs et enregistre le relevé, ou un état indisponible en conservant les dernières valeurs.
-6. Actualiser la liste pour voir le résultat. Les compteurs ne sont pas annoncés comme du temps réel ; une demande toutes les cinq minutes par publication évite de consommer les quotas à chaque clic.
+6. Actualiser la liste pour voir le résultat. Les compteurs ne sont pas annoncés comme du temps réel ; une demande par minute par publication évite de consommer les quotas à chaque clic.
 
 À comprendre : une lecture distante peut être lente ou échouer. Messenger la sort de la requête navigateur ; Doctrine garde un état durable et la transaction évite d’afficher une demande sans message. L’idempotence empêche une redélivrance de message d’écraser le résultat d’une demande plus récente. Il s’agit d’une lecture, pas d’un nouvel envoi de vidéo.
 

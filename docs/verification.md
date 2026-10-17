@@ -1,3 +1,8 @@
+# Vérification — 17 octobre 2026, actualisation des statistiques à une minute
+
+- À la demande du propriétaire, délai par publication réduit de cinq minutes à 60 secondes. Constante commune PublicationStatistic::REQUEST_INTERVAL_SECONDS utilisée par la validation métier et le bouton de la liste ; messages Twig, flash et commande locale actualisés. Documentation statistics mise à jour. Les verrous et protections contre les demandes répétées sont conservés.
+- Test fonctionnel ajouté : demande refusée après 30 secondes et bouton désactivé, demande acceptée après 61 secondes et bouton actif ; HTTP simulé uniquement. Migrations shortflow_test à jour avant PHPUnit. PublicationStatisticsTest : **14 tests / 118 assertions réussis**, 1 min 24,630 s. Les 403/404 sont attendus. Lint 35 Twig, conteneur et PHPStan niveau 5 : codes 0 ; CS-Fixer appliqué. Aucun changement CSS/JS : build et navigateur non répétés ; suite globale non répétée pour ce réglage. Aucun nouvel appel social réel.
+
 # Vérification — 17 octobre 2026, lecture YouTube réelle et suppression multiple
 
 - Lecture réelle YouTube explicitement autorisée par le propriétaire. Activation séparée par réseau via PublicationStatisticsAccess : valeurs par défaut à 0, tests simulés à 1, configuration privée locale YouTube=1 / Instagram=0 / TikTok=0. Le contrôleur, la demande et le worker appliquent le même réglage. Test ciblé PublicationStatisticsTest|StudioOverviewTest : **17 tests / 173 assertions réussis**, 1 min 36,996 s, exclusivement shortflow_test migrée. Le scénario ajouté vérifie boutons et refus de mise en file/lecture des deux réseaux inactifs.
