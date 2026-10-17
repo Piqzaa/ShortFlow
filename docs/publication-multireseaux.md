@@ -30,7 +30,7 @@ L’entrée principale conserve `/studio/publications/preparer` et le nom `app_p
 
 ## Brouillons et limites
 
-Le brouillon est lié à l’utilisateur et à sa session, conservé une heure au maximum, avec dix préparations récentes au maximum. Ce n’est pas une bibliothèque de brouillons persistants ni un calendrier. Chaque nouvelle sélection ouvre une préparation distincte, pour éviter qu’un onglet écrase l’autre.
+L’espace de travail temporaire reste lié à la session (une heure, dix préparations récentes). **Enregistrer le brouillon** et **Voir le récapitulatif** sauvegardent aussi une préparation durable et versionnée. Le récapitulatif propose directement la publication immédiate ou le choix d’un créneau, sans enregistrement manuel ni détour obligatoire par Brouillons. La confirmation datée réutilise les contrôles existants. Voir [calendrier.md](calendrier.md). Chaque nouvelle sélection ouvre une préparation distincte.
 
 Enregistrer les textes avec **Voir le récapitulatif** avant de changer les réseaux. Les textes enregistrés sont conservés, y compris pour une destination retirée puis rajoutée. Les modifications non enregistrées ne sont pas conservées lors d’une navigation. Une modification des réseaux impose une nouvelle validation des textes ; chaque nouvel enregistrement change la version du récapitulatif. Un ancien formulaire de confirmation est refusé. Un lot déjà confirmé redirige vers le suivi ; la clé commune empêche également les doublons côté service.
 

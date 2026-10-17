@@ -1,0 +1,4 @@
+{{ form_row(form.mode) }}
+{{ form_label(form.local) }}{{ form_errors(form.local) }}{{ form_widget(form.local,{type:'datetime-local'}) }}
+{{ form_row(form.timezone) }}
+<p class="library-note">Entre deux minutes et 90 jours dans le futur. Le PC et le worker doivent fonctionner au créneau choisi. Au-delà de deux minutes de retard, il faudra reprogrammer.</p>

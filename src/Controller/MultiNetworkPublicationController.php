@@ -4,10 +4,14 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\MultiNetworkPrepareType;
+use App\Form\PublicationPlanType;
+use App\Repository\PublicationDraftRepository;
 use App\Repository\VideoAssetRepository;
 use App\Service\MultiNetworkPublishing;
+use App\Service\PublicationDrafts;
 use App\Service\PublicationException;
 use App\Service\TikTokPublishing;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -55,15 +59,16 @@ final class MultiNetworkPublicationController extends AbstractController
     }
 
     #[Route('/preparation/{key}', name: 'app_publication_batch', requirements: ['key' => '[a-f0-9]{64}'], methods: ['GET', 'POST'])]
-    public function networks(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing): Response
+    public function networks(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts): Response
     {
         $draft = $this->draft($request, $user, $key);
         if ($draft['completed']) {
             return $this->redirectToRoute('app_publications', status: 303);
         }
         $context = $this->context($publishing, $user, $draft);
+        $saving = $request->isMethod('POST') && $request->request->has('save_draft');
         $form = $this->createFormBuilder(['networks' => $draft['networks']], ['csrf_token_id' => 'batch_networks_'.$key])
-            ->add('networks', ChoiceType::class, ['label' => 'Destinations', 'choices' => array_flip(MultiNetworkPublishing::LABELS), 'multiple' => true, 'expanded' => true, 'constraints' => [new Assert\Count(min: 1, max: 3, minMessage: 'Choisis au moins un réseau.')]])->getForm()->handleRequest($request);
+            ->add('networks', ChoiceType::class, ['label' => 'Destinations', 'choices' => array_flip(MultiNetworkPublishing::LABELS), 'multiple' => true, 'expanded' => true, 'constraints' => [new Assert\Count(min: $saving ? 0 : 1, max: 3, minMessage: 'Choisis au moins un réseau.')]])->getForm()->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $draft['networks'] = $form->getData()['networks'];
             if (in_array('tiktok', $draft['networks'], true) && count($draft['ids']) > 5) {
@@ -75,6 +80,18 @@ final class MultiNetworkPublicationController extends AbstractController
                 $draft['revision'] = bin2hex(random_bytes(16));
                 unset($draft['reviewKey']);
                 $this->save($request, $key, $draft);
+                if ($saving) {
+                    try {
+                        $this->persist($request, $user, $key, $draft, $drafts, $draft['title'] ?? '');
+                        $this->addFlash('success', 'Brouillon enregistré. Tu pourras le retrouver après déconnexion.');
+
+                        return $this->redirectToRoute('app_draft', ['id' => $draft['persistentId']], 303);
+                    } catch (PublicationException $error) {
+                        $form->addError(new FormError($error->getMessage()));
+
+                        return $this->page('publication/batch_networks.html.twig', $context + ['form' => $form, 'key' => $key, 'step' => 1], 422);
+                    }
+                }
 
                 return $this->redirectToRoute('app_publication_batch_edit', ['key' => $key], 303);
             }
@@ -84,7 +101,7 @@ final class MultiNetworkPublicationController extends AbstractController
     }
 
     #[Route('/preparation/{key}/textes', name: 'app_publication_batch_edit', requirements: ['key' => '[a-f0-9]{64}'], methods: ['GET', 'POST'])]
-    public function edit(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, TikTokPublishing $tiktok): Response
+    public function edit(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, TikTokPublishing $tiktok, PublicationDrafts $drafts): Response
     {
         $draft = $this->draft($request, $user, $key);
         if ($draft['completed']) {
@@ -94,6 +111,7 @@ final class MultiNetworkPublicationController extends AbstractController
             return $this->redirectToRoute('app_publication_batch', ['key' => $key], 303);
         }
         $context = $this->context($publishing, $user, $draft);
+        $saving = $request->isMethod('POST') && $request->request->has('save_draft');
         $data = $draft['content'];
         foreach ($draft['networks'] as $network) {
             foreach ($context['videos'] as $video) {
@@ -118,9 +136,9 @@ final class MultiNetworkPublicationController extends AbstractController
             }
         }
         $data = array_intersect_key($data, array_flip($draft['networks']));
-        $form = $this->createForm(MultiNetworkPrepareType::class, $data, ['videos' => $context['videos'], 'networks' => $draft['networks'], 'draft_key' => $draft['revision'], 'creator' => $context['creator']])->handleRequest($request);
+        $form = $this->createForm(MultiNetworkPrepareType::class, $data, ['videos' => $context['videos'], 'networks' => $draft['networks'], 'draft_key' => $draft['revision'], 'creator' => $context['creator'], 'partial' => $saving, 'draft_title' => $draft['title'] ?? ''])->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            if ($context['creator']) {
+            if (!$saving && $context['creator']) {
                 foreach ($form->getData()['tiktok']['videos'] ?? [] as $row) {
                     try {
                         // Cross-field commercial, UTF-16 and permission rules also apply before review.
@@ -132,6 +150,20 @@ final class MultiNetworkPublicationController extends AbstractController
             }
             if ($form->isValid()) {
                 $draft['content'] = array_replace($draft['content'], $form->getData());
+                try {
+                    $this->persist($request, $user, $key, $draft, $drafts, $form->get('draft_title')->getData() ?? '');
+                } catch (PublicationException $error) {
+                    $form->addError(new FormError($error->getMessage()));
+
+                    return $this->page('publication/batch_edit.html.twig', $context + ['form' => $form, 'key' => $key, 'networks' => $draft['networks'], 'step' => 2], 422);
+                }
+                if ($saving) {
+                    unset($draft['reviewKey']);
+                    $this->save($request, $key, $draft);
+                    $this->addFlash('success', 'Brouillon enregistré. Aucun envoi n’a été lancé.');
+
+                    return $this->redirectToRoute('app_draft', ['id' => $draft['persistentId']], 303);
+                }
                 $draft['reviewKey'] = bin2hex(random_bytes(16));
                 $draft['revision'] = bin2hex(random_bytes(16));
                 $this->save($request, $key, $draft);
@@ -144,7 +176,7 @@ final class MultiNetworkPublicationController extends AbstractController
     }
 
     #[Route('/preparation/{key}/confirmer', name: 'app_publication_batch_confirm', requirements: ['key' => '[a-f0-9]{64}'], methods: ['GET', 'POST'])]
-    public function confirm(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function confirm(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts, PublicationDraftRepository $repository, ManagerRegistry $registry, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
         $draft = $this->draft($request, $user, $key);
         if ($draft['completed']) {
@@ -165,13 +197,17 @@ final class MultiNetworkPublicationController extends AbstractController
                 $form->addError(new FormError('Trop de publications rapprochées. Réessaie dans 15 minutes.'));
             } else {
                 try {
-                    $publishing->enqueue($user, $draft['ids'], $draft['networks'], $draft['content'], $key, $draft['accounts']);
+                    if (!isset($draft['persistentId'], $draft['persistentRevision'])) {
+                        throw new PublicationException('Enregistre de nouveau les textes avant de confirmer.');
+                    }
+                    $drafts->confirm($user, $draft['persistentId'], $draft['persistentRevision'], false);
                     $draft['completed'] = true;
                     $this->save($request, $key, $draft);
                     $this->addFlash('success', count($draft['ids']) * count($draft['networks']).' publications sont dans la file d’envoi. Le suivi est distinct pour chaque vidéo et destination.');
 
                     return $this->redirectToRoute('app_publications', status: 303);
                 } catch (PublicationException $error) {
+                    $registry->resetManager();
                     $this->addFlash('error', $error->getMessage());
 
                     return $this->redirectToRoute('app_publication_batch_confirm', ['key' => $key], 303);
@@ -179,7 +215,10 @@ final class MultiNetworkPublicationController extends AbstractController
             }
         }
 
-        return $this->page('publication/batch_confirm.html.twig', $context + ['form' => $form, 'key' => $key, 'networks' => $draft['networks'], 'content' => $draft['content'], 'step' => 3], $form->isSubmitted() ? 422 : 200);
+        $stored = isset($draft['persistentId']) ? $repository->owned($draft['persistentId'], $user) : null;
+        $plan = $stored ? $this->createForm(PublicationPlanType::class, ['mode' => 'scheduled', 'local' => $stored->getLocalTime(), 'timezone' => $stored->getTimezone()], ['revision' => $draft['persistentRevision'], 'scheduled_only' => true, 'csrf_token_id' => 'draft_plan_'.$stored->getId(), 'action' => $this->generateUrl('app_draft', ['id' => $stored->getId()])]) : null;
+
+        return $this->page('publication/batch_confirm.html.twig', $context + ['form' => $form, 'plan' => $plan, 'key' => $key, 'networks' => $draft['networks'], 'content' => $draft['content'], 'persistentId' => $draft['persistentId'] ?? null, 'step' => 3], $form->isSubmitted() ? 422 : 200);
     }
 
     /** @return array<string, mixed> */
@@ -202,6 +241,16 @@ final class MultiNetworkPublicationController extends AbstractController
         $drafts = $request->getSession()->get('publication_drafts', []);
         $drafts[$key] = $draft;
         $request->getSession()->set('publication_drafts', $drafts);
+    }
+
+    /** @param array<string, mixed> $draft */
+    private function persist(Request $request, User $user, string $key, array &$draft, PublicationDrafts $service, string $title): void
+    {
+        $stored = $service->save($user, $draft['ids'], $draft['networks'], $draft['content'], $draft['accounts'], $title, $draft['persistentId'] ?? null, $draft['persistentRevision'] ?? null);
+        $draft['persistentId'] = $stored->getId();
+        $draft['persistentRevision'] = $stored->getRevision();
+        $draft['title'] = $stored->getTitle();
+        $this->save($request, $key, $draft);
     }
 
     /** @param array<string, mixed> $draft @return array<string, mixed> */

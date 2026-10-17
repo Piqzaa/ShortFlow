@@ -9,6 +9,10 @@
 parameters:
 
 services:
+    app.publication_clock:
+        class: Symfony\Component\Clock\NativeClock
+        arguments: ['UTC']
+    Symfony\Component\Clock\ClockInterface: '@app.publication_clock'
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.

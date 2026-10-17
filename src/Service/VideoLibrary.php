@@ -91,6 +91,10 @@ final class VideoLibrary
                     $active = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM youtube_publication WHERE source_id = ? AND status IN ('queued', 'uploading', 'processing', 'paused')", [$video->getId()]);
                     $instagramActive = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM instagram_publication WHERE source_id = ? AND status IN ('queued', 'processing', 'publishing', 'paused', 'review')", [$video->getId()]);
                     $tiktokActive = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM tiktok_publication WHERE source_id = ? AND status IN ('queued', 'processing', 'publishing', 'paused', 'review')", [$video->getId()]);
+                    $scheduled = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM publication_draft_item i JOIN publication_draft d ON d.id = i.draft_id WHERE i.source_id = ? AND d.status = 'scheduled'", [$video->getId()]);
+                    if ((int) $scheduled > 0) {
+                        throw new VideoLibraryException('Une vidéo sélectionnée est programmée. Annule sa programmation avant de supprimer. Aucune vidéo supprimée.');
+                    }
                     if ((int) $active + (int) $instagramActive + (int) $tiktokActive > 0) {
                         throw new VideoLibraryException('Une vidéo sélectionnée a un envoi en cours ou suspendu. Aucune vidéo supprimée : termine cet envoi ou retire-la de la sélection.');
                     }

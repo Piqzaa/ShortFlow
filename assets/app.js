@@ -27,3 +27,5 @@ import PublicationPreviewController from './controllers/publication_preview_cont
 app.register('publication-preview', PublicationPreviewController);
 import SelectionController from './controllers/selection_controller.js';
 app.register('selection', SelectionController);
+import UnsavedController from './controllers/unsaved_controller.js';
+app.register('unsaved', UnsavedController);

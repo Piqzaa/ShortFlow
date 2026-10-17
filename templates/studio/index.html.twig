@@ -2,6 +2,7 @@
 {% block studio_content %}
 <div class="studio-heading dashboard-intro"><div><span class="eyebrow">TON ESPACE DE PUBLICATION</span><h1>Vue d’ensemble.</h1><p>{{ usage.count ? 'Choisis tes vidéos et prépare leur prochaine publication.' : 'Importe ta première vidéo pour commencer.' }}</p></div><div class="dashboard-actions">{% if usage.count %}<a class="button small" href="{{ path('app_library') }}#library-selection">Préparer une publication ↗</a><a class="account-secondary" href="{{ path('app_video_upload') }}">Importer une vidéo +</a>{% else %}<a class="button small" href="{{ path('app_video_upload') }}">Importer une vidéo +</a>{% endif %}</div></div>
 <ol class="dashboard-workflow" aria-label="Parcours de publication"><li><span>1</span> Choisir les vidéos</li><li><span>2</span> Préparer par réseau</li><li><span>3</span> Confirmer et suivre</li></ol>
+<div class="batch-actions"><a class="account-secondary" href="{{ path('app_drafts') }}">Retrouver mes brouillons ↗</a><a class="account-secondary" href="{{ path('app_calendar') }}">Ouvrir le calendrier ↗</a></div>
 <nav class="dashboard-summary" aria-label="État de ton studio">
 <a href="{{ path('app_library') }}"><span>Dans ta bibliothèque</span><strong>{{ usage.count }}</strong><small>vidéo{{ usage.count > 1 ? 's' : '' }} · {{ (usage.bytes / 1048576)|number_format(1, ',', ' ') }} Mo utilisés ↗</small></a>
 <a href="{{ path('app_publications', {state:'active'}) }}"><span>En cours</span><strong>{{ counts.active }}</strong><small>envoi{{ counts.active > 1 ? 's' : '' }} à suivre ↗</small></a>

@@ -19,6 +19,7 @@ framework:
                     auto_setup: false
                     use_notify: false
         routing:
+            App\Message\DispatchScheduledPublication: publications
             App\Message\PublishYouTube: publications
             App\Message\PublishInstagram: publications
             App\Message\PublishTikTok: publications

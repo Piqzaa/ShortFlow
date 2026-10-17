@@ -1,5 +1,9 @@
 framework:
     rate_limiter:
+        publication_draft:
+            policy: sliding_window
+            limit: 30
+            interval: '1 minute'
         publication_statistics:
             policy: sliding_window
             limit: 20

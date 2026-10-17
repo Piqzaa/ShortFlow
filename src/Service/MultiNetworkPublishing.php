@@ -96,12 +96,12 @@ final class MultiNetworkPublishing
     }
 
     /** @param list<int> $ids @param list<string> $networks @param array<string, array<string, mixed>> $content @param array<string, ?string> $accounts */
-    public function enqueue(User $owner, array $ids, array $networks, array $content, string $key, array $accounts): void
+    public function enqueue(User $owner, array $ids, array $networks, array $content, string $key, array $accounts, ?callable $beforeCommit = null): void
     {
         if (!$ids || count($ids) > 20 || count(array_unique($ids)) !== count($ids) || !$networks || count(array_unique($networks)) !== count($networks) || array_diff($networks, array_keys(self::LABELS))) {
             throw new PublicationException('Vérifie les vidéos et les réseaux sélectionnés.');
         }
-        $this->lock->run((int) $owner->getId(), function () use ($owner, $ids, $networks, $content, $key, $accounts): void {
+        $this->lock->run((int) $owner->getId(), function () use ($owner, $ids, $networks, $content, $key, $accounts, $beforeCommit): void {
             $existing = [];
             foreach ($networks as $network) {
                 $existing[$network] = $this->em->getRepository(self::ENTITIES[$network])->count(['owner' => $owner, 'submissionKey' => $key]);
@@ -118,7 +118,7 @@ final class MultiNetworkPublishing
             }
             // Nested network transactions use savepoints on the same connection as Messenger.
             // A failure on any destination rolls back every job and every queued message.
-            $this->em->getConnection()->transactional(function () use ($owner, $ids, $networks, $content, $key, $accounts): void {
+            $this->em->getConnection()->transactional(function () use ($owner, $ids, $networks, $content, $key, $accounts, $beforeCommit): void {
                 foreach ($networks as $network) {
                     $publisher = match ($network) {
                         'youtube' => $this->youtube,
@@ -127,6 +127,9 @@ final class MultiNetworkPublishing
                         default => throw new PublicationException('Réseau indisponible.'),
                     };
                     $publisher->enqueue($owner, $ids, $content[$network]['videos'], $key, (string) $accounts[$network]);
+                }
+                if ($beforeCommit) {
+                    $beforeCommit();
                 }
             });
         });

@@ -12,6 +12,8 @@ Mise à jour du 17 octobre 2026 : le propriétaire autorise la préparation loca
 
 Mise à jour du 17 octobre 2026 : lot statistiques de base autorisé localement pour les trois réseaux avec API simulées : vues, j’aime, nombre de commentaires et aperçu de la vidéo source dans Publications. Les compteurs sont distincts par destination, datés et collectés en arrière-plan ; aucune donnée manquante remplacée par zéro. La collecte réelle et les autorisations sociales supplémentaires restent à activer séparément. Aucun texte de commentaire, réponse, modération, historique analytique, calendrier ou IA ajouté dans ce lot. Voir docs/statistics.md.
 
+Mise à jour du 18 octobre 2026 : parcours validé et lot brouillons durables, programmation ponctuelle et calendrier explicitement autorisé localement. Réutiliser le moteur multi-réseaux avec API simulées, contrôle des fuseaux, confirmation, annulation avant départ et blocage des créneaux manqués. Accès/essais sociaux réels, cloud, IA, montage et séries restent distincts. Voir docs/calendrier.md.
+
 ## Stack et architecture
 Monolithe Symfony 7.4 LTS ; PHP 8.4 Docker ; Doctrine ORM et PostgreSQL 16 ; Twig ; Stimulus ; Vite ; Three.js ; GSAP/ScrollTrigger. Aucun React, microservice, CQRS ou DDD complexe.
 Controllers légers dans src/Controller ; formulaire/validation dans src/Form ; métier dans src/Service ; entités dans src/Entity ; migrations versionnées dans migrations ; templates dans templates ; contrôleurs Stimulus dans assets/controllers ; tokens/styles dans assets/styles ; documentation dans docs.

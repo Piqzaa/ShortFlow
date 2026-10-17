@@ -1,0 +1,6 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Choisir les vidéos — VydFlow{% endblock %}
+{% block studio_content %}
+<div class="studio-heading"><div><h1>Les vidéos de ce brouillon.</h1><p>Les textes déjà enregistrés sont conservés pour les vidéos gardées.</p></div></div>
+{{ form_start(form,{attr:{class:'publication-form account-form batch-form draft-sources'}}) }}{{ form_errors(form) }}{{ form_row(form.videos) }}<div class="batch-actions"><button class="button" type="submit">Enregistrer la sélection</button><a class="account-secondary" href="{{ path('app_draft',{id:draft.id}) }}">Annuler</a></div>{{ form_end(form) }}
+{% endblock %}

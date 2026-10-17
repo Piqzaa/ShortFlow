@@ -1,0 +1,9 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Brouillons — VydFlow{% endblock %}
+{% block studio_content %}
+<div class="studio-heading draft-heading"><div><span class="eyebrow">LES IDÉES QUE TU GARDES</span><h1>Tes préparations.</h1><p>Retrouve les textes, les options et les créneaux enregistrés.</p></div><a class="button small" href="{{ path('app_library') }}">Préparer une publication ↗</a></div>
+<p class="library-note"><a class="account-secondary" href="{{ path('app_calendar') }}">Ouvrir le calendrier ↗</a></p>
+{% if not drafts %}<div class="studio-empty draft-empty"><h2>Rien d’enregistré pour le moment.</h2><p>Choisis tes vidéos dans la bibliothèque, puis enregistre un brouillon.</p></div>{% endif %}
+<div class="draft-list">{% for draft in drafts %}<article>{% if draft.items|length %}{% include 'draft/_preview.html.twig' with {item:draft.items|first,preload:'metadata'} %}{% endif %}<div class="draft-list-copy"><span class="publication-state state-{{ states[draft.id] }}">{{ labels[states[draft.id]] }}</span><h2><a href="{{ path('app_draft', {id:draft.id}) }}">{{ draft.title }}</a></h2><p>{{ draft.items|length }} vidéo{{ draft.items|length > 1 ? 's' : '' }} · {{ draft.networks|length }} destination{{ draft.networks|length > 1 ? 's' : '' }}</p>{% if draft.scheduledAt %}<p>{{ draft.scheduledAt|date('d/m/Y à H:i', draft.timezone) }} · {{ draft.timezone }}</p>{% endif %}<small>Modifiée le {{ draft.updatedAt|date('d/m/Y à H:i') }}</small></div><a class="account-secondary" href="{{ path('app_draft', {id:draft.id}) }}">Ouvrir ↗</a></article>{% endfor %}</div>
+{% if pages > 1 %}<nav class="library-pagination" aria-label="Pages des préparations">{% if page > 1 %}<a href="{{ path('app_drafts',{page:page-1}) }}">← Précédente</a>{% endif %}<span>{{ page }} / {{ pages }}</span>{% if page < pages %}<a href="{{ path('app_drafts',{page:page+1}) }}">Suivante →</a>{% endif %}</nav>{% endif %}
+{% endblock %}

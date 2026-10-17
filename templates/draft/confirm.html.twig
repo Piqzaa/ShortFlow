@@ -1,0 +1,10 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Confirmer la préparation — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary" href="{{ path('app_draft',{id:draft.id}) }}">← Revenir au brouillon</a><div class="studio-heading"><div><span class="eyebrow">LE DÉPART RESTE TON CHOIX</span><h1>Vérifie avant de confirmer.</h1><p>{{ draft.title }}</p></div></div>
+{% include 'publication/_batch_issues.html.twig' %}
+<div class="batch-total"><strong>{{ draft.items|length * networks|length }}</strong><p>publications · {% if draft.scheduledAt %}Départ prévu le {{ draft.scheduledAt|date('d/m/Y à H:i', draft.timezone) }} · {{ draft.timezone }}{% else %}Départ immédiat après confirmation{% endif %}</p></div>
+
+{% include 'publication/_batch_review.html.twig' with {videos:viewVideos} %}
+{{ form_start(form,{attr:{class:'publication-form account-form batch-form'}}) }}{{ form_errors(form) }}<div class="publication-confirm"><p>Les réseaux traitent chaque vidéo séparément. Leur heure d’apparition publique peut varier.</p>{% if draft.scheduledAt %}<p>Le poste et le worker doivent fonctionner. Si le départ a plus de deux minutes de retard, il sera bloqué et tu devras choisir une nouvelle date.</p>{% endif %}<p class="library-note">Consulte les <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">conditions YouTube</a>, la <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener noreferrer">confirmation musicale TikTok</a> et la <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noopener noreferrer">politique relative aux contenus de marque</a> pour les destinations concernées.</p>{{ form_row(form.confirm) }}<button class="button" type="submit"{% if not ready %} disabled{% endif %}>{{ draft.scheduledAt ? 'Confirmer la programmation' : 'Confirmer et publier' }} ↗</button></div>{{ form_end(form) }}
+{% endblock %}

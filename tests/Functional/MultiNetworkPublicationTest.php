@@ -189,7 +189,7 @@ final class MultiNetworkPublicationTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('button[type="submit"][disabled]');
         self::assertSelectorTextContains('.batch-review', 'À choisir après connexion');
-        $payload = $crawler->filter('form')->last()->form()->getPhpValues();
+        $payload = $crawler->filter('form[name="form"]')->form()->getPhpValues();
         $payload['form']['confirm'] = '1';
         $this->client->request('POST', $this->client->getRequest()->getUri(), $payload);
         self::assertResponseStatusCodeSame(422);
@@ -241,7 +241,7 @@ final class MultiNetworkPublicationTest extends WebTestCase
         $crawler = $this->review($this->choose([$incompatible], ['youtube', 'instagram']), [$incompatible]);
         self::assertSelectorExists('.batch-issues');
         self::assertSelectorExists('button[type="submit"][disabled]');
-        $payload = $crawler->filter('form')->last()->form()->getPhpValues();
+        $payload = $crawler->filter('form[name="form"]')->form()->getPhpValues();
         $payload['form']['confirm'] = '1';
         $this->client->request('POST', $this->client->getRequest()->getUri(), $payload);
         self::assertResponseStatusCodeSame(422);
@@ -378,5 +378,34 @@ final class MultiNetworkPublicationTest extends WebTestCase
         self::assertFalse($context['ready']);
         self::assertStringContainsString('Reviens aux textes et réglages', $context['issues']['tiktok'][0]);
         $this->assertJobs(0, 0);
+    }
+
+    public function testScheduleCanBeChosenDirectlyInThePublicationFlow(): void
+    {
+        $this->connectAll();
+        $video = $this->video();
+        $crawler = $this->review($this->choose([$video], ['youtube']), [$video]);
+        self::assertSelectorExists('#programmer');
+        self::assertSelectorCount(1, '#publication_plan_local');
+        self::assertSelectorCount(1, '#form_confirm');
+        $date = (new \DateTimeImmutable('+1 hour'))->setTimezone(new \DateTimeZone('Europe/Paris'))->format('Y-m-d\TH:i');
+        $plan = $crawler->selectButton('Vérifier ce créneau')->form();
+        $plan['publication_plan[local]'] = $date;
+        $plan['publication_plan[timezone]'] = 'Europe/Paris';
+        $this->client->submit($plan);
+        self::assertResponseStatusCodeSame(303);
+        $this->assertJobs(0, 0);
+        $crawler = $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.batch-total', 'Départ prévu');
+        $form = $crawler->selectButton('Confirmer la programmation')->form();
+        $form['form[confirm]'] = true;
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame('scheduled', $this->db()->fetchOne('SELECT status FROM publication_draft LIMIT 1'));
+        foreach (['youtube', 'instagram', 'tiktok'] as $network) {
+            self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM '.$network.'_publication'));
+        }
+        self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 }

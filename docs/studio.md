@@ -2,7 +2,7 @@
 
 ## Objectif
 
-La bibliothèque gère les vidéos sources ; Publications suit chaque envoi YouTube, Instagram ou TikTok. La vue d'ensemble donne les vrais compteurs, les trois derniers envois à traiter et en cours, l'état local des réseaux et les dernières vidéos. Une même source peut produire plusieurs résultats. Calendrier et IA ne sont pas ajoutés à la navigation avant leurs lots.
+La bibliothèque gère les vidéos sources ; Publications suit chaque envoi YouTube, Instagram ou TikTok. La vue d'ensemble donne les vrais compteurs, les trois derniers envois à traiter et en cours, l'état local des réseaux et les dernières vidéos. Une même source peut produire plusieurs résultats. Brouillons et Calendrier rejoignent la navigation dans leur lot du 18 octobre : préparations durables, choix du créneau confirmé et suivi commun, voir calendrier.md. IA reste à venir.
 
 ## Fichiers et composants
 

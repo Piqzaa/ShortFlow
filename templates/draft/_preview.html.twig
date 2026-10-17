@@ -1,0 +1,6 @@
+{% if item.source and item.source.owner.id == app.user.id %}
+<figure class="draft-media" data-controller="publication-preview">
+  <video controls playsinline preload="{{ preload|default('metadata') }}" src="{{ path('app_video_stream', {id:item.source.id}) }}" aria-label="Aperçu de {{ item.title }}">Ton navigateur ne permet pas de lire cette vidéo.</video>
+  <figcaption>{{ item.title }}</figcaption>
+</figure>
+{% else %}<p class="library-note draft-media-missing">Source supprimée · aperçu indisponible</p>{% endif %}
