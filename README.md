@@ -16,12 +16,48 @@ docker compose build
 docker compose run --rm --no-deps php composer install
 docker compose --profile tools run --rm node
 docker compose up -d
-docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
+docker compose exec php composer db:sync
 ```
 
 Créer .env.local avant le premier démarrage sur un nouveau clone : APP_SECRET doit être une chaîne aléatoire privée. Exemple de génération : docker compose run --rm --no-deps php php -r "echo bin2hex(random_bytes(32));". Le fichier est ignoré par Git ; une valeur locale a déjà été générée dans cet espace de travail.
 
+### Après un git pull et accès PostgreSQL
+
+Git transfère le code et les migrations, pas la base, les vidéos importées ni `.env.local`. Après un pull :
+
+```sh
+docker compose up -d
+docker compose exec php composer db:sync
+docker compose --profile tools run --rm --no-deps node
+docker compose restart worker
+```
+
+Si `composer.lock` a changé, réinstaller d'abord les dépendances comme indiqué ci-dessous. Si le Dockerfile a changé, reconstruire l'image PHP. Si les assets ont changé, relancer le build frontend.
+
+La commande Node ci-dessus installe les dépendances et reconstruit les assets : `public/build` est ignoré par Git. Après un pull, des templates récents avec un ancien CSS peuvent donner un dashboard sans style ou des textes collés. Reconstruire puis recharger le navigateur avec `Ctrl+F5`.
+
+`composer db:sync` crée la base dev si elle manque, applique seulement les migrations manquantes puis vérifie le schéma. Les fichiers versionnés de `migrations/` sont la recette de construction des tables : aucun export SQL de données personnelles n'est nécessaire. Cette commande ne purge pas les tables ; relire toute nouvelle migration avant de l'appliquer. Elle ne prépare pas la base de test, gérée par `scripts/check.php`.
+
+Les seeds/fixtures sont des données de démonstration facultatives. Aucune donnée métier initiale n'est requise actuellement : créer un compte par `/inscription`, confirmer via Mailpit, puis importer ses vidéos. Aucun compte à mot de passe partagé, faux compte social ou seed automatique n'est installé. Les fixtures des tests restent exclusivement dans `shortflow_test`.
+
+Pour l'extension PostgreSQL de VS Code sur ce PC :
+
+| Champ | Valeur locale |
+| --- | --- |
+| Hôte | `127.0.0.1` |
+| Port | `5433` |
+| Base | `shortflow` |
+| Utilisateur | `shortflow` |
+| Mot de passe | `localdev` |
+| SSL | Désactivé pour ce serveur local |
+
+Ces identifiants sont ceux de `compose.yaml`, exclusivement pour Docker local. Le port PostgreSQL est lié à loopback ; aucun accès réseau public n'est ouvert. Depuis PHP/worker, l'adresse reste `database:5432` : ne pas remplacer leur `DATABASE_URL` par l'adresse VS Code. Le volume `shortflow_database_data` conserve les données. Ne pas lancer `docker compose down -v` pour résoudre une migration manquante.
+
+Pour vérifier : `docker compose exec php composer db:sync` peut être répété, puis recharger `/studio`. Doctrine mémorise les migrations exécutées dans `doctrine_migration_versions` ; une deuxième exécution ne recrée pas les tables.
+
 Les dépendances PHP (`php_vendor` → `/app/vendor`) et le cache Symfony (`app_cache` → `/app/var/cache`) sont conservés dans des volumes Docker natifs partagés par PHP et le worker. Cela évite les milliers d'accès aux fichiers Windows/OneDrive pendant chaque requête. Le code source reste modifiable depuis Windows et le mode debug reste actif. Après un changement de `composer.lock`, lancer `docker compose run --rm --no-deps php composer install`, puis `docker compose restart worker`. Utiliser Composer et les outils PHP dans Docker : un éventuel dossier `vendor` Windows n'est plus celui exécuté par les conteneurs. Pour rafraîchir le cache : `docker compose exec php php bin/console cache:clear`.
+
+Un `git pull` ne reconfigure pas les conteneurs déjà démarrés : `docker compose restart` les relance avec leurs anciens montages. Après un changement de Compose, installer les dépendances dans les volumes prévus avec `docker compose run --rm --no-deps php composer install`, puis appliquer la configuration avec `docker compose up -d php worker`. Sur Windows/OneDrive, un ancien conteneur qui lit encore `vendor` et `var/cache` via le montage du projet peut ralentir chaque page de plusieurs secondes. `docker inspect vydflow-php-1 --format '{{range .Mounts}}{{.Destination}} {{.Type}}{{println}}{{end}}'` doit afficher `/app/vendor volume` et `/app/var/cache volume` en plus de `/app bind`.
 
 La base PostgreSQL et les vidéos privées ne sont pas dans ces deux volumes : leur emplacement reste inchangé. Les commandes de démarrage ci-dessus initialisent aussi les volumes sur un nouveau clone ; aucune copie manuelle du cache n'est nécessaire.
 
@@ -38,6 +74,7 @@ Bibliothèque : http://localhost:8000/studio/bibliotheque. Après mise à jour d
 Avec Node local : npm ci puis npm run build remplace le conteneur outils. Après chaque changement frontend, relancer npm run build et recharger la page. npm run dev n’est pas relié aux templates ; le mode courant utilise les fichiers compilés. Le dossier public/build est généré et ignoré. PHP local par défaut est 8.1 : utiliser le conteneur PHP 8.4 pour toutes les commandes applicatives.
 
 ## Vérifications
+
 
 Studio : vue d'ensemble avec compteurs réels et envois à traiter, historique commun YouTube/Instagram/TikTok filtrable et paginé, réseaux connectés et espace Mon compte (`/studio/mon-compte`) avec changement sécurisé du mot de passe. Les liens légaux généraux sont regroupés vers `/informations-legales`. Guide des composants, flux Symfony et tests : [docs/studio.md](docs/studio.md).
 

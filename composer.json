@@ -58,6 +58,11 @@
         "symfony/polyfill-php82": "*"
     },
     "scripts": {
+        "db:sync": [
+            "@php bin/console doctrine:database:create --env=dev --if-not-exists",
+            "@php bin/console doctrine:migrations:migrate --env=dev --no-interaction",
+            "@php bin/console doctrine:schema:validate --env=dev"
+        ],
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
             "assets:install %PUBLIC_DIR%": "symfony-cmd"

@@ -35,6 +35,8 @@ services:
     ports: ["127.0.0.1:8026:8025"]
   database:
     image: postgres:16-alpine
+    # Local database tools (VS Code); never bind PostgreSQL to all interfaces.
+    ports: ["127.0.0.1:5433:5432"]
     environment:
       POSTGRES_DB: shortflow
       POSTGRES_USER: shortflow
