@@ -32,7 +32,16 @@ final class InstagramPublishing
 
     public function validateVideo(VideoAsset $video): void
     {
-        if ('video/mp4' !== $video->getMimeType() || 'h264' !== $video->getCodec() || $video->getDuration() < 3 || $video->getWidth() > 1920) {
+        if ('video/mp4' !== $video->getMimeType() || 'h264' !== $video->getCodec()) {
+            $format = match ($video->getMimeType()) {
+                'video/webm' => 'WebM',
+                'video/mp4' => 'MP4',
+                default => 'format non pris en charge',
+            };
+            $codec = 'h264' === $video->getCodec() ? 'H.264' : strtoupper($video->getCodec());
+            throw new PublicationException('Format incompatible avec Instagram : '.$format.' / '.$codec.'. Exporte cette vidéo en MP4 / H.264, puis importe la copie dans la bibliothèque. La vidéo d’origine peut être conservée.');
+        }
+        if ($video->getDuration() < 3 || $video->getWidth() > 1920) {
             throw new PublicationException('Pour Instagram, choisis un MP4 H.264 de 3 secondes minimum et de 1920 pixels de largeur maximum.');
         }
     }

@@ -178,6 +178,25 @@ final class MultiNetworkPublicationTest extends WebTestCase
         self::assertSame(2, (int) $this->db()->fetchOne("SELECT COUNT(*) FROM youtube_publication WHERE status = 'published'"));
     }
 
+    public function testIncompatibleInstagramFormatExplainsCurrentAndRequiredFormatWithoutQueuing(): void
+    {
+        $this->connectAll();
+        $video = new VideoAsset($this->owner, 'Clip <WebM>', bin2hex(random_bytes(24)).'.webm', 'video/webm', 1234, 6, 540, 960, 'vp9');
+        $this->em()->persist($video);
+        $this->em()->flush();
+        $crawler = $this->choose([$video], ['instagram']);
+        self::assertSelectorTextContains('.batch-issues', 'Format incompatible avec Instagram : WebM / VP9');
+        self::assertSelectorTextContains('.batch-issues', 'Exporte cette vidéo en MP4 / H.264');
+        $crawler = $this->review($crawler, [$video]);
+        self::assertSelectorTextContains('.batch-issues', 'Publication bloquée');
+        self::assertSelectorTextContains('.batch-issues', 'importe la copie dans la bibliothèque');
+        self::assertSelectorExists('.publication-confirm button[type="submit"][disabled]');
+        self::assertStringNotContainsString('<WebM>', $this->client->getResponse()->getContent());
+        self::assertStringNotContainsString('Après connexion, vérifie de nouveau', $this->client->getResponse()->getContent());
+        $this->assertJobs(0, 0);
+        self::assertSame(0, $this->creatorQueries);
+    }
+
     public function testOfflinePreparationShowsUnavailableDestinationsAndCannotPublish(): void
     {
         $videos = [$this->video()];

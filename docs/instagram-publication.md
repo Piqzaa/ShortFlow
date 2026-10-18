@@ -1,5 +1,7 @@
 # Publier un Reel depuis la bibliothèque
 
+Mise à jour du 18 octobre 2026 : connexion Instagram réelle validée et tunnel HTTPS temporaire configuré. Le premier envoi Reel réel reste à effectuer avec une vidéo explicitement choisie et confirmation du propriétaire. Guide du tunnel : [instagram-test-https.md](instagram-test-https.md).
+
 ## Objectif
 
 Sélectionner une ou plusieurs vidéos privées, choisir Instagram Reels dans la préparation, modifier chaque légende puis confirmer. Chaque vidéo devient une publication distincte. La page Publications suit les envois Instagram et YouTube ; la bibliothèque affiche les deux icônes si la même source a réussi sur les deux réseaux.
@@ -36,6 +38,10 @@ Le téléchargement utilise une URL HMAC propre au job, valable au maximum 24 he
 Une réponse de création perdue peut laisser un conteneur orphelin expirant chez Meta ; il ne sera jamais publié par VydFlow. Le mécanisme garantit l’absence de nouvelle tentative automatique de publication après un résultat incertain, au prix d’une vérification manuelle.
 
 ## Formats et limites
+
+Le blocage de format indique désormais le conteneur et le codec détectés, par exemple « Format incompatible avec Instagram : WebM / VP9 », puis demande d'exporter en MP4 / H.264 et d'importer la copie. `InstagramPublishing::validateVideo` produit cette explication ; `MultiNetworkPublishing::context` l'associe au titre de la vidéo et à sa destination ; Twig l'affiche échappée dans la préparation et les récapitulatifs immédiats ou programmés. Le message près du bouton ne suggère plus systématiquement de reconnecter un compte. Aucun transcodage automatique n'est ajouté.
+
+Pour vérifier : préparer un WebM pour Instagram avec un compte connecté, lire le format actuel et la correction dans le bloc « Publication bloquée », puis constater que la confirmation reste désactivée. Importer une copie MP4/H.264 compatible et refaire la sélection. Le test fonctionnel `testIncompatibleInstagramFormatExplainsCurrentAndRequiredFormatWithoutQueuing` vérifie l'affichage, l'échappement et l'absence de jobs/messages/appels sociaux ; il utilise uniquement `shortflow_test`. En Symfony, le service décide si la vidéo est compatible ; le contrôleur et Twig rendent cette décision sans contourner la validation serveur.
 
 Contrôles locaux sur les métadonnées privées : MP4 H.264, durée minimale 3 secondes, largeur maximale 1 920 pixels. Les limites générales d’import (100 Mo, 3 minutes, audio AAC) continuent de s’appliquer. Meta contrôle également cadence 23–60 i/s, encodage progressif, débit et organisation MP4 ; ces caractéristiques ne sont pas toutes validées localement ni corrigées automatiquement. Export recommandé : vertical 9:16, H.264/AAC, MP4 faststart, cadence 25/30 i/s. Une vidéo refusée reste dans la bibliothèque et son erreur est visible dans le suivi. Le quota distant est appliqué par Meta ; aucune promesse de capacité illimitée.
 
