@@ -1,0 +1,30 @@
+# Temporary Instagram tests only; use together with compose.yaml.
+services:
+  social-web:
+    image: vydflow-php
+    profiles: [social-test]
+    working_dir: /app
+    ports: ["127.0.0.1:8001:8080"]
+    volumes:
+      - .:/app
+      - php_vendor:/app/vendor
+      - social_test_cache:/app/var/cache
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "0"
+      DATABASE_URL: postgresql://shortflow:localdev@database:5432/shortflow?serverVersion=16&charset=utf8
+      MAILER_DSN: smtp://mailpit:1025
+    # Never record request URLs: callbacks contain OAuth codes, media links contain signatures.
+    command: [sh, -c, "exec php -d display_errors=0 -d log_errors=0 -d session.cookie_secure=1 -S 0.0.0.0:8080 -t public docker/social-test/router.php >/dev/null 2>&1"]
+    logging:
+      driver: none
+    depends_on:
+      database:
+        condition: service_healthy
+  social-tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: [social-test]
+    command: [tunnel, --no-autoupdate, --protocol, http2, --url, "http://social-web:8080"]
+    depends_on: [social-web]
+volumes:
+  social_test_cache:

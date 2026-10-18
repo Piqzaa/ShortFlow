@@ -57,6 +57,8 @@ Pour vérifier : `docker compose exec php composer db:sync` peut être répété
 
 ### Réseaux sociaux sur un autre PC
 
+Essais Instagram par tunnel HTTPS temporaire autorisé : [procédure dédiée](docs/instagram-test-https.md), entrée Docker sans debug, arrêt et limites. Le serveur de développement habituel ne doit pas être ciblé par le tunnel.
+
 L’état « À configurer » indique que la configuration privée du réseau manque sur ce poste. Les identifiants OAuth (client ID/key et client secret), la clé de chiffrement des jetons et les URL de retour se configurent dans `.env.local`, ignoré par Git. Ils ne sont donc pas récupérés par un pull. Réutiliser l’application développeur existante, notamment celle de Google pour YouTube ; il n’est pas nécessaire d’en créer une par PC. Ne jamais copier les secrets dans le dépôt ou dans une conversation.
 
 La configuration de l’application et l’autorisation d’un compte sont deux étapes différentes : une fois le réseau configuré, connecter son compte depuis **Réseaux**. Cette autorisation est enregistrée dans la base locale, elle aussi indépendante de Git. Si une base contenant des connexions est restaurée, conserver les clés de chiffrement d’origine ; les remplacer rend les jetons existants illisibles. Après modification de la configuration privée, vider le cache dev avec `docker compose exec php php bin/console cache:clear --no-debug`, puis redémarrer le worker. Les premiers essais Meta/TikTok restent soumis aux accès, à la configuration HTTPS et à l’autorisation explicite du propriétaire.
