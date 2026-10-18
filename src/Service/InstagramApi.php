@@ -70,6 +70,18 @@ final class InstagramApi
         return $this->identifier($data['id'] ?? null);
     }
 
+    public function permalink(\App\Entity\InstagramConnection $connection, string $id): string
+    {
+        $id = $this->identifier($id);
+        $media = $this->json('GET', $this->endpoint($id), ['auth_bearer' => $this->access($connection), 'query' => ['fields' => 'id,username,permalink']], 'Le lien Instagram est indisponible.');
+        $url = $media['permalink'] ?? null;
+        if (($media['id'] ?? null) !== $id || !is_string($media['username'] ?? null) || strtolower($media['username']) !== strtolower($connection->getUsername()) || !is_string($url) || !preg_match('~^https://www\.instagram\.com/(?:reel|reels|p)/[A-Za-z0-9_-]+/?$~D', $url)) {
+            throw new PublicationException('Le lien Instagram est indisponible.');
+        }
+
+        return $url;
+    }
+
     /** @return array{views: mixed, likes: mixed, comments: mixed} */
     public function statistics(\App\Entity\InstagramConnection $connection, string $id): array
     {

@@ -23,6 +23,28 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route('/studio/publications/instagram')]
 final class InstagramPublicationController extends AbstractController
 {
+    #[Route('/{id}/voir', name: 'app_instagram_view', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function view(int $id, #[CurrentUser] User $user, EntityManagerInterface $em, \App\Service\InstagramApi $api, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    {
+        $job = $em->getRepository(InstagramPublication::class)->findOneBy(['id' => $id, 'owner' => $user]) ?? throw $this->createNotFoundException();
+        try {
+            $connection = $em->getRepository(\App\Entity\InstagramConnection::class)->findOneBy(['owner' => $user]);
+            if ('published' !== $job->getStatus() || !$job->getRemoteId() || !$connection || $connection->getInstagramId() !== $job->getInstagramId() || !$limiter->create('instagram-link-'.$user->getId())->consume()->isAccepted()) {
+                throw new PublicationException('Le lien Instagram est indisponible. Vérifie le compte connecté.');
+            }
+
+            $response = $this->redirect($api->permalink($connection, $job->getRemoteId()), 303);
+            $response->headers->set('Cache-Control', 'private, no-store');
+            $response->headers->set('Referrer-Policy', 'no-referrer');
+
+            return $response;
+        } catch (PublicationException $error) {
+            $this->addFlash('error', $error->getMessage());
+
+            return $this->redirectToRoute('app_publications', status: 303);
+        }
+    }
+
     #[Route('/preparer', name: 'app_instagram_prepare', methods: ['GET', 'POST'])]
     public function prepare(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, InstagramPublishing $publishing, InstagramMediaLink $links, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {

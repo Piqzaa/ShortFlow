@@ -214,6 +214,8 @@ final class PublicationStatisticsTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/publications');
         self::assertResponseIsSuccessful();
         self::assertSelectorCount(1, '.publication-statistics form');
+        self::assertSelectorCount(3, '.publication-statistics');
+        self::assertSame(['—', '—', '—'], $crawler->filter('.publication-item[data-network="instagram"] .publication-statistics dd')->each(static fn ($node): string => $node->text()));
         self::assertSame(1, $crawler->filter('.publication-item[data-network="youtube"] .publication-statistics form')->count());
         self::assertTrue($this->stats()->queue($this->owner(), 'youtube', (int) $youtube->getId()));
         foreach (['instagram' => $instagram, 'tiktok' => $tiktok] as $network => $job) {
@@ -230,6 +232,36 @@ final class PublicationStatisticsTest extends WebTestCase
         $this->stats()->refresh((int) $snapshot->getId(), $snapshot->getRequestKey());
         self::assertSame('unavailable', $this->row((int) $snapshot->getId())['status']);
         self::assertNull($this->row((int) $snapshot->getId())['counts']);
+    }
+
+    public function testInstagramVideoLinkUsesProviderPermalinkAndChecksOwnership(): void
+    {
+        $job = $this->job('instagram');
+        $this->mock('instagram', static function (string $method, string $url, array $options): MockResponse {
+            self::assertSame('GET', $method);
+            self::assertStringContainsString('fields=id%2Cusername%2Cpermalink', $url);
+
+            return new MockResponse(json_encode(['id' => self::IDS['instagram'], 'username' => 'statistics_test', 'permalink' => 'https://www.instagram.com/reel/Test_clip123/'], JSON_THROW_ON_ERROR));
+        });
+        $this->client->loginUser($this->owner());
+        $this->client->request('GET', '/studio/publications/instagram/'.$job->getId().'/voir');
+        self::assertResponseRedirects('https://www.instagram.com/reel/Test_clip123/', 303);
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('private'));
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/publications/instagram/'.$job->getId().'/voir');
+        self::assertResponseStatusCodeSame(404);
+        self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testInstagramProviderCannotRedirectToAnUntrustedWebsite(): void
+    {
+        $job = $this->job('instagram');
+        $this->mock('instagram', static fn (): MockResponse => new MockResponse(json_encode(['id' => self::IDS['instagram'], 'username' => 'statistics_test', 'permalink' => 'https://www.instagram.com.evil.test/reel/Test/'], JSON_THROW_ON_ERROR)));
+        $this->client->loginUser($this->owner());
+        $this->client->request('GET', '/studio/publications/instagram/'.$job->getId().'/voir');
+        self::assertResponseRedirects('/studio/publications', 303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.account-notice.error', 'lien Instagram est indisponible');
     }
 
     public function testReadingIsLocalAndQueueRequiresOwnerAndCsrf(): void
