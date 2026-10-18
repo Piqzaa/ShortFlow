@@ -96,13 +96,13 @@ final class StudioOverviewTest extends WebTestCase
         self::assertSelectorTextContains('.publication-item', 'Older YouTube');
         $this->client->request('GET', '/studio/publications?state=published');
         self::assertSelectorNotExists('.publication-item');
-        $this->client->request('GET', '/studio');
+        $this->client->request('GET', '/studio/activite');
         self::assertSelectorTextContains('.dashboard-summary a.needs-attention strong', '2');
         self::assertSelectorTextNotContains('.dashboard-attention', 'Other owner private');
         self::assertSelectorNotExists('.studio-footer');
         self::assertSelectorNotExists('.studio-sidebar a[href="/informations-legales"]');
         self::assertSelectorNotExists('.studio-topbar a[href="/informations-legales"]');
-        self::assertSelectorExists('.dashboard-actions a[href="/studio/bibliotheque#library-selection"]');
+        self::assertSelectorExists('.dashboard-actions a[href="/studio/composer"]');
         self::assertSelectorExists('.studio-profile[href="/studio/mon-compte"]');
         $owner = $this->em()->find(User::class, $this->alice->getId());
         $overview = static::getContainer()->get(PublicationOverview::class);
@@ -113,7 +113,7 @@ final class StudioOverviewTest extends WebTestCase
         self::assertSame('youtube', $second['items'][0]['network']);
         self::assertSame(2, $overview->page($owner, 999, limit: 1)['page']);
         $this->publication($owner, 'youtube', 'queued', 'Waiting video');
-        $this->client->request('GET', '/studio');
+        $this->client->request('GET', '/studio/activite');
         self::assertSelectorTextContains('#active-title', 'En cours');
         self::assertSelectorTextContains('.dashboard-activity[aria-labelledby="active-title"]', 'Waiting video');
         self::assertSelectorTextContains('.dashboard-summary a[href="/studio/publications?state=active"] strong', '1');
@@ -131,7 +131,7 @@ final class StudioOverviewTest extends WebTestCase
         $this->client->request('GET', '/studio/mon-compte');
         self::assertResponseStatusCodeSame(403);
         $this->client->loginUser($this->alice);
-        $this->client->request('GET', '/studio');
+        $this->client->request('GET', '/studio/activite');
         self::assertSelectorExists('.dashboard-actions a[href="/studio/bibliotheque/importer"]');
         self::assertSelectorNotExists('#active-title');
         self::assertSelectorNotExists('#attention-title');
@@ -143,7 +143,7 @@ final class StudioOverviewTest extends WebTestCase
         self::assertSelectorExists('.profile-legal a[href="/suppression-donnees"]');
         $this->client->submit($crawler->selectButton('Modifier mon mot de passe ↗')->form($this->passwordData('wrong password')));
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('.account-form', 'actuel est incorrect');
+        self::assertSelectorTextContains('form[name="change_password"]', 'actuel est incorrect');
         $this->client->request('POST', '/studio/mon-compte', ['change_password' => ['currentPassword' => 'original password for studio', 'newPassword' => ['first' => 'a new password for studio', 'second' => 'a new password for studio']]]);
         self::assertResponseStatusCodeSame(422);
         self::assertTrue(static::getContainer()->get(UserPasswordHasherInterface::class)->isPasswordValid($this->em()->find(User::class, $this->alice->getId()), 'original password for studio'));
@@ -174,9 +174,9 @@ final class StudioOverviewTest extends WebTestCase
         $this->em()->clear();
         self::assertTrue($hasher->isPasswordValid($this->em()->find(User::class, $this->alice->getId()), 'a new password for studio'));
         self::assertTrue($hasher->isPasswordValid($this->em()->find(User::class, $this->bob->getId()), 'original password for studio'));
-        $this->client->request('GET', '/studio');
+        $this->client->request('GET', '/studio/activite');
         self::assertResponseRedirects('http://localhost/connexion');
-        $oldSession->request('GET', '/studio');
+        $oldSession->request('GET', '/studio/activite');
         self::assertSame(302, $oldSession->getResponse()->getStatusCode());
         self::assertSame('http://localhost/connexion', $oldSession->getResponse()->headers->get('Location'));
     }
@@ -229,7 +229,7 @@ final class StudioOverviewTest extends WebTestCase
         $this->preparation($this->bob, 'Blocage autre propriétaire', 'blocked');
         $this->preparation($this->bob, 'Brouillon autre propriétaire', 'draft');
         $this->client->loginUser($this->alice);
-        $crawler = $this->client->request('GET', '/studio');
+        $crawler = $this->client->request('GET', '/studio/activite');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('#upcoming-title .dashboard-count', '2');
         self::assertSelectorTextContains('#drafts-title .dashboard-count', '2');
@@ -245,15 +245,15 @@ final class StudioOverviewTest extends WebTestCase
         self::assertSame('scheduled', $db->fetchOne('SELECT status FROM publication_draft WHERE id = ?', [$late->getId()]));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
-        self::assertSelectorExists('.studio-mobile-menu summary');
-        self::assertSelectorExists('.studio-mobile-menu a[href="/studio/mon-compte"]');
+        self::assertSelectorExists('.studio-bottom-nav[aria-label="Navigation mobile du studio"]');
+        self::assertSelectorExists('.studio-top-account[href="/studio/mon-compte"]');
     }
 
     public function testDashboardEmptyAndBoundedPreparationLists(): void
     {
         static::getContainer()->set('app.publication_clock', new MockClock('2026-10-18T08:00:00+00:00'));
         $this->client->loginUser($this->alice);
-        $this->client->request('GET', '/studio');
+        $this->client->request('GET', '/studio/activite');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('#upcoming-title .dashboard-count', '0');
         self::assertSelectorTextContains('#drafts-title .dashboard-count', '0');
@@ -265,7 +265,7 @@ final class StudioOverviewTest extends WebTestCase
             $this->preparation($owner, 'Départ '.$i, 'scheduled', '2026-10-19T'.(10 + $i).':00:00+00:00');
             $this->preparation($owner, 'Brouillon '.$i, 'draft');
         }
-        $this->client->request('GET', '/studio');
+        $this->client->request('GET', '/studio/activite');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('#upcoming-title .dashboard-count', '5');
         self::assertSelectorTextContains('#drafts-title .dashboard-count', '5');

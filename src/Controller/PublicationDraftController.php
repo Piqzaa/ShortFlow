@@ -40,9 +40,9 @@ final class PublicationDraftController extends AbstractController
     }
 
     #[Route('/studio/calendrier', name: 'app_calendar', methods: ['GET'])]
-    public function calendar(Request $request, #[CurrentUser] User $user, PublicationDraftRepository $repository, PublicationCalendar $calendar, ClockInterface $clock): Response
+    public function calendar(Request $request, #[CurrentUser] User $user, PublicationDraftRepository $repository, PublicationCalendar $calendar, ClockInterface $clock, VideoAssetRepository $videos): Response
     {
-        $zone = $request->query->getString('zone', 'Europe/Paris');
+        $zone = $request->query->getString('zone', $user->getTimezone());
         if (!in_array($zone, \DateTimeZone::listIdentifiers(), true)) {
             throw $this->createNotFoundException('Fuseau invalide.');
         }
@@ -53,7 +53,8 @@ final class PublicationDraftController extends AbstractController
         }
         $first = new \DateTimeImmutable($month.'-01 00:00:00', $timezone);
         $start = $first->modify('-'.((int) $first->format('N') - 1).' days');
-        $end = $start->modify('+42 days');
+        $dayCount = (int) (ceil(((int) $first->format('N') - 1 + (int) $first->format('t')) / 7) * 7);
+        $end = $start->modify('+'.$dayCount.' days');
         $drafts = $repository->month($user, $start->setTimezone(new \DateTimeZone('UTC')), $end->setTimezone(new \DateTimeZone('UTC')));
         $states = $calendar->states($drafts);
         $network = $request->query->getString('network');
@@ -65,7 +66,7 @@ final class PublicationDraftController extends AbstractController
             throw $this->createNotFoundException();
         }
         $days = [];
-        for ($i = 0; $i < 42; ++$i) {
+        for ($i = 0; $i < $dayCount; ++$i) {
             $date = $start->modify('+'.$i.' days');
             $days[$date->format('Y-m-d')] = ['date' => $date, 'outside' => $date->format('Y-m') !== $month, 'entries' => []];
         }
@@ -79,7 +80,20 @@ final class PublicationDraftController extends AbstractController
             }
         }
 
-        return $this->page('draft/calendar.html.twig', ['days' => $days, 'month' => $first, 'previous' => $first->modify('-1 month')->format('Y-m'), 'next' => $first->modify('+1 month')->format('Y-m'), 'zone' => $zone, 'network' => $network, 'state' => $state, 'states' => $states, 'labels' => PublicationCalendar::LABELS, 'networks' => MultiNetworkPublishing::LABELS, 'undated' => $repository->count(['owner' => $user, 'scheduledAt' => null, 'status' => 'draft'])]);
+        return $this->page('draft/calendar.html.twig', ['libraryVideos' => $videos->page($user), 'libraryTotal' => $videos->count(['owner' => $user]), 'weeks' => (int) ($dayCount / 7), 'days' => $days, 'month' => $first, 'previous' => $first->modify('-1 month')->format('Y-m'), 'next' => $first->modify('+1 month')->format('Y-m'), 'zone' => $zone, 'network' => $network, 'state' => $state, 'states' => $states, 'labels' => PublicationCalendar::LABELS, 'networks' => MultiNetworkPublishing::LABELS, 'undated' => $repository->count(['owner' => $user, 'scheduledAt' => null, 'status' => 'draft'])]);
+    }
+
+    #[Route('/studio/calendrier/videos', name: 'app_calendar_videos', methods: ['GET'])]
+    public function videos(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos): Response
+    {
+        $query = mb_substr(trim($request->query->getString('q')), 0, 120);
+        $result = $videos->search($user, $query, $request->query->getInt('page', 1));
+
+        return $this->json([
+            'html' => $this->renderView('draft/_video_choices.html.twig', ['libraryVideos' => $result['items']]),
+            'total' => $result['total'],
+            'nextPage' => $result['page'] < $result['pages'] ? $result['page'] + 1 : null,
+        ], headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'same-origin']);
     }
 
     #[Route('/studio/brouillons/{id}', name: 'app_draft', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
@@ -166,7 +180,7 @@ final class PublicationDraftController extends AbstractController
                 if ('delete' === $action) {
                     $this->addFlash('success', 'Brouillon supprimé. Les vidéos de la bibliothèque sont conservées.');
 
-                    return $this->redirectToRoute('app_drafts', status: 303);
+                    return $this->redirectToRoute('app_dashboard', ['tab' => 'drafts'], 303);
                 }
                 if ('cancel' === $action) {
                     $this->addFlash('success', 'Programmation annulée avant le départ.');
@@ -181,14 +195,8 @@ final class PublicationDraftController extends AbstractController
                         return $this->redirectToRoute('app_draft_sources', ['id' => $id], 303);
                     }
                 }
-                $key = bin2hex(random_bytes(32));
-                $workspace = ['owner' => $user->getId(), 'ids' => $draft->videoIds(), 'networks' => $draft->getNetworks(), 'accounts' => $draft->getAccounts(), 'content' => $draft->content(), 'revision' => bin2hex(random_bytes(16)), 'expires' => time() + 3600, 'completed' => false, 'persistentId' => $id, 'persistentRevision' => $draft->getRevision(), 'title' => $draft->getTitle()];
-                $workspaces = $request->getSession()->get('publication_drafts', []);
-                $workspaces = array_slice($workspaces, -9, null, true);
-                $workspaces[$key] = $workspace;
-                $request->getSession()->set('publication_drafts', $workspaces);
 
-                return $this->redirectToRoute($draft->getNetworks() ? 'app_publication_batch_edit' : 'app_publication_batch', ['key' => $key], 303);
+                return $this->redirectToRoute('app_composer_start', ['draft' => $id], 303);
             } catch (PublicationException $error) {
                 $this->addFlash('error', $error->getMessage());
 

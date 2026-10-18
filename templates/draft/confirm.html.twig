@@ -1,7 +1,7 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}Confirmer la préparation — VydFlow{% endblock %}
 {% block studio_content %}
-<a class="account-secondary" href="{{ path('app_draft',{id:draft.id}) }}">← Revenir au brouillon</a><div class="studio-heading"><div><span class="eyebrow">LE DÉPART RESTE TON CHOIX</span><h1>Vérifie avant de confirmer.</h1><p>{{ draft.title }}</p></div></div>
+<a class="account-secondary" href="{{ path('app_composer_start',{draft:draft.id}) }}">← Revenir au brouillon</a><div class="studio-heading"><div><span class="eyebrow">LE DÉPART RESTE TON CHOIX</span><h1>Vérifie avant de confirmer.</h1><p>{{ draft.title }}</p></div></div>
 {% include 'publication/_batch_issues.html.twig' %}
 <div class="batch-total"><strong>{{ draft.items|length * networks|length }}</strong><p>publications · {% if draft.scheduledAt %}Départ prévu le {{ draft.scheduledAt|date('d/m/Y à H:i', draft.timezone) }} · {{ draft.timezone }}{% else %}Départ immédiat après confirmation{% endif %}</p></div>
 

@@ -74,7 +74,7 @@ final class AccountTest extends WebTestCase
         self::assertSelectorNotExists('.studio-verification');
         self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
         self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('private'));
-        $logout = $crawler->selectButton('Se déconnecter ↗')->form();
+        $logout = $crawler->selectButton('Se déconnecter')->form();
         $this->client->request('POST', '/deconnexion');
         self::assertResponseStatusCodeSame(403);
         $this->client->submit($logout);

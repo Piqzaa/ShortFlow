@@ -22,7 +22,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class DashboardController extends AbstractController
 {
-    #[Route('/studio', name: 'app_dashboard', methods: ['GET'])]
+    #[Route('/studio/activite', name: 'app_activity', methods: ['GET'])]
     public function index(#[CurrentUser] User $user, VideoAssetRepository $videos, PublicationOverview $publications, PublicationDraftRepository $drafts, PublicationCalendar $calendar, ClockInterface $clock, EntityManagerInterface $em, YouTubeApi $youtube, InstagramApi $instagram, TikTokApi $tiktok): Response
     {
         $recent = $videos->page($user, 1, 4);

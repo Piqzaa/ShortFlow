@@ -93,7 +93,7 @@ final class InstagramConnectionTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/connexions');
         self::assertSelectorTextNotContains('.instagram-connection', 'vydflow_qa');
         self::assertSelectorTextContains('.instagram-connection', '@other_qa');
-        $this->client->submit($crawler->selectButton('Déconnecter Instagram de VydFlow')->form());
+        $this->client->submit($crawler->filter('form[action="/studio/connexions/instagram/deconnecter"]')->selectButton('Déconnecter de VydFlow')->form());
         self::assertResponseRedirects('/studio/connexions', 303);
         self::assertSame(1, $this->em()->getRepository(InstagramConnection::class)->count([]));
         self::assertNotNull($this->em()->getRepository(InstagramConnection::class)->findOneBy(['owner' => $this->alice]));

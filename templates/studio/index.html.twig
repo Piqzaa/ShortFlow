@@ -2,7 +2,7 @@
 {% block studio_content %}
 <div class="studio-heading dashboard-intro">
   <div><h1>Vue d’ensemble.</h1><p>{{ usage.count ? 'Tes publications et les prochaines étapes.' : 'Importe ta première vidéo pour commencer.' }}</p></div>
-  <div class="dashboard-actions">{% if usage.count %}<a class="button" href="{{ path('app_library') }}#library-selection">Préparer une publication ↗</a><a class="account-secondary dashboard-import-link" href="{{ path('app_video_upload') }}">Importer +</a>{% else %}<a class="button" href="{{ path('app_video_upload') }}">Importer une vidéo +</a>{% endif %}</div>
+  <div class="dashboard-actions">{% if usage.count %}<a class="button" href="{{ path('app_composer_start') }}">Préparer une publication ↗</a><a class="account-secondary dashboard-import-link" href="{{ path('app_video_upload') }}">Importer +</a>{% else %}<a class="button" href="{{ path('app_video_upload') }}">Importer une vidéo +</a>{% endif %}</div>
 </div>
 <nav class="dashboard-summary" aria-label="État de ton studio">
   <a href="{{ path('app_publications', {state:'attention'}) }}" class="{{ counts.attention ? 'needs-attention' : '' }}"><span>À traiter</span><strong>{{ counts.attention }}</strong><small>envoi{{ counts.attention > 1 ? 's' : '' }} à vérifier ↗</small></a>

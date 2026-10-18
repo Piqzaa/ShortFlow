@@ -1,7 +1,7 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}Importer une vidéo — VydFlow{% endblock %}
 {% block studio_content %}
-<a class="account-secondary" href="{{ path('app_library') }}">← Revenir à la bibliothèque</a>
+<a class="account-secondary" href="{{ app.request.query.get('next') == 'compose' ? path('app_dashboard',{choose:1,date:app.request.query.get('date'),zone:app.request.query.get('zone',app.user.timezone)}) : path('app_library') }}">← Revenir aux vidéos</a>
 <div class="studio-heading"><div><span class="eyebrow">UNE NOUVELLE CRÉATION</span><h1>Ajoute ton prochain flow.</h1><p>Ta vidéo rejoint ton espace privé, prête à être retrouvée.</p></div></div>
 <div class="upload-layout"><section class="upload-panel" data-upload-panel aria-label="Importer une vidéo">
 {{ form_start(form, {attr: {class: 'account-form upload-form', 'data-controller': 'upload', 'data-action': 'submit->upload#submit'}}) }}
@@ -12,5 +12,5 @@
 <p class="upload-feedback" data-upload-target="error" role="alert" hidden></p>
 <button class="button" type="submit" data-upload-target="button">Importer ma vidéo <span aria-hidden="true">↗</span></button>
 {{ form_end(form) }}
-</section><aside class="upload-guidance"><span class="eyebrow">UN ESPACE À TOI</span><h2>Privée, dès le premier instant.</h2><p>Seul ton compte peut lire et gérer tes vidéos.</p><ul><li>Jusqu’à 3 minutes par vidéo.</li><li>MP4 H.264 8 bits, audio AAC facultatif.</li><li>WebM VP8, VP9 ou AV1 8 bits, audio Opus/Vorbis facultatif.</li><li>1 Go de stockage, jusqu’à 100 vidéos.</li></ul><p class="library-note">Pas de modification automatique du fichier. La programmation et la publication arrivent dans les prochaines étapes.</p></aside></div>
+</section><aside class="upload-guidance"><span class="eyebrow">UN ESPACE À TOI</span><h2>Privée, dès le premier instant.</h2><p>Seul ton compte peut lire et gérer tes vidéos.</p><ul><li>Jusqu’à 3 minutes par vidéo.</li><li>MP4 H.264 8 bits, audio AAC facultatif.</li><li>WebM VP8, VP9 ou AV1 8 bits, audio Opus/Vorbis facultatif.</li><li>1 Go de stockage, jusqu’à 100 vidéos.</li></ul><p class="library-note">Ton fichier est conservé sans modification. Pour Instagram Reels, importe un MP4 H.264. Après l’import, prépare tes textes et choisis quand publier.</p></aside></div>
 {% endblock %}

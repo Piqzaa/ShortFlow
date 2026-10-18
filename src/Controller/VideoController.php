@@ -55,11 +55,15 @@ final class VideoController extends AbstractController
                 $video = $this->library->import($user, $data['file'], $data['title']);
                 $this->addFlash('success', 'Ta vidéo a rejoint ta bibliothèque.');
 
+                $redirect = 'compose' === $request->query->getString('next')
+                    ? $this->generateUrl('app_composer_start', array_filter(['videos' => [$video->getId()], 'date' => $request->query->getString('date'), 'zone' => $request->query->getString('zone', $user->getTimezone())]))
+                    : $this->generateUrl('app_video_show', ['id' => $video->getId()]);
+
                 if ($request->isXmlHttpRequest()) {
-                    return new JsonResponse(['redirect' => $this->generateUrl('app_video_show', ['id' => $video->getId()])], 201, ['Cache-Control' => 'no-store, private']);
+                    return new JsonResponse(['redirect' => $redirect], 201, ['Cache-Control' => 'no-store, private']);
                 }
 
-                return $this->redirectToRoute('app_video_show', ['id' => $video->getId()], 303);
+                return $this->redirect($redirect, 303);
             } catch (VideoLibraryException $error) {
                 $form->addError(new FormError($error->getMessage()));
                 $status = 422;

@@ -380,6 +380,26 @@ final class VideoLibraryTest extends WebTestCase
         self::assertCount(0, glob($storage->directory().'/*.deleted-*'));
     }
 
+    public function testComposerImportKeepsCalendarDateAndZoneWithAjax(): void
+    {
+        $this->asUser('alice@example.test');
+        $messagesBefore = (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages');
+        $url = '/studio/bibliotheque/importer?next=compose&date=2026-10-20&zone=America%2FToronto';
+        $crawler = $this->client->request('GET', $url);
+        $form = $crawler->selectButton('Importer ma vidéo')->form(['video_upload[title]' => 'À préparer']);
+        $this->client->request('POST', $url, $form->getPhpValues(), ['video_upload' => ['file' => $this->fixture('tests/Fixtures/library-valid.mp4')]], ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+        self::assertResponseStatusCodeSame(201);
+        $data = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertStringStartsWith('/studio/composer?', $data['redirect']);
+        $this->client->request('GET', $data['redirect']);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertInputValueSame('publication_composer[local]', '2026-10-20T12:00');
+        self::assertSelectorExists('option[value="America/Toronto"][selected]');
+        self::assertSelectorTextContains('.composer-preview', 'À préparer');
+        self::assertSame($messagesBefore, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
     private function asUser(string $email): void
     {
         $this->client->loginUser(static::getContainer()->get(UserRepository::class)->findByEmail($email));

@@ -30,3 +30,10 @@ app.register('selection', SelectionController);
 import UnsavedController from './controllers/unsaved_controller.js';
 app.register('unsaved', UnsavedController);
 import './styles/dashboard.css';
+import './styles/workspace.css';
+import ComposerController from './controllers/composer_controller.js';
+app.register('composer', ComposerController);
+import CalendarController from './controllers/calendar_controller.js';
+app.register('calendar', CalendarController);
+
+import './styles/workspace-responsive.css';

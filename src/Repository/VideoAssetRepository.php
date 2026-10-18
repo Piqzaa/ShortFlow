@@ -27,6 +27,22 @@ final class VideoAssetRepository extends ServiceEntityRepository
         return $this->findBy(['owner' => $owner], ['createdAt' => 'DESC', 'id' => 'DESC'], $limit, ($page - 1) * $limit);
     }
 
+    /** @return array{items: list<VideoAsset>, total: int, page: int, pages: int} */
+    public function search(User $owner, string $query, int $page = 1): array
+    {
+        $builder = $this->createQueryBuilder('v')->where('v.owner = :owner')->setParameter('owner', $owner);
+        if ('' !== $query) {
+            $pattern = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($query));
+            $builder->andWhere('LOWER(v.title) LIKE :query')->setParameter('query', '%'.$pattern.'%');
+        }
+        $total = (int) (clone $builder)->select('COUNT(v.id)')->getQuery()->getSingleScalarResult();
+        $pages = max(1, (int) ceil($total / 12));
+        $page = min(max(1, $page), $pages);
+        $items = $builder->orderBy('v.createdAt', 'DESC')->addOrderBy('v.id', 'DESC')->setFirstResult(($page - 1) * 12)->setMaxResults(12)->getQuery()->getResult();
+
+        return ['items' => $items, 'total' => $total, 'page' => $page, 'pages' => $pages];
+    }
+
     /**
      * @param list<VideoAsset> $videos
      *
