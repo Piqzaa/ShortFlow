@@ -1,6 +1,6 @@
 # Publier un Reel depuis la bibliothèque
 
-Mise à jour du 18 octobre 2026 : connexion Instagram réelle validée et tunnel HTTPS temporaire configuré. Le premier envoi Reel réel reste à effectuer avec une vidéo explicitement choisie et confirmation du propriétaire. Guide du tunnel : [instagram-test-https.md](instagram-test-https.md).
+Mise à jour du 18 octobre 2026 : connexion Instagram réelle validée, puis premier Reel réellement publié après programmation confirmée par le propriétaire. Succès enregistré et identifiant distant présent ; aucune nouvelle publication lancée par le diagnostic. Le tunnel temporaire est actuellement indisponible et devra être rétabli/configuré pour d'autres essais. Guide : [instagram-test-https.md](instagram-test-https.md).
 
 ## Objectif
 

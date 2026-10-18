@@ -47,3 +47,7 @@ Lorsqu’une fonctionnalité importante est ajoutée, expliquer :
 Opérations habituelles locales autorisées : fichiers, dépendances, conteneurs, tests. Aucune dépense, publication, déploiement public, service cloud, identifiant réel ou suppression de données existantes sans demande explicite. Arrêter après la phase demandée et fournir un bilan pédagogique. Aucun commit requis automatiquement.
 
 Mise à jour du 17 octobre 2026 : lecture réelle des statistiques YouTube explicitement autorisée et premier relevé réussi, sans nouvel envoi ; Instagram/TikTok restent désactivés pour les statistiques réelles. Suppression multiple de la bibliothèque autorisée, confirmation explicite dans l’interface et blocage de tout le lot si un envoi est actif. Plusieurs commits locaux demandés ; aucun push demandé.
+
+Mise à jour du 18 octobre 2026 : refonte du studio et du compte explicitement autorisée avant TikTok réel. Galerie et brouillons, préparation commune sur un écran, accès par date du calendrier ; profil avec nom affiché, photo privée, préférences de fuseau et sécurité existante. Emplacement Abonnement à venir uniquement : aucun paiement ni moyen de paiement implémenté. Voir docs/studio-compte.md.
+
+Mise à jour du 18 octobre 2026 : le propriétaire autorise explicitement les statistiques Instagram réelles lors des ajustements du studio. Activation locale et premier relevé réussi sur le Reel existant, lien direct renvoyé par Meta vérifié. Aucun nouvel envoi. TikTok réel et ses statistiques restent à activer dans leur lot.

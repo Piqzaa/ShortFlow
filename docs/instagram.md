@@ -1,6 +1,6 @@
 # Instagram — connexion OAuth et publication Reels, 16 octobre 2026
 
-État actualisé le 18 octobre 2026 : première connexion OAuth Instagram réelle réussie par le propriétaire, confirmée en base avec YouTube sur le même compte VydFlow. Aucun Reel encore publié par cette intervention. Les paragraphes initiaux ci-dessous décrivent le lot historique ; le tunnel HTTPS autorisé et les diagnostics récents sont documentés plus bas.
+État actualisé le 18 octobre 2026 : première connexion OAuth Instagram réelle réussie par le propriétaire, confirmée en base avec YouTube sur le même compte VydFlow. Premier Reel ensuite publié avec succès après une programmation confirmée par le propriétaire. Les paragraphes initiaux ci-dessous décrivent le lot historique ; le tunnel HTTPS autorisé et les diagnostics récents sont documentés plus bas.
 
 ## Objectif et périmètre
 
