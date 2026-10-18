@@ -176,7 +176,7 @@ final class PublicationScheduleTest extends WebTestCase
         self::assertSelectorTextContains('.batch-review', 'À choisir');
         self::assertSelectorCount(1, '.draft-media video[controls][playsinline][preload="metadata"]:not([autoplay])');
         self::assertSelectorExists('.draft-media video[src="/studio/bibliotheque/'.$video->getId().'/lecture"]');
-        $this->client->request('GET', '/studio/brouillons');
+        $this->client->request('GET', '/studio/preparations');
         self::assertSelectorCount(1, '.draft-media video[preload="metadata"]:not([autoplay])');
         $this->client->request('GET', '/studio/brouillons/'.$draft->getId().'/confirmer');
         self::assertResponseIsSuccessful();
@@ -186,9 +186,30 @@ final class PublicationScheduleTest extends WebTestCase
             $this->client->request('GET', '/studio/brouillons/'.$draft->getId().$path);
             self::assertResponseStatusCodeSame(404);
         }
-        $this->client->request('GET', '/studio/brouillons');
+        $this->client->request('GET', '/studio/preparations');
         self::assertSelectorTextNotContains('main', 'Brouillon privé');
         $this->assertJobs(0);
+    }
+
+    public function testDraftEntryPointExcludesDispatchedPreparationsButKeepsHistory(): void
+    {
+        $this->connect();
+        $sent = $this->draft(['youtube']);
+        $this->service()->confirm($this->owner, $sent->getId(), $sent->getRevision(), false);
+        self::assertSame('dispatched', $this->reload($sent->getId())->getStatus());
+        $this->owner = $this->em()->find(User::class, $this->owner->getId());
+        $video = $this->video();
+        $pending = $this->service()->save($this->owner, [$video->getId()], [], [], [], 'Préparation encore ouverte');
+        $this->client->loginUser($this->owner);
+        $this->client->request('GET', '/studio/brouillons');
+        self::assertResponseRedirects('/studio?tab=drafts');
+        $this->client->followRedirect();
+        self::assertSelectorExists('.workspace-draft a[href="/studio/composer?draft='.$pending->getId().'"]');
+        self::assertSelectorNotExists('.workspace-draft a[href="/studio/composer?draft='.$sent->getId().'"]');
+        $this->client->request('GET', '/studio/preparations');
+        self::assertSelectorExists('a[href="/studio/brouillons/'.$sent->getId().'"]');
+        self::assertSelectorExists('a[href="/studio/brouillons/'.$pending->getId().'"]');
+        $this->assertJobs(1, 0, 0);
     }
 
     public function testConfirmationCsrfAndRevisionAreRequired(): void

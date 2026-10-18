@@ -1,3 +1,4 @@
+.account-mobile-sections,.calendar-day-count{display:none}
 /* Studio layouts: desktop workspace, tablet rail, phone navigation. */
 .studio-mobile-brand,.studio-mobile-session,.studio-bottom-nav,.calendar-mobile-agenda{display:none}
 .studio-v2 .studio-main{min-width:0}
@@ -101,7 +102,15 @@
   .studio-v2 .composer-actions .button,.composer-actions>.account-secondary{width:100%;min-width:0;min-height:48px;text-align:center;justify-content:center;flex:none}
   .composer-safe-note{text-align:center;line-height:1.6}
   .account-workspace{display:block;margin-top:0}
-  .account-sections{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:2px 2px 14px;margin-bottom:24px;scrollbar-width:thin}
+  .account-sections{display:none}
+  .account-mobile-sections{display:block;margin-bottom:24px;border:1px solid var(--workspace-border);border-radius:12px;background:var(--workspace-panel)}
+  .account-mobile-sections>summary{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:12px 16px;cursor:pointer;list-style:none}
+  .account-mobile-sections>summary::-webkit-details-marker{display:none}
+  .account-mobile-sections[open]>summary{border-bottom:1px solid var(--workspace-border)}
+  .account-mobile-sections nav{display:grid;padding:6px}
+  .account-mobile-sections a{display:flex;align-items:center;gap:12px;min-height:48px;padding:12px;border-radius:8px}
+  .account-mobile-sections a[aria-current="page"]{background:var(--workspace-raised);color:var(--workspace-accent)}
+  .account-mobile-sections small{color:var(--workspace-muted)}
   .account-sections>a{flex-shrink:0;white-space:nowrap;min-height:44px;padding:10px 12px}
   .profile-identity{margin-bottom:22px}
   .studio-v2 .profile-avatar{width:60px;height:60px}
@@ -139,10 +148,11 @@
   .calendar-nav a:last-child:after{content:'→';font-size:20px}
   .calendar-workspace .calendar-nav h2{font-size:21px}
   .calendar-workspace .calendar-grid,.calendar-workspace .calendar-weekdays{gap:4px}
-  .calendar-workspace .calendar-day{height:62px;min-height:62px;padding:3px;border-radius:7px}
+  .calendar-workspace .calendar-day{height:62px;min-height:62px;padding:3px;border-radius:7px;overflow:hidden}
   .calendar-workspace .calendar-create-day{min-height:36px;justify-content:center;font-size:12px}
   .calendar-workspace .calendar-create-day>span{display:none}
-  .calendar-workspace .calendar-entry{font-size:10px;line-height:1.2;padding:3px;margin-top:1px}
+  .calendar-workspace .calendar-entry{display:none}
+  .calendar-workspace .calendar-day-count{display:block;width:18px;height:18px;line-height:18px;text-align:center;margin:0 auto;border-radius:50%;background:var(--workspace-accent);color:#171120;font-size:10px;font-weight:600;pointer-events:none}
   .calendar-workspace .calendar-entry time{font-size:9px}
   .calendar-mobile-agenda{display:block;margin:24px 0 8px}
   .calendar-mobile-agenda h2{font-size:18px;margin-bottom:12px}

@@ -3,6 +3,12 @@
 {% block studio_content %}
 <div class="studio-heading"><div><span class="eyebrow">TON ESPACE PERSONNEL</span><h1>Mon compte.</h1><p>Un profil à toi, des réglages utiles et un accès protégé.</p></div></div>
 <div class="account-workspace">
+<details class="account-mobile-sections">
+<summary>{{ {profile:'Profil',preferences:'Préférences',security:'Sécurité',subscription:'Abonnement'}[section] }} <span aria-hidden="true">⌄</span></summary>
+<nav aria-label="Rubriques du compte">
+{% for key,label in {profile:'Profil',preferences:'Préférences',security:'Sécurité'} %}<a href="{{ path('app_profile',{section:key}) }}"{% if section == key %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+<a href="{{ path('app_connections') }}">Réseaux connectés ↗</a><a href="{{ path('app_profile',{section:'subscription'}) }}"{% if section == 'subscription' %} aria-current="page"{% endif %}>Abonnement <small>À venir</small></a>
+</nav></details>
 <nav class="account-sections" aria-label="Réglages du compte">
 {% for key,label in {profile:'Profil',preferences:'Préférences',security:'Sécurité'} %}<a href="{{ path('app_profile',{section:key}) }}"{% if section == key %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
 <a href="{{ path('app_connections') }}">Réseaux connectés ↗</a><a href="{{ path('app_profile',{section:'subscription'}) }}"{% if section == 'subscription' %} aria-current="page"{% endif %}>Abonnement <small>À venir</small></a>

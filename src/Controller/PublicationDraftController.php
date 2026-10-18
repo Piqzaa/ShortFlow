@@ -28,6 +28,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 final class PublicationDraftController extends AbstractController
 {
     #[Route('/studio/brouillons', name: 'app_drafts', methods: ['GET'])]
+    public function drafts(): Response
+    {
+        return $this->redirectToRoute('app_dashboard', ['tab' => 'drafts']);
+    }
+
+    #[Route('/studio/preparations', name: 'app_preparations', methods: ['GET'])]
     public function index(Request $request, #[CurrentUser] User $user, PublicationDraftRepository $repository, PublicationCalendar $calendar): Response
     {
         $page = max(1, $request->query->getInt('page', 1));

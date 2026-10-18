@@ -1,7 +1,7 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}{{ draft.title }} — VydFlow{% endblock %}
 {% block studio_content %}
-<a class="account-secondary" href="{{ path('app_drafts') }}">← Toutes les préparations</a>
+<a class="account-secondary" href="{{ path('app_preparations') }}">← Toutes les préparations</a>
 <div class="studio-heading"><div><span class="eyebrow">{{ labels[states[draft.id]] }}</span><h1 class="draft-title">{{ draft.title }}</h1><p>Sauvegardée le {{ draft.updatedAt|date('d/m/Y à H:i') }} · version {{ draft.revision }}</p></div></div>
 {% if draft.notice %}<div class="account-notice" role="status">{{ draft.notice }}</div>{% endif %}
 {% if states[draft.id] == 'missed' %}<div class="account-notice" role="status">Le créneau est dépassé. Aucun nouveau départ ne sera lancé : modifie la préparation et confirme une nouvelle date.</div>{% endif %}
