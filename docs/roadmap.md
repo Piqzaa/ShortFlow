@@ -1,5 +1,7 @@
 # Roadmap V1 — vision de lancement validée le 15 octobre 2026
 
+État du 18 octobre, essais réels : connexion OAuth Instagram réussie et confirmée avec YouTube sur le même compte VydFlow via un tunnel HTTPS temporaire. Publication Reels réelle encore à valider ; aucune activation réelle TikTok ajoutée. Voir `instagram-test-https.md` et `verification.md`.
+
 Le passage à la V1 est autorisé. Comptes terminés ; lot bibliothèque autorisé le 15 octobre 2026. La landing conserve ses animations et adopte le parcours bêta : inscription → confirmation → connexion → studio/bibliothèque. L’ancienne liste d’attente reste sur /liste-attente, hors parcours principal, sans effacement de données. Décision du propriétaire du 15 octobre : priorité à la publication immédiate multi-réseaux avant l’IA. Cadrage dans docs/publication.md.
 
 1. **Cadrage et comptes — terminé** : inscription, connexion/déconnexion, confirmation obligatoire, récupération et dashboard privé. Emails exclusivement locaux dans Mailpit.
