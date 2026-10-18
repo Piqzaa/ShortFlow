@@ -68,7 +68,7 @@ final class PublicationController extends AbstractController
         foreach ($draft['ids'] as $id) {
             $video = $videos->owned($id, $user) ?? throw $this->createNotFoundException();
             $selected[] = $video;
-            $data['videos'][$id] = ['title' => mb_substr(str_replace(['<', '>'], '', $video->getTitle()), 0, 100), 'description' => ''];
+            $data['videos'][$id] = ['title' => mb_substr(str_replace(['<', '>'], '', $video->getTitle()), 0, 100), 'description' => '', 'privacy' => 'public', 'audience' => 'yes'];
         }
         $connection = $publishing->connection($user);
         $ready = $api->isReady() && null !== $connection;

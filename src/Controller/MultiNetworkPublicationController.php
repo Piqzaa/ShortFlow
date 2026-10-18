@@ -116,7 +116,7 @@ final class MultiNetworkPublicationController extends AbstractController
         foreach ($draft['networks'] as $network) {
             foreach ($context['videos'] as $video) {
                 $data[$network]['videos'][$video->getId()] ??= match ($network) {
-                    'youtube' => ['title' => mb_substr(str_replace(['<', '>'], '', $video->getTitle()), 0, 100), 'description' => '', 'privacy' => null, 'audience' => null, 'synthetic' => false],
+                    'youtube' => ['title' => mb_substr(str_replace(['<', '>'], '', $video->getTitle()), 0, 100), 'description' => '', 'privacy' => 'public', 'audience' => 'yes', 'synthetic' => false],
                     'instagram' => ['caption' => $video->getTitle(), 'shareToFeed' => true, 'synthetic' => false],
                     'tiktok' => ['caption' => $video->getTitle(), 'privacy' => null, 'comment' => false, 'duet' => false, 'stitch' => false, 'disclosure' => false, 'ownBrand' => false, 'partnerBrand' => false, 'synthetic' => false],
                     default => throw $this->createNotFoundException(),

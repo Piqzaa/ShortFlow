@@ -127,10 +127,31 @@ final class PublicationComposerTest extends WebTestCase
         $this->noSend();
     }
 
+    public function testYouTubeDefaultsRemainEditableAndNeverReplaceSavedChoices(): void
+    {
+        $crawler = $this->networks($this->start(), ['youtube']);
+        $prefix = 'publication_composer[settings][youtube][videos]['.$this->video->getId().']';
+        self::assertSelectorExists('select[name="'.$prefix.'[privacy]"] option[value="public"][selected]');
+        self::assertSelectorExists('select[name="'.$prefix.'[audience]"] option[value="yes"][selected]');
+        $this->post($crawler, 'save', ['settings' => ['youtube' => ['videos' => [$this->video->getId() => ['privacy' => 'private', 'audience' => 'no']]]]]);
+        self::assertResponseStatusCodeSame(303);
+        $id = $this->stored()->getId();
+        $this->client->restart();
+        $this->client->loginUser($this->owner);
+        $crawler = $this->start(['draft' => $id]);
+        self::assertSelectorExists('select[name="'.$prefix.'[privacy]"] option[value="private"][selected]');
+        self::assertSelectorExists('select[name="'.$prefix.'[audience]"] option[value="no"][selected]');
+        $crawler = $this->networks($crawler, []);
+        $this->networks($crawler, ['youtube']);
+        self::assertSelectorExists('select[name="'.$prefix.'[privacy]"] option[value="private"][selected]');
+        self::assertSelectorExists('select[name="'.$prefix.'[audience]"] option[value="no"][selected]');
+        $this->noSend();
+    }
+
     public function testIncompleteDraftPersistsAcrossSessionsAndStrictReviewShowsMissingFields(): void
     {
         $crawler = $this->networks($this->start(), ['youtube']);
-        $this->post($crawler, 'save', ['settings' => ['youtube' => ['videos' => [$this->video->getId() => ['title' => 'Mon titre sauvegardé', 'description' => 'Mon texte']]]]]);
+        $this->post($crawler, 'save', ['settings' => ['youtube' => ['videos' => [$this->video->getId() => ['title' => 'Mon titre sauvegardé', 'description' => 'Mon texte', 'privacy' => '', 'audience' => '']]]]]);
         self::assertResponseStatusCodeSame(303);
         $id = $this->stored()->getId();
         $this->client->restart();

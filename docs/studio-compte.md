@@ -101,3 +101,17 @@ Sur téléphone, la bibliothèque garde deux colonnes et masque les deux actions
 Le calendrier conserve ses jours cliquables et ajoute une liste « Au programme » sous la grille sur téléphone. Les titres, états et réseaux y restent lisibles ; la grille garde le repère visuel des dates. Sur les petits écrans, défiler verticalement reste possible et nécessaire pour la liste des publications.
 
 À tester : Studio → choisir une vidéo → préparation → choisir une date ; puis Calendrier → rechercher une vidéo. Vérifier aussi le profil, les connexions, les compteurs, la navigation au clavier et le bas des pages. Les contrôles visuels sont réalisés en navigateur avec des tailles simulées ; ils ne remplacent pas un essai sur appareils iOS/Android réels.
+
+
+### Changement de réseau sans fausse alerte de départ
+
+Lorsqu’un réseau change, le compositeur actualise le formulaire côté serveur en conservant les champs. La soumission automatique est déclenchée avec `setTimeout(..., 0)` après la propagation complète de l’événement, puis `unsaved#submit` remet le garde de sortie à zéro. Une microtâche était trop précoce : un navigateur peut l’exécuter entre deux écouteurs, avant que le même `change` ne marque à nouveau le formulaire comme modifié. Le timer est annulé à la déconnexion du contrôleur. Quitter réellement une page avec du texte non enregistré déclenche toujours l’avertissement.
+
+Pour TikTok, `TikTokPublishing::readinessIssue` distingue compte absent, autorisation expirée, configuration OAuth et disponibilité du téléchargement des vidéos. `TikTokMediaLink` explique séparément envoi désactivé, URL non vérifiée et HTTPS mal configuré. Le récapitulatif utilise ce diagnostic au lieu de demander une reconnexion lorsque le compte est déjà connecté.
+
+
+### Valeurs de départ YouTube — 19 octobre 2026
+
+À la demande explicite du propriétaire, les nouvelles préparations YouTube proposent `public` et audience `yes` (« Oui, conçue pour les enfants »). Ces choix sont modifiables et restent visibles dans le récapitulatif avant confirmation. Les contrôleurs `PublicationComposerController`, `MultiNetworkPublicationController` et `PublicationController` initialisent seulement les nouvelles lignes ; ils ne changent aucune donnée de brouillon déjà enregistrée ni les options soumises par l’utilisateur. Une ancienne ligne sans choix reste à compléter, sans valeur ajoutée lors de la validation serveur.
+
+Le formulaire Symfony continue de valider les valeurs disponibles. Le test fonctionnel couvre la préselection, sa modification en privé/non, la sauvegarde, la reprise dans une autre session et la conservation lors du retrait/retour d’un réseau. TikTok conserve sa visibilité vide : [ses règles d’interface](https://developers.tiktok.com/docs/en/content-sharing-guidelines) imposent un choix manuel même si seul `SELF_ONLY` est autorisé. Aucun changement aux droits sociaux ni à la confirmation finale, aucun nouveau transfert lancé.

@@ -146,7 +146,9 @@ final class MultiNetworkPublicationTest extends WebTestCase
         $crawler = $this->choose($videos, ['youtube', 'instagram', 'tiktok']);
         self::assertResponseIsSuccessful();
         self::assertSelectorCount(3, '.batch-network');
-        self::assertSelectorCount(0, 'select[name$="[privacy]"] option[selected="selected"][value]:not([value=""])');
+        self::assertSelectorCount(2, 'select[name*="[youtube]"][name$="[privacy]"] option[selected="selected"][value="public"]');
+        self::assertSelectorCount(2, 'select[name*="[youtube]"][name$="[audience]"] option[selected="selected"][value="yes"]');
+        self::assertSelectorCount(0, 'select[name*="[tiktok]"][name$="[privacy]"] option[selected="selected"][value]:not([value=""])');
         $crawler = $this->review($crawler, $videos);
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.batch-total strong', '6');
