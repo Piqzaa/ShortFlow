@@ -572,3 +572,42 @@ Vérifications :
 - Base `shortflow_test` migrée. Test de déconnexion/CSRF : **1 test, 13 assertions réussis**. Dans la sélection calendrier/dashboard, le calendrier réussit mais le dashboard attendait encore les deux sélecteurs de l’ancien menu mobile. Ces assertions ont été adaptées à la navigation fixe et au lien Mon compte ; relance finale du dashboard : **1 test, 23 assertions réussis**. Aucun changement au moteur de publication ni appel social réel.
 - Vérification en navigateur des six écrans Studio, Brouillons, Compte, Connexions, Publications et Calendrier à **320, 390, 768 et 1 024 px** : aucun débordement horizontal de page détecté. Contrôle visuel mobile et tablette portrait, apparition des boutons après sélection, champs date/fuseau, navigation fixe vers Calendrier et recherche d’une vidéo. Liste du calendrier rendue avec une préparation de démonstration. Rendus Twig utilisant seulement des objets en mémoire, sans écriture en base dev.
 - Ce contrôle utilise des dimensions simulées dans le navigateur de bureau. Aucun appareil iOS/Android physique n’a été testé ; les particularités du clavier virtuel et des zones de sécurité restent à valider sur appareil réel.
+
+
+## 18 octobre — URL du Sandbox TikTok
+
+À la demande du propriétaire, préparation d’URL concrètes pour le portail TikTok. L’ancien tunnel encore démarré renvoyait « Unauthorized: Tunnel not found » ; redémarrage du seul service `social-tunnel`, nouvelle origine `https://pushing-yarn-curtis-rows.trycloudflare.com`, connexion Cloudflare enregistrée. Le routeur de l’entrée sans debug autorise en plus les routes exactes `/cgu` et `/confidentialite`.
+
+Vérifications locales sur 127.0.0.1:8001 et publiques par curl : `/cgu` et `/confidentialite` en 200, `/.env.local` et `/_profiler` en 404. L’origine publique, suivie jusqu’à la connexion, répond en 200. `php -l docker/social-test/router.php` : aucune erreur. Aucune donnée de session ni connexion sociale utilisée ; aucun jeton, nouvelle publication ou changement de configuration OAuth des autres réseaux. Vérification de propriété TikTok et activation du client restent à effectuer.
+
+
+## 19 octobre — configuration du client OAuth TikTok Sandbox
+
+Présence des trois valeurs privées TikTok vérifiée sans les afficher. Publication, audit, vérification média et statistiques maintenus désactivés. Les caches dev sans debug du serveur local et de l’entrée HTTPS ont été rechargés ; accès HTTPS à Connexions confirmé (200 après redirection vers la connexion pour visiteur anonyme). Aucun jeton TikTok demandé par l’agent ni transfert lancé.
+
+Correction de la demande OAuth : `video.list` conditionné à l’activation des statistiques, les permissions requises restant `user.info.basic` et `video.publish`. `TikTokApiTest` : **11 tests, 21 assertions réussis**, sans API réelle ni accès base. Conteneur valide, PHPStan aucune erreur, CS-Fixer aucune correction sur 127 fichiers. Aucune modification de schéma ni frontend. La connexion réelle par le propriétaire reste à observer après autorisation TikTok.
+
+
+## 19 octobre — alerte de sortie du brouillon et vérification de propriété TikTok
+
+Correction du timer d’actualisation des réseaux : la microtâche initialement essayée restait trop précoce dans un navigateur réel (ordre observé : input, submit, change). Un timer à zéro attend désormais la fin de l’événement et le garde de modifications se réinitialise lors de la soumission. Test navigateur sur formulaire utilisant les vrais contrôleurs Stimulus : clic TikTok → page actualisée, réseau TikTok et texte conservés, aucun dialogue beforeunload. Aucun compte réel ni base utilisés par ce formulaire de régression.
+
+Tests fonctionnels sur `shortflow_test` migrée : **3 tests, 28 assertions réussis** (deux modes TikTok bloqués avec compte connecté, aucun appel API ni message ; conservation des textes après changement de réseau). Frontend : **11 tests JavaScript réussis**, syntaxe et build réussis ; avertissements Vite existants. Conteneur et PHPStan valides. CS-Fixer appliqué sur cinq fichiers concernés. Les erreurs TikTok distinguent désormais connexion et activation d’envoi.
+
+Fichier de preuve fourni par le propriétaire copié dans `public/tiktokcdhRfEm4ejiwaGoxZqVcLdkkVfxcSJQ7.txt`, route du tunnel autorisée uniquement pour ce fichier. Téléchargement par HTTPS public réussi et comparaison SHA-256 identique à l’original (sans afficher le contenu). Le propriétaire doit encore cliquer Verify dans TikTok : aucun drapeau de vérification ou de publication n’a été activé. Le routeur autorise le format précis des liens médias TikTok signés, sans ouvrir le stockage privé. Aucun nouvel envoi social, aucun changement des connexions existantes.
+
+
+## 19 octobre — activation TikTok après confirmation du domaine vérifié
+
+Confirmation explicite du propriétaire que le portail TikTok indique le préfixe URL comme vérifié. Les deux drapeaux locaux URL_VERIFIED et PUBLISH_ENABLED sont passés à 1 ; audit et statistiques réelles restent à 0. Aucun secret affiché ni ajouté à Git. Avant rechargement, requête de lecture sur les trois tables de publications : aucun transfert queued/uploading/processing/publishing actif. Caches local/HTTPS sans debug rechargés et worker redémarré.
+
+Diagnostic en lecture seule, exécuté depuis les conteneurs local et social-web : OAuth prêt, téléchargement signé prêt, une connexion TikTok non expirée, audit et statistiques inactifs. Contrôles HTTPS : connexion en 200, `.env.local` en 404 et lien TikTok falsifié en 404. Worker démarré ; aucune publication TikTok créée par cette intervention. Aucun nouveau test de code nécessaire pour ces seuls drapeaux : les tests de refus d’envoi et des liens signés ont été exécutés dans les lots précédents. Le premier envoi réel et son résultat restent à confirmer par le propriétaire.
+
+
+## 19 octobre — premier TikTok publié et valeurs de départ YouTube
+
+Le propriétaire confirme la réussite du premier envoi TikTok réel. Contrôle local en lecture seule : une publication TikTok au statut `published`. Aucune nouvelle publication ni demande de statistiques lancée par l’agent. Le scénario immédiat est validé ; la programmation TikTok reste à éprouver séparément.
+
+Valeurs YouTube explicitement demandées : nouvelle ligne `public`, audience `yes`, toujours modifiables et sans remplacement des brouillons enregistrés. Visibilité TikTok sans valeur par défaut conformément aux règles officielles. Trois contrôleurs de préparation ajustés ; validations et confirmation finale conservées.
+
+Migrations test à jour avant PHPUnit. Après correction d’une assertion qui recherchait un input au lieu du select de visibilité, sélection finale : **4 tests, 98 assertions réussis** (valeurs de départ, choix sauvegardés, ancien brouillon incomplet, confirmation multi-réseaux/idempotence et refus sans confirmation/CSRF). API simulées, exclusivement `shortflow_test`. Conteneur et PHPStan valides, CS-Fixer aucune correction avant la mise en forme finale du test. Aucun changement JS/CSS dans ce dernier réglage ; la vérification précédente des contrôleurs frontend reste **11 tests réussis**, syntaxe et build valides. Icône VydFlow exportée du favicon en PNG RGB 1 024 × 1 024, 49 058 octets, contrôlée visuellement.

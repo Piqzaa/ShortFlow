@@ -51,3 +51,9 @@ Mise à jour du 17 octobre 2026 : lecture réelle des statistiques YouTube expli
 Mise à jour du 18 octobre 2026 : refonte du studio et du compte explicitement autorisée avant TikTok réel. Galerie et brouillons, préparation commune sur un écran, accès par date du calendrier ; profil avec nom affiché, photo privée, préférences de fuseau et sécurité existante. Emplacement Abonnement à venir uniquement : aucun paiement ni moyen de paiement implémenté. Voir docs/studio-compte.md.
 
 Mise à jour du 18 octobre 2026 : le propriétaire autorise explicitement les statistiques Instagram réelles lors des ajustements du studio. Activation locale et premier relevé réussi sur le Reel existant, lien direct renvoyé par Meta vérifié. Aucun nouvel envoi. TikTok réel et ses statistiques restent à activer dans leur lot.
+
+
+Mise à jour du 19 octobre 2026 : le propriétaire a configuré TikTok Sandbox, connecté son compte et confirmé la vérification du préfixe HTTPS. Envoi TikTok local explicitement activé pour ses essais confirmés depuis le studio ; audit et statistiques réelles TikTok restent désactivés. Aucune publication autonome : la vidéo, les réglages et la confirmation finale appartiennent au propriétaire. Premier transfert TikTok réel encore à valider. Voir docs/tiktok.md.
+
+
+Mise à jour du 19 octobre 2026 : premier envoi TikTok Sandbox réussi et confirmé par le propriétaire, statut published vérifié en lecture seule. Pas d’audit TikTok ni de statistiques réelles activés ; programmation TikTok réelle encore à tester séparément. Le propriétaire demande plusieurs commits locaux de l’ensemble des changements, sans push. Nouvelles préparations YouTube : Publique et audience Oui (conçue pour les enfants) explicitement demandées, modifiables sans changer les brouillons existants ; visibilité TikTok toujours choisie manuellement.
