@@ -26,9 +26,23 @@ final class TikTokPublishing
 
     public function ready(User $owner): bool
     {
-        $connection = $this->connection($owner);
+        return null === $this->readinessIssue($owner);
+    }
 
-        return $this->api->isReady() && $this->links->isReady() && $connection && !$connection->isExpired();
+    public function readinessIssue(User $owner): ?string
+    {
+        $connection = $this->connection($owner);
+        if (!$connection) {
+            return 'Connecte ton compte TikTok depuis la page Connexions avant de publier.';
+        }
+        if ($connection->isExpired()) {
+            return 'L’autorisation TikTok a expiré. Reconnecte ton compte depuis la page Connexions.';
+        }
+        if (!$this->api->isReady()) {
+            return 'La configuration de la connexion TikTok doit être complétée dans VydFlow.';
+        }
+
+        return $this->links->readinessIssue();
     }
 
     public function validateVideo(VideoAsset $video, int $maxDuration = 600): void

@@ -9,6 +9,7 @@ use App\Entity\VideoAsset;
 use App\Message\PublishTikTok;
 use App\MessageHandler\PublishTikTokHandler;
 use App\Repository\VideoAssetRepository;
+use App\Service\MultiNetworkPublishing;
 use App\Service\PrivateVideoStorage;
 use App\Service\PublicationException;
 use App\Service\TikTokApi;
@@ -19,6 +20,7 @@ use App\Service\VideoLibrary;
 use App\Service\VideoLibraryException;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -124,6 +126,29 @@ final class TikTokTest extends WebTestCase
         $this->em()->flush();
 
         return $job;
+    }
+
+    /** @return iterable<string, array{bool, bool, string}> */
+    public static function blockedSendingModes(): iterable
+    {
+        yield 'posting disabled' => [true, false, 'L’envoi TikTok est encore désactivé'];
+        yield 'media URL unverified' => [false, true, 'L’adresse de téléchargement des vidéos doit être vérifiée'];
+    }
+
+    #[DataProvider('blockedSendingModes')]
+    public function testConnectedAccountExplainsWhySendingIsBlocked(bool $verified, bool $enabled, string $message): void
+    {
+        $connection = $this->connection();
+        $video = $this->video();
+        static::getContainer()->set(TikTokMediaLink::class, new TikTokMediaLink('https://vydflow.example.test', 'synthetic-secret', $verified, $enabled));
+        static::getContainer()->set('tiktok.http', new MockHttpClient(static function (): never {
+            self::fail('A blocked destination must not call TikTok.');
+        }));
+        $context = static::getContainer()->get(MultiNetworkPublishing::class)->context($this->owner, [$video->getId()], ['tiktok'], ['tiktok' => $connection->getOpenId()]);
+        self::assertFalse($context['ready']);
+        self::assertStringStartsWith($message, $context['issues']['tiktok'][0]);
+        self::assertSame($connection->getOpenId(), $context['destinations']['tiktok']['account']);
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
     private function begin(): string

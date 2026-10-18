@@ -16,9 +16,9 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class TikTokApiTest extends TestCase
 {
-    private function api(MockHttpClient $http, bool $audited = false, string $redirect = 'https://vydflow.example.test/retour'): TikTokApi
+    private function api(MockHttpClient $http, bool $audited = false, string $redirect = 'https://vydflow.example.test/retour', bool $statisticsEnabled = false): TikTokApi
     {
-        return new TikTokApi($http, new TokenVault(base64_encode(str_repeat('t', 32))), $this->createMock(EntityManagerInterface::class), 'key', 'secret', $redirect, $audited);
+        return new TikTokApi($http, new TokenVault(base64_encode(str_repeat('t', 32))), $this->createMock(EntityManagerInterface::class), 'key', 'secret', $redirect, $audited, $statisticsEnabled);
     }
 
     private function connection(): TikTokConnection
@@ -35,6 +35,11 @@ final class TikTokApiTest extends TestCase
         $url = $api->authorizationUrl('one-use-state');
         self::assertStringNotContainsString('secret', $url);
         self::assertStringContainsString('state=one-use-state', $url);
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        self::assertSame('user.info.basic,video.publish', $query['scope']);
+        $statisticsUrl = $this->api(new MockHttpClient(), statisticsEnabled: true)->authorizationUrl('state');
+        parse_str((string) parse_url($statisticsUrl, PHP_URL_QUERY), $statisticsQuery);
+        self::assertSame('user.info.basic,video.publish,video.list', $statisticsQuery['scope']);
         foreach (['http://localhost/retour', 'https://user@example.test/retour', 'https://example.test/retour?x=1', 'https://example.test/retour#x'] as $redirect) {
             self::assertFalse($this->api(new MockHttpClient(), redirect: $redirect)->isReady());
         }

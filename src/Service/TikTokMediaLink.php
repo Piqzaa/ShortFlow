@@ -13,9 +13,23 @@ final class TikTokMediaLink
 
     public function isReady(): bool
     {
-        $parts = parse_url($this->baseUrl);
+        return null === $this->readinessIssue();
+    }
 
-        return $this->verified && $this->enabled && is_array($parts) && 'https' === ($parts['scheme'] ?? '') && !empty($parts['host']) && !isset($parts['user']) && !isset($parts['pass']) && !isset($parts['query']) && !isset($parts['fragment']) && '' !== $this->secret;
+    public function readinessIssue(): ?string
+    {
+        if (!$this->enabled) {
+            return 'L’envoi TikTok est encore désactivé dans VydFlow. Ton compte est connecté : aucune reconnexion n’est nécessaire.';
+        }
+        if (!$this->verified) {
+            return 'L’adresse de téléchargement des vidéos doit être vérifiée auprès de TikTok avant le premier envoi.';
+        }
+        $parts = parse_url($this->baseUrl);
+        if (!is_array($parts) || 'https' !== ($parts['scheme'] ?? '') || empty($parts['host']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment']) || '' === $this->secret) {
+            return 'L’adresse HTTPS de téléchargement des vidéos doit être configurée dans VydFlow avant l’envoi TikTok.';
+        }
+
+        return null;
     }
 
     public function url(TikTokPublication $job): string

@@ -47,7 +47,7 @@ final class MultiNetworkPublishing
         $creator = [];
         foreach ($networks as $network) {
             if (!$destinations[$network]['ready']) {
-                $issues[$network][] = 'Connecte le compte et active l’envoi depuis la page Réseaux avant de publier.';
+                $issues[$network][] = 'tiktok' === $network ? $this->tiktok->readinessIssue($owner) : 'Connecte le compte et active l’envoi depuis la page Réseaux avant de publier.';
             }
             if (($accounts[$network] ?? null) !== $destinations[$network]['account']) {
                 $issues[$network][] = 'Le compte destinataire a changé. Reviens au choix des réseaux pour le vérifier.';

@@ -18,7 +18,8 @@ final class TikTokApi
         #[Autowire('%env(TIKTOK_CLIENT_KEY)%')] private string $clientKey,
         #[Autowire('%env(TIKTOK_CLIENT_SECRET)%')] private string $clientSecret,
         #[Autowire('%env(TIKTOK_REDIRECT_URI)%')] private string $redirectUri,
-        #[Autowire('%env(bool:TIKTOK_AUDITED)%')] private bool $audited)
+        #[Autowire('%env(bool:TIKTOK_AUDITED)%')] private bool $audited,
+        #[Autowire('%env(bool:TIKTOK_STATISTICS_ENABLED)%')] private bool $statisticsEnabled = false)
     {
     }
 
@@ -35,7 +36,9 @@ final class TikTokApi
             throw new PublicationException('La connexion TikTok n’est pas encore disponible.');
         }
 
-        return 'https://www.tiktok.com/v2/auth/authorize/?'.http_build_query(['client_key' => $this->clientKey, 'scope' => implode(',', self::SCOPES), 'response_type' => 'code', 'redirect_uri' => $this->redirectUri, 'state' => $state, 'disable_auto_auth' => 1], '', '&', PHP_QUERY_RFC3986);
+        $scopes = $this->statisticsEnabled ? self::SCOPES : self::REQUIRED_SCOPES;
+
+        return 'https://www.tiktok.com/v2/auth/authorize/?'.http_build_query(['client_key' => $this->clientKey, 'scope' => implode(',', $scopes), 'response_type' => 'code', 'redirect_uri' => $this->redirectUri, 'state' => $state, 'disable_auto_auth' => 1], '', '&', PHP_QUERY_RFC3986);
     }
 
     /** @return array{openId: string, name: string, access: string, refresh: string, expires: int, refreshExpires: int} */

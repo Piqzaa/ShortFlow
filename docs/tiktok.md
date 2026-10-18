@@ -1,6 +1,10 @@
-# TikTok — intégration locale, 17 octobre 2026
+# TikTok — intégration locale et premier essai réel
 
-## Objectif et état
+État du 19 octobre 2026 : connexion OAuth Sandbox, préfixe HTTPS vérifié et premier envoi réel réussi par le propriétaire. Contrôle en lecture seule : une publication au statut `published`. Application non auditée, compte de test privé et visibilité `SELF_ONLY` ; statistiques réelles TikTok toujours désactivées. Les sections datées ci-dessous conservent l’historique du lot local et de son activation.
+
+Mise à jour du 18 octobre : le propriétaire a créé son application Sandbox et ajouté son compte test. Pour renseigner le portail, le tunnel de test existant a été redémarré : `https://pushing-yarn-curtis-rows.trycloudflare.com`. Le routeur autorise désormais précisément `/cgu` et `/confidentialite`. Website : origine du tunnel ; Login Kit Web : origine + `/studio/connexions/tiktok/retour`. Les pages légales sont accessibles, mais le dépôt et la validation du fichier de propriété TikTok restent à faire. Aucun accès TikTok enregistré, aucune connexion ni publication effectuée pendant cette préparation. L’adresse temporaire peut changer au redémarrage ; les callbacks Instagram/YouTube configurés sur l’ancienne origine n’ont pas été modifiés.
+
+## Objectif et périmètre initial du 17 octobre
 
 Connecter un compte TikTok puis préparer jusqu’à cinq vidéos, confirmer explicitement leurs réglages et suivre les publications dans le studio. Ce lot est autorisé sans créer de compte développeur ce soir. L’intégration est testée avec une API simulée ; aucune connexion, publication réelle ou exposition HTTPS du serveur local n’a eu lieu. Instagram possède déjà son parcours Reels local, décrit dans [instagram-publication.md](instagram-publication.md), avec la même attente des accès réels.
 
@@ -62,3 +66,25 @@ Les tests couvrent OAuth, permissions, chiffrement et rotation, CSRF/state/rejeu
 - [Règles d’interface et d’audit](https://developers.tiktok.com/doc/content-sharing-guidelines) et [transfert des médias](https://developers.tiktok.com/doc/content-posting-api-media-transfer-guide).
 
 Les résultats effectivement exécutés et les limites de vérification figurent dans [verification.md](verification.md).
+
+
+### Préparation OAuth Sandbox — 19 octobre 2026
+
+Identifiants du Sandbox renseignés par le propriétaire dans `.env.local`, clé de chiffrement et retour HTTPS configurés. Les caches local et entrée HTTPS sans debug ont été rechargés. Les drapeaux de publication, audit, vérification du média et statistiques réelles restent à zéro : connexion uniquement, sans envoi. Le propriétaire doit ouvrir le studio depuis le domaine HTTPS du callback avant de cliquer sur Connecter TikTok.
+
+`TikTokApi::authorizationUrl` demande maintenant `user.info.basic` et `video.publish` lorsque les statistiques sont désactivées. `video.list` est ajouté uniquement si `TIKTOK_STATISTICS_ENABLED=1`. Symfony injecte ce drapeau au service ; les tests couvrent les deux variantes. Cela évite de demander au sandbox une permission de lecture non configurée lors du simple essai de connexion.
+
+
+### Vérification de propriété et diagnostic d’envoi — 19 octobre
+
+Le propriétaire a fourni le fichier de vérification TikTok. Il a été copié sans modification dans `public/`, puis autorisé individuellement dans le routeur du tunnel, en GET/HEAD. La réponse publique correspond exactement au fichier original. Le clic Verify et la confirmation du portail restent à faire ; `TIKTOK_URL_VERIFIED` et `TIKTOK_PUBLISH_ENABLED` restent donc à zéro. Le routeur accepte aussi le format exact des liens TikTok signés ; le contrôleur maintient ses contrôles HMAC, expiration, propriétaire et état actif. Aucun téléchargement d’une vraie vidéo ni envoi n’a été lancé.
+
+
+### Activation de l’envoi Sandbox — 19 octobre 2026
+
+Le propriétaire confirme que TikTok affiche le préfixe du tunnel comme vérifié. Activation locale de `TIKTOK_URL_VERIFIED=1` et `TIKTOK_PUBLISH_ENABLED=1`, sans modifier les identifiants ni les connexions existantes. `TIKTOK_AUDITED=0` et statistiques réelles désactivées. Caches sans debug du serveur local et de l’entrée HTTPS rechargés, worker redémarré après vérification d’absence de transfert actif. Diagnostic en lecture seule : OAuth prêt, liens signés prêts et un compte TikTok connecté avec autorisation non expirée. Aucun appel d’initialisation de publication effectué ; le propriétaire doit reprendre sa préparation, choisir une visibilité autorisée et confirmer le récapitulatif. L’activation ne vaut pas validation d’un premier transfert réel réussi.
+
+
+### Premier transfert réel réussi — 19 octobre 2026
+
+Le propriétaire confirme qu’une vidéo a été publiée depuis VydFlow sur TikTok. Une requête de lecture confirme une ligne `published`, sans lancer d’autre transfert ni collecter de statistiques. La connexion et l’envoi immédiat TikTok sont donc validés en sandbox ; un essai de programmation TikTok reste distinct. Le compte de test doit rester privé pour l’application non auditée ; la visibilité de la vidéo est choisie explicitement, sans valeur prédéfinie. Références : [règles de partage](https://developers.tiktok.com/docs/en/content-sharing-guidelines) et [informations du créateur](https://developers.tiktok.com/docs/en/content-posting-api-reference-query-creator-info).

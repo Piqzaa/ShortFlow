@@ -28,6 +28,21 @@ if ('/' === $path) {
     exit;
 }
 
+// Only the exact TikTok ownership proof supplied by the app owner is public.
+if ('/tiktokcdhRfEm4ejiwaGoxZqVcLdkkVfxcSJQ7.txt' === $path && in_array($_SERVER['REQUEST_METHOD'], ['GET', 'HEAD'], true)) {
+    $proof = __DIR__.'/../../public/tiktokcdhRfEm4ejiwaGoxZqVcLdkkVfxcSJQ7.txt';
+    if (!is_file($proof)) {
+        http_response_code(404);
+        exit;
+    }
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+    if ('GET' === $_SERVER['REQUEST_METHOD']) {
+        readfile($proof);
+    }
+    exit;
+}
+
 // Static files are served explicitly: never let the CLI server bypass this guard.
 if (str_starts_with($path, '/build/') || '/media/creators/hero-fashion.webp' === $path) {
     $public = realpath(__DIR__.'/../../public'.(str_starts_with($path, '/build/') ? '/build' : '/media/creators'));
@@ -45,9 +60,9 @@ if (str_starts_with($path, '/build/') || '/media/creators/hero-fashion.webp' ===
     exit;
 }
 
-$allowed = in_array($path, ['/connexion', '/deconnexion', '/studio'], true)
+$allowed = in_array($path, ['/connexion', '/deconnexion', '/studio', '/cgu', '/confidentialite'], true)
     || str_starts_with($path, '/studio/')
-    || (bool) preg_match('#^/media/instagram/\d+/\d+/[a-f0-9]{64}$#D', $path);
+    || (bool) preg_match('#^/media/(instagram|tiktok)/\d+/\d+/[a-f0-9]{64}$#D', $path);
 if (!$allowed) {
     http_response_code(404);
     exit;
