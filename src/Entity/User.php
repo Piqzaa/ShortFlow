@@ -23,6 +23,43 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(length: 80, options: ['default' => ''])]
+    private string $displayName = '';
+    #[ORM\Column(length: 64, options: ['default' => 'Europe/Paris'])]
+    private string $timezone = 'Europe/Paris';
+    #[ORM\Column(length: 52, nullable: true)]
+    private ?string $avatarName = null;
+
+    public function getDisplayName(): string
+    {
+        return $this->displayName;
+    }
+
+    public function setDisplayName(string $name): void
+    {
+        $this->displayName = $name;
+    }
+
+    public function getTimezone(): string
+    {
+        return $this->timezone;
+    }
+
+    public function setTimezone(string $timezone): void
+    {
+        $this->timezone = $timezone;
+    }
+
+    public function getAvatarName(): ?string
+    {
+        return $this->avatarName;
+    }
+
+    public function setAvatarName(?string $name): void
+    {
+        $this->avatarName = $name;
+    }
+
     public function __construct(string $email)
     {
         $this->email = strtolower(trim($email));
