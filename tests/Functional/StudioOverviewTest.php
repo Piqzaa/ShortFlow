@@ -5,6 +5,7 @@ namespace App\Tests\Functional;
 use App\Entity\AccountToken;
 use App\Entity\InstagramConnection;
 use App\Entity\InstagramPublication;
+use App\Entity\PublicationDraft;
 use App\Entity\User;
 use App\Entity\VideoAsset;
 use App\Entity\YouTubeConnection;
@@ -14,6 +15,8 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Clock\MockClock;
+use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class StudioOverviewTest extends WebTestCase
@@ -185,5 +188,88 @@ final class StudioOverviewTest extends WebTestCase
             $this->client->request('POST', '/studio/mon-compte', ['change_password' => ['_token' => 'invalid']]);
         }
         self::assertResponseStatusCodeSame(429);
+    }
+
+    private function preparation(User $owner, string $title, string $status, ?string $date = null): PublicationDraft
+    {
+        $now = new \DateTimeImmutable('2026-10-18T08:00:00+00:00');
+        $draft = new PublicationDraft($owner, $title, $now);
+        $draft->edit($title, ['youtube'], [], $now);
+        if ($date) {
+            $draft->plan(new \DateTimeImmutable($date), 'Europe/Paris', null, $now);
+        }
+        if ('draft' !== $status) {
+            $draft->arm($now);
+            if ('scheduled' !== $status) {
+                $draft->change($status, null, $now);
+            }
+        }
+        $this->em()->persist($draft);
+        $this->em()->flush();
+
+        return $draft;
+    }
+
+    public function testDashboardShowsOwnedDraftsAndSchedulesWithoutApiCallsOrWrites(): void
+    {
+        static::getContainer()->set('app.publication_clock', new MockClock('2026-10-18T08:00:00+00:00'));
+        foreach (['youtube.http', 'instagram.http', 'tiktok.http'] as $service) {
+            static::getContainer()->set($service, new MockHttpClient(static function (): never {
+                throw new \LogicException('Dashboard consultation must never call a social API.');
+            }));
+        }
+        $this->preparation($this->alice, 'Créneau du lendemain', 'scheduled', '2026-10-19T09:00:00+00:00');
+        $due = $this->preparation($this->alice, 'Fenêtre encore valide', 'scheduled', '2026-10-18T07:58:00+00:00');
+        $late = $this->preparation($this->alice, 'Départ manqué', 'scheduled', '2026-10-18T07:57:59+00:00');
+        $this->preparation($this->alice, 'Compte à revérifier', 'blocked', '2026-10-18T10:00:00+00:00');
+        $this->preparation($this->alice, 'Ancien brouillon', 'draft');
+        $second = $this->preparation($this->alice, 'Brouillon récent', 'draft');
+        $this->preparation($this->alice, 'À exclure car annulée', 'cancelled');
+        $this->preparation($this->bob, 'Préparation autre propriétaire', 'scheduled', '2026-10-18T09:00:00+00:00');
+        $this->preparation($this->bob, 'Blocage autre propriétaire', 'blocked');
+        $this->preparation($this->bob, 'Brouillon autre propriétaire', 'draft');
+        $this->client->loginUser($this->alice);
+        $crawler = $this->client->request('GET', '/studio');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#upcoming-title .dashboard-count', '2');
+        self::assertSelectorTextContains('#drafts-title .dashboard-count', '2');
+        self::assertSelectorTextContains('.dashboard-schedule-alert h3', '2 préparations');
+        self::assertSelectorTextContains('.dashboard-schedule-alert', 'À reprogrammer');
+        self::assertSelectorTextContains('.dashboard-planning time', '18/10 à 09:58');
+        self::assertSelectorTextContains('.dashboard-planning', 'Europe/Paris');
+        self::assertSame('/studio/brouillons/'.$due->getId(), $crawler->filter('[aria-labelledby="upcoming-title"] > .dashboard-preparation')->first()->attr('href'));
+        self::assertSame('/studio/brouillons/'.$second->getId(), $crawler->filter('[aria-labelledby="drafts-title"] .dashboard-preparation')->first()->attr('href'));
+        self::assertStringNotContainsString('autre propriétaire', $this->client->getResponse()->getContent());
+        self::assertStringNotContainsString('À exclure car annulée', $this->client->getResponse()->getContent());
+        $db = static::getContainer()->get(Connection::class);
+        self::assertSame('scheduled', $db->fetchOne('SELECT status FROM publication_draft WHERE id = ?', [$late->getId()]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
+        self::assertSelectorExists('.studio-mobile-menu summary');
+        self::assertSelectorExists('.studio-mobile-menu a[href="/studio/mon-compte"]');
+    }
+
+    public function testDashboardEmptyAndBoundedPreparationLists(): void
+    {
+        static::getContainer()->set('app.publication_clock', new MockClock('2026-10-18T08:00:00+00:00'));
+        $this->client->loginUser($this->alice);
+        $this->client->request('GET', '/studio');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#upcoming-title .dashboard-count', '0');
+        self::assertSelectorTextContains('#drafts-title .dashboard-count', '0');
+        self::assertSelectorNotExists('.dashboard-schedule-alert');
+        self::assertSelectorNotExists('.dashboard-preparation');
+        self::assertSelectorExists('.dashboard-guide[open]');
+        $owner = $this->em()->find(User::class, $this->alice->getId());
+        for ($i = 0; $i < 5; ++$i) {
+            $this->preparation($owner, 'Départ '.$i, 'scheduled', '2026-10-19T'.(10 + $i).':00:00+00:00');
+            $this->preparation($owner, 'Brouillon '.$i, 'draft');
+        }
+        $this->client->request('GET', '/studio');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#upcoming-title .dashboard-count', '5');
+        self::assertSelectorTextContains('#drafts-title .dashboard-count', '5');
+        self::assertSelectorCount(3, '[aria-labelledby="upcoming-title"] .dashboard-preparation');
+        self::assertSelectorCount(2, '[aria-labelledby="drafts-title"] .dashboard-preparation');
     }
 }

@@ -1,17 +1,30 @@
 {% extends 'studio/base.html.twig' %}
 {% block studio_content %}
-<div class="studio-heading dashboard-intro"><div><span class="eyebrow">TON ESPACE DE PUBLICATION</span><h1>Vue d’ensemble.</h1><p>{{ usage.count ? 'Choisis tes vidéos et prépare leur prochaine publication.' : 'Importe ta première vidéo pour commencer.' }}</p></div><div class="dashboard-actions">{% if usage.count %}<a class="button small" href="{{ path('app_library') }}#library-selection">Préparer une publication ↗</a><a class="account-secondary" href="{{ path('app_video_upload') }}">Importer une vidéo +</a>{% else %}<a class="button small" href="{{ path('app_video_upload') }}">Importer une vidéo +</a>{% endif %}</div></div>
-<ol class="dashboard-workflow" aria-label="Parcours de publication"><li><span>1</span> Choisir les vidéos</li><li><span>2</span> Préparer par réseau</li><li><span>3</span> Confirmer et suivre</li></ol>
-<div class="batch-actions"><a class="account-secondary" href="{{ path('app_drafts') }}">Retrouver mes brouillons ↗</a><a class="account-secondary" href="{{ path('app_calendar') }}">Ouvrir le calendrier ↗</a></div>
+<div class="studio-heading dashboard-intro">
+  <div><h1>Vue d’ensemble.</h1><p>{{ usage.count ? 'Tes publications et les prochaines étapes.' : 'Importe ta première vidéo pour commencer.' }}</p></div>
+  <div class="dashboard-actions">{% if usage.count %}<a class="button" href="{{ path('app_library') }}#library-selection">Préparer une publication ↗</a><a class="account-secondary dashboard-import-link" href="{{ path('app_video_upload') }}">Importer +</a>{% else %}<a class="button" href="{{ path('app_video_upload') }}">Importer une vidéo +</a>{% endif %}</div>
+</div>
 <nav class="dashboard-summary" aria-label="État de ton studio">
-<a href="{{ path('app_library') }}"><span>Dans ta bibliothèque</span><strong>{{ usage.count }}</strong><small>vidéo{{ usage.count > 1 ? 's' : '' }} · {{ (usage.bytes / 1048576)|number_format(1, ',', ' ') }} Mo utilisés ↗</small></a>
-<a href="{{ path('app_publications', {state:'active'}) }}"><span>En cours</span><strong>{{ counts.active }}</strong><small>envoi{{ counts.active > 1 ? 's' : '' }} à suivre ↗</small></a>
-<a href="{{ path('app_publications', {state:'attention'}) }}" class="{{ counts.attention ? 'needs-attention' : '' }}"><span>À traiter</span><strong>{{ counts.attention }}</strong><small>échecs, suspensions ou vérifications ↗</small></a>
-<a href="{{ path('app_publications', {state:'published'}) }}"><span>Publiées</span><strong>{{ counts.published }}</strong><small>publications réussies, tous réseaux ↗</small></a>
+  <a href="{{ path('app_publications', {state:'attention'}) }}" class="{{ counts.attention ? 'needs-attention' : '' }}"><span>À traiter</span><strong>{{ counts.attention }}</strong><small>envoi{{ counts.attention > 1 ? 's' : '' }} à vérifier ↗</small></a>
+  <a href="{{ path('app_publications', {state:'active'}) }}"><span>En cours</span><strong>{{ counts.active }}</strong><small>envoi{{ counts.active > 1 ? 's' : '' }} à suivre ↗</small></a>
+  <a href="{{ path('app_publications', {state:'published'}) }}"><span>Publiées</span><strong>{{ counts.published }}</strong><small>destinations réussies ↗</small></a>
+  <a href="{{ path('app_library') }}"><span>Bibliothèque</span><strong>{{ usage.count }}</strong><small>vidéo{{ usage.count > 1 ? 's' : '' }} disponible{{ usage.count > 1 ? 's' : '' }} ↗</small></a>
 </nav>
 {% if attention %}{% include 'studio/_activity.html.twig' with {jobs:attention,state:'attention'} %}{% endif %}
+<div class="dashboard-planning">
+  <section class="dashboard-panel" aria-labelledby="upcoming-title">
+    <div class="studio-section-heading"><h2 id="upcoming-title">Prochains départs <span class="dashboard-count">{{ preparations.counts.scheduled }}</span></h2><a class="account-secondary" href="{{ path('app_calendar') }}">Calendrier ↗</a></div>
+    {% if preparations.problems %}<div class="dashboard-schedule-alert"><h3>{{ preparations.counts.attention }} préparation{{ preparations.counts.attention > 1 ? 's' : '' }} à vérifier</h3>{% for draft in preparations.problems %}<a class="dashboard-preparation" href="{{ path('app_draft',{id:draft.id}) }}"><strong>{{ draft.title }}</strong><span class="state-{{ preparationStates[draft.id] }}">{{ preparationLabels[preparationStates[draft.id]] }} ↗</span></a>{% endfor %}{% if preparations.counts.attention > preparations.problems|length %}<a class="account-secondary" href="{{ path('app_drafts') }}">Toutes les préparations ↗</a>{% endif %}</div>{% endif %}
+    {% for draft in preparations.upcoming %}<a class="dashboard-preparation" href="{{ path('app_draft',{id:draft.id}) }}"><strong>{{ draft.title }}</strong><time datetime="{{ draft.scheduledAt|date('c','UTC') }}">{{ draft.scheduledAt|date('d/m à H:i',draft.timezone) }} · {{ draft.timezone }}</time><span>{{ draft.networks|map(n=>{youtube:'YouTube',instagram:'Instagram',tiktok:'TikTok'}[n])|join(' · ') }}</span></a>{% else %}<p class="dashboard-panel-note">Aucun départ à venir. Choisis une date depuis le récapitulatif d’une publication.</p>{% endfor %}
+  </section>
+  <section class="dashboard-panel" aria-labelledby="drafts-title">
+    <div class="studio-section-heading"><h2 id="drafts-title">Brouillons <span class="dashboard-count">{{ preparations.counts.drafts }}</span></h2><a class="account-secondary" href="{{ path('app_drafts') }}">Tout voir ↗</a></div>
+    {% for draft in preparations.recent %}<a class="dashboard-preparation" href="{{ path('app_draft',{id:draft.id}) }}"><strong>{{ draft.title }}</strong><span>Modifié le {{ draft.updatedAt|date('d/m à H:i') }} · Reprendre ↗</span></a>{% else %}<p class="dashboard-panel-note">Aucun brouillon à reprendre. Tu peux enregistrer une préparation, même incomplète.</p>{% endfor %}
+  </section>
+</div>
 {% if active %}{% include 'studio/_activity.html.twig' with {jobs:active,state:'active'} %}{% endif %}
 <section class="dashboard-networks"><div><h2>Tes réseaux.</h2><p class="dashboard-network-list">{% for label,status in networks %}<span class="dashboard-network-state" data-state="{{ status }}">{{ label }} · <strong>{{ status }}</strong></span>{% endfor %}</p></div><a class="account-secondary" href="{{ path('app_connections') }}">Gérer mes réseaux ↗</a></section>
-<section class="studio-library" aria-labelledby="library-title"><div class="studio-section-heading"><h2 id="library-title">Tes dernières vidéos</h2><a class="dashboard-library-link" href="{{ path('app_library') }}">Toute la bibliothèque · {{ usage.count }} ↗</a></div>
+<details class="dashboard-guide"{% if not usage.count %} open{% endif %}><summary>Comment préparer une publication ?</summary><ol><li>Importe et choisis tes vidéos.</li><li>Adapte les textes et enregistre si tu veux continuer plus tard.</li><li>Connecte les destinations avant de confirmer l’envoi ou le créneau.</li></ol><p>Tu peux préparer un brouillon sans connecter tes réseaux.</p></details>
+<section class="studio-library" aria-labelledby="library-title"><div class="studio-section-heading"><h2 id="library-title">Tes dernières vidéos</h2><a class="account-secondary" href="{{ path('app_library') }}">Bibliothèque · {{ usage.count }} ↗</a></div><p class="dashboard-storage">{{ (usage.bytes / 1048576)|number_format(1, ',', ' ') }} Mo utilisés</p>
 {% if videos %}{% include 'library/_cards.html.twig' %}{% else %}<div class="studio-empty"><div class="studio-empty-art" aria-hidden="true"><span>+</span></div><h3>Une place pour tes prochaines vidéos.</h3><p>Importe ta première création dans ta bibliothèque privée.</p><a class="button small" href="{{ path('app_video_upload') }}">Importer ma première vidéo <span aria-hidden="true">↗</span></a></div>{% endif %}</section>
 {% endblock %}

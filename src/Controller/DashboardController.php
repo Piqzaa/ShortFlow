@@ -6,13 +6,16 @@ use App\Entity\InstagramConnection;
 use App\Entity\TikTokConnection;
 use App\Entity\User;
 use App\Entity\YouTubeConnection;
+use App\Repository\PublicationDraftRepository;
 use App\Repository\VideoAssetRepository;
 use App\Service\InstagramApi;
+use App\Service\PublicationCalendar;
 use App\Service\PublicationOverview;
 use App\Service\TikTokApi;
 use App\Service\YouTubeApi;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -20,7 +23,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class DashboardController extends AbstractController
 {
     #[Route('/studio', name: 'app_dashboard', methods: ['GET'])]
-    public function index(#[CurrentUser] User $user, VideoAssetRepository $videos, PublicationOverview $publications, EntityManagerInterface $em, YouTubeApi $youtube, InstagramApi $instagram, TikTokApi $tiktok): Response
+    public function index(#[CurrentUser] User $user, VideoAssetRepository $videos, PublicationOverview $publications, PublicationDraftRepository $drafts, PublicationCalendar $calendar, ClockInterface $clock, EntityManagerInterface $em, YouTubeApi $youtube, InstagramApi $instagram, TikTokApi $tiktok): Response
     {
         $recent = $videos->page($user, 1, 4);
         $youtubeConnection = $em->getRepository(YouTubeConnection::class)->findOneBy(['owner' => $user]);
@@ -32,7 +35,8 @@ final class DashboardController extends AbstractController
             'Instagram' => !$instagram->isReady() ? 'À configurer' : ($instagramConnection ? ($instagramConnection->isExpired() ? 'À reconnecter' : ($instagramConnection->isExpiring() ? 'À renouveler' : 'Connecté')) : 'À connecter'),
         ];
         $counts = $publications->counts($user);
-        $response = $this->render('studio/index.html.twig', ['videos' => $recent, 'usage' => $videos->usage($user), 'publishedPlatforms' => $videos->publishedPlatforms($user, $recent), 'counts' => $counts, 'attention' => $counts['attention'] ? $publications->page($user, state: 'attention', limit: 3)['items'] : [], 'active' => $counts['active'] ? $publications->page($user, state: 'active', limit: 3)['items'] : [], 'networks' => $networks]);
+        $preparations = $drafts->dashboard($user, $clock->now());
+        $response = $this->render('studio/index.html.twig', ['videos' => $recent, 'usage' => $videos->usage($user), 'publishedPlatforms' => $videos->publishedPlatforms($user, $recent), 'counts' => $counts, 'attention' => $counts['attention'] ? $publications->page($user, state: 'attention', limit: 3)['items'] : [], 'active' => $counts['active'] ? $publications->page($user, state: 'active', limit: 3)['items'] : [], 'networks' => $networks, 'preparations' => $preparations, 'preparationStates' => $calendar->states(array_merge($preparations['upcoming'], $preparations['problems'])), 'preparationLabels' => PublicationCalendar::LABELS]);
         $response->headers->set('Cache-Control', 'no-store, private');
 
         return $response;

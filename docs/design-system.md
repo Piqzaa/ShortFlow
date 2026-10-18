@@ -15,6 +15,17 @@ Studio créatif sombre, composition éditoriale et géométrie abstraite origina
 - Ombres : diffuses, noires, réservées au téléphone et à l’aperçu studio.
 
 ## Composants
+
+### Studio authentifié — 18 octobre 2026
+
+La landing conserve ses échelles expressives. Le studio utilise `assets/styles/dashboard.css` pour les fondations communes et la vue d’ensemble : `--studio-text:14px`, `--studio-meta:12px`, `--studio-control:44px`, `--studio-panel:#14151d`, `--studio-gap:24px`. Titres du dashboard 32 px desktop/27 px mobile ; titres des panneaux 21/19 px. Les actions secondaires communes, les petites actions principales et les liens du menu ont une hauteur minimale de 44 px et un texte de 13 px. Cette règle ne prétend pas convertir chaque petit contrôle du produit.
+
+Hiérarchie : action principale → compteurs réels → envois à vérifier → créneaux confirmés et brouillons → traitements actifs → réseaux → aide repliable → sources récentes. Le menu mobile utilise details/summary, avec rubrique courante, état actif et focus visible. Sur petite hauteur desktop, la barre latérale défile indépendamment. Les panneaux et titres longs utilisent minmax(0,1fr), min-width:0 et un retour à la ligne.
+
+Les définitions du dashboard sont regroupées dans ce fichier, avec leurs adaptations à 1100 et 760 px. Les couleurs, polices et animations de la landing restent celles de la charte. Aucun composant externe ajouté.
+
+### Landing
+
 Bouton violet sombre au texte foncé, focus visible de 2 px, hover légèrement éclairci et translation de 2 px. Liens textuels soulignés au CTA. Formulaire avec labels persistants, erreurs serveur et confirmation role=status. Cartes réservées aux destinations et à l’aperçu ; sections éditoriales ouvertes. SVG pour le poster et favicon ; symboles typographiques pour la navigation illustrative.
 
 ## Mouvement et performance

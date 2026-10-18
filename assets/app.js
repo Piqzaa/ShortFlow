@@ -29,3 +29,4 @@ import SelectionController from './controllers/selection_controller.js';
 app.register('selection', SelectionController);
 import UnsavedController from './controllers/unsaved_controller.js';
 app.register('unsaved', UnsavedController);
+import './styles/dashboard.css';
