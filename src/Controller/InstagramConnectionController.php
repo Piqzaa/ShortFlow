@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\InstagramConnection;
 use App\Entity\User;
 use App\Service\InstagramApi;
+use App\Service\OAuthCallbackOrigin;
 use App\Service\PublicationException;
 use App\Service\PublicationLock;
 use App\Service\TokenVault;
@@ -25,7 +26,7 @@ final class InstagramConnectionController extends AbstractController
     }
 
     #[Route('', name: 'app_instagram_connect', methods: ['POST'])]
-    public function connect(Request $request, #[CurrentUser] User $user, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function connect(Request $request, #[CurrentUser] User $user, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, OAuthCallbackOrigin $origin, #[Autowire('%env(INSTAGRAM_REDIRECT_URI)%')] string $callback): Response
     {
         if (!$this->isCsrfTokenValid('instagram_connect', $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
@@ -36,6 +37,7 @@ final class InstagramConnectionController extends AbstractController
             return $this->back();
         }
         try {
+            $origin->assertSameOrigin($request, $callback);
             $state = bin2hex(random_bytes(32));
             $url = $this->api->authorizationUrl($state);
             $request->getSession()->set('instagram_oauth', ['state' => $state, 'user' => $user->getId(), 'expires' => time() + 600]);
@@ -74,6 +76,9 @@ final class InstagramConnectionController extends AbstractController
                     });
                 });
                 $this->addFlash('success', 'Ton compte Instagram est connecté.');
+            } catch (PublicationException $error) {
+                // Our services only expose fixed messages and numeric provider codes.
+                $this->addFlash('error', $error->getMessage());
             } catch (\Throwable) {
                 $this->addFlash('error', 'La connexion Instagram n’a pas abouti. Vérifie le compte professionnel et les autorisations puis réessaie.');
             }

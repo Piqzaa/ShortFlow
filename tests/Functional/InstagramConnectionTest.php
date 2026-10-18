@@ -4,6 +4,7 @@ namespace App\Tests\Functional;
 
 use App\Entity\InstagramConnection;
 use App\Entity\User;
+use App\Entity\YouTubeConnection;
 use App\Service\InstagramApi;
 use App\Service\TokenVault;
 use Doctrine\DBAL\Connection;
@@ -59,7 +60,7 @@ final class InstagramConnectionTest extends WebTestCase
     private function responses(): array
     {
         return [
-            new MockResponse(json_encode(['data' => [['access_token' => 'ig-short-private', 'user_id' => '123456', 'permissions' => implode(',', InstagramApi::SCOPES)]]], JSON_THROW_ON_ERROR)),
+            new MockResponse(json_encode(['data' => [['access_token' => 'ig-short-private', 'user_id' => '123456', 'permissions' => InstagramApi::SCOPES]]], JSON_THROW_ON_ERROR)),
             new MockResponse('{"access_token":"ig-long-private","expires_in":5183944}'),
             new MockResponse('{"id":"123456","user_id":"17841400000000001","username":"vydflow_qa","account_type":"MEDIA_CREATOR"}'),
         ];
@@ -154,9 +155,60 @@ final class InstagramConnectionTest extends WebTestCase
         $this->client->request('GET', '/studio/connexions/instagram/retour', ['state' => $query['state'], 'code' => 'code']);
         $this->client->followRedirect();
         self::assertSelectorTextContains('.instagram-connection', '@old_profile');
-        self::assertSelectorTextContains('.account-notice.error', 'La connexion Instagram n’a pas abouti');
+        self::assertSelectorTextContains('.account-notice.error', 'Instagram a refusé l’échange du code de connexion');
         self::assertStringNotContainsString('provider-private-secret', $this->client->getResponse()->getContent());
         self::assertSame(1, $this->em()->getRepository(InstagramConnection::class)->count([]));
+    }
+
+    public function testFailedAndSuccessfulInstagramConnectionsPreserveYouTubeCredentialsAndDisplay(): void
+    {
+        $youtube = new YouTubeConnection($this->alice, 'UC'.str_repeat('a', 22), 'Chaîne conservée', 'youtube-access-ciphertext', 'youtube-refresh-ciphertext', 3600);
+        $this->em()->persist($youtube);
+        $this->em()->flush();
+        $id = $youtube->getId();
+        $this->client->loginUser($this->alice);
+        static::getContainer()->set('instagram.http', new MockHttpClient([
+            new MockResponse('{"error":{"code":100,"message":"private-provider-message"}}', ['http_code' => 400]),
+            ...$this->responses(),
+        ]));
+        for ($attempt = 0; $attempt < 2; ++$attempt) {
+            $state = $this->begin();
+            $this->client->request('GET', '/studio/connexions/instagram/retour', ['state' => $state, 'code' => 'test-code']);
+            self::assertResponseRedirects('/studio/connexions', 303);
+            $this->client->followRedirect();
+            self::assertSelectorTextContains('#youtube-title + p', 'Chaîne conservée');
+            self::assertSelectorExists('form[action="/studio/connexions/youtube/deconnecter"]');
+            self::assertStringNotContainsString('private-provider-message', $this->client->getResponse()->getContent());
+            $db = static::getContainer()->get(Connection::class);
+            $row = $db->fetchAssociative('SELECT id, access_token, refresh_token FROM youtube_connection WHERE owner_id = ?', [$this->alice->getId()]);
+            self::assertIsArray($row);
+            self::assertSame($id, $row['id']);
+            self::assertSame('youtube-access-ciphertext', $row['access_token']);
+            self::assertSame('youtube-refresh-ciphertext', $row['refresh_token']);
+        }
+    }
+
+    public function testWrongOriginDoesNotStartEitherOAuthFlowOrChangeExistingYouTube(): void
+    {
+        $youtube = new YouTubeConnection($this->alice, 'UC'.str_repeat('a', 22), 'Chaîne conservée', 'access-ciphertext', 'refresh-ciphertext', 3600);
+        $this->em()->persist($youtube);
+        $this->em()->flush();
+        $http = new MockHttpClient(static function (): never { self::fail('Wrong origin must never contact a social API'); });
+        static::getContainer()->set('instagram.http', $http);
+        static::getContainer()->set('youtube.http', $http);
+        $this->client->loginUser($this->alice);
+        foreach (['Instagram' => 'Connecter Instagram ↗', 'YouTube' => 'Changer / reconnecter ↗'] as $network => $button) {
+            $crawler = $this->client->request('GET', 'https://localhost/studio/connexions');
+            self::assertResponseIsSuccessful();
+            $this->client->submit($crawler->selectButton($button)->form());
+            self::assertResponseRedirects('/studio/connexions', 303);
+            self::assertFalse($this->client->getRequest()->getSession()->has(strtolower($network).'_oauth'));
+            $this->client->followRedirect();
+            self::assertSelectorTextContains('.account-notice.error', 'La connexion et son retour doivent utiliser la même adresse');
+            self::assertSelectorTextContains('#youtube-title + p', 'Chaîne conservée');
+            self::assertSame(1, $this->em()->getRepository(YouTubeConnection::class)->count([]));
+        }
+        self::assertSame(0, $http->getRequestsCount());
     }
 
     public function testExpiredConnectionIsNeverDisplayedAsActive(): void

@@ -7,6 +7,7 @@ use App\Entity\TikTokConnection;
 use App\Entity\User;
 use App\Entity\YouTubeConnection;
 use App\Service\InstagramApi;
+use App\Service\OAuthCallbackOrigin;
 use App\Service\PublicationException;
 use App\Service\PublicationLock;
 use App\Service\TikTokApi;
@@ -32,7 +33,7 @@ final class YouTubeConnectionController extends AbstractController
     }
 
     #[Route('/youtube', name: 'app_youtube_connect', methods: ['POST'])]
-    public function connect(Request $request, #[CurrentUser] User $user, YouTubeApi $api, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function connect(Request $request, #[CurrentUser] User $user, YouTubeApi $api, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, OAuthCallbackOrigin $origin, #[Autowire('%env(YOUTUBE_REDIRECT_URI)%')] string $callback): Response
     {
         if (!$this->isCsrfTokenValid('youtube_connect', $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
@@ -43,6 +44,7 @@ final class YouTubeConnectionController extends AbstractController
             return $this->redirectToRoute('app_connections', status: 303);
         }
         try {
+            $origin->assertSameOrigin($request, $callback);
             $state = bin2hex(random_bytes(32));
             $verifier = bin2hex(random_bytes(32));
             $url = $api->authorizationUrl($state, $verifier);

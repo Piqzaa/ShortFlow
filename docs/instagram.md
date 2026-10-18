@@ -1,5 +1,7 @@
 # Instagram — connexion OAuth et publication Reels, 16 octobre 2026
 
+État actualisé le 18 octobre 2026 : première connexion OAuth Instagram réelle réussie par le propriétaire, confirmée en base avec YouTube sur le même compte VydFlow. Aucun Reel encore publié par cette intervention. Les paragraphes initiaux ci-dessous décrivent le lot historique ; le tunnel HTTPS autorisé et les diagnostics récents sont documentés plus bas.
+
 ## Objectif et périmètre
 
 Connecter un compte Instagram Créateur/Entreprise directement depuis Connexions, puis préparer et publier des Reels depuis la bibliothèque. Le premier lot ci-dessous décrit OAuth ; le fonctionnement du second lot est détaillé dans [instagram-publication.md](instagram-publication.md). L’essai réel attend les accès Meta et un environnement HTTPS adapté ; aucune connexion ni publication Instagram réelle annoncée. TikTok, calendrier et IA restent hors de ce lot.
@@ -27,6 +29,8 @@ Connecter un compte Instagram Créateur/Entreprise directement depuis Connexions
 À comprendre : OAuth autorise VydFlow à accéder au compte, sans fournir son mot de passe à VydFlow. Le state protège le lien entre le départ et le retour. Le conteneur Symfony injecte deux clients HTTP et deux coffres distincts ; Doctrine stocke les métadonnées et le secret chiffré, Twig affiche uniquement les champs nécessaires.
 
 ## Configuration privée ultérieure
+
+Mise à jour du 18 octobre : tunnel HTTPS temporaire explicitement autorisé pour les essais personnels, avec entrée Docker dédiée sans debug. Procédure et limites : [instagram-test-https.md](instagram-test-https.md). Cela remplace l'interdiction d'ouvrir un tunnel sans accord dans les paragraphes historiques ci-dessous ; le serveur de développement habituel ne doit toujours pas être exposé.
 
 Les variables publiques .env sont vides ; elles ne rendent pas la connexion disponible. Compléter seulement .env.local ignoré après création de l’application Meta :
 
@@ -57,3 +61,15 @@ Documentation Meta lue dans le navigateur intégré le 16 octobre 2026, les requ
 - [Commencer](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/get-started) : profil, identifiants et types de compte.
 
 Résultats exacts dans docs/verification.md. L’accès développeur Meta reste distinct de la connexion Instagram proposée aux futurs utilisateurs.
+
+## Diagnostic des premiers essais HTTPS — 18 octobre
+
+Le premier message précis a localisé le refus au contrôle des permissions après échange du code. Le code n'acceptait qu'une chaîne séparée par virgules/espaces ; il accepte désormais aussi une liste JSON de chaînes, en exigeant toujours les deux permissions minimales. Les listes absentes, imbriquées, malformées ou partielles restent refusées. Le message distingue une liste non exploitable des permissions minimales non confirmées, dont les noms proviennent seulement de notre liste fixe. Le propriétaire a ensuite réussi sa connexion réelle. Tests finaux de ce lot : `verification.md`.
+
+L'échec OAuth affichait auparavant un message unique dans le contrôleur, ce qui masquait l'étape réellement refusée. `InstagramApi::json()` accepte désormais un message fixe par étape : échange du code, prolongation du jeton, lecture du profil. Seuls le statut HTTP et les codes Meta entiers `code`/`error_subcode` peuvent compléter ce message. Aucun corps d'erreur, message fournisseur, trace distante, code OAuth ou jeton n'est affiché ni journalisé. `InstagramConnectionController` rend les `PublicationException` contrôlées ; toute autre exception conserve le message neutre. Les contrôles de permissions, identité et compte professionnel restent inchangés.
+
+Les tests unitaires simulent le refus à chacune des trois étapes, ainsi que des erreurs malformées et des champs contenant des secrets synthétiques. Le test fonctionnel de conservation YouTube simule successivement un échec puis une réussite Instagram et vérifie le même identifiant de connexion YouTube, les mêmes jetons chiffrés et la chaîne affichée. Exécuter après migration de `shortflow_test` : `docker compose exec -T -e SHELL_VERBOSITY=-1 php php vendor/bin/phpunit --filter 'InstagramApiTest|InstagramConnectionTest'`.
+
+Localhost et le domaine HTTPS ont des sessions navigateur indépendantes. Si leurs emails VydFlow diffèrent, leurs réseaux connectés diffèrent également. Mais constater deux emails ne suffit pas à expliquer tous les incidents : le propriétaire a précisé pouvoir connecter YouTube sur son compte de test, puis constater un état incohérent après Instagram. La configuration utilisait un retour YouTube localhost et un retour Instagram HTTPS : commencer le parcours depuis la mauvaise origine perd le state de la session au retour. Le contrôleur charge uniquement les connexions appartenant à `CurrentUser` ; les tests sur une même session vérifient qu'un échec Instagram conserve la connexion YouTube.
+
+`OAuthCallbackOrigin::assertSameOrigin()` compare désormais schéma, hôte et port du départ avec l'URI de retour configurée, avant de créer le state et de rediriger vers le réseau. Il est appelé par les deux contrôleurs YouTube et Instagram ; un mélange d'origines reçoit une explication et l'adresse attendue, sans appel social ni changement des connexions. Les contrôles state/propriétaire/expiration au retour restent obligatoires. `.env.test` fixe explicitement les retours fictifs sur l'origine du navigateur fonctionnel, indépendamment des secrets et adresses du poste.

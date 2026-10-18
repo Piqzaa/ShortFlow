@@ -34,17 +34,19 @@ final class InstagramApiTest extends TestCase
         self::assertFalse($this->api(new MockHttpClient(), redirect: 'https://user@example.com/retour')->isReady());
     }
 
-    /** @return iterable<string, array{bool}> */
+    /** @return iterable<string, array{bool, bool}> */
     public static function payloadShapes(): iterable
     {
-        yield 'documented data wrapper' => [true];
-        yield 'flat response' => [false];
+        yield 'data wrapper, comma-separated permissions' => [true, false];
+        yield 'flat response, comma-separated permissions' => [false, false];
+        yield 'data wrapper, list permissions' => [true, true];
+        yield 'flat response, list permissions' => [false, true];
     }
 
     #[DataProvider('payloadShapes')]
-    public function testExchangesCodeThenUsesLongLivedTokenToCheckProfessionalProfile(bool $wrapped): void
+    public function testExchangesCodeThenUsesLongLivedTokenToCheckProfessionalProfile(bool $wrapped, bool $list): void
     {
-        $short = ['access_token' => 'short-private', 'user_id' => '123456', 'permissions' => implode(',', InstagramApi::SCOPES)];
+        $short = ['access_token' => 'short-private', 'user_id' => '123456', 'permissions' => $list ? InstagramApi::SCOPES : implode(',', InstagramApi::SCOPES)];
         $profile = ['id' => '123456', 'user_id' => '17841400000000001', 'username' => 'vydflow.test', 'account_type' => 'MEDIA_CREATOR'];
         $payloads = [$wrapped ? ['data' => [$short]] : $short, ['access_token' => 'long-private', 'expires_in' => 5183944], $wrapped ? ['data' => [$profile]] : $profile];
         $calls = [];
@@ -74,6 +76,36 @@ final class InstagramApiTest extends TestCase
             self::fail('Missing publication permission must reject connection');
         } catch (PublicationException) {
             self::assertSame(1, $http->getRequestsCount());
+        }
+    }
+
+    /** @return iterable<string, array{mixed}> */
+    public static function unconfirmedPermissions(): iterable
+    {
+        yield 'missing' => [null];
+        yield 'boolean' => [true];
+        yield 'nested list' => [[['permission' => 'instagram_business_content_publish']]];
+        yield 'associative object' => [['instagram_business_content_publish' => true]];
+        yield 'partial list' => [['instagram_business_basic']];
+        yield 'partial string' => ['instagram_business_basic'];
+        yield 'empty list' => [[]];
+    }
+
+    #[DataProvider('unconfirmedPermissions')]
+    public function testUnconfirmedPermissionsCannotReachTokenExtension(mixed $permissions): void
+    {
+        $http = new MockHttpClient(new MockResponse(json_encode(['access_token' => 'private-short-token', 'user_id' => '123456', 'permissions' => $permissions], JSON_THROW_ON_ERROR)));
+        try {
+            $this->api($http)->connect('private-code');
+            self::fail('Unconfirmed permissions must reject connection');
+        } catch (PublicationException $error) {
+            self::assertSame(1, $http->getRequestsCount());
+            self::assertStringNotContainsString('private', $error->getMessage());
+            if (in_array($permissions, [['instagram_business_basic'], 'instagram_business_basic', []], true)) {
+                self::assertStringContainsString('instagram_business_content_publish', $error->getMessage());
+            } else {
+                self::assertStringContainsString('liste des autorisations', $error->getMessage());
+            }
         }
     }
 
@@ -110,6 +142,50 @@ final class InstagramApiTest extends TestCase
         } catch (PublicationException $error) {
             self::assertStringNotContainsString('must-not-leak', $error->getMessage());
             self::assertNull($error->getPrevious());
+        }
+    }
+
+    /** @return iterable<string, array{int, string}> */
+    public static function failedSteps(): iterable
+    {
+        yield 'code exchange' => [0, 'échange du code'];
+        yield 'long-lived token' => [1, 'prolongation'];
+        yield 'profile' => [2, 'lecture du profil'];
+    }
+
+    #[DataProvider('failedSteps')]
+    public function testConnectionFailureIdentifiesStepWithOnlyNumericProviderMetadata(int $step, string $message): void
+    {
+        $responses = [
+            new MockResponse('{"access_token":"short-private","user_id":"123456","permissions":"instagram_business_basic,instagram_business_content_publish"}'),
+            new MockResponse('{"access_token":"long-private","expires_in":5183944}'),
+        ];
+        $responses = array_slice($responses, 0, $step);
+        $responses[] = new MockResponse('{"error":{"message":"provider-private-secret","code":100,"error_subcode":33,"fbtrace_id":"private-trace"}}', ['http_code' => 400]);
+        $http = new MockHttpClient($responses);
+        try {
+            $this->api($http)->connect('one-use-private-code');
+            self::fail('Provider rejection must stop connection');
+        } catch (PublicationException $error) {
+            self::assertStringContainsString($message, $error->getMessage());
+            self::assertStringContainsString('HTTP 400, code 100, error_subcode 33', $error->getMessage());
+            self::assertStringNotContainsString('private', $error->getMessage());
+            self::assertNull($error->getPrevious());
+            self::assertSame($step + 1, $http->getRequestsCount());
+        }
+    }
+
+    public function testNonNumericErrorMetadataAndMalformedBodyCannotLeak(): void
+    {
+        foreach (['{"error":{"code":"private-secret","error_subcode":"private-token","message":"private-message"}}', 'private-non-json-body', '{"error":"private-error"}'] as $body) {
+            try {
+                $this->api(new MockHttpClient(new MockResponse($body, ['http_code' => 400])))->connect('private-code');
+                self::fail('Provider error must reject connection');
+            } catch (PublicationException $error) {
+                self::assertStringContainsString('HTTP 400', $error->getMessage());
+                self::assertStringNotContainsString('private', $error->getMessage());
+                self::assertNull($error->getPrevious());
+            }
         }
     }
 }

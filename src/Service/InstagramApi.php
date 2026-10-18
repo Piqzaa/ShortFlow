@@ -120,16 +120,24 @@ final class InstagramApi
         ]);
         $short = $this->record($this->json('POST', 'https://api.instagram.com/oauth/access_token', [
             'headers' => $form->getPreparedHeaders()->toArray(), 'body' => $form->bodyToIterable(),
-        ]));
+        ], 'Instagram a refusé l’échange du code de connexion.'));
         $permissions = $short['permissions'] ?? null;
-        if (!is_string($permissions) || array_diff(self::REQUIRED_SCOPES, preg_split('/[,\s]+/', $permissions) ?: [])) {
-            throw new PublicationException('Autorise le profil et la publication Instagram puis réessaie.');
+        if (is_string($permissions)) {
+            $permissions = preg_split('/[,\s]+/', $permissions, flags: PREG_SPLIT_NO_EMPTY) ?: [];
+        }
+        if (!is_array($permissions) || !array_is_list($permissions) || count(array_filter($permissions, 'is_string')) !== count($permissions)) {
+            throw new PublicationException('Instagram n’a pas confirmé la liste des autorisations accordées. Recommence la connexion et vérifie les autorisations de l’application Meta.');
+        }
+        $missing = array_diff(self::REQUIRED_SCOPES, $permissions);
+        if ($missing) {
+            // Missing names come from our fixed scope list, never from provider text.
+            throw new PublicationException('Autorisations non confirmées par Instagram : '.implode(', ', $missing).'. Vérifie ces autorisations dans Meta puis reconnecte le compte.');
         }
         $shortToken = $this->token($short);
         $scopedId = $this->identifier($short['user_id'] ?? null);
         $long = $this->json('GET', 'https://graph.instagram.com/access_token', ['query' => [
             'grant_type' => 'ig_exchange_token', 'client_secret' => $this->clientSecret, 'access_token' => $shortToken,
-        ]]);
+        ]], 'Instagram a refusé la prolongation de l’autorisation.');
         $access = $this->token($long);
         $expires = $long['expires_in'] ?? null;
         if (!is_int($expires) || $expires < 1 || $expires > 5184000) {
@@ -137,7 +145,7 @@ final class InstagramApi
         }
         $profile = $this->record($this->json('GET', 'https://graph.instagram.com/'.$this->version.'/me', [
             'auth_bearer' => $access, 'query' => ['fields' => 'id,user_id,username,account_type'],
-        ]));
+        ], 'Instagram a refusé la lecture du profil professionnel.'));
         $type = is_string($profile['account_type'] ?? null) ? strtoupper($profile['account_type']) : '';
         $username = $profile['username'] ?? null;
         if ($this->identifier($profile['id'] ?? null) !== $scopedId || !in_array($type, ['BUSINESS', 'MEDIA_CREATOR'], true) || !is_string($username) || !preg_match('/^[A-Za-z0-9._]{1,30}$/D', $username)) {
@@ -180,18 +188,35 @@ final class InstagramApi
     }
 
     /** @param array<string, mixed> $options @return array<string, mixed> */
-    private function json(string $method, string $url, #[\SensitiveParameter] array $options): array
+    private function json(string $method, string $url, #[\SensitiveParameter] array $options, string $failureMessage = 'La connexion Instagram n’a pas abouti. Vérifie les autorisations puis réessaie.'): array
     {
+        $diagnostic = '';
         try {
             $response = $this->http->request($method, $url, $options + ['max_redirects' => 0, 'timeout' => 15, 'max_duration' => 30]);
-            if (200 !== $response->getStatusCode()) {
+            $status = $response->getStatusCode();
+            if (200 !== $status) {
+                // Only numeric metadata is allowed out of a provider error.
+                $diagnostic = ' (HTTP '.$status;
+                try {
+                    $data = $response->toArray(false);
+                    $error = is_array($data['error'] ?? null) ? $data['error'] : [];
+                    foreach (['code', 'error_subcode'] as $field) {
+                        $value = $error[$field] ?? null;
+                        if (is_int($value) && $value >= 0) {
+                            $diagnostic .= ', '.$field.' '.$value;
+                        }
+                    }
+                } catch (\Throwable) {
+                    // Malformed provider bodies are never included in the message.
+                }
+                $diagnostic .= ')';
                 throw new \RuntimeException();
             }
 
             return $response->toArray(false);
         } catch (\Throwable) {
             // Provider errors may contain secrets: never chain, log or render them.
-            throw new PublicationException('La connexion Instagram n’a pas abouti. Vérifie les autorisations puis réessaie.');
+            throw new PublicationException($failureMessage.$diagnostic);
         }
     }
 }
