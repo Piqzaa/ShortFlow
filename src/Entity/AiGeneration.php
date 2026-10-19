@@ -28,6 +28,10 @@ class AiGeneration
     private string $priceChecked;
     #[ORM\Column(length: 20)]
     private string $status = 'prepared';
+    #[ORM\Column(length: 8, options: ['default' => 'api'])]
+    private string $accessMode = 'api';
+    #[ORM\Column(length: 128, nullable: true)]
+    private ?string $accessAccount = null;
     #[ORM\Column(type: 'json')]
     private array $remote = [];
     #[ORM\Column(type: 'text', nullable: true)]
@@ -55,6 +59,32 @@ class AiGeneration
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getAccessMode(): string
+    {
+        return $this->accessMode;
+    }
+
+    public function useMcp(): void
+    {
+        if ('prepared' !== $this->status) {
+            throw new \LogicException('Le mode d’accès est déjà fixé.');
+        }
+        $this->accessMode = 'mcp';
+    }
+
+    public function bindAccessAccount(string $id): void
+    {
+        if ('prepared' !== $this->status || 'mcp' !== $this->accessMode) {
+            throw new \LogicException('Le compte facturé est déjà fixé.');
+        }
+        $this->accessAccount = $id;
+    }
+
+    public function getAccessAccount(): ?string
+    {
+        return $this->accessAccount;
     }
 
     public function getOwner(): User

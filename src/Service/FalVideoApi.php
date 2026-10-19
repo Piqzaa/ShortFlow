@@ -12,12 +12,26 @@ final class FalVideoApi
     {
     }
 
-    /** @return array<string,string> */
-    public function submit(AiGeneration $job, #[\SensitiveParameter] string $key): array
+    /** @return array<string,mixed> */
+    public function input(AiGeneration $job): array
     {
         $model = $this->catalog->model($job->getModel());
         $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
+        $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
         $payload = ['prompt' => $job->getPrompt(), 'duration' => (string) $job->getSeconds(), 'aspect_ratio' => $job->getRatio(), 'enable_safety_checker' => true];
+        $payload = array_replace($payload, $model['input'] ?? []);
+        if ('integer' === ($model['durationType'] ?? '')) {
+            $payload['duration'] = $job->getSeconds();
+        } elseif ('none' === ($model['durationType'] ?? '')) {
+            unset($payload['duration']);
+        }
+        if ($model['omitRatio'] ?? false) {
+            unset($payload['aspect_ratio']);
+        }
+        if ('seedance-25' === $job->getModel()) {
+            $payload['end_user_id'] = hash('sha256', 'vydflow-user:'.$job->getOwner()->getId());
+            unset($payload['enable_safety_checker']);
+        }
         if ('wan-25' === $job->getModel()) {
             $payload['resolution'] = '720p';
             $payload['enable_prompt_expansion'] = false;
@@ -26,13 +40,21 @@ final class FalVideoApi
             $payload['generate_audio'] = true;
             $payload['shot_type'] = 'customize';
         }
-        $data = $this->http->request('POST', 'https://queue.fal.run/'.$model['endpoint'], ['headers' => ['Authorization' => 'Key '.$key], 'json' => $payload, 'max_redirects' => 0, 'timeout' => 30, 'max_duration' => 45])->toArray();
+
+        return $payload;
+    }
+
+    /** @return array<string,string> */
+    public function submit(AiGeneration $job, #[\SensitiveParameter] string $key): array
+    {
+        $model = $this->catalog->model($job->getModel());
+        $data = $this->http->request('POST', 'https://queue.fal.run/'.$model['endpoint'], ['headers' => ['Authorization' => 'Key '.$key], 'json' => $this->input($job), 'max_redirects' => 0, 'timeout' => 30, 'max_duration' => 45])->toArray();
         $remote = [];
         foreach (['status_url', 'response_url'] as $field) {
             if (!is_string($data[$field] ?? null)) {
                 throw new \RuntimeException('Réponse fournisseur incomplète.');
             }
-            $this->assertQueueUrl($data[$field]);
+            $this->assertQueueUrl($data[$field], $job);
             $remote[$field] = $data[$field];
         }
 
@@ -43,7 +65,7 @@ final class FalVideoApi
     public function poll(AiGeneration $job, #[\SensitiveParameter] string $key): array
     {
         $remote = $job->getRemote();
-        $this->assertQueueUrl($remote['status_url']);
+        $this->assertQueueUrl($remote['status_url'], $job);
         $options = ['headers' => ['Authorization' => 'Key '.$key], 'max_redirects' => 0, 'timeout' => 20, 'max_duration' => 30];
         $status = $this->http->request('GET', $remote['status_url'], $options)->toArray();
         if (in_array($status['status'] ?? '', ['IN_QUEUE', 'IN_PROGRESS'], true)) {
@@ -52,7 +74,7 @@ final class FalVideoApi
         if ('COMPLETED' !== ($status['status'] ?? '') || isset($status['error'])) {
             throw new \RuntimeException('Le fournisseur a refusé ou interrompu la génération.');
         }
-        $this->assertQueueUrl($remote['response_url']);
+        $this->assertQueueUrl($remote['response_url'], $job);
         $result = $this->http->request('GET', $remote['response_url'], $options)->toArray();
         $url = $result['video']['url'] ?? null;
         if (!is_string($url)) {
@@ -62,9 +84,13 @@ final class FalVideoApi
         return ['ready' => true, 'url' => $url];
     }
 
-    private function assertQueueUrl(string $url): void
+    private function assertQueueUrl(string $url, AiGeneration $job): void
     {
-        if (!preg_match('~^https://queue\.fal\.run/fal-ai/(kling-video|wan-25-preview)(/[a-zA-Z0-9._/-]+)?/requests/[a-zA-Z0-9_-]+(/status|/response)?$~D', $url)) {
+        // Fal queue references use either the full endpoint or its owner/application prefix.
+        $endpoint = $this->catalog->model($job->getModel())['endpoint'];
+        $application = implode('/', array_slice(explode('/', $endpoint), 0, 2));
+        $prefix = preg_quote($application, '~');
+        if (!preg_match('~^https://queue\.fal\.run/'.$prefix.'(?:/[a-zA-Z0-9_-][a-zA-Z0-9._-]*)*/requests/[a-zA-Z0-9_-]+(?:/status|/response)?$~D', $url)) {
             throw new \RuntimeException('Adresse fournisseur invalide.');
         }
     }

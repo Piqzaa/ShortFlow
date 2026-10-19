@@ -17,6 +17,8 @@ final class AiVideoDownload
         $allowed = match ($provider) {
             'fal' => preg_match('~^https://(?:[a-z0-9-]+\.)?fal\.media/[^\s#]+$~D', $url) || preg_match('~^https://storage\.googleapis\.com/falserverless/[^\s#]+$~D', $url),
             'replicate' => preg_match('~^https://(?:[a-z0-9-]+\.)?replicate\.delivery/[^\s#]+$~D', $url),
+            // Official async API returns public/signed Google Storage URLs; never send the LTX key.
+            'ltx' => preg_match('~^https://storage\.googleapis\.com/[^\s#]+$~D', $url),
             default => false,
         };
         if (!$allowed) {

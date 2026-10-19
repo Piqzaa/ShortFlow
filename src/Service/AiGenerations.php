@@ -36,8 +36,8 @@ final class AiGenerations
         }
         $prepared = $this->owned($id, $owner) ?? throw new \RuntimeException('Génération indisponible.');
         $provider = $this->catalog->model($prepared->getModel())['provider'];
-        if ('prepared' === $prepared->getStatus() && !$this->keys->connection($owner, $provider)) {
-            throw new \RuntimeException('Ajoute ta clé '.$this->catalog->provider($provider).' avant de confirmer.');
+        if ('prepared' === $prepared->getStatus() && !$this->keys->hasAccess($owner, $provider, $prepared->getAccessMode())) {
+            throw new \RuntimeException('mcp' === $prepared->getAccessMode() ? 'Connecte ton compte Fal par navigateur avant de confirmer.' : 'Ajoute ta clé '.$this->catalog->provider($provider).' avant de confirmer.');
         }
         $this->em->wrapInTransaction(function () use ($owner, $id): void {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
@@ -47,16 +47,21 @@ final class AiGenerations
                 return;
             }
             $provider = $this->catalog->model($job->getModel())['provider'];
-            if (!$this->keys->connection($owner, $provider)) {
-                throw new \RuntimeException('Ajoute ta clé '.$this->catalog->provider($provider).' avant de confirmer.');
+            if (!$this->keys->hasAccess($owner, $provider, $job->getAccessMode())) {
+                throw new \RuntimeException('mcp' === $job->getAccessMode() ? 'Connecte ton compte Fal par navigateur avant de confirmer.' : 'Ajoute ta clé '.$this->catalog->provider($provider).' avant de confirmer.');
             }
             $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
+            $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
             if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
                 throw new \RuntimeException('Le tarif doit être revérifié. Prépare une nouvelle estimation avant de lancer.');
             }
             $active = $this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]);
             if ($active >= 3) {
                 throw new \RuntimeException('Trois générations sont déjà en cours. Attends leur résultat.');
+            }
+            if ('mcp' === $job->getAccessMode()) {
+                $credential = json_decode($this->keys->plain($owner, $provider, 'mcp'), true, 32, JSON_THROW_ON_ERROR);
+                $job->bindAccessAccount($credential['account_id']);
             }
             $job->progress('queued');
             $this->em->flush();
@@ -74,10 +79,11 @@ final class AiGenerations
             $job = $this->owned($id, $owner) ?? throw new \RuntimeException('Génération indisponible.');
             $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
             if ('waiting_key' === $job->getStatus()) {
-                if (!$confirmed || !$this->keys->connection($owner, $this->catalog->model($job->getModel())['provider'])) {
-                    throw new \RuntimeException('Ajoute la clé et confirme à nouveau le coût estimé.');
+                if (!$confirmed || !$this->keys->hasAccess($owner, $this->catalog->model($job->getModel())['provider'], $job->getAccessMode())) {
+                    throw new \RuntimeException('Rétablis l’accès au fournisseur et confirme à nouveau le coût estimé.');
                 }
                 $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
+                $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
                 if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
                     throw new \RuntimeException('Le tarif doit être revérifié avant de reprendre.');
                 }
@@ -121,16 +127,18 @@ final class AiGenerations
                 return;
             }
             try {
-                $key = $this->keys->plain($job->getOwner(), $this->catalog->model($job->getModel())['provider']);
+                $key = $this->keys->plain($job->getOwner(), $this->catalog->model($job->getModel())['provider'], $job->getAccessMode());
             } catch (\Throwable) {
-                $job->progress('queued' === $job->getStatus() ? 'waiting_key' : 'review', 'La clé de ce fournisseur est indisponible. Ajoute-la dans Connexions.');
+                $job->progress('queued' === $job->getStatus() ? 'waiting_key' : 'review', 'L’accès à ce fournisseur est indisponible. Vérifie la connexion choisie dans Connexions.');
                 $this->em->flush();
 
                 return;
             }
             if ('queued' === $job->getStatus()) {
                 try {
+                    $this->api->checkAccess($job, $key);
                     $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
+                    $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
                     if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
                         throw new \RuntimeException('Le tarif doit être revérifié avant de lancer. Prépare une nouvelle estimation.');
                     }

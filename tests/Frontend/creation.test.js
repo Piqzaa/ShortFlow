@@ -67,3 +67,38 @@ test('catalog filters combine search, provider, audio, duration and connected pr
   controller.providerTarget.value = 'replicate'; controller.filter();
   assert.equal(controller.emptyTarget.hidden, false);
 });
+
+test('tiered prices use the exact duration quote and block missing prices', () => {
+  const controller = creation();
+  controller.modelsValue.kling.pricesCents = { 5: 45, 8: 90, 10: 99 };
+  controller.durationTarget.value = '10'; controller.estimate();
+  assert.equal(controller.costTarget.textContent, 'Estimation : 0,99 $ US');
+  controller.modelsValue.kling.pricesCents = { 5: 45 }; controller.estimate();
+  assert.match(controller.costTarget.textContent, /doit être vérifié/);
+});
+
+test('native thirty second models remain searchable and preserve their duration', () => {
+  const controller = creation();
+  controller.modelsValue.long.seconds = [4, 5, 10, 15, 20, 30];
+  controller.modelsValue.long.rateMicros = 473000;
+  controller.modelTarget.value = 'long'; controller.durationTarget.value = '30';
+  controller.changeModel(); controller.minimumTarget.value = '30'; controller.filter();
+  assert.equal(controller.durationTarget.value, '30');
+  assert.equal(controller.costTarget.textContent, 'Estimation : 14,19 $ US');
+  assert.deepEqual(controller.cardTargets.filter(c => !c.hidden).map(c => c.dataset.modelId), ['long']);
+});
+
+test('resolution filter and price sort compare the same duration with exact tiered prices', () => {
+  const controller = creation();
+  controller.hasQualityTarget = true; controller.hasSortTarget = true; controller.hasGridTarget = true;
+  controller.qualityTarget = {value:'1080p'}; controller.sortTarget = {value:'price-asc'}; controller.comparisonTarget = {value:'10'};
+  controller.modelsValue.kling.quality = '1080p'; controller.modelsValue.wan.quality = '4k'; controller.modelsValue.long.quality = '1080p';
+  controller.modelsValue.long.pricesCents = {5:20,10:65};
+  const ordered = [];
+  controller.gridTarget = {append: card => ordered.push(card.dataset.modelId)};
+  controller.cardTargets.forEach(card => { card.note = {}; card.querySelector = () => card.note; });
+  controller.filter();
+  assert.deepEqual(ordered, ['long','kling','wan']);
+  assert.equal(controller.cardTargets.find(card => card.dataset.modelId === 'wan').hidden, true);
+  assert.match(controller.cardTargets.find(card => card.dataset.modelId === 'long').note.textContent, /10 s : 0,65/);
+});

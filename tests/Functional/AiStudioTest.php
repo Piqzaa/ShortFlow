@@ -5,6 +5,7 @@ namespace App\Tests\Functional;
 use App\Entity\AiGeneration;
 use App\Entity\User;
 use App\Entity\VideoAsset;
+use App\Service\AiCatalog;
 use App\Service\AiGenerations;
 use App\Service\AiKeys;
 use App\Service\PrivateVideoStorage;
@@ -67,7 +68,9 @@ final class AiStudioTest extends WebTestCase
                     throw new \RuntimeException('Synthetic network timeout');
                 }
 
-                return new MockResponse(json_encode(['status_url' => 'https://queue.fal.run/fal-ai/kling-video/requests/synthetic-id/status', 'response_url' => 'https://queue.fal.run/fal-ai/kling-video/requests/synthetic-id'], JSON_THROW_ON_ERROR));
+                $application = str_contains($url, 'wan-25') ? 'wan-25-preview' : 'kling-video';
+
+                return new MockResponse(json_encode(['status_url' => 'https://queue.fal.run/fal-ai/'.$application.'/requests/synthetic-id/status', 'response_url' => 'https://queue.fal.run/fal-ai/'.$application.'/requests/synthetic-id'], JSON_THROW_ON_ERROR));
             }
             if (str_ends_with($url, '/status')) {
                 return new MockResponse($this->waiting ? '{"status":"IN_PROGRESS"}' : '{"status":"COMPLETED"}');
@@ -607,5 +610,121 @@ final class AiStudioTest extends WebTestCase
         self::assertSame('review', $job->getStatus());
         self::assertSame(1, $this->submissions);
         self::assertSame(0, $this->em()->getRepository(VideoAsset::class)->count([]));
+    }
+
+    public function testExtendedFalFamiliesReachThePrivateLibraryWithoutDuplicateSubmissions(): void
+    {
+        $this->key();
+        $catalog = new AiCatalog();
+        $cases = [
+            ['pika-22', 5, '9:16', 20],
+            ['vidu-q1', 5, '1:1', 40],
+            ['grok-video', 1, '9:16', 7],
+            ['hailuo-02', 6, '16:9', 27],
+            ['pixverse-56', 8, '9:16', 90],
+            ['pixverse-6', 15, '9:16', 90],
+            ['seedance-25', 30, '9:16', 1419],
+        ];
+        $this->httpScenario = function (string $method, string $url, array $options): MockResponse {
+            if ('POST' === $method) {
+                ++$this->submissions;
+                self::assertContains('Authorization: Key '.self::KEY, $options['headers']);
+                $path = parse_url($url, PHP_URL_PATH);
+                $application = implode('/', array_slice(explode('/', trim($path, '/')), 0, 2));
+                $base = 'https://queue.fal.run/'.$application.'/requests/extended';
+
+                return new MockResponse(json_encode(['status_url' => $base.'/status', 'response_url' => $base], JSON_THROW_ON_ERROR));
+            }
+            if (str_ends_with($url, '/status')) {
+                return new MockResponse('{"status":"COMPLETED"}');
+            }
+            if (str_contains($url, '/requests/')) {
+                return new MockResponse('{"video":{"url":"https://v3.fal.media/extended.mp4"}}');
+            }
+            self::assertSame('https://v3.fal.media/extended.mp4', $url);
+            self::assertFalse(isset($options['normalized_headers']['authorization']));
+
+            return new MockResponse(file_get_contents(dirname(__DIR__).'/Fixtures/library-valid.mp4'));
+        };
+        foreach ($cases as [$model, $seconds, $ratio, $cents]) {
+            self::assertSame($cents, $catalog->estimate($model, $seconds));
+            $job = new AiGeneration($this->owner, 'Création '.$model, 'Un paysage', $model, $seconds, $ratio, $cents);
+            $this->em()->persist($job);
+            $this->em()->flush();
+            $id = $job->getId();
+            $this->service()->confirm($this->owner, $id);
+            $this->service()->process($id);
+            self::assertSame('processing', $job->getStatus());
+            $this->service()->process($id);
+            self::assertSame('available', $job->getStatus());
+            self::assertSame($this->owner->getId(), $job->getVideo()->getOwner()->getId());
+            $this->files[] = static::getContainer()->get(PrivateVideoStorage::class)->path($job->getVideo()->getStorageName());
+            $this->service()->process($id);
+        }
+        self::assertSame(7, $this->submissions);
+        self::assertSame(7, $this->em()->getRepository(VideoAsset::class)->count([]));
+    }
+
+    public function testThirtySecondIdeaAndMultibytePromptLimitsAreValidatedBeforeAnySpend(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => 'Une histoire de trente secondes', 'ai_idea[model]' => 'seedance-25', 'ai_idea[seconds]' => 30, 'ai_idea[ratio]' => '9:16']));
+        self::assertResponseStatusCodeSame(303);
+        $crawler = $this->client->followRedirect();
+        self::assertSelectorTextContains('.studio-heading', '30 secondes');
+        self::assertSelectorTextContains('.ai-review', '14,19 $ US');
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => str_repeat('🌲', 600), 'ai_idea[model]' => 'pixverse-6', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => '9:16']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.creation-form', '2048 octets');
+        self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testLtxFourKUsesItsOwnKeyAndReachesThePrivateLibrary(): void
+    {
+        static::getContainer()->get(AiKeys::class)->save($this->owner, 'synthetic-ltx-only-key-1234567890', 'ltx');
+        $this->httpScenario = function (string $method, string $url, array $options): MockResponse {
+            if ('POST' === $method) {
+                ++$this->submissions;
+                self::assertSame('https://api.ltx.io/v2/text-to-video', $url);
+                self::assertContains('Authorization: Bearer synthetic-ltx-only-key-1234567890', $options['headers']);
+                $input = json_decode($options['body'], true, 32, JSON_THROW_ON_ERROR);
+                self::assertSame('2160x3840', $input['resolution']);
+
+                return new MockResponse('{"id":"ltx-test"}', ['http_code' => 202]);
+            }
+            if (str_starts_with($url, 'https://api.ltx.io/')) {
+                return new MockResponse('{"status":"completed","result":{"video_url":"https://storage.googleapis.com/ltx-result/test.mp4"}}');
+            }
+            self::assertSame('https://storage.googleapis.com/ltx-result/test.mp4', $url);
+            self::assertFalse(isset($options['normalized_headers']['authorization']));
+
+            return new MockResponse(file_get_contents(dirname(__DIR__).'/Fixtures/library-valid.mp4'));
+        };
+        $job = new AiGeneration($this->owner, 'LTX 4K', 'A forest', 'ltx-25-fast-4k', 6, '9:16', 180);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $this->service()->confirm($this->owner, $job->getId());
+        $this->service()->process($job->getId());
+        $this->service()->process($job->getId());
+        self::assertSame('available', $job->getStatus());
+        $this->files[] = static::getContainer()->get(PrivateVideoStorage::class)->path($job->getVideo()->getStorageName());
+        $this->service()->process($job->getId());
+        self::assertSame(1, $this->submissions);
+    }
+
+    public function testMcpCannotBeForgedForAnotherProviderAndFourKBlocksLongDurations(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => 'A forest', 'ai_idea[model]' => 'ltx-25-fast-4k', 'ai_idea[seconds]' => 6, 'ai_idea[ratio]' => '9:16', 'ai_idea[accessMode]' => 'mcp']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.creation-form', 'Ce fournisseur utilise une clé API');
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => 'A forest', 'ai_idea[model]' => 'ltx-25-fast-4k', 'ai_idea[seconds]' => 20, 'ai_idea[ratio]' => '9:16', 'ai_idea[accessMode]' => 'api']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.creation-form', 'Cette durée n’est pas disponible');
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->submissions);
     }
 }

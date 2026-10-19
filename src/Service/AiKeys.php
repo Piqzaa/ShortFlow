@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final class AiKeys
 {
-    public function __construct(private EntityManagerInterface $em, #[Autowire(service: 'ai.vault')] private TokenVault $vault, private AiCatalog $catalog)
+    public function __construct(private EntityManagerInterface $em, #[Autowire(service: 'ai.vault')] private TokenVault $vault, private AiCatalog $catalog, private FalOAuth $falOAuth)
     {
     }
 
@@ -55,8 +55,20 @@ final class AiKeys
         });
     }
 
-    public function plain(User $owner, string $provider = 'fal'): string
+    public function hasAccess(User $owner, string $provider, string $mode): bool
     {
+        return 'mcp' === $mode ? 'fal' === $provider && null !== $this->falOAuth->connection($owner) : null !== $this->connection($owner, $provider);
+    }
+
+    public function plain(User $owner, string $provider = 'fal', string $mode = 'api'): string
+    {
+        if ('mcp' === $mode) {
+            if ('fal' !== $provider) {
+                throw new \RuntimeException('Ce fournisseur ne propose pas encore la connexion navigateur dans VydFlow.');
+            }
+
+            return $this->falOAuth->credential($owner);
+        }
         $name = $this->catalog->provider($provider);
         $connection = $this->connection($owner, $provider);
         if (!$connection) {
