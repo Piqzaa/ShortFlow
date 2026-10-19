@@ -21,6 +21,7 @@ final class AiStudioTest extends WebTestCase
     private User $owner;
     private User $other;
     private int $submissions = 0;
+    private ?\Closure $httpScenario = null;
     private bool $timeout = false;
     private bool $badUrl = false;
     private bool $badFile = false;
@@ -47,6 +48,9 @@ final class AiStudioTest extends WebTestCase
         $this->em()->flush();
         static::getContainer()->get('cache.rate_limiter')->clear();
         static::getContainer()->set('ai.http', new MockHttpClient(function (string $method, string $url, array $options): MockResponse {
+            if ($this->httpScenario) {
+                return ($this->httpScenario)($method, $url, $options);
+            }
             if ('POST' === $method) {
                 ++$this->submissions;
                 self::assertStringStartsWith('https://queue.fal.run/fal-ai/', $url);
@@ -158,7 +162,7 @@ final class AiStudioTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/ia');
         $form = $crawler->selectButton('Ajouter ma clé en gardant l’idée')->form(['ai_idea[title]' => 'Mon idée', 'ai_idea[prompt]' => 'Un paysage <privé>', 'ai_idea[model]' => 'wan-25']);
         $this->client->submit($form);
-        self::assertResponseRedirects('/studio/connexions/ia?next=idea', 303);
+        self::assertResponseRedirects('/studio/connexions/ia?next=idea&provider=fal', 303);
         $crawler = $this->client->followRedirect();
         $this->client->submit($crawler->selectButton('Enregistrer ma clé')->form(['apiKey' => self::KEY]));
         self::assertResponseRedirects('/studio/creation', 303);
@@ -432,5 +436,176 @@ final class AiStudioTest extends WebTestCase
         }
         self::assertSame('prepared', $job->getStatus());
         self::assertSame(0, $this->submissions);
+    }
+
+    public function testProviderKeysCoexistAndRemovalNeverTouchesTheOtherProvider(): void
+    {
+        $this->key();
+        $keys = static::getContainer()->get(AiKeys::class);
+        $crawler = $this->client->request('GET', '/studio/connexions/ia?provider=replicate');
+        $this->client->submit($crawler->selectButton('Enregistrer ma clé Replicate')->form(['apiKey' => 'synthetic-replicate-only-key-123456']));
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame(self::KEY, $keys->plain($this->owner));
+        self::assertSame('synthetic-replicate-only-key-123456', $keys->plain($this->owner, 'replicate'));
+        self::assertNotSame('synthetic-replicate-only-key-123456', $keys->connection($this->owner, 'replicate')->getEncryptedKey());
+        $crawler = $this->client->followRedirect();
+        self::assertStringNotContainsString('synthetic-replicate-only-key-123456', $this->client->getResponse()->getContent());
+        $this->client->submit($crawler->selectButton('Retirer ma clé Replicate')->form(['confirm' => '1']));
+        self::assertNull($keys->connection($this->owner, 'replicate'));
+        self::assertSame(self::KEY, $keys->plain($this->owner));
+        $this->client->loginUser($this->other);
+        $crawler = $this->client->request('GET', '/studio/connexions/ia');
+        self::assertSelectorNotExists('.ai-key-status');
+        $values = $crawler->selectButton('Enregistrer ma clé Replicate')->form(['apiKey' => 'synthetic-replicate-only-key-123456'])->getPhpValues();
+        $values['provider'] = 'https://untrusted.example';
+        $this->client->request('POST', '/studio/connexions/ia', $values);
+        self::assertResponseStatusCodeSame(303);
+        self::assertNull($keys->connection($this->other, 'replicate'));
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testReplicateIdeaSurvivesConnectionAndCannotUseTheFalKey(): void
+    {
+        $this->key();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Ajouter ma clé en gardant l’idée')->form(['ai_idea[prompt]' => 'Une forêt sous la pluie', 'ai_idea[model]' => 'wan-25-replicate', 'ai_idea[seconds]' => 10]));
+        self::assertResponseRedirects('/studio/connexions/ia?next=idea&provider=replicate', 303);
+        $crawler = $this->client->followRedirect();
+        self::assertSelectorTextSame('.ai-key-panel h2', 'Replicate');
+        $this->client->submit($crawler->selectButton('Enregistrer ma clé Replicate')->form(['apiKey' => 'synthetic-replicate-only-key-123456']));
+        $crawler = $this->client->followRedirect();
+        self::assertSelectorExists('option[value="wan-25-replicate"][selected]');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form());
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.studio-heading', 'Wan 2.5 · Replicate · 10 secondes');
+        self::assertSelectorTextContains('.ai-review', '1,00 $ US');
+        self::assertSelectorTextContains('.ai-confirm', 'chez Replicate');
+        $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
+        $this->owner = $this->em()->find(User::class, $this->owner->getId());
+        static::getContainer()->get(AiKeys::class)->remove($this->owner, 'replicate');
+        try {
+            $this->service()->confirm($this->owner, $job->getId());
+            self::fail('Fal key accepted for Replicate.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('Replicate', $error->getMessage());
+        }
+        self::assertSame('prepared', $job->getStatus());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testModelSpecificDurationAndRatioAreCheckedWithoutJavascript(): void
+    {
+        foreach ([['kling-25', 15, '9:16'], ['wan-25-replicate', 5, '1:1'], ['kling-3', 3, '9:16']] as [$model, $seconds, $ratio]) {
+            $crawler = $this->client->request('GET', '/studio/creation');
+            $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => 'Un plan contrôlé', 'ai_idea[model]' => $model, 'ai_idea[seconds]' => $seconds, 'ai_idea[ratio]' => $ratio]));
+            self::assertResponseStatusCodeSame('kling-3' === $model ? 303 : 422);
+        }
+        $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
+        self::assertSame('kling-3', $job->getModel());
+        self::assertSame(51, $job->getEstimatedCents());
+        self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testReplicatePollingAndSafeDownloadResumeNeverResubmit(): void
+    {
+        static::getContainer()->get(AiKeys::class)->save($this->owner, 'synthetic-replicate-only-key-123456', 'replicate');
+        $this->httpScenario = function (string $method, string $url, array $options): MockResponse {
+            if ('POST' === $method) {
+                ++$this->submissions;
+                self::assertSame('https://api.replicate.com/v1/models/wan-video/wan-2.5-t2v/predictions', $url);
+                self::assertContains('Authorization: Bearer synthetic-replicate-only-key-123456', $options['headers']);
+                $body = json_decode($options['body'], true, 32, JSON_THROW_ON_ERROR);
+                self::assertSame(['prompt' => 'Un paysage', 'duration' => 10, 'size' => '720*1280', 'enable_prompt_expansion' => false], $body['input']);
+
+                return new MockResponse('{"id":"synthetic-prediction","urls":{"get":"https://untrusted.example/credential-theft"}}');
+            }
+            if (str_starts_with($url, 'https://api.replicate.com/')) {
+                self::assertSame('https://api.replicate.com/v1/predictions/synthetic-prediction', $url);
+                self::assertContains('Authorization: Bearer synthetic-replicate-only-key-123456', $options['headers']);
+
+                return new MockResponse(json_encode(['status' => $this->waiting ? 'processing' : 'succeeded', 'output' => $this->badUrl ? 'https://replicate.delivery.evil.example/result.mp4' : 'https://tjzk.replicate.delivery/synthetic.mp4'], JSON_THROW_ON_ERROR));
+            }
+            self::assertSame('https://tjzk.replicate.delivery/synthetic.mp4', $url);
+            self::assertFalse(isset($options['normalized_headers']['authorization']));
+            self::assertSame(0, $options['max_redirects']);
+
+            return new MockResponse(file_get_contents(dirname(__DIR__).'/Fixtures/library-valid.mp4'));
+        };
+        $job = new AiGeneration($this->owner, 'Replicate', 'Un paysage', 'wan-25-replicate', 10, '9:16', 100);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $id = $job->getId();
+        $this->service()->confirm($this->owner, $id);
+        $this->service()->process($id);
+        self::assertSame(['prediction_id' => 'synthetic-prediction'], $this->reload($id)->getRemote());
+        $this->waiting = true;
+        $this->service()->process($id);
+        self::assertSame('processing', $this->reload($id)->getStatus());
+        $this->waiting = false;
+        $this->badUrl = true;
+        $this->service()->process($id);
+        self::assertSame('review', $this->reload($id)->getStatus());
+        $this->badUrl = false;
+        $this->service()->retry($this->owner, $id);
+        $this->service()->process($id);
+        self::assertSame('available', $this->reload($id)->getStatus());
+        $this->files[] = static::getContainer()->get(PrivateVideoStorage::class)->path($job->getVideo()->getStorageName());
+        $this->service()->process($id);
+        self::assertSame(1, $this->submissions);
+        self::assertSame(1, $this->em()->getRepository(VideoAsset::class)->count([]));
+    }
+
+    public function testKlingThreeUsesFifteenSecondsAndAnExplicitAudioSetting(): void
+    {
+        $this->key();
+        $this->httpScenario = function (string $method, string $url, array $options): MockResponse {
+            ++$this->submissions;
+            self::assertSame('POST', $method);
+            self::assertSame('https://queue.fal.run/fal-ai/kling-video/v3/pro/text-to-video', $url);
+            $input = json_decode($options['body'], true, 32, JSON_THROW_ON_ERROR);
+            self::assertSame('15', $input['duration']);
+            self::assertTrue($input['generate_audio']);
+            self::assertSame('customize', $input['shot_type']);
+
+            return new MockResponse('{"status_url":"https://queue.fal.run/fal-ai/kling-video/requests/kling3/status","response_url":"https://queue.fal.run/fal-ai/kling-video/requests/kling3"}');
+        };
+        $job = new AiGeneration($this->owner, 'Plan long', 'Un paysage', 'kling-3', 15, '9:16', 252);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $this->service()->confirm($this->owner, $job->getId());
+        $this->service()->process($job->getId());
+        self::assertSame('processing', $job->getStatus());
+        self::assertSame(1, $this->submissions);
+    }
+
+    public function testVeoUsesItsOwnSchemaAndTerminalFailureNeverResubmits(): void
+    {
+        static::getContainer()->get(AiKeys::class)->save($this->owner, 'synthetic-replicate-only-key-123456', 'replicate');
+        $this->httpScenario = function (string $method, string $url, array $options): MockResponse {
+            if ('POST' === $method) {
+                ++$this->submissions;
+                self::assertSame('https://api.replicate.com/v1/models/google/veo-3.1-fast/predictions', $url);
+                $input = json_decode($options['body'], true, 32, JSON_THROW_ON_ERROR)['input'];
+                self::assertSame(['prompt' => 'Un paysage', 'duration' => 8, 'aspect_ratio' => '9:16', 'resolution' => '720p', 'generate_audio' => true], $input);
+
+                return new MockResponse('{"id":"synthetic-veo"}');
+            }
+
+            return new MockResponse('{"status":"failed","error":"synthetic provider moderation"}');
+        };
+        $job = new AiGeneration($this->owner, 'Veo', 'Un paysage', 'veo-31-fast-replicate', 8, '9:16', 120);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $id = $job->getId();
+        $this->service()->confirm($this->owner, $id);
+        $this->service()->process($id);
+        $this->service()->process($id);
+        self::assertSame('review', $job->getStatus());
+        $this->service()->retry($this->owner, $id);
+        $this->service()->process($id);
+        self::assertSame('review', $job->getStatus());
+        self::assertSame(1, $this->submissions);
+        self::assertSame(0, $this->em()->getRepository(VideoAsset::class)->count([]));
     }
 }

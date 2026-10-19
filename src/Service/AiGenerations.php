@@ -15,7 +15,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiGenerations
 {
-    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private FalVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry)
+    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry)
     {
     }
 
@@ -34,8 +34,10 @@ final class AiGenerations
         if (!$this->enabled) {
             throw new \RuntimeException('Les essais de génération payants ne sont pas encore activés. Ton idée est conservée.');
         }
-        if (!$this->keys->connection($owner)) {
-            throw new \RuntimeException('Ajoute ta clé Fal avant de confirmer.');
+        $prepared = $this->owned($id, $owner) ?? throw new \RuntimeException('Génération indisponible.');
+        $provider = $this->catalog->model($prepared->getModel())['provider'];
+        if ('prepared' === $prepared->getStatus() && !$this->keys->connection($owner, $provider)) {
+            throw new \RuntimeException('Ajoute ta clé '.$this->catalog->provider($provider).' avant de confirmer.');
         }
         $this->em->wrapInTransaction(function () use ($owner, $id): void {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
@@ -44,6 +46,11 @@ final class AiGenerations
             if ('prepared' !== $job->getStatus()) {
                 return;
             }
+            $provider = $this->catalog->model($job->getModel())['provider'];
+            if (!$this->keys->connection($owner, $provider)) {
+                throw new \RuntimeException('Ajoute ta clé '.$this->catalog->provider($provider).' avant de confirmer.');
+            }
+            $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
             if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
                 throw new \RuntimeException('Le tarif doit être revérifié. Prépare une nouvelle estimation avant de lancer.');
             }
@@ -67,10 +74,11 @@ final class AiGenerations
             $job = $this->owned($id, $owner) ?? throw new \RuntimeException('Génération indisponible.');
             $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
             if ('waiting_key' === $job->getStatus()) {
-                if (!$confirmed || !$this->keys->connection($owner)) {
+                if (!$confirmed || !$this->keys->connection($owner, $this->catalog->model($job->getModel())['provider'])) {
                     throw new \RuntimeException('Ajoute la clé et confirme à nouveau le coût estimé.');
                 }
-                if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days')) {
+                $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
+                if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
                     throw new \RuntimeException('Le tarif doit être revérifié avant de reprendre.');
                 }
                 if ($this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]) >= 3) {
@@ -104,7 +112,7 @@ final class AiGenerations
             }
             $this->em->refresh($job);
             if ('submitting' === $job->getStatus()) {
-                $job->progress('review', 'Le résultat de la demande est incertain. Vérifie l’historique Fal avant tout nouvel essai : aucun renvoi automatique.');
+                $job->progress('review', 'Le résultat de la demande est incertain. Vérifie l’historique fournisseur avant tout nouvel essai : aucun renvoi automatique.');
                 $this->em->flush();
 
                 return;
@@ -113,14 +121,25 @@ final class AiGenerations
                 return;
             }
             try {
-                $key = $this->keys->plain($job->getOwner());
+                $key = $this->keys->plain($job->getOwner(), $this->catalog->model($job->getModel())['provider']);
             } catch (\Throwable) {
-                $job->progress('queued' === $job->getStatus() ? 'waiting_key' : 'review', 'La clé Fal est indisponible. Ajoute-la dans Connexions.');
+                $job->progress('queued' === $job->getStatus() ? 'waiting_key' : 'review', 'La clé de ce fournisseur est indisponible. Ajoute-la dans Connexions.');
                 $this->em->flush();
 
                 return;
             }
             if ('queued' === $job->getStatus()) {
+                try {
+                    $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
+                    if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
+                        throw new \RuntimeException('Le tarif doit être revérifié avant de lancer. Prépare une nouvelle estimation.');
+                    }
+                } catch (\InvalidArgumentException|\RuntimeException $error) {
+                    $job->progress('review', $error->getMessage());
+                    $this->em->flush();
+
+                    return;
+                }
                 // Commit this state before the billable POST. A redelivery must never submit again.
                 $job->progress('submitting');
                 $this->em->flush();
@@ -130,7 +149,7 @@ final class AiGenerations
                     $this->em->flush();
                     $this->later($id);
                 } catch (\Throwable) {
-                    $job->progress('review', 'La demande n’a pas pu être confirmée. Vérifie l’historique Fal avant de recommencer ; elle peut déjà avoir été facturée.');
+                    $job->progress('review', 'La demande n’a pas pu être confirmée. Vérifie l’historique fournisseur avant de recommencer ; elle peut déjà avoir été facturée.');
                     $this->em->flush();
                 }
 
@@ -151,7 +170,7 @@ final class AiGenerations
 
                     return;
                 }
-                $path = $this->api->download($result['url']);
+                $path = $this->api->download($job, $result['url']);
                 // The job result and imported asset commit together, including on message redelivery.
                 $this->em->wrapInTransaction(function () use ($job, $path, &$video): void {
                     $video = $this->library->import($job->getOwner(), new UploadedFile($path, 'generation.mp4', null, null, true), $job->getTitle());

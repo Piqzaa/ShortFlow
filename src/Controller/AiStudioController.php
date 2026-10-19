@@ -32,7 +32,7 @@ final class AiStudioController extends AbstractController
             if (!$limiter->create('ai-idea-'.$user->getId())->consume()->isAccepted()) {
                 $form->addError(new FormError('Trop de préparations rapprochées. Réessaie plus tard.'));
             } elseif ('connect' === $request->request->getString('intent')) {
-                return $this->redirectToRoute('app_ai_keys', ['next' => 'idea'], 303);
+                return $this->redirectToRoute('app_ai_keys', ['next' => 'idea', 'provider' => $catalog->model($data['model'])['provider']], 303);
             } else {
                 $title = trim($data['title'] ?? '');
                 if ('' === $title) {
@@ -47,7 +47,12 @@ final class AiStudioController extends AbstractController
         }
         $jobs = $em->getRepository(AiGeneration::class)->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 12);
 
-        return $this->render('ai/studio.html.twig', ['ideaForm' => $form, 'models' => AiCatalog::MODELS, 'jobs' => $jobs, 'hasKey' => null !== $keys->connection($user)], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        $connected = [];
+        foreach (AiCatalog::PROVIDERS as $id => $name) {
+            $connected[$id] = null !== $keys->connection($user, $id);
+        }
+
+        return $this->render('ai/studio.html.twig', ['ideaForm' => $form, 'models' => AiCatalog::MODELS, 'providers' => AiCatalog::PROVIDERS, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/ia/generations/{id}', name: 'app_ai_generation', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
@@ -73,7 +78,9 @@ final class AiStudioController extends AbstractController
             return $this->redirectToRoute('app_ai_generation', ['id' => $id], 303);
         }
 
-        return $this->render('ai/generation.html.twig', ['job' => $job, 'model' => $catalog->model($job->getModel()), 'enabled' => $generations->enabled(), 'hasKey' => null !== $keys->connection($user)], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        $model = $catalog->model($job->getModel());
+
+        return $this->render('ai/generation.html.twig', ['job' => $job, 'model' => $model, 'providerName' => $catalog->provider($model['provider']), 'enabled' => $generations->enabled(), 'hasKey' => null !== $keys->connection($user, $model['provider'])], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/connexions/ia', name: 'app_ai_keys', methods: ['GET', 'POST'])]
@@ -90,6 +97,8 @@ final class AiStudioController extends AbstractController
                 throw $this->createAccessDeniedException();
             }
             try {
+                $provider = $request->request->getString('provider', 'fal');
+                $name = (new AiCatalog())->provider($provider);
                 if (!$limiter->create('ai-key-'.$user->getId())->consume()->isAccepted()) {
                     throw new \InvalidArgumentException('Trop de modifications rapprochées. Réessaie plus tard.');
                 }
@@ -97,11 +106,11 @@ final class AiStudioController extends AbstractController
                     if (!$request->request->getBoolean('confirm')) {
                         throw new \InvalidArgumentException('Confirme le retrait de la clé.');
                     }
-                    $keys->remove($user);
-                    $this->addFlash('success', 'La clé Fal a été retirée de VydFlow.');
+                    $keys->remove($user, $provider);
+                    $this->addFlash('success', 'La clé '.$name.' a été retirée de VydFlow.');
                 } else {
-                    $keys->save($user, $key);
-                    $this->addFlash('success', 'Clé Fal enregistrée. Son accès sera vérifié lors du premier essai autorisé.');
+                    $keys->save($user, $key, $provider);
+                    $this->addFlash('success', 'Clé '.$name.' enregistrée. Son accès sera vérifié lors du premier essai autorisé.');
                 }
 
                 return $this->redirectToRoute('idea' === $back ? 'app_studio' : ($back ? 'app_ai_generation' : 'app_ai_keys'), $back && 'idea' !== $back ? ['id' => (int) $back] : [], 303);
@@ -114,6 +123,16 @@ final class AiStudioController extends AbstractController
             return $this->redirectToRoute('app_ai_keys', ['next' => $back], 303);
         }
 
-        return $this->render('ai/keys.html.twig', ['connection' => $keys->connection($user), 'ready' => $keys->ready(), 'back' => $back], new Response(headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'no-referrer']));
+        $connections = [];
+        foreach (AiCatalog::PROVIDERS as $id => $name) {
+            $connections[$id] = $keys->connection($user, $id);
+        }
+        $preferred = $request->query->getString('provider', 'fal');
+        $providers = AiCatalog::PROVIDERS;
+        if ('replicate' === $preferred) {
+            $providers = ['replicate' => 'Replicate', 'fal' => 'Fal'];
+        }
+
+        return $this->render('ai/keys.html.twig', ['connections' => $connections, 'providers' => $providers, 'ready' => $keys->ready(), 'back' => $back], new Response(headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'no-referrer']));
     }
 }
