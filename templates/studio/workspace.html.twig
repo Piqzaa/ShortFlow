@@ -1,7 +1,7 @@
 {% extends 'studio/base.html.twig' %}
-{% block title %}Ton studio — VydFlow{% endblock %}
+{% block title %}Mes vidéos — VydFlow{% endblock %}
 {% block studio_content %}
-<div class="workspace-heading"><div><span class="eyebrow">TON ESPACE CRÉATIF</span><h1>Ton studio.</h1><p>{{ choosing ? 'Choisis tes vidéos, ou importe une nouvelle création.' : 'Tes vidéos. La suite à préparer.' }}</p></div><div class="workspace-heading-actions"><a class="account-secondary" href="{{ path('app_ai_studio') }}">Générer une vidéo ✦</a><a class="button" href="{{ path('app_composer_start') }}">Nouvelle publication +</a></div></div>
+<div class="workspace-heading"><div><span class="eyebrow">TA BIBLIOTHÈQUE PRIVÉE</span><h1>Tes vidéos.</h1><p>{{ choosing ? 'Choisis tes vidéos, ou importe une nouvelle création.' : 'Tes vidéos. La suite à préparer.' }}</p></div><div class="workspace-heading-actions"><a class="account-secondary" href="{{ path('app_studio') }}">Ouvrir le Studio ✦</a><a class="button" href="{{ path('app_composer_start') }}">Nouvelle publication +</a></div></div>
 <div class="workspace-layout"><section class="workspace-library" aria-label="Vidéos et brouillons">
 <nav class="workspace-tabs" aria-label="Vues du studio"><a href="{{ path('app_dashboard') }}"{% if tab == 'videos' %} aria-current="page"{% endif %}>Vidéos <span>{{ usage.count }}</span></a><a href="{{ path('app_dashboard',{tab:'drafts'}) }}"{% if tab == 'drafts' %} aria-current="page"{% endif %}>Brouillons <span>{{ draftCount }}</span></a><a href="{{ path('app_activity') }}">Activité ↗</a></nav>
 {% if tab == 'videos' %}

@@ -161,7 +161,7 @@ final class AiStudioTest extends WebTestCase
         self::assertResponseRedirects('/studio/connexions/ia?next=idea', 303);
         $crawler = $this->client->followRedirect();
         $this->client->submit($crawler->selectButton('Enregistrer ma clé')->form(['apiKey' => self::KEY]));
-        self::assertResponseRedirects('/studio/ia', 303);
+        self::assertResponseRedirects('/studio/creation', 303);
         $crawler = $this->client->followRedirect();
         self::assertSelectorExists('input[name="ai_idea[title]"][value="Mon idée"]');
         self::assertSelectorTextContains('textarea', 'Un paysage <privé>');
@@ -370,6 +370,52 @@ final class AiStudioTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/connexions/ia?next=https://external.example/');
         $this->client->submit($crawler->selectButton('Remplacer ma clé')->form(['apiKey' => self::KEY]));
         self::assertResponseRedirects('/studio/connexions/ia', 303);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testStudioAndVideosHaveDistinctNavigationAndLegacyLinksStillWork(): void
+    {
+        $this->client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('h1', 'Studio.');
+        self::assertSelectorExists('.studio-sidebar nav a[href="/studio/creation"][aria-current="page"]');
+        self::assertSelectorExists('.studio-bottom-nav a[href="/studio/creation"][aria-current="page"]');
+        self::assertSelectorNotExists('.studio-sidebar nav a[href="/studio"][aria-current="page"]');
+        self::assertSelectorExists('.creation-tool-soon[aria-disabled="true"]');
+        self::assertSelectorNotExists('input[name="ai_idea[title]"][required]');
+        $this->client->request('GET', '/studio');
+        self::assertSelectorTextSame('h1', 'Tes vidéos.');
+        self::assertSelectorExists('.studio-sidebar nav a[href="/studio"][aria-current="page"]');
+        self::assertSelectorNotExists('.studio-sidebar nav a[href="/studio/creation"][aria-current="page"]');
+        $this->client->request('GET', '/studio/ia');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('h1', 'Studio.');
+        $this->client->request('GET', '/studio/connexions/ia');
+        self::assertSelectorExists('.studio-sidebar nav a[href="/studio/connexions"][aria-current="page"]');
+        self::assertSelectorNotExists('.studio-sidebar nav a[href="/studio/creation"][aria-current="page"]');
+    }
+
+    public function testIdeaCanBePreparedWithoutNamingItAndStillRequiresCostConfirmation(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => "Une scène\n  au soleil <privée>", 'ai_idea[model]' => 'kling-25', 'ai_idea[seconds]' => 10]));
+        self::assertResponseStatusCodeSame(303);
+        $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
+        self::assertSame('Une scène au soleil <privée>', $job->getTitle());
+        self::assertSame(70, $job->getEstimatedCents());
+        self::assertSame('prepared', $job->getStatus());
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('h1', 'Une scène au soleil <privée>');
+        self::assertStringNotContainsString('<privée>', $this->client->getResponse()->getContent());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testWhitespaceIdeaCannotCreateAnEmptyPreparation(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => " \n ", 'ai_idea[model]' => 'kling-25']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
         self::assertSame(0, $this->submissions);
     }
 

@@ -1,7 +1,7 @@
 {% extends 'studio/base.html.twig' %}
-{% block title %}{{ job.title }} — Studio IA{% endblock %}
+{% block title %}{{ job.title }} — Studio{% endblock %}
 {% block studio_content %}
-<a class="account-secondary" href="{{ path('app_ai_studio') }}">← Studio IA</a><div class="studio-heading"><div><span class="eyebrow">TA CRÉATION</span><h1>{{ job.title }}</h1><p>{{ model.name }} · Fal · {{ job.seconds }} secondes · {{ job.ratio }}</p></div></div>
+<a class="account-secondary" href="{{ path('app_studio') }}">← Studio</a><div class="studio-heading"><div><span class="eyebrow">TA CRÉATION</span><h1>{{ job.title }}</h1><p>{{ model.name }} · Fal · {{ job.seconds }} secondes · {{ job.ratio }}</p></div></div>
 <div class="ai-review"><section><h2>Ton idée</h2><p class="ai-prompt">{{ job.prompt }}</p><dl class="profile-facts"><div><dt>Coût estimé fournisseur</dt><dd>{{ (job.estimatedCents / 100)|number_format(2,',',' ') }} $ US</dd></div><div><dt>Tarif vérifié</dt><dd>{{ job.priceChecked|date('d/m/Y') }}</dd></div><div><dt>Audio</dt><dd>{{ model.audio ? 'Audio généré · 720p' : 'Sans audio' }}</dd></div></dl><p class="library-note">Estimation indicative hors taxes et conversion éventuelles, facturée directement par Fal. Aucun crédit VydFlow utilisé.</p><a class="account-secondary" href="https://fal.ai/models/{{ model.endpoint }}" target="_blank" rel="noopener noreferrer">Vérifier le tarif Fal ↗</a></section>
 <section class="ai-status" aria-labelledby="ai-state-title"><h2 id="ai-state-title">{{ {prepared:'Prête à être confirmée',queued:'En attente de génération',submitting:'Demande en cours',processing:'La vidéo prend forme',waiting_key:'Ajoute ta clé pour continuer',review:'Une vérification est nécessaire',available:'Ta vidéo est prête'}[job.status] }}</h2>
 {% if job.issue %}<p role="alert">{{ job.issue }}</p>{% endif %}

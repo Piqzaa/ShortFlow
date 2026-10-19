@@ -39,3 +39,6 @@ app.register('calendar', CalendarController);
 import './styles/workspace-responsive.css';
 
 import './styles/ai-studio.css';
+
+import CreationController from './controllers/creation_controller.js';
+app.register('creation', CreationController);

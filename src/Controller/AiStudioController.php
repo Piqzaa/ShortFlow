@@ -20,6 +20,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class AiStudioController extends AbstractController
 {
+    #[Route('/studio/creation', name: 'app_studio', methods: ['GET', 'POST'])]
     #[Route('/studio/ia', name: 'app_ai_studio', methods: ['GET', 'POST'])]
     public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, EntityManagerInterface $em, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
@@ -33,7 +34,11 @@ final class AiStudioController extends AbstractController
             } elseif ('connect' === $request->request->getString('intent')) {
                 return $this->redirectToRoute('app_ai_keys', ['next' => 'idea'], 303);
             } else {
-                $job = new AiGeneration($user, trim($data['title']), trim($data['prompt']), $data['model'], $data['seconds'], $data['ratio'], $catalog->estimate($data['model'], $data['seconds']));
+                $title = trim($data['title'] ?? '');
+                if ('' === $title) {
+                    $title = mb_substr(preg_replace('/\s+/u', ' ', trim($data['prompt'])), 0, 80);
+                }
+                $job = new AiGeneration($user, $title, trim($data['prompt']), $data['model'], $data['seconds'], $data['ratio'], $catalog->estimate($data['model'], $data['seconds']));
                 $em->persist($job);
                 $em->flush();
 
@@ -99,7 +104,7 @@ final class AiStudioController extends AbstractController
                     $this->addFlash('success', 'Clé Fal enregistrée. Son accès sera vérifié lors du premier essai autorisé.');
                 }
 
-                return $this->redirectToRoute('idea' === $back ? 'app_ai_studio' : ($back ? 'app_ai_generation' : 'app_ai_keys'), $back && 'idea' !== $back ? ['id' => (int) $back] : [], 303);
+                return $this->redirectToRoute('idea' === $back ? 'app_studio' : ($back ? 'app_ai_generation' : 'app_ai_keys'), $back && 'idea' !== $back ? ['id' => (int) $back] : [], 303);
             } catch (\InvalidArgumentException $error) {
                 $this->addFlash('error', $error->getMessage());
             } finally {

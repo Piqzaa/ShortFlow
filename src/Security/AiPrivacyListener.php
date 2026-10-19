@@ -16,7 +16,7 @@ final class AiPrivacyListener
     public function __invoke(RequestEvent $event): void
     {
         $request = $event->getRequest();
-        if (str_starts_with($request->getPathInfo(), '/studio/connexions/ia') || str_starts_with($event->getRequest()->getPathInfo(), '/studio/ia')) {
+        if (str_starts_with($request->getPathInfo(), '/studio/connexions/ia') || str_starts_with($request->getPathInfo(), '/studio/ia') || str_starts_with($request->getPathInfo(), '/studio/creation')) {
             $this->profiler?->disable();
             if (str_starts_with($request->getPathInfo(), '/studio/connexions/ia') && $request->isMethod('POST')) {
                 $values = $request->request->all();
