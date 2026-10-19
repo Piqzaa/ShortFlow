@@ -9,7 +9,7 @@
       <video controls playsinline preload="metadata" src="{{ path('app_video_stream', {id:job.source_id}) }}" aria-label="Aperçu de {{ job.title }}">Ton navigateur ne permet pas de lire cette vidéo.</video>
     </details>
   {% else %}<div class="publication-media publication-media-missing"><span>Source supprimée</span></div>{% endif %}
-  <div><span class="eyebrow">{{ networkName|upper }} · {{ instagram ? '@' : '' }}{{ job.account }}</span><h2>{{ job.title }}</h2><p>{{ job.created_at|date('d/m/Y à H:i') }}{% if not instagram %} · Visibilité demandée : {{ {private:'Privée',unlisted:'Non répertoriée',public:'Publique',SELF_ONLY:'Moi uniquement',PUBLIC_TO_EVERYONE:'Tout le monde',MUTUAL_FOLLOW_FRIENDS:'Amis',FOLLOWER_OF_CREATOR:'Abonnés'}[job.privacy]|default(job.privacy) }}{% else %} · Reel{% endif %}</p>
+  <div><span class="eyebrow publication-network">{% include 'shared/_network_icon.html.twig' with {network:job.network} only %}<span>{{ networkName|upper }} · {{ instagram ? '@' : '' }}{{ job.account }}</span></span><h2>{{ job.title }}</h2><p>{{ job.created_at|date('d/m/Y à H:i') }}{% if not instagram %} · Visibilité demandée : {{ {private:'Privée',unlisted:'Non répertoriée',public:'Publique',SELF_ONLY:'Moi uniquement',PUBLIC_TO_EVERYONE:'Tout le monde',MUTUAL_FOLLOW_FRIENDS:'Amis',FOLLOWER_OF_CREATOR:'Abonnés'}[job.privacy]|default(job.privacy) }}{% else %} · Reel{% endif %}</p>
     {% if job.notice %}<p class="publication-notice">{{ job.notice }}</p>{% endif %}
     {% if job.status == 'published' %}{% include 'publication/_statistics.html.twig' with {statisticsEnabled: statisticsNetworks[job.network]|default(false)} %}{% endif %}
   </div>

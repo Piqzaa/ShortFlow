@@ -272,6 +272,7 @@ final class PublicationStatisticsTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/publications');
         self::assertResponseIsSuccessful();
         self::assertSelectorCount(1, '.publication-item');
+        self::assertSelectorExists('.publication-item .publication-network .network-icon[aria-hidden="true"]');
         self::assertSelectorTextContains('.publication-statistics', 'Aucun relevé');
         self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
         $this->client->request('POST', '/studio/publications/youtube/'.$job->getId().'/statistiques', ['_token' => 'invalid']);

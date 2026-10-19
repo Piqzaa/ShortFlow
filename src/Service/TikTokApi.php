@@ -57,6 +57,17 @@ final class TikTokApi
         return $tokens + ['name' => $user['display_name']];
     }
 
+    public function profileUrl(TikTokConnection $connection): string
+    {
+        $response = $this->request('POST', '/v2/post/publish/creator_info/query/', ['auth_bearer' => $this->access($connection), 'json' => new \stdClass()]);
+        $username = $response['data']['creator_username'] ?? null;
+        if (!is_string($username) || !preg_match('/^[A-Za-z0-9._]{1,24}$/D', $username)) {
+            throw new PublicationException('TikTok n’a pas fourni le lien du profil. Réessaie plus tard.');
+        }
+
+        return 'https://www.tiktok.com/@'.$username;
+    }
+
     public function access(TikTokConnection $connection): string
     {
         if (!$this->isReady() || $connection->isExpired()) {

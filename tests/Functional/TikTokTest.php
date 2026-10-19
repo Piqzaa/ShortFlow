@@ -128,6 +128,39 @@ final class TikTokTest extends WebTestCase
         return $job;
     }
 
+    public function testProfileLinkUsesCurrentUsernameAndNeverDisplayName(): void
+    {
+        $this->connection();
+        static::getContainer()->set('tiktok.http', new MockHttpClient(function (string $method, string $url): MockResponse {
+            self::assertSame('POST', $method);
+            self::assertSame('https://open.tiktokapis.com/v2/post/publish/creator_info/query/', $url);
+
+            return $this->response(['creator_username' => 'real.handle_12']);
+        }));
+        $this->client->loginUser($this->owner);
+        $this->client->request('GET', '/studio/connexions');
+        self::assertSelectorExists('a[href="/studio/connexions/tiktok/profil"][rel="noopener noreferrer"]');
+        self::assertSelectorTextSame('title', 'Mes connexions — VydFlow');
+        self::assertSelectorCount(1, '#ai-connections-title');
+        $this->client->request('GET', '/studio/connexions/tiktok/profil');
+        self::assertResponseRedirects('https://www.tiktok.com/@real.handle_12', 303);
+        self::assertSame('no-referrer', $this->client->getResponse()->headers->get('Referrer-Policy'));
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/connexions/tiktok/profil');
+        self::assertResponseRedirects('/studio/connexions', 303);
+    }
+
+    public function testProfileLinkRejectsUnexpectedProviderUsername(): void
+    {
+        $this->connection();
+        static::getContainer()->set('tiktok.http', new MockHttpClient(fn (): MockResponse => $this->response(['creator_username' => 'evil.example/?next=bad'])));
+        $this->client->loginUser($this->owner);
+        $this->client->request('GET', '/studio/connexions/tiktok/profil');
+        self::assertResponseRedirects('/studio/connexions', 303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.account-notice.error', 'TikTok n’a pas fourni le lien du profil');
+    }
+
     /** @return iterable<string, array{bool, bool, string}> */
     public static function blockedSendingModes(): iterable
     {

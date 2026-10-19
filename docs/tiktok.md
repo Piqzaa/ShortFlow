@@ -88,3 +88,12 @@ Le propriétaire confirme que TikTok affiche le préfixe du tunnel comme vérifi
 ### Premier transfert réel réussi — 19 octobre 2026
 
 Le propriétaire confirme qu’une vidéo a été publiée depuis VydFlow sur TikTok. Une requête de lecture confirme une ligne `published`, sans lancer d’autre transfert ni collecter de statistiques. La connexion et l’envoi immédiat TikTok sont donc validés en sandbox ; un essai de programmation TikTok reste distinct. Le compte de test doit rester privé pour l’application non auditée ; la visibilité de la vidéo est choisie explicitement, sans valeur prédéfinie. Références : [règles de partage](https://developers.tiktok.com/docs/en/content-sharing-guidelines) et [informations du créateur](https://developers.tiktok.com/docs/en/content-posting-api-reference-query-creator-info).
+
+
+### Accès au profil depuis Connexions — 19 octobre 2026
+
+Le compte connecté possède désormais « Voir le profil ↗ ». `TikTokConnectionController::profile` retrouve exclusivement la connexion du propriétaire, applique un limiteur et appelle `TikTokApi::profileUrl`. Cette lecture utilise `creator_info/query` avec l’autorisation `video.publish` déjà nécessaire à l’envoi. Le `creator_username` renvoyé doit respecter le format attendu avant de construire une URL HTTPS TikTok ; le nom affiché n’est jamais pris pour un pseudo. Aucun champ supplémentaire, migration ou nouvelle autorisation OAuth. Le lien est résolu au clic pour suivre aussi les changements de pseudo, sans appel social lors du simple affichage des connexions.
+
+La redirection privée utilise `no-store` et `no-referrer`. Une absence de compte, un échec fournisseur ou un pseudo invalide ramène aux connexions avec un message, sans toucher aux autres réseaux. Tester avec un compte connecté, un autre propriétaire et une réponse fournisseur inattendue. Aucun envoi ni relevé statistique n’est déclenché par cette route.
+
+Référence : [Query Creator Info — documentation TikTok](https://developers.tiktok.com/docs/en/content-posting-api-reference-query-creator-info?enter_method=left_navigation).

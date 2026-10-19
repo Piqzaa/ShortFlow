@@ -83,6 +83,31 @@ final class TikTokConnectionController extends AbstractController
         return $this->back();
     }
 
+    #[Route('/profil', name: 'app_tiktok_profile', methods: ['GET'])]
+    public function profile(#[CurrentUser] User $user, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    {
+        $connection = $this->em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $user]);
+        if (!$connection) {
+            $this->addFlash('error', 'Connecte ton compte TikTok pour ouvrir son profil.');
+
+            return $this->back();
+        }
+        if (!$limiter->create('tiktok-profile-'.$user->getId())->consume()->isAccepted()) {
+            $this->addFlash('error', 'Trop de consultations rapprochées. Réessaie plus tard.');
+
+            return $this->back();
+        }
+        try {
+            $url = $this->lock->run((int) $user->getId(), fn (): string => $this->api->profileUrl($connection));
+
+            return new \Symfony\Component\HttpFoundation\RedirectResponse($url, 303, ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'no-referrer']);
+        } catch (PublicationException $error) {
+            $this->addFlash('error', $error->getMessage());
+
+            return $this->back();
+        }
+    }
+
     #[Route('/deconnecter', name: 'app_tiktok_disconnect', methods: ['POST'])]
     public function disconnect(Request $request, #[CurrentUser] User $user): Response
     {
