@@ -1,6 +1,6 @@
 # Studio IA BYOK — cadrage du 19 octobre 2026
 
-Statut : lot autorisé ; cadrage commencé, génération non implémentée. Le propriétaire ne choisit pas de fournisseur personnel et demande que les utilisateurs puissent choisir leurs IA et modèles vidéo. Cette décision remplace la limite antérieure « un fournisseur/un modèle ». La disponibilité de chaque modèle reste conditionnée à son API, ses accès, ses capacités et ses tests.
+Statut : premier parcours local implémenté le 19 octobre, avec API Fal simulée en tests ; essais payants désactivés. Le propriétaire ne choisit pas de fournisseur personnel et demande que les utilisateurs puissent choisir leurs IA et modèles vidéo. Cette décision remplace la limite antérieure « un fournisseur/un modèle ». La disponibilité de chaque modèle reste conditionnée à son API, ses accès, ses capacités et ses tests.
 
 ## Expérience visée
 
@@ -44,3 +44,32 @@ Tests attendus : API HTTP simulées uniquement, isolation propriétaire des clé
 - [Google : génération vidéo Veo par API](https://ai.google.dev/gemini-api/docs/veo?hl=en).
 
 Les versions et prix précis seront revérifiés à l’implémentation. Cette recherche n’a envoyé aucun prompt ni identifiant privé à ces services.
+
+
+## Première livraison locale — 19 octobre
+
+Depuis Studio → « Générer une vidéo », saisir nom, prompt et choisir Kling 2.5 Turbo Pro ou Wan 2.5 via Fal. Le formulaire propose 5/10 secondes et les formats vertical, paysage ou carré. Wan est limité à 720p dans ce lot ; Kling utilise son réglage fournisseur. Aucun choix de modèle imposé. Les tarifs indicatifs sont 0,07 USD/seconde pour Kling et 0,10 USD/seconde pour Wan à 720p, vérifiés sur les pages officielles citées ci-dessous. Un tarif de plus de 14 jours bloque un nouveau départ. Ces estimations ne garantissent ni la facture ni une limite de dépense fournisseur.
+
+Le récapitulatif enregistre l’idée sans envoi. L’ajout d’une clé peut se faire en conservant les champs du formulaire ; depuis une préparation enregistrée, le retour mène à celle-ci. La liste des douze préparations/générations les plus récentes est privée et distincte des brouillons de publication. Les modèles d’autres fournisseurs ne sont pas annoncés utilisables : l’adaptateur Replicate, image vers vidéo, catalogue large/recherche et réglages avancés restent les prochaines extensions.
+
+### Composants et exécution Symfony
+
+- `AiStudioController` expose `/studio/ia`, `/studio/ia/generations/{id}` et `/studio/connexions/ia`. Security exige ROLE_VERIFIED et la préparation est retrouvée par propriétaire, y compris sur POST. `AiIdeaType` valide modèle, durée, format et longueurs côté serveur. Les POST réussis redirigent en 303.
+- `AiCredential` conserve la clé Fal chiffrée et datée ; `AiKeys` réutilise le chiffrement sodium `TokenVault` avec une **clé de chiffrement indépendante** `AI_TOKEN_KEY`. Aucun secret ne passe dans une URL ou dans Messenger. La clé n’est pas réaffichée, et « enregistrée » ne signifie pas « authentifiée auprès de Fal ». Remplacement et retrait CSRF, confirmation explicite du retrait, limiteur de modifications.
+- `AiPrivacyListener` désactive la collecte du profiler sur les routes IA. Sur le POST de clé, il retire avant routage les corps brut et analysé contenant la clé ; une `SensitiveParameterValue` transmet celle-ci au contrôleur, qui retire aussi cet attribut. Le formulaire de clé n’utilise pas le collecteur de formulaire Symfony. Le client `ai.http` est créé sans logger/profiler, à l’image des clients OAuth existants.
+- `AiGeneration` conserve propriétaire, idée, modèle, paramètres, estimation datée, état et référence de résultat. La migration `Version20261019010000` ajoute seulement ces deux tables ; aucune donnée existante n’est effacée.
+- `AiGenerations::confirm` verrouille le propriétaire et la préparation, vérifie clé/activation/tarif et limite à trois départs simultanés. Le message `GenerateAiVideo` ne contient que l’identifiant. `GenerateAiVideoHandler` utilise la file Messenger existante `publications` et le worker Docker, sans nouveau service cloud.
+- `FalVideoApi` traduit les réglages vers les endpoints contrôlés. L’état `submitting` est enregistré **avant** le POST facturable. En cas de réponse ambiguë ou de redélivrance après coupure, passer à « À vérifier » plutôt que renvoyer. Les consultations ultérieures attendent 20 secondes ; au-delà de 45 minutes, demander une reprise explicite de la même consultation. Un refus fournisseur est présenté comme un état à vérifier, sans reprendre automatiquement la soumission.
+- Le résultat n’est téléchargé que depuis Fal Media ou le préfixe `storage.googleapis.com/falserverless/`, sans clé d’API ni redirection. Limites de temps/taille, validation `VideoProbe`, quotas et stockage privé `VideoLibrary` sont réutilisés. L’import et l’association au résultat sont une même transaction ; la redélivrance ne crée pas deux vidéos. Une erreur d’import, de domaine ou de quota propose de reprendre la récupération, sans nouvelle génération.
+- Une clé retirée avant le départ bloque celui-ci dans un état spécifique, sans requête fournisseur. Son remplacement permet une reprise avec nouvelle confirmation du coût. Une clé retirée après soumission n’annule pas l’opération chez Fal.
+- Twig et `ai-studio.css` réutilisent la navigation et les tokens du studio, avec une colonne principale pour l’idée et une colonne de modèles sur grand écran, puis une seule colonne sur téléphone. Aucun nouvel outil frontend ni dépendance ajouté.
+
+À comprendre en Symfony : le contrôleur reçoit le formulaire et prépare une réponse ; le service porte les règles ; Doctrine conserve l’état ; Messenger poursuit le travail après la réponse HTTP. Le suivi en base permet de distinguer une nouvelle demande payante d’une simple récupération du même résultat. Une vidéo disponible retourne au parcours existant de publication : **aucun envoi social automatique**.
+
+### Configuration et essais
+
+`AI_TOKEN_KEY` : clé sodium de 32 octets en base64, uniquement `.env.local` ignoré ou environnement. Une clé locale indépendante a été créée sans être affichée. La conserver avec les sauvegardes privées ; la changer rend les clés BYOK existantes illisibles. `AI_GENERATION_ENABLED=0` reste le défaut, et reste désactivé dans la configuration locale réelle. Ne pas l’activer avant un essai payant explicitement demandé avec modèle/paramètres/coût. Le bouton de confirmation est désactivé et le serveur refuse aussi un POST forgé. Une fois l’essai autorisé, recharger le cache et le worker pour prendre la configuration en compte.
+
+Tests locaux : migrations test, puis `docker compose exec -T -e SHELL_VERBOSITY=-1 php vendor/bin/phpunit tests/Functional/AiStudioTest.php`. Les clés et réponses HTTP y sont synthétiques et `AI_GENERATION_ENABLED=1` ne s’applique qu’à `shortflow_test`. Aucun fournisseur n’est contacté et aucune facture créée. Tester aussi le parcours sans clé, la conservation de l’idée, le récapitulatif, le retour à la préparation et le menu Connexions sur téléphone. Le premier essai réel, les contraintes propres au compte fournisseur et les formats réellement produits restent à valider séparément.
+
+Tarifs et schémas vérifiés : [Kling 2.5 Turbo Pro chez Fal](https://fal.ai/models/fal-ai/kling-video/v2.5-turbo/pro/text-to-video) et [schéma](https://fal.ai/models/fal-ai/kling-video/v2.5-turbo/pro/text-to-video/api) ; [Wan 2.5 chez Fal](https://fal.ai/models/fal-ai/wan-25-preview/text-to-video) et [schéma](https://fal.ai/models/fal-ai/wan-25-preview/text-to-video/api). La documentation Veo consultée indique une dépréciation prochaine de l’endpoint ; il n’a pas été intégré dans ce premier lot.
