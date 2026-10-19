@@ -78,3 +78,46 @@ Tarifs et schémas vérifiés : [Kling 2.5 Turbo Pro chez Fal](https://fal.ai/mo
 ### Évolution de l’espace de création
 
 Le 19 octobre, l’interface devient **Studio** pour accueillir à terme création et montage, et la bibliothèque devient **Vidéos**. Entrée principale : `/studio/creation`, avec compatibilité `/studio/ia`. Les retours de configuration conservent l’idée et conduisent au nouveau Studio. Nom facultatif, estimation indicative locale, comparaison repliable et aperçu de la dernière création : voir [studio-compte.md](studio-compte.md). Ces changements n’activent ni montage réel, ni séries, ni génération payante. Les règles de coût, confirmation et récupération du premier lot restent les mêmes.
+
+
+## Catalogue multi-fournisseurs — livraison du 19 octobre
+
+Objectif : choisir explicitement un modèle et le fournisseur qui le facture, avec des réglages compatibles et une clé BYOK indépendante par fournisseur. Le lot comprend recherche par nom/créateur, filtres fournisseur/audio/durée minimale et fournisseurs dont une clé est enregistrée. Une clé enregistrée reste à vérifier lors du premier essai réel. Le filtre ne remplace jamais le modèle sélectionné ; aucun basculement payant automatique.
+
+### Choix intégrés et vérification des tarifs
+
+| Modèle | Fournisseur | Durées du plan | Formats intégrés | Réglage retenu | Tarif indicatif USD/s |
+| --- | --- | --- | --- | --- | --- |
+| Kling 2.5 Turbo Pro | Fal | 5 / 10 s | 9:16, 16:9, 1:1 | Pro sans audio | 0,070 |
+| Wan 2.5 | Fal | 5 / 10 s | 9:16, 16:9, 1:1 | 720p avec audio | 0,100 |
+| Kling 3.0 Pro | Fal | 3 à 15 s, pas de 1 s | 9:16, 16:9, 1:1 | Pro avec audio, sans contrôle vocal | 0,168 |
+| Wan 2.5 | Replicate | 5 / 10 s | 9:16, 16:9 | 720p avec audio | 0,100 |
+| Veo 3.1 Fast | Replicate | 4 / 6 / 8 s | 9:16, 16:9 | 720p avec audio | 0,150 |
+
+Ces cinq choix représentent quatre modèles, pas la totalité du marché. Tous sont texte vers vidéo dans ce lot ; image vers vidéo, choix libre de résolution/audio, autres fournisseurs et synchronisation distante du catalogue ne sont pas implémentés. Les durées correspondent à un plan, pas encore à un film composé de scènes. La création complète de 30–60 secondes, le montage et les séries restent les lots suivants. Les anciens paragraphes décrivent la première livraison ; ce tableau décrit le catalogue actuel.
+
+Sources consultées le 19/10/2026 : [Kling 3 : schéma](https://fal.ai/models/fal-ai/kling-video/v3/pro/text-to-video/api) et [tarif chargé dans le Playground](https://fal.ai/models/fal-ai/kling-video/v3/pro/text-to-video), [Wan chez Replicate : formulaire, sortie JSON et tarif 720p](https://replicate.com/wan-video/wan-2.5-t2v), [Veo 3.1 Fast chez Replicate : formulaire et tarif avec audio](https://replicate.com/google/veo-3.1-fast), [prédictions asynchrones](https://replicate.com/docs/topics/predictions/create-a-prediction), [domaines et expiration des résultats](https://replicate.com/docs/topics/predictions/output-files). Kling 3 avec audio ne prend en charge que les voix chinoises/anglaises selon son schéma ; ne pas promettre des dialogues français. Les tarifs du premier lot Fal restent documentés plus haut.
+
+Les calculs utilisent des microdollars entiers, puis un arrondi supérieur au centime : 3 s de Kling 3 correspondent à une estimation de 0,51 USD et 15 s à 2,52 USD. L'arrondi est indicatif, pas une garantie de facture ou un plafond fournisseur. Aucun coût nul n'est inventé. Une estimation incompatible, modifiée ou âgée de plus de 14 jours bloque la confirmation ; un contrôle est aussi effectué par le worker avant le POST facturable.
+
+### Fichiers et rôle de chaque composant
+
+- `src/Service/AiCatalog.php` contient les schémas contrôlés, fournisseurs, capacités et tarifs. Les identifiants des choix sont durables : ne jamais réaffecter un ancien identifiant à un autre fournisseur ou schéma, pour préserver les générations enregistrées.
+- `src/Entity/AiCredential.php`, `src/Service/AiKeys.php` et la migration `Version20261019020000` permettent une clé par propriétaire/fournisseur, chiffrée avec le coffre existant. La migration associe toutes les anciennes clés à Fal sans changer leur chiffrement et préserve les générations. Le retour arrière refuse d'effacer implicitement des clés d'autres fournisseurs.
+- `src/Service/AiVideoApi.php` oriente vers les deux adaptateurs réels, `FalVideoApi` et `ReplicateVideoApi`. Aucun connecteur spéculatif pour les futurs fournisseurs.
+- `src/Service/ReplicateVideoApi.php` envoie un input Wan ou Veo explicite, sans image ni réglage externe fourni par l'utilisateur. Il conserve uniquement l'identifiant de prédiction et construit lui-même l'URL de consultation sur `api.replicate.com`. Les URL de suivi renvoyées par le fournisseur ne sont jamais utilisées avec la clé.
+- `src/Service/AiVideoDownload.php` mutualise les téléchargements bornés sans clé et sans redirection. La liste des domaines reste propre au fournisseur : Fal Media / préfixe Fal Google Storage ou `replicate.delivery` et ses sous-domaines. Les résultats Replicate expirent : une consultation tardive peut échouer, sans entraîner de nouvelle génération.
+- `src/Service/AiGenerations.php` réutilise les états et Messenger, choisit la bonne clé et recontrôle les paramètres/coûts. Les consultations et reprises ne soumettent pas une seconde génération. Les anciennes générations Fal gardent leur routage.
+- `src/Form/AiIdeaType.php` valide les combinaisons modèle/durée/format côté serveur après soumission. Sans JavaScript, le sélecteur propose l'union des durées ; un choix incompatible provoque une erreur explicite, sans envoi.
+- `src/Controller/AiStudioController.php` prépare le catalogue, les états de connexion et le récapitulatif du bon fournisseur. L'intention « Ajouter ma clé » conserve l'idée et ouvre le fournisseur choisi en premier. Les fournisseurs sont limités à la liste contrôlée ; aucun retour externe.
+- `templates/ai/{studio,keys,generation}.html.twig`, `assets/controllers/creation_controller.js` et `assets/styles/ai-studio.css` portent la présentation et l'amélioration progressive. Les filtres restent hors du formulaire de création pour ne pas déclencher l'alerte de départ. Changer de modèle conserve les valeurs compatibles et vide les valeurs incompatibles, sans en sélectionner d'autres silencieusement. Le récapitulatif précise toujours le fournisseur et le consentement au coût.
+
+### Flux et essai local
+
+1. Ouvrir Studio et explorer le catalogue, ou choisir directement dans la liste native. Saisir l'idée, puis une durée et un format compatibles.
+2. Si nécessaire, ajouter la clé du fournisseur sélectionné dans Connexions. La clé de l'autre fournisseur reste intacte, l'idée est conservée.
+3. « Voir le récapitulatif » enregistre la préparation et son estimation sans contacter de fournisseur. Vérifier le nom du fournisseur, le prix, la durée et le format.
+4. Avec le drapeau de génération désactivé, la confirmation reste bloquée dans l'interface et côté serveur. Aucun essai payant n'a été exécuté pendant ce lot.
+5. Lors d'un essai explicitement autorisé ultérieur : confirmation → file Messenger → adaptateur → consultation de la même demande → téléchargement contrôlé → sonde vidéo et bibliothèque privée. Aucune publication sociale automatique.
+
+En Symfony, un champ ChoiceType ne suffit pas à valider une combinaison de plusieurs champs : l'écouteur POST_SUBMIT ajoute les erreurs adaptées et le service recontrôle avant dépense. Une relation ManyToOne avec un index unique composé exprime « une clé par utilisateur et fournisseur » ; la migration modifie le schéma sans recréer les comptes. L'adaptateur traduit une même intention métier en deux API différentes, tandis que Messenger et la bibliothèque restent communs.
