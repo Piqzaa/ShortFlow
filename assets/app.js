@@ -37,3 +37,5 @@ import CalendarController from './controllers/calendar_controller.js';
 app.register('calendar', CalendarController);
 
 import './styles/workspace-responsive.css';
+
+import './styles/ai-studio.css';
