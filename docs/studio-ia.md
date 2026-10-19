@@ -1,6 +1,6 @@
 # Studio IA BYOK — cadrage du 19 octobre 2026
 
-Statut : premier parcours local implémenté le 19 octobre, avec API Fal simulée en tests ; essais payants désactivés. Le propriétaire ne choisit pas de fournisseur personnel et demande que les utilisateurs puissent choisir leurs IA et modèles vidéo. Cette décision remplace la limite antérieure « un fournisseur/un modèle ». La disponibilité de chaque modèle reste conditionnée à son API, ses accès, ses capacités et ses tests.
+Statut : catalogue Fal/Replicate implémenté localement, API simulées en tests et premier essai Fal réel réussi le 19 octobre ; activation payante globale désactivée après cet essai unique. Le propriétaire demande que les utilisateurs puissent choisir leurs IA et modèles vidéo, par clé API ou connexion navigateur/MCP quand disponible. Cette décision remplace la limite antérieure « un fournisseur/un modèle ». La disponibilité de chaque modèle reste conditionnée à son API, ses accès, ses capacités et ses tests. Voir l'[inventaire des fournisseurs et modes de connexion](fournisseurs-video-ia.md) et le [bilan du premier essai](ia-premier-essai.md).
 
 ## Expérience visée
 
@@ -121,3 +121,14 @@ Les calculs utilisent des microdollars entiers, puis un arrondi supérieur au ce
 5. Lors d'un essai explicitement autorisé ultérieur : confirmation → file Messenger → adaptateur → consultation de la même demande → téléchargement contrôlé → sonde vidéo et bibliothèque privée. Aucune publication sociale automatique.
 
 En Symfony, un champ ChoiceType ne suffit pas à valider une combinaison de plusieurs champs : l'écouteur POST_SUBMIT ajoute les erreurs adaptées et le service recontrôle avant dépense. Une relation ManyToOne avec un index unique composé exprime « une clé par utilisateur et fournisseur » ; la migration modifie le schéma sans recréer les comptes. L'adaptateur traduit une même intention métier en deux API différentes, tandis que Messenger et la bibliothèque restent communs.
+
+
+## Connexion Fal sans copie de clé — piste vérifiée le 19 octobre
+
+Le propriétaire signale qu'il a connecté Fal dans ChatGPT par MCP et souhaite un parcours similaire dans VydFlow. La [documentation officielle du MCP Fal](https://fal.ai/docs/documentation/setting-up/mcp) et [celle des autres clients](https://fal.ai/docs/documentation/setting-up/mcp/other-clients) confirment un relais Streamable HTTP avec OAuth et connexion navigateur sans API key. Le relais offre découverte des modèles, schémas, tarification, soumission et consultation des générations. Il ne nécessite pas en soi un agent LLM : un client applicatif peut appeler les outils pris en charge.
+
+Cette connexion appartient au client qui l'a obtenue : les accès du plugin ChatGPT ne sont pas transférés à VydFlow. Un bouton « Connecter Fal » nécessiterait que VydFlow implémente son propre client OAuth/MCP côté serveur, son retour sécurisé, le chiffrement et le renouvellement des accès. Un jeton destiné au relais MCP ne doit pas être supposé valable sur l'API REST de génération existante ; les audiences et les capacités autorisées restent à vérifier.
+
+Orientation UX à évaluer : connexion navigateur comme parcours simple, avec clé API comme alternative. Avant de remplacer le parcours actuel, vérifier l'acceptation des retours VydFlow, le renouvellement hors session pour Messenger/calendrier, les permissions et la révocation, ainsi que le compte personnel/équipe facturé. Fal documente un « Active MCP account » partagé entre les applications connectées : un changement externe de ce compte ne doit pas entraîner une dépense sur un compte inattendu. Les générations utilisent les crédits Fal et le MCP ne rend pas les modèles gratuits. Les API directes et le catalogue contrôlé restent utiles ; une connexion MCP n'active pas automatiquement tous les modèles dans VydFlow.
+
+Aucun client OAuth/MCP VydFlow ajouté dans cette étude. Le premier essai réel autorisé conserve le parcours API BYOK existant afin de vérifier le service, Messenger et la récupération privée ; aucune génération supplémentaire n'est lancée par le plugin ChatGPT.
