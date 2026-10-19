@@ -48,3 +48,12 @@ services:
         class: App\Service\TokenVault
         arguments:
             $key: '%env(TIKTOK_TOKEN_KEY)%'
+
+    ai.http:
+        class: Symfony\Contracts\HttpClient\HttpClientInterface
+        factory: ['Symfony\Component\HttpClient\HttpClient', 'create']
+
+    ai.vault:
+        class: App\Service\TokenVault
+        arguments:
+            $key: '%env(AI_TOKEN_KEY)%'
