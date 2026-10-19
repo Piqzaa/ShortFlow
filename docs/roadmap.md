@@ -18,6 +18,10 @@ Le passage à la V1 est autorisé. Comptes terminés ; lot bibliothèque autoris
 7. **Séries récurrentes** : thème, prompt, fournisseur/modèle BYOK, recette de montage, destinations et créneaux. Préparation en avance, descriptions adaptées, validation activée par défaut ; mode automatique activé explicitement selon les capacités autorisées des plateformes. Pause, limites de générations et plafond de dépense configuré. Vérifier les moyens de respecter ce plafond avec le fournisseur choisi avant activation ; une estimation seule ne garantit pas une limite de facturation.
 8. **Abonnement logiciel et lancement** : Stripe pour VydFlow uniquement, quotas, infrastructure privée adaptée, sauvegardes/restauration, exploitation, suppression de compte et données, confidentialité et documents commerciaux finalisés avant ouverture publique. Aucun prix définitif ni promesse d’IA illimitée.
 
+## Organisation du produit validée le 19 octobre
+
+Vidéos regroupe les sources et résultats ; Studio accueille la création IA et le futur montage guidé, indépendamment de l’origine de la vidéo. Séries réutilisera le parcours de production avec une fréquence, préparation en avance, limites et validation par défaut. Calendrier montre chaque occurrence ; Publications suit chaque destination ; Connexions rassemble réseaux et clés IA. Première réorganisation Vidéos/Studio implémentée ; montage et séries restent à construire dans leurs lots. Voir [studio-compte.md](studio-compte.md).
+
 ## Promesse et parcours de lancement
 
 « Importe ou génère tes vidéos courtes, prépare-les et programme leur publication sur tes réseaux depuis un seul studio. »

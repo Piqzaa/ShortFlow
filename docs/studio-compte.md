@@ -128,3 +128,24 @@ L’ancienne route `/studio/brouillons` affichait toutes les préparations, y co
 Flux Symfony : le routeur choisit la liste ; le contrôleur et le repository conservent la vérification du propriétaire ; Twig rend les mêmes données avec une présentation adaptée à la largeur. L’historique métier reste nécessaire au suivi et à l’idempotence : on filtre l’affichage au lieu de supprimer les préparations après envoi.
 
 Pour tester : ouvrir un mois avec publications sur téléphone, vérifier le nombre dans une case et ouvrir sa date ; ouvrir « Mon compte », déplier les rubriques au toucher et au clavier. Enregistrer une préparation puis la confirmer avec les API de test : elle doit quitter Brouillons et rester dans Préparations/Publications. Le test fonctionnel de régression vérifie cette séparation sans envoi réel.
+
+
+## Vidéos et Studio : deux usages distincts — 19 octobre 2026
+
+Objectif : rendre le produit cohérent avec sa chaîne import/génération → montage facultatif → préparation → publication, puis séries récurrentes. `/studio` reste la bibliothèque et porte désormais le nom **Vidéos**. Le **Studio** est directement accessible dans la navigation via `/studio/creation`. Les cinq destinations disponibles restent accessibles en permanence sur téléphone : Vidéos, Studio, Calendrier, Publications, Connexions. Les séries sont annoncées « À venir » dans la barre latérale, sans fausse action ; elles ne prennent pas un sixième emplacement mobile.
+
+Le Studio contient aujourd’hui la création IA. Le montage guidé possède un emplacement explicitement annoncé à venir et une explication ; aucune transformation ni série automatique n’est ajoutée dans ce lot. La séparation évite d’assimiler l’ensemble du Studio au seul choix des modèles. Une fois disponible, le montage doit accueillir aussi bien les vidéos importées que générées.
+
+### Fichiers, responsabilités et flux
+
+`templates/studio/shell.html.twig` partage une liste de liens entre ordinateur et mobile et calcule séparément les états actifs Vidéos/Studio/Connexions. La route historique `/studio/ia` reste utilisable ; `AiStudioController::index` reçoit aussi la nouvelle route `/studio/creation` pour réutiliser exactement le même formulaire, la sauvegarde et le moteur IA. Le retour après configuration d’une clé et les liens depuis le récapitulatif utilisent la nouvelle adresse. `AiPrivacyListener` inclut cette adresse pour maintenir la désactivation du profiler sur les idées privées.
+
+`templates/ai/studio.html.twig` place l’idée avant les réglages, replie le nom et la comparaison des modèles dans des `details` natifs, et montre la dernière création ou un état vide explicite. Si une vidéo existe, son aperçu privé est contrôlable sans lecture automatique et un lien mène au compositeur existant. Le résultat affiché est identifié comme la dernière création, pour ne pas le confondre avec un nouveau prompt en cours de saisie. `ai-studio.css` et `workspace-responsive.css` assurent les dispositions, les cinq liens tactiles et l’alignement des contrôles.
+
+`AiIdeaType` rend le nom facultatif et refuse un prompt constitué uniquement d’espaces. Si le nom manque, le contrôleur dérive un nom court du prompt, sans changer l’idée originale ni les créations existantes. Les paramètres, le coût et la confirmation restent contrôlés côté serveur.
+
+`creation_controller.js` actualise uniquement l’estimation indicative et la description audio à partir du modèle et de la durée. Il ne soumet aucun formulaire et n’effectue aucune requête fournisseur. Sans JavaScript, le formulaire et le coût serveur du récapitulatif restent disponibles ; un texte de remplacement le précise. Le garde d’édition `unsaved` existant reste attaché au formulaire. Aucun nouveau stockage, transport ou fournisseur ajouté, aucune activation de génération payante.
+
+À comprendre en Symfony : deux noms de routes peuvent mener à la même action pour conserver les anciens liens pendant une évolution du vocabulaire. Le template indique la section active ; Stimulus améliore le retour immédiat, tandis que la validation et le calcul faisant foi restent dans le formulaire et les services PHP existants.
+
+Pour tester : Vidéos → Studio dans les deux navigations, changer modèle/durée et vérifier l’estimation, préparer une idée sans nom puis vérifier le nom proposé et le coût au récapitulatif. Ouvrir les réglages et comparaisons au clavier, revenir après configuration de clé, ouvrir aussi l’ancien lien `/studio/ia`. Vérifier les états sans création, création en attente et vidéo disponible, puis le lien de préparation de publication. Montage et Séries doivent rester clairement indisponibles.
