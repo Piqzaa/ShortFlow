@@ -405,6 +405,26 @@ final class VideoLibraryTest extends WebTestCase
         $this->client->loginUser(static::getContainer()->get(UserRepository::class)->findByEmail($email));
     }
 
+    public function testPrivateDownloadUsesAttachmentAndPreservesOwnershipAndRanges(): void
+    {
+        $this->asUser('alice@example.test');
+        $video = $this->upload('tests/Fixtures/library-valid.mp4', 'Mon clip été');
+        $url = '/studio/bibliotheque/'.$video->getId().'/telecharger';
+        $this->client->request('GET', $url, server: ['HTTP_RANGE' => 'bytes=0-15']);
+        self::assertResponseStatusCodeSame(206);
+        self::assertStringStartsWith('attachment;', $this->client->getResponse()->headers->get('Content-Disposition'));
+        self::assertStringContainsString("filename*=utf-8''Mon%20clip%20%C3%A9t%C3%A9.mp4", $this->client->getResponse()->headers->get('Content-Disposition'));
+        self::assertResponseHeaderSame('Content-Type', 'video/mp4');
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        self::assertSame(16, strlen($this->client->getInternalResponse()->getContent()));
+        $this->client->request('HEAD', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSame('', $this->client->getInternalResponse()->getContent());
+        $this->asUser('bob@example.test');
+        $this->client->request('GET', $url);
+        self::assertResponseStatusCodeSame(404);
+    }
+
     private function upload(string $source, string $title = 'Ma vidéo', ?string $name = null): VideoAsset
     {
         $this->submitUpload($this->fixture($source, $name), $title);

@@ -42,3 +42,5 @@ import './styles/ai-studio.css';
 
 import CreationController from './controllers/creation_controller.js';
 app.register('creation', CreationController);
+import OptionsController from './controllers/options_controller.js';
+app.register('options', OptionsController);

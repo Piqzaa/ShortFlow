@@ -93,7 +93,8 @@ final class VideoController extends AbstractController
     }
 
     #[Route('/{id}/lecture', name: 'app_video_stream', requirements: ['id' => '\d+'], methods: ['GET', 'HEAD'])]
-    public function media(int $id, #[CurrentUser] User $user): BinaryFileResponse
+    #[Route('/{id}/telecharger', name: 'app_video_download', requirements: ['id' => '\d+'], methods: ['GET', 'HEAD'])]
+    public function media(int $id, Request $request, #[CurrentUser] User $user): BinaryFileResponse
     {
         $video = $this->owned($id, $user);
         try {
@@ -110,7 +111,14 @@ final class VideoController extends AbstractController
         $response->headers->set('Cache-Control', 'no-store, private');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
-        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, 'video-'.$id.'.'.pathinfo($video->getStorageName(), PATHINFO_EXTENSION));
+        $download = 'app_video_download' === $request->attributes->get('_route');
+        $extension = 'video/mp4' === $video->getMimeType() ? 'mp4' : 'webm';
+        $filename = 'video-'.$id.'.'.$extension;
+        if ($download) {
+            $title = trim(preg_replace('~[\x00-\x1f\x7f/\\\\]+~u', '-', $video->getTitle()), ' .-');
+            $filename = ('' === $title ? 'video-'.$id : mb_substr($title, 0, 100)).'.'.$extension;
+        }
+        $response->setContentDisposition($download ? ResponseHeaderBag::DISPOSITION_ATTACHMENT : ResponseHeaderBag::DISPOSITION_INLINE, $filename, 'video-'.$id.'.'.$extension);
 
         return $response;
     }
