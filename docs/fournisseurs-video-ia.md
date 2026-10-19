@@ -82,3 +82,7 @@ Réutiliser AiCatalog, AiGenerations, Messenger, validation du média et bibliot
 Serveurs et outils autorisés explicitement ; pas d'URL MCP arbitraire ni exécution de commandes fournies par l'utilisateur. Pour un MCP local nécessitant une clé, préférer l'API directe lorsqu'il n'apporte rien au produit. Les générations restent des appels déterministes avec consentement au coût ; aucun agent LLM supplémentaire nécessaire pour simplement appeler les outils MCP.
 
 Tests attendus lors de l'implémentation : réponses API/MCP simulées, échange/renouvellement/révocation OAuth, isolation propriétaire, compte facturé, maintien de l'idée, double clic, délai ambigu sans seconde soumission payante, perte d'accès pendant la consultation, copie privée, estimation et confirmation. Cette étude documentaire ne modifie pas le code ni les accès ; aucun test applicatif relancé.
+
+## État de livraison après le lot HD/4K
+
+Trois fournisseurs sont implémentés localement : Fal, Replicate et LTX direct, 21 configurations au total. Fal dispose aussi du client OAuth/MCP, vérifié avec HTTP simulé mais sans première autorisation réelle. Les autres fournisseurs de cet inventaire restent des candidats, sans bouton de connexion fictif. Détails : [ia-connexions-hd.md](ia-connexions-hd.md).

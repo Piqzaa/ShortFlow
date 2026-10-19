@@ -4,6 +4,8 @@ Statut : catalogue Fal/Replicate implémenté localement, API simulées en tests
 
 ## Expérience visée
 
+Extension locale du 19 octobre : **12 choix fournisseur/modèle (11 modèles)** avec Pika, Vidu, Grok, Hailuo, PixVerse 5.6/V6 et Seedance 2.5 jusqu'à 30 s natives. Guide, prix par durée, contrats API et limites dans [ia-catalogue-etendu.md](ia-catalogue-etendu.md). Les sections de premières livraisons ci-dessous restent historiques. Aucun essai réel supplémentaire ni client OAuth/MCP livré dans cette extension.
+
 Depuis le Studio, « Générer une vidéo » ouvre l’idée et un choix de modèles avec recherche, filtres texte/image vers vidéo, format vertical, durée et audio. Afficher d’abord les modèles utilisables avec les connexions de l’utilisateur ; conserver un accès au catalogue complet pris en charge. Les réglages avancés restent repliés. Aucun modèle sélectionné automatiquement en remplacement d’un autre.
 
 Le modèle et le fournisseur sont distincts : le même modèle peut être accessible chez plusieurs fournisseurs avec des tarifs et paramètres différents. Choisir un modèle affiche ses fournisseurs pris en charge, la connexion nécessaire et une estimation datée pour les paramètres retenus. Une clé Fal ne devient pas une clé Google, Runway ou Replicate. Un abonnement grand public ne prouve pas l’existence d’un accès API.
@@ -132,3 +134,7 @@ Cette connexion appartient au client qui l'a obtenue : les accès du plugin Chat
 Orientation UX à évaluer : connexion navigateur comme parcours simple, avec clé API comme alternative. Avant de remplacer le parcours actuel, vérifier l'acceptation des retours VydFlow, le renouvellement hors session pour Messenger/calendrier, les permissions et la révocation, ainsi que le compte personnel/équipe facturé. Fal documente un « Active MCP account » partagé entre les applications connectées : un changement externe de ce compte ne doit pas entraîner une dépense sur un compte inattendu. Les générations utilisent les crédits Fal et le MCP ne rend pas les modèles gratuits. Les API directes et le catalogue contrôlé restent utiles ; une connexion MCP n'active pas automatiquement tous les modèles dans VydFlow.
 
 Aucun client OAuth/MCP VydFlow ajouté dans cette étude. Le premier essai réel autorisé conserve le parcours API BYOK existant afin de vérifier le service, Messenger et la récupération privée ; aucune génération supplémentaire n'est lancée par le plugin ChatGPT.
+
+## Lot HD/4K et connexion navigateur Fal
+
+Le catalogue local couvre désormais 21 configurations et trois fournisseurs (Fal, Replicate, LTX). Téléchargement privé, filtres de résolution, prix à durée commune et client Fal OAuth/MCP : voir [ia-connexions-hd.md](ia-connexions-hd.md). Les paragraphes précédents décrivent les lots antérieurs ; les nouveaux accès et modèles sont testés avec HTTP simulé, sans nouvel essai payant. La première connexion OAuth réelle reste à valider.

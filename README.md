@@ -9,6 +9,9 @@ Le studio et l’espace personnel ont été remaniés le 18 octobre : galerie et
 Vision validée le 15 octobre 2026 : « Importe ou génère tes vidéos courtes, prépare-les et programme leur publication sur tes réseaux depuis un seul studio. » Deux parcours : vidéos importées avec montage facultatif et textes adaptés, puis publication immédiate ou calendrier ; séries IA BYOK préparées en avance avec montage, textes et programmation, validation activée par défaut ou automatisation explicitement choisie selon les possibilités des plateformes. Choix BYOK multi-fournisseurs et multi-modèles validé le 19 octobre ; quelques recettes de montage, pause et limites de générations/dépense ; aucun éditeur vidéo complet. Le calendrier ponctuel est implémenté localement ; IA, montage et séries restent à construire. Cible et étapes dans docs/roadmap.md, sans autorisation implicite de commencer les lots suivants.
 
 ## Démarrage local
+
+Catalogue IA étendu localement : **21 configurations fournisseur/modèle chez Fal, Replicate et LTX**, dont Seedance 2.5 jusqu'à 30 secondes natives ; formats, audio et estimations propres à chaque configuration. Guide et limites : [docs/ia-catalogue-etendu.md](docs/ia-catalogue-etendu.md). Nouvelles configurations HD/4K et connexion navigateur Fal OAuth/MCP testées avec API simulées ; premier accès OAuth réel encore à valider et génération payante globale désactivée. Téléchargement privé et filtres qualité/prix : [guide du lot](docs/ia-connexions-hd.md).
+
 Prérequis : Docker Desktop démarré (conteneurs Linux), Docker Compose et Git. Node local est optionnel : un conteneur outils est prévu.
 
 Depuis le dossier du projet :
