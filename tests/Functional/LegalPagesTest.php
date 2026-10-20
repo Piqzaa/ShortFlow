@@ -24,6 +24,11 @@ final class LegalPagesTest extends WebTestCase
         $client->request('GET', '/confidentialite');
         self::assertSelectorTextContains('.legal-copy', 'Instagram');
         self::assertSelectorTextContains('.legal-copy', 'purge automatique');
+        self::assertSelectorTextContains('.legal-copy', 'images de référence');
+        self::assertSelectorTextContains('.legal-copy', 'Replicate');
+        self::assertStringNotContainsString('Aucun envoi vers un fournisseur IA', $client->getResponse()->getContent());
+        $client->request('GET', '/cgu');
+        self::assertSelectorTextContains('.legal-copy', 'TikTok reste soumis aux restrictions Sandbox');
         $client->request('GET', '/cgv');
         self::assertSelectorTextContains('.legal-copy', 'Aucune commande');
         $client->request('GET', '/inscription');

@@ -1,5 +1,9 @@
 # Roadmap V1 — vision de lancement validée le 15 octobre 2026
 
+## État courant — 20 octobre 2026
+
+Le studio IA, l’image vers vidéo et le suivi sont intégrés à la bêta ; catalogue de 54 configurations, essais manuels activés localement et premier essai image réussi confirmé par le propriétaire. Lot de simplification : trois choix Fal, connexion guidée, textes de disponibilité actualisés et recherche privée dans les vidéos. Le catalogue complet reste accessible. Voir [le guide](studio-simple-recherche.md). Montage guidé, séries et abonnement restent à construire ; accès publics des plateformes à valider avant commercialisation. Les états datés ci-dessous conservent l’historique des lots et ne remplacent pas ce point courant.
+
 Lot studio/compte autorisé le 18 octobre, avant TikTok réel : navigation simplifiée, galerie/brouillons, préparation commune sur un écran, compte à onglets avec photo privée et fuseau par défaut. L’espace abonnement reste annoncé à venir, sans traitement de paiement. Voir [studio-compte.md](studio-compte.md).
 
 Historique du 18 octobre, essais réels : connexion OAuth Instagram réussie, puis premier Reel réellement publié après programmation confirmée par le propriétaire. Départ du lot à 16 h 02 heure de Paris, succès enregistré avec identifiant distant, sans échec de transfert. Le tunnel temporaire est ensuite constaté indisponible ; ce dispositif n'est pas un hébergement durable. Aucune activation réelle TikTok ajoutée. Voir `instagram-test-https.md` et `verification.md`.
