@@ -25,9 +25,11 @@ final class FalOAuthTest extends WebTestCase
     private int $registrations = 0;
     private int $submissions = 0;
     private int $refreshes = 0;
-    private string $activeAccount = 'account-one';
-    private bool $pending = false;
+    private string $activeAccount = 'auth0|account-one';
+    private string $challenge = '';
+    private int $exchanges = 0;
     private bool $revoked = false;
+    private bool $registrationRejected = false;
     /** @var list<string> */ private array $files = [];
 
     protected function setUp(): void
@@ -51,16 +53,18 @@ final class FalOAuthTest extends WebTestCase
                 return $this->json(['resource' => FalMcpClient::RESOURCE, 'authorization_servers' => ['https://authkit.fal.ai']]);
             }
             if (str_contains($url, 'oauth-authorization-server')) {
-                return $this->json(['issuer' => 'https://authkit.fal.ai', 'device_authorization_endpoint' => 'https://authkit.fal.ai/oauth2/device_authorization', 'registration_endpoint' => 'https://authkit.fal.ai/oauth2/register', 'token_endpoint' => 'https://authkit.fal.ai/oauth2/token']);
+                return $this->json(['issuer' => 'https://authkit.fal.ai', 'authorization_endpoint' => 'https://authkit.fal.ai/oauth2/authorize', 'code_challenge_methods_supported' => ['S256'], 'registration_endpoint' => 'https://authkit.fal.ai/oauth2/register', 'token_endpoint' => 'https://authkit.fal.ai/oauth2/token']);
             }
             if (str_ends_with($url, '/oauth2/register')) {
                 ++$this->registrations;
                 self::assertSame('none', json_decode($options['body'], true)['token_endpoint_auth_method']);
+                self::assertSame(['code'], json_decode($options['body'], true)['response_types']);
+                self::assertSame(['http://localhost/studio/connexions/ia/fal/retour'], json_decode($options['body'], true)['redirect_uris']);
+                if ($this->registrationRejected) {
+                    return $this->json(['error' => 'invalid_client_metadata', 'error_description' => 'private-provider-details'], 400);
+                }
 
                 return $this->json(['client_id' => 'synthetic-client']);
-            }
-            if (str_ends_with($url, '/device_authorization')) {
-                return $this->json(['device_code' => 'private-device-secret', 'user_code' => 'ABCD-EFGH', 'verification_uri' => 'https://authkit.fal.ai/activate', 'expires_in' => 600, 'interval' => 5]);
             }
             if (str_ends_with($url, '/oauth2/token')) {
                 parse_str($options['body'], $body);
@@ -71,8 +75,12 @@ final class FalOAuthTest extends WebTestCase
                     if ($this->revoked) {
                         return $this->json(['error' => 'invalid_grant'], 400);
                     }
-                } elseif ($this->pending) {
-                    return $this->json(['error' => 'authorization_pending'], 400);
+                } else {
+                    ++$this->exchanges;
+                    self::assertSame('authorization_code', $body['grant_type']);
+                    self::assertSame('synthetic-authorization-code', $body['code']);
+                    self::assertSame($this->challenge, rtrim(strtr(base64_encode(hash('sha256', $body['code_verifier'], true)), '+/', '-_'), '='));
+                    self::assertSame('http://localhost/studio/connexions/ia/fal/retour', $body['redirect_uri']);
                 }
 
                 return $this->json(['access_token' => 'private-access-secret', 'refresh_token' => 'private-refresh-secret', 'expires_in' => 3600, 'token_type' => 'Bearer']);
@@ -135,11 +143,16 @@ final class FalOAuthTest extends WebTestCase
     {
         $crawler = $this->client->request('GET', '/studio/connexions/ia/fal');
         $this->client->submit($crawler->selectButton('Connecter mon compte Fal')->form());
-        $crawler = $this->client->followRedirect();
-        self::assertSelectorTextContains('.ai-device-code', 'ABCD-EFGH');
-        self::assertStringNotContainsString('private-device-secret', $this->client->getResponse()->getContent());
-        self::assertStringNotContainsString('private-device-secret', $this->client->getRequest()->getSession()->get('fal_oauth'));
-        $this->client->submit($crawler->selectButton('J’ai autorisé, vérifier la connexion')->form());
+        $url = $this->client->getResponse()->headers->get('Location');
+        self::assertStringStartsWith('https://authkit.fal.ai/oauth2/authorize?', $url);
+        parse_str(parse_url($url, PHP_URL_QUERY), $params);
+        self::assertSame('S256', $params['code_challenge_method']);
+        $this->challenge = $params['code_challenge'];
+        $encrypted = $this->client->getRequest()->getSession()->get('fal_oauth');
+        self::assertStringNotContainsString($params['state'], $encrypted);
+        $this->client->request('GET', '/studio/connexions/ia/fal/retour', ['code' => 'synthetic-authorization-code', 'state' => $params['state']]);
+        self::assertFalse($this->client->getRequest()->query->has('code'));
+        self::assertStringNotContainsString('synthetic-authorization-code', $this->client->getRequest()->getUri());
         self::assertResponseRedirects('/studio/connexions/ia', 303);
         $this->client->followRedirect();
         $this->owner = $this->em()->find(User::class, $this->owner->getId());
@@ -161,6 +174,17 @@ final class FalOAuthTest extends WebTestCase
         self::assertSame(0, $this->submissions);
     }
 
+    public function testRegistrationRejectionIdentifiesTheStageWithoutExposingProviderDetails(): void
+    {
+        $this->registrationRejected = true;
+        $crawler = $this->client->request('GET', '/studio/connexions/ia/fal');
+        $this->client->submit($crawler->selectButton('Connecter mon compte Fal')->form());
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'déclaration de VydFlow refusée (HTTP 400 · invalid_client_metadata)');
+        self::assertStringNotContainsString('private-provider-details', $this->client->getResponse()->getContent());
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testMcpRefreshAndPrivateImportKeepTheOriginalReceiptAndNeverResubmit(): void
     {
         $this->connect();
@@ -168,7 +192,7 @@ final class FalOAuthTest extends WebTestCase
         $job = $this->job();
         $generations = static::getContainer()->get(AiGenerations::class);
         $generations->confirm($this->owner, $job->getId());
-        self::assertSame('account-one', $job->getAccessAccount());
+        self::assertSame('auth0|account-one', $job->getAccessAccount());
         self::assertSame(1, $this->refreshes);
         $generations->process($job->getId());
         self::assertSame('processing', $job->getStatus());
@@ -208,6 +232,20 @@ final class FalOAuthTest extends WebTestCase
         self::assertSame('waiting_key', $job->getStatus());
         self::assertTrue($this->em()->isOpen());
         self::assertSame(0, $this->submissions);
+    }
+
+    public function testInvalidOrReplayedCallbackNeverExchangesTokens(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/connexions/ia/fal');
+        $this->client->submit($crawler->selectButton('Connecter mon compte Fal')->form());
+        parse_str(parse_url($this->client->getResponse()->headers->get('Location'), PHP_URL_QUERY), $params);
+        $this->client->request('GET', '/studio/connexions/ia/fal/retour', ['code' => 'synthetic-authorization-code', 'state' => 'forged-state']);
+        self::assertSame(0, $this->exchanges);
+        $this->challenge = $params['code_challenge'];
+        $this->client->request('GET', '/studio/connexions/ia/fal/retour', ['code' => 'synthetic-authorization-code', 'state' => $params['state']]);
+        self::assertSame(1, $this->exchanges);
+        $this->client->request('GET', '/studio/connexions/ia/fal/retour', ['code' => 'synthetic-authorization-code', 'state' => $params['state']]);
+        self::assertSame(1, $this->exchanges);
     }
 
     private function job(): AiGeneration

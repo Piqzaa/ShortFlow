@@ -171,15 +171,13 @@ final class AiStudioController extends AbstractController
                     $this->addFlash('success', 'La connexion navigateur Fal a été retirée de VydFlow. Ta clé API reste conservée.');
                 } elseif ('cancel' === $intent) {
                     $session->remove('fal_oauth');
-                } elseif ('check' === $intent) {
-                    if ($oauth->finish($user, $session)) {
-                        $this->addFlash('success', 'Fal est connecté sans copie de clé API. Choisis la connexion navigateur dans le Studio pour l’utiliser.');
-
-                        return $this->redirectToRoute('idea' === $back ? 'app_studio' : ($back ? 'app_ai_generation' : 'app_ai_keys'), $back && 'idea' !== $back ? ['id' => (int) $back] : [], 303);
-                    }
-                    $this->addFlash('notice', 'L’autorisation est encore en attente chez Fal. Termine-la puis vérifie à nouveau.');
                 } elseif ('start' === $intent) {
-                    $oauth->begin($user, $session);
+                    $url = $oauth->begin($user, $session, $this->generateUrl('app_ai_fal_callback', [], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL), $back);
+                    $response = $this->redirect($url, 303);
+                    $response->headers->set('Cache-Control', 'private, no-store');
+                    $response->headers->set('Referrer-Policy', 'no-referrer');
+
+                    return $response;
                 }
             } catch (\Throwable $error) {
                 $this->addFlash('error', \RuntimeException::class === $error::class ? $error->getMessage() : 'La connexion Fal n’a pas abouti. Vérifie l’autorisation et le compte MCP actif chez Fal. Aucun nouvel envoi de vidéo n’a été demandé.');
@@ -187,9 +185,27 @@ final class AiStudioController extends AbstractController
 
             return $this->redirectToRoute('app_ai_fal_connect', ['next' => $back], 303);
         }
-        $pending = $oauth->pending($user, $session);
-        $public = $pending ? ['code' => $pending['user_code'], 'uri' => $pending['uri']] : null;
 
-        return $this->render('ai/fal_connect.html.twig', ['pending' => $public, 'connected' => null !== $oauth->connection($user), 'back' => $back], new Response(headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'no-referrer']));
+        return $this->render('ai/fal_connect.html.twig', ['connected' => null !== $oauth->connection($user), 'back' => $back], new Response(headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'no-referrer']));
+    }
+
+    #[Route('/studio/connexions/ia/fal/retour', name: 'app_ai_fal_callback', methods: ['GET'])]
+    public function falCallback(Request $request, #[CurrentUser] User $user, FalOAuth $oauth): Response
+    {
+        $back = '';
+        $callback = $request->attributes->get('_fal_callback');
+        $request->attributes->remove('_fal_callback');
+        $values = $callback instanceof \SensitiveParameterValue ? $callback->getValue() : ['code' => '', 'state' => '', 'denied' => true];
+        try {
+            $back = $oauth->finish($user, $request->getSession(), $values['code'], $values['state'], $values['denied']);
+            $this->addFlash('success', 'Fal est connecté. Choisis la connexion navigateur dans le Studio pour l’utiliser.');
+        } catch (\Throwable $error) {
+            $this->addFlash('error', \RuntimeException::class === $error::class ? $error->getMessage() : 'Le retour Fal n’a pas abouti. Recommence depuis Connexions.');
+        }
+        $response = $this->redirectToRoute('idea' === $back ? 'app_studio' : ($back ? 'app_ai_generation' : 'app_ai_keys'), $back && 'idea' !== $back ? ['id' => (int) $back] : [], 303);
+        $response->headers->set('Cache-Control', 'private, no-store');
+        $response->headers->set('Referrer-Policy', 'no-referrer');
+
+        return $response;
     }
 }

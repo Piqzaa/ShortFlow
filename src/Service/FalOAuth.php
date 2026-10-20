@@ -42,56 +42,42 @@ final class FalOAuth
         return null;
     }
 
-    public function begin(User $owner, SessionInterface $session): void
+    public function begin(User $owner, SessionInterface $session, string $redirectUri, string $back = ''): string
     {
         if (!$this->vault->isReady()) {
             throw new \RuntimeException('Le stockage sécurisé des accès IA attend sa configuration.');
         }
-        if ($this->pending($owner, $session)) {
-            return;
-        }
-        $resource = $this->http->request('GET', 'https://mcp.fal.ai/.well-known/oauth-protected-resource/mcp-relay', $this->options())->toArray();
-        $metadata = $this->http->request('GET', self::AUTH.'/.well-known/oauth-authorization-server', $this->options())->toArray();
-        if (($resource['resource'] ?? '') !== FalMcpClient::RESOURCE || !in_array(self::AUTH, $resource['authorization_servers'] ?? [], true) || ($metadata['issuer'] ?? '') !== self::AUTH || ($metadata['device_authorization_endpoint'] ?? '') !== self::AUTH.'/oauth2/device_authorization' || ($metadata['registration_endpoint'] ?? '') !== self::AUTH.'/oauth2/register' || ($metadata['token_endpoint'] ?? '') !== self::AUTH.'/oauth2/token') {
+        $session->remove('fal_oauth');
+        $resource = $this->json('GET', 'https://mcp.fal.ai/.well-known/oauth-protected-resource/mcp-relay', [], 'découverte du service');
+        $metadata = $this->json('GET', self::AUTH.'/.well-known/oauth-authorization-server', [], 'découverte OAuth');
+        if (($resource['resource'] ?? '') !== FalMcpClient::RESOURCE || !in_array(self::AUTH, $resource['authorization_servers'] ?? [], true) || ($metadata['issuer'] ?? '') !== self::AUTH || ($metadata['authorization_endpoint'] ?? '') !== self::AUTH.'/oauth2/authorize' || ($metadata['registration_endpoint'] ?? '') !== self::AUTH.'/oauth2/register' || ($metadata['token_endpoint'] ?? '') !== self::AUTH.'/oauth2/token' || !in_array('S256', $metadata['code_challenge_methods_supported'] ?? [], true)) {
             throw new \RuntimeException('La configuration OAuth Fal a changé. La connexion doit être revérifiée.');
         }
-        $client = $this->http->request('POST', self::AUTH.'/oauth2/register', [...$this->options(), 'json' => ['client_name' => 'VydFlow', 'token_endpoint_auth_method' => 'none', 'grant_types' => ['urn:ietf:params:oauth:grant-type:device_code', 'refresh_token'], 'response_types' => []]])->toArray();
+        $client = $this->json('POST', self::AUTH.'/oauth2/register', ['json' => ['client_name' => 'VydFlow', 'token_endpoint_auth_method' => 'none', 'grant_types' => ['authorization_code', 'refresh_token'], 'response_types' => ['code'], 'redirect_uris' => [$redirectUri]]], 'déclaration de VydFlow');
         $clientId = $client['client_id'] ?? null;
         if (!is_string($clientId) || '' === $clientId || isset($client['client_secret'])) {
             throw new \RuntimeException('Fal n’a pas accepté la connexion publique de VydFlow.');
         }
-        $device = $this->http->request('POST', self::AUTH.'/oauth2/device_authorization', [...$this->options(), 'body' => ['client_id' => $clientId, 'scope' => 'openid profile offline_access', 'resource' => FalMcpClient::RESOURCE]])->toArray();
-        $uri = $device['verification_uri'] ?? '';
-        if (!is_string($device['device_code'] ?? null) || !is_string($device['user_code'] ?? null) || !is_string($uri) || !preg_match('~^https://(?:(?:authkit|auth|www)\.)?fal\.ai/[^\s#]*$~D', $uri) || !is_numeric($device['expires_in'] ?? null)) {
-            throw new \RuntimeException('Fal n’a pas renvoyé une autorisation exploitable.');
-        }
-        $data = ['owner' => $owner->getId(), 'client_id' => $clientId, 'device_code' => $device['device_code'], 'user_code' => mb_substr($device['user_code'], 0, 40), 'uri' => $uri, 'expires' => time() + min(1800, max(1, (int) $device['expires_in'])), 'interval' => max(5, min(60, (int) ($device['interval'] ?? 5))), 'next' => time()];
-        $session->set('fal_oauth', $this->vault->encrypt(json_encode($data, JSON_THROW_ON_ERROR)));
+        $verifier = bin2hex(random_bytes(32));
+        $state = bin2hex(random_bytes(32));
+        $pending = ['flow' => 'browser', 'owner' => $owner->getId(), 'client_id' => $clientId, 'verifier' => $verifier, 'state' => $state, 'redirect_uri' => $redirectUri, 'back' => $back, 'expires' => time() + 600];
+        $session->set('fal_oauth', $this->vault->encrypt(json_encode($pending, JSON_THROW_ON_ERROR)));
+
+        return self::AUTH.'/oauth2/authorize?'.http_build_query(['response_type' => 'code', 'client_id' => $clientId, 'redirect_uri' => $redirectUri, 'scope' => 'openid profile offline_access', 'resource' => FalMcpClient::RESOURCE, 'state' => $state, 'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='), 'code_challenge_method' => 'S256'], '', '&', PHP_QUERY_RFC3986);
     }
 
-    public function finish(User $owner, SessionInterface $session): bool
+    public function finish(User $owner, SessionInterface $session, #[\SensitiveParameter] string $code, string $state, bool $denied = false): string
     {
-        $pending = $this->pending($owner, $session) ?? throw new \RuntimeException('La connexion Fal a expiré. Recommence.');
-        if ($pending['next'] > time()) {
-            throw new \RuntimeException('Attends quelques secondes avant de vérifier à nouveau.');
+        $pending = $this->pending($owner, $session);
+        if (!$pending || 'browser' !== ($pending['flow'] ?? '') || !hash_equals($pending['state'] ?? '', $state) || '' === $state) {
+            throw new \RuntimeException('La connexion Fal a expiré ou son retour est invalide. Recommence depuis VydFlow, avec la même adresse.');
         }
-        $pending['next'] = time() + $pending['interval'];
-        $session->set('fal_oauth', $this->vault->encrypt(json_encode($pending, JSON_THROW_ON_ERROR)));
-        $response = $this->http->request('POST', self::AUTH.'/oauth2/token', [...$this->options(), 'body' => ['grant_type' => 'urn:ietf:params:oauth:grant-type:device_code', 'device_code' => $pending['device_code'], 'client_id' => $pending['client_id'], 'resource' => FalMcpClient::RESOURCE]]);
-        $data = $response->toArray(false);
-        if (in_array($data['error'] ?? '', ['authorization_pending', 'slow_down'], true)) {
-            if ('slow_down' === $data['error']) {
-                $pending['interval'] = min(60, $pending['interval'] + 5);
-                $pending['next'] = time() + $pending['interval'];
-                $session->set('fal_oauth', $this->vault->encrypt(json_encode($pending, JSON_THROW_ON_ERROR)));
-            }
-
-            return false;
+        // Consume before exchange: callbacks cannot replay a billable or credential operation.
+        $session->remove('fal_oauth');
+        if ($denied || '' === $code) {
+            throw new \RuntimeException('L’autorisation Fal a été annulée ou refusée. Ta clé API existante reste disponible.');
         }
-        if (200 !== $response->getStatusCode()) {
-            $session->remove('fal_oauth');
-            throw new \RuntimeException('L’autorisation Fal a été refusée ou a expiré. Recommence.');
-        }
+        $data = $this->json('POST', self::AUTH.'/oauth2/token', ['body' => ['grant_type' => 'authorization_code', 'code' => $code, 'code_verifier' => $pending['verifier'], 'client_id' => $pending['client_id'], 'redirect_uri' => $pending['redirect_uri'], 'resource' => FalMcpClient::RESOURCE]], 'échange de l’autorisation');
         $bundle = $this->tokens($data, $pending['client_id']);
         $account = $this->account($this->mcp->call($bundle['access_token'], 'check_account_status'));
         $bundle['account_id'] = $account;
@@ -105,9 +91,8 @@ final class FalOAuth
                 $this->em->persist(new AiCredential($owner, $encrypted, 'fal-mcp'));
             }
         });
-        $session->remove('fal_oauth');
 
-        return true;
+        return $pending['back'];
     }
 
     /** @return array<string,mixed> */
@@ -157,8 +142,12 @@ final class FalOAuth
     public function account(array $data): string
     {
         $id = $data['account_id'] ?? $data['account']['id'] ?? $data['account']['account_id'] ?? null;
-        if ('ready' !== ($data['status'] ?? '') || !is_string($id) || !preg_match('/^[a-zA-Z0-9_-]{1,128}$/D', $id)) {
+        if ('ready' !== ($data['status'] ?? '')) {
             throw new \RuntimeException('Fal doit confirmer le compte actif et ses accès avant de connecter VydFlow. Vérifie les crédits et le compte MCP actif chez Fal.');
+        }
+        // Provider identity is opaque (personal IDs may contain "|"). Never use it as a URL/path.
+        if (!is_string($id) || !preg_match('/^[\x21-\x7e]{1,128}$/D', $id)) {
+            throw new \RuntimeException('Fal a autorisé l’accès, mais son identifiant de compte n’est pas reconnu par VydFlow.');
         }
 
         return $id;
@@ -177,5 +166,24 @@ final class FalOAuth
     private function options(): array
     {
         return ['max_redirects' => 0, 'timeout' => 20, 'max_duration' => 30];
+    }
+
+    /** @param array<string,mixed> $options @return array<string,mixed> */
+    private function json(string $method, string $url, array $options, string $stage): array
+    {
+        try {
+            $response = $this->http->request($method, $url, $options + $this->options());
+            $status = $response->getStatusCode();
+            $data = $response->toArray(false);
+        } catch (\Throwable) {
+            throw new \RuntimeException('Connexion Fal : '.$stage.' impossible. Réessaie dans quelques instants.');
+        }
+        if ($status < 200 || $status >= 300) {
+            // Do not expose provider bodies, tokens or arbitrary error descriptions in flashes/logs.
+            $code = in_array($data['error'] ?? '', ['invalid_client_metadata', 'invalid_client', 'invalid_scope', 'unauthorized_client', 'access_denied'], true) ? ' · '.$data['error'] : '';
+            throw new \RuntimeException('Connexion Fal : '.$stage.' refusée (HTTP '.$status.$code.').');
+        }
+
+        return $data;
     }
 }

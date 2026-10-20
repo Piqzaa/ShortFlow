@@ -18,6 +18,15 @@ final class AiPrivacyListener
         $request = $event->getRequest();
         if (str_starts_with($request->getPathInfo(), '/studio/connexions/ia') || str_starts_with($request->getPathInfo(), '/studio/ia') || str_starts_with($request->getPathInfo(), '/studio/creation')) {
             $this->profiler?->disable();
+            if ('/studio/connexions/ia/fal/retour' === $request->getPathInfo()) {
+                $query = $request->query->all();
+                $callback = ['code' => is_string($query['code'] ?? null) ? $query['code'] : '', 'state' => is_string($query['state'] ?? null) ? $query['state'] : '', 'denied' => isset($query['error'])];
+                $server = $request->server->all();
+                $server['QUERY_STRING'] = '';
+                $server['REQUEST_URI'] = $request->getPathInfo();
+                $request->initialize([], $request->request->all(), $request->attributes->all(), $request->cookies->all(), $request->files->all(), $server, '');
+                $request->attributes->set('_fal_callback', new \SensitiveParameterValue($callback));
+            }
             if (str_starts_with($request->getPathInfo(), '/studio/connexions/ia') && $request->isMethod('POST')) {
                 $values = $request->request->all();
                 $key = is_string($values['apiKey'] ?? null) ? $values['apiKey'] : '';

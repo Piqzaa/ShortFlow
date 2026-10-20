@@ -5,14 +5,9 @@
 <div class="studio-heading"><div><span class="eyebrow">TON COMPTE FOURNISSEUR</span><h1>Connecter Fal.</h1><p>Autorise VydFlow chez Fal, sans copier de clé API.</p></div></div>
 <section class="ai-key-panel">
 {% if connected %}<p class="ai-key-status">Connexion navigateur enregistrée.</p>{% endif %}
-{% if pending %}
-<h2>Autorise la connexion chez Fal</h2><p>Ouvre Fal et saisis ce code uniquement sur sa page d’autorisation :</p><p class="ai-device-code"><strong>{{ pending.code }}</strong></p>
-<a class="button" href="{{ pending.uri }}" target="_blank" rel="noopener noreferrer">Ouvrir Fal pour autoriser ↗</a>
-<form method="post" class="account-form"><input type="hidden" name="_token" value="{{ csrf_token('fal_mcp') }}"><button class="button" name="intent" value="check">J’ai autorisé, vérifier la connexion</button><button class="account-secondary" name="intent" value="cancel">Annuler</button></form>
-{% else %}
 <p>Fal utilise les crédits de ton compte MCP actif, commun à tes applications connectées. Vérifie ce compte chez Fal avant de lancer une vidéo. VydFlow ne change pas ce réglage.</p>
 <form method="post" class="account-form"><input type="hidden" name="_token" value="{{ csrf_token('fal_mcp') }}"><button class="button" name="intent" value="start">{{ connected ? 'Reconnecter mon compte Fal' : 'Connecter mon compte Fal' }}</button></form>
-{% endif %}
+<p class="library-note">Tu seras redirigé vers Fal pour autoriser VydFlow, puis ramené ici automatiquement. Aucun code d’appareil à saisir.</p>
 <p class="library-note">Cette étape autorise l’accès et le suivi en arrière-plan. Elle ne génère aucune vidéo. Ta clé API Fal existante est conservée ; tu choisis le mode d’accès dans le Studio.</p>
 {% if connected %}<form method="post" class="account-form"><input type="hidden" name="_token" value="{{ csrf_token('fal_mcp') }}"><label><input type="checkbox" name="confirm" value="1" required> Déconnecter cet accès navigateur de VydFlow.</label><button class="account-secondary" name="intent" value="remove">Déconnecter Fal de VydFlow</button><p class="library-note">Une génération déjà transmise continue chez Fal. Pour révoquer l’autorisation chez le fournisseur, utilise les connexions de ton compte Fal.</p></form>{% endif %}
 </section>
