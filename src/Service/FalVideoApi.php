@@ -28,7 +28,7 @@ final class FalVideoApi
         if ($model['omitRatio'] ?? false) {
             unset($payload['aspect_ratio']);
         }
-        if ('seedance-25' === $job->getModel()) {
+        if (str_starts_with($model['endpoint'], 'bytedance/seedance-2.5/')) {
             $payload['end_user_id'] = hash('sha256', 'vydflow-user:'.$job->getOwner()->getId());
             unset($payload['enable_safety_checker']);
         }
@@ -41,8 +41,27 @@ final class FalVideoApi
             $payload['shot_type'] = 'customize';
         }
 
+        if ($model['omitSafety'] ?? false) {
+            unset($payload['enable_safety_checker']);
+        }
         if ($model['image'] ?? false) {
-            $payload['image_url'] = $this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '');
+            $first = $this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '', $job->getRatio(), $job->getImageFit());
+            $endName = $job->getEndReferenceImage();
+            if (($model['requiresEnd'] ?? false) && null === $endName) {
+                throw new \RuntimeException('Ce modèle nécessite une image de fin.');
+            }
+            $last = null !== $endName ? $this->references->dataUri($job->getOwner(), $endName, $job->getRatio(), $job->getImageFit(), 'auto' === $job->getRatio() ? $job->getReferenceImage() : null) : null;
+            $field = $model['imageField'] ?? 'image_url';
+            if ('image_urls' === $field) {
+                $payload[$field] = [$first, $last];
+                $payload['transitions'] = [['duration' => $job->getSeconds(), 'prompt' => $job->getPrompt()]];
+            } else {
+                $payload[$field] = $first;
+                if (null !== $last) {
+                    $endField = $model['endImageField'] ?? throw new \RuntimeException('Image de fin incompatible.');
+                    $payload[$endField] = $last;
+                }
+            }
         }
 
         return $payload;

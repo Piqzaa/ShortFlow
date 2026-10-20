@@ -71,13 +71,40 @@ final class AiReferenceStorage
         }
     }
 
-    public function dataUri(User $owner, string $name): string
+    public function bytes(User $owner, string $name, string $ratio = 'auto', string $fit = 'crop', ?string $match = null): string
     {
-        $bytes = file_get_contents($this->path($owner, $name));
+        $path = $this->path($owner, $name);
+        if (!in_array($ratio, ['auto', '9:16', '16:9', '1:1'], true) || !in_array($fit, ['crop', 'contain'], true)) {
+            throw new \RuntimeException('Cadrage indisponible.');
+        }
+        if ('auto' === $ratio && null === $match) {
+            $bytes = file_get_contents($path);
+        } else {
+            [$width, $height] = match ($ratio) {
+                '9:16' => [1080, 1920], '16:9' => [1920, 1080], '1:1' => [1080, 1080],
+                default => array_slice(getimagesize($this->path($owner, $match)) ?: throw new \RuntimeException('Image de début indisponible.'), 0, 2),
+            };
+            $filter = 'crop' === $fit
+                ? 'scale='.$width.':'.$height.':force_original_aspect_ratio=increase,crop='.$width.':'.$height
+                : 'scale='.$width.':'.$height.':force_original_aspect_ratio=decrease,pad='.$width.':'.$height.':(ow-iw)/2:(oh-ih)/2:black';
+            $process = new Process(['ffmpeg', '-nostdin', '-v', 'error', '-max_alloc', '67108864', '-protocol_whitelist', 'file,pipe', '-threads', '1', '-i', $path, '-frames:v', '1', '-vf', $filter, '-map_metadata', '-1', '-c:v', 'mjpeg', '-q:v', '3', '-threads', '1', '-f', 'image2pipe', 'pipe:1']);
+            $process->setTimeout(15);
+            try {
+                $process->mustRun();
+                $bytes = $process->getOutput();
+            } catch (\Throwable) {
+                throw new \RuntimeException('Impossible de préparer ce cadrage. Essaie une image plus légère ou un autre format.');
+            }
+        }
         if (false === $bytes || strlen($bytes) > 2097152) {
-            throw new \RuntimeException('Image indisponible.');
+            throw new \RuntimeException('Image trop volumineuse après cadrage. Essaie une image plus légère.');
         }
 
-        return 'data:image/jpeg;base64,'.base64_encode($bytes);
+        return $bytes;
+    }
+
+    public function dataUri(User $owner, string $name, string $ratio = 'auto', string $fit = 'crop', ?string $match = null): string
+    {
+        return 'data:image/jpeg;base64,'.base64_encode($this->bytes($owner, $name, $ratio, $fit, $match));
     }
 }

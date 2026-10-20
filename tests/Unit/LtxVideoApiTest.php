@@ -5,6 +5,7 @@ namespace App\Tests\Unit;
 use App\Entity\AiGeneration;
 use App\Entity\User;
 use App\Service\AiCatalog;
+use App\Service\AiReferenceStorage;
 use App\Service\LtxVideoApi;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -46,7 +47,7 @@ final class LtxVideoApiTest extends TestCase
 
             return new MockResponse('{"status":"completed","result":{"video_url":"https://storage.googleapis.com/ltx-test/result.mp4"}}');
         });
-        $api = new LtxVideoApi($http, $catalog);
+        $api = new LtxVideoApi($http, $catalog, new AiReferenceStorage(sys_get_temp_dir().'/vydflow-ai-unit'));
         $job->progress('processing', remote: $api->submit($job, 'synthetic-ltx-key'));
         self::assertSame(['ready' => true, 'url' => 'https://storage.googleapis.com/ltx-test/result.mp4'], $api->poll($job, 'synthetic-ltx-key'));
         self::assertSame(2, $calls);

@@ -56,3 +56,5 @@ L’hybride (recharges vendues par VydFlow + BYOK) est une piste future, pas une
 Montage guidé, sous-titres et séries récurrentes font désormais partie de la cible du lancement, à développer dans leurs lots. La demande du 19 octobre inclut désormais plusieurs fournisseurs/modèles dans le lot IA. Éditeur vidéo complet, automatisations libres et statistiques avancées restent ultérieurs. Les décisions du présent document remplacent l’ancien prompt de lancement.
 
 20/10/2026 — Premier lot image vers vidéo local : Kling 2.5 Turbo Pro via Fal API/MCP, référence privée, aperçu, récapitulatif et reprise ; tests simulés. Essai fournisseur réel distinct. Prochain lot : montage guidé de plusieurs plans, puis extensions image/modèles et gestion des anciennes références avant ouverture large.
+
+20/10/2026 — Extension image réalisée localement : toutes les familles du catalogue ayant une variante compatible sont couvertes via Fal/Replicate/LTX, avec début/fin et cadrage. Essai réel image toujours à choisir par le propriétaire ; prochaine fonction produit : montage guidé, puis séries. Références : studio-image-video-complet.md.

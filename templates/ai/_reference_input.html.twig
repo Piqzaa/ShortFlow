@@ -1,0 +1,10 @@
+{{ form_start(referenceForm,{attr:{class:'account-form reference-form','data-controller':'image-reference','data-image-reference-slot-value':slot,'data-action':'submit->image-reference#upload'}}) }}
+<noscript><p class="library-note">Importe tes images avant de compléter l’idée et les réglages.</p></noscript>
+{{ form_errors(referenceForm) }}{{ form_row(referenceForm.image,{attr:{'data-image-reference-target':'file','data-action':'change->image-reference#select'}}) }}
+<p class="library-note">JPG, PNG ou WebP · 10 Mo max. · 300 à 4 096 px par côté.</p>
+<div class="creation-frame" data-creation-target="{{ slot == 'start' ? 'startFrame' : 'endFrame' }}"{% if not referenceUrl %} hidden{% endif %}>
+<img class="creation-reference-preview" alt="{{ slot == 'start' ? 'Image de départ' : 'Image de fin' }}" data-creation-target="{{ slot == 'start' ? 'startPreview' : 'endPreview' }}" data-action="load->creation#frameChanged" data-image-reference-target="preview"{% if referenceUrl %} src="{{ referenceUrl }}"{% else %} hidden{% endif %}>
+</div>
+<p class="library-note" role="status" data-image-reference-target="status">{{ referenceUrl ? 'Image enregistrée dans ton espace privé.' : 'Choisis une image pour voir son aperçu.' }}</p>
+<div class="ai-actions"><button type="submit" class="account-secondary" data-image-reference-target="submit">Enregistrer l’image</button><button type="button" class="account-secondary" data-image-reference-target="remove" data-action="image-reference#remove" hidden>Retirer l’image{{ slot == 'end' ? ' de fin' : '' }}</button></div>
+{{ form_end(referenceForm) }}

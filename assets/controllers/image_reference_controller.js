@@ -1,6 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
+  static values = { slot: {type: String, default: 'start'} };
   static targets = ['file', 'preview', 'status', 'submit', 'remove'];
 
   connect() {
@@ -16,7 +17,7 @@ export default class extends Controller {
   }
 
   changed(reference = '', pending = false) {
-    this.dispatch('changed', { detail: { reference, pending } });
+    this.dispatch('changed', { detail: { reference, pending, slot: this.slotValue || 'start' } });
   }
 
   select() {

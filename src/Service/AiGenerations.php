@@ -220,8 +220,17 @@ final class AiGenerations
         if ($image !== (null !== $job->getReferenceImage())) {
             throw new \RuntimeException('Vérifie l’image de départ et le modèle puis prépare une nouvelle estimation.');
         }
+        if (($this->catalog->model($job->getModel())['requiresEnd'] ?? false) && null === $job->getEndReferenceImage()) {
+            throw new \RuntimeException('Ce modèle nécessite une image de fin. Prépare une nouvelle estimation.');
+        }
+        if (null !== $job->getEndReferenceImage() && (!$image || !isset($this->catalog->model($job->getModel())['endImageField']))) {
+            throw new \RuntimeException('Ce modèle n’accepte pas d’image de fin.');
+        }
         if ($image) {
             $this->references->path($job->getOwner(), $job->getReferenceImage());
+        }
+        if (null !== $job->getEndReferenceImage()) {
+            $this->references->path($job->getOwner(), $job->getEndReferenceImage());
         }
     }
 

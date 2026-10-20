@@ -11,6 +11,6 @@ final class AiReferenceType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add('image', FileType::class, ['label' => 'Image de départ', 'constraints' => [new Assert\NotNull(), new Assert\File(maxSize: '10M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'])], 'attr' => ['accept' => 'image/jpeg,image/png,image/webp']]);
+        $builder->add('image', FileType::class, ['label' => $options['label'] ?? 'Image de départ', 'constraints' => [new Assert\NotNull(), new Assert\File(maxSize: '10M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'])], 'attr' => ['accept' => 'image/jpeg,image/png,image/webp']]);
     }
 }

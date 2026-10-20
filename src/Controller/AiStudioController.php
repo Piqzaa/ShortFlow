@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,13 +28,13 @@ final class AiStudioController extends AbstractController
 {
     #[Route('/studio/creation', name: 'app_studio', methods: ['GET', 'POST'])]
     #[Route('/studio/ia', name: 'app_ai_studio', methods: ['GET', 'POST'])]
-    public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, AiReferenceStorage $references, EntityManagerInterface $em, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, AiReferenceStorage $references, EntityManagerInterface $em, FormFactoryInterface $forms, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
         if (!$request->getSession()->has('ai_idea_revision')) {
             $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
         }
         $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16']);
-        $idea += ['accessMode' => 'api', 'source' => 'text', 'reference' => ''];
+        $idea += ['accessMode' => 'api', 'source' => 'text', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop'];
         $connected = [];
         foreach (AiCatalog::PROVIDERS as $id => $name) {
             $connected[$id] = null !== $keys->connection($user, $id) || ('fal' === $id && null !== $falOAuth->connection($user));
@@ -42,15 +43,23 @@ final class AiStudioController extends AbstractController
         $connected['fal-mcp'] = null !== $falOAuth->connection($user);
         $connecting = $request->isMethod('POST') && 'connect' === $request->request->getString('intent');
         $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites()])->handleRequest($request);
-        $referenceUrl = null;
-        $reference = $form->get('reference')->getData();
-        if (is_string($reference) && '' !== $reference) {
+        $referenceUrl = $endReferenceUrl = null;
+        foreach (['reference', 'endReference'] as $field) {
+            $reference = $form->get($field)->getData();
+            if (!is_string($reference) || '' === $reference) {
+                continue;
+            }
             try {
                 $references->path($user, $reference);
-                $referenceUrl = $this->generateUrl('app_ai_reference_image', ['name' => $reference]);
+                $url = $this->generateUrl('app_ai_reference_image', ['name' => $reference]);
+                if ('reference' === $field) {
+                    $referenceUrl = $url;
+                } else {
+                    $endReferenceUrl = $url;
+                }
             } catch (\RuntimeException $error) {
-                if ($form->isSubmitted() && 'image' === $form->get('source')->getData()) {
-                    $form->get('reference')->addError(new FormError($error->getMessage()));
+                if ($form->isSubmitted() && 'image' === $form->get('source')->getData() && ('reference' === $field || $form->get('useEnd')->getData())) {
+                    $form->get($field)->addError(new FormError($error->getMessage()));
                 }
             }
         }
@@ -74,6 +83,10 @@ final class AiStudioController extends AbstractController
                 $job = new AiGeneration($user, $title, trim($data['prompt']), $data['model'], $data['seconds'], $data['ratio'], $catalog->estimate($data['model'], $data['seconds']));
                 if ($catalog->model($data['model'])['image'] ?? false) {
                     $job->attachReference($data['reference']);
+                    $job->frameImages($data['imageFit'] ?? 'crop');
+                    if ($data['useEnd'] ?? false) {
+                        $job->attachEndReference($data['endReference']);
+                    }
                 }
                 if ('mcp' === $data['accessMode']) {
                     $job->useMcp();
@@ -86,7 +99,7 @@ final class AiStudioController extends AbstractController
         }
         $jobs = $em->getRepository(AiGeneration::class)->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 12);
 
-        return $this->render('ai/studio.html.twig', ['ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/studio.html.twig', ['ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/creation/idee', name: 'app_ai_save_idea', methods: ['POST'])]
@@ -97,9 +110,12 @@ final class AiStudioController extends AbstractController
         if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
         }
-        if ('image' === $form->getData()['source'] && $form->getData()['reference']) {
+        foreach (['reference', 'endReference'] as $field) {
+            if ('image' !== $form->getData()['source'] || !$form->getData()[$field] || ('endReference' === $field && !$form->getData()['useEnd'])) {
+                continue;
+            }
             try {
-                $references->path($user, $form->getData()['reference']);
+                $references->path($user, $form->getData()[$field]);
             } catch (\RuntimeException) {
                 return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
             }
@@ -125,9 +141,13 @@ final class AiStudioController extends AbstractController
     }
 
     #[Route('/studio/creation/images', name: 'app_ai_reference_upload', methods: ['POST'])]
-    public function uploadReference(Request $request, #[CurrentUser] User $user, AiReferenceStorage $references, EntityManagerInterface $em, #[Autowire(service: 'limiter.video_upload')] RateLimiterFactory $limiter): Response
+    public function uploadReference(Request $request, #[CurrentUser] User $user, AiReferenceStorage $references, EntityManagerInterface $em, FormFactoryInterface $forms, #[Autowire(service: 'limiter.video_upload')] RateLimiterFactory $limiter): Response
     {
-        $form = $this->createForm(AiReferenceType::class)->handleRequest($request);
+        $slot = $request->query->getString('slot', 'start');
+        if (!in_array($slot, ['start', 'end'], true)) {
+            throw $this->createNotFoundException();
+        }
+        $form = $forms->createNamed('end' === $slot ? 'ai_end_reference' : 'ai_reference', AiReferenceType::class)->handleRequest($request);
         $error = 'Choisis un JPG, PNG ou WebP valide de 10 Mo maximum, puis réessaie.';
         if ($form->isSubmitted() && $form->isValid()) {
             if (!$limiter->create('ai-reference-'.$user->getId())->consume()->isAccepted()) {
@@ -144,13 +164,22 @@ final class AiStudioController extends AbstractController
                         return $references->store($user, $file);
                     });
                     $idea = $request->getSession()->get('ai_idea', []);
-                    $idea['reference'] = $name;
+                    $idea['end' === $slot ? 'endReference' : 'reference'] = $name;
                     $idea['source'] = 'image';
-                    $idea['model'] = 'kling-25-image';
-                    $idea['ratio'] = 'auto';
+                    if ('end' === $slot) {
+                        $idea['useEnd'] = true;
+                    }
+                    $model = AiCatalog::MODELS[$idea['model'] ?? ''] ?? [];
+                    if (!($model['image'] ?? false) || ('end' === $slot && !isset($model['endImageField']))) {
+                        $idea['model'] = 'kling-25-image';
+                        $model = AiCatalog::MODELS['kling-25-image'];
+                    }
+                    if (!in_array($idea['ratio'] ?? '', $model['ratios'], true)) {
+                        $idea['ratio'] = $model['ratios'][0];
+                    }
                     $request->getSession()->set('ai_idea', $idea);
                     if ('application/json' === $request->headers->get('Accept')) {
-                        return $this->json(['reference' => $name, 'url' => $this->generateUrl('app_ai_reference_image', ['name' => $name])], headers: ['Cache-Control' => 'private, no-store']);
+                        return $this->json(['reference' => $name, 'slot' => $slot, 'url' => $this->generateUrl('app_ai_reference_image', ['name' => $name])], headers: ['Cache-Control' => 'private, no-store']);
                     }
 
                     return $this->redirectToRoute('app_studio', status: 303);
@@ -168,20 +197,15 @@ final class AiStudioController extends AbstractController
     }
 
     #[Route('/studio/creation/images/{name}', name: 'app_ai_reference_image', requirements: ['name' => '[a-f0-9]{48}\.jpg'], methods: ['GET'])]
-    public function referenceImage(string $name, #[CurrentUser] User $user, AiReferenceStorage $references): Response
+    public function referenceImage(string $name, Request $request, #[CurrentUser] User $user, AiReferenceStorage $references): Response
     {
         try {
-            $path = $references->path($user, $name);
+            $bytes = $references->bytes($user, $name, $request->query->getString('ratio', 'auto'), $request->query->getString('fit', 'crop'), $request->query->has('match') ? $request->query->getString('match') : null);
         } catch (\RuntimeException) {
             throw $this->createNotFoundException();
         }
 
-        $response = $this->file($path, 'reference.jpg', \Symfony\Component\HttpFoundation\ResponseHeaderBag::DISPOSITION_INLINE);
-        $response->headers->set('Content-Type', 'image/jpeg');
-        $response->headers->set('Cache-Control', 'private, no-store');
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-
-        return $response;
+        return new Response($bytes, headers: ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff', 'Content-Disposition' => 'inline; filename="reference.jpg"']);
     }
 
     #[Route('/studio/creation/favoris/{id}', name: 'app_ai_favorite', methods: ['POST'])]
@@ -261,7 +285,7 @@ final class AiStudioController extends AbstractController
             throw $this->createAccessDeniedException();
         }
         $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
-        $request->getSession()->set('ai_idea', ['title' => $job->getTitle(), 'prompt' => $job->getPrompt(), 'model' => $job->getModel(), 'seconds' => $job->getSeconds(), 'ratio' => $job->getRatio(), 'accessMode' => $job->getAccessMode(), 'source' => null !== $job->getReferenceImage() ? 'image' : 'text', 'reference' => $job->getReferenceImage()]);
+        $request->getSession()->set('ai_idea', ['title' => $job->getTitle(), 'prompt' => $job->getPrompt(), 'model' => $job->getModel(), 'seconds' => $job->getSeconds(), 'ratio' => $job->getRatio(), 'accessMode' => $job->getAccessMode(), 'source' => null !== $job->getReferenceImage() ? 'image' : 'text', 'reference' => $job->getReferenceImage(), 'endReference' => $job->getEndReferenceImage(), 'useEnd' => null !== $job->getEndReferenceImage(), 'imageFit' => $job->getImageFit()]);
         $this->addFlash('success', 'Ton idée et ses réglages sont repris. Modifie-les puis vérifie une nouvelle estimation avant de générer.');
 
         return $this->redirectToRoute('app_studio', status: 303);

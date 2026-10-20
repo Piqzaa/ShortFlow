@@ -1,5 +1,7 @@
 # Image vers vidéo — premier lot local
 
+Suite du 20/10/2026 : ce document décrit le premier lot historique. Le [parcours étendu](studio-image-video-complet.md) ajoute les autres familles compatibles, les images de fin et le choix du format/cadrage.
+
 ## Objectif et parcours
 
 Depuis Studio, choisir **Animer une image**, importer un JPG/PNG/WebP, vérifier son aperçu, décrire le mouvement puis ouvrir le récapitulatif. L’image accompagne la préparation et sa réutilisation. Aucune génération ni publication ne démarre à l’import. Le bouton de génération nécessite la confirmation du coût, la connexion appropriée et l’activation globale habituelle.

@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Service\AiCatalog;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -34,6 +35,9 @@ final class AiIdeaType extends AbstractType
         $builder
             ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire une vidéo' => 'text', 'Animer une image' => 'image'], 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
             ->add('reference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
+            ->add('endReference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
+            ->add('useEnd', CheckboxType::class, ['label' => 'Ajouter une image de fin', 'required' => false])
+            ->add('imageFit', ChoiceType::class, ['label' => 'Ajustement des images', 'choices' => ['Recadrage centré' => 'crop', 'Image entière (bandes)' => 'contain'], 'placeholder' => false, 'required' => false, 'empty_data' => 'crop'])
             ->add('title', TextType::class, ['label' => 'Nom de ta création', 'required' => false, 'help' => 'Facultatif : un nom sera proposé à partir de ton idée.', 'constraints' => [new Assert\Length(max: 120, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['maxlength' => 120]])
             ->add('prompt', TextareaType::class, ['label' => 'Ton idée', 'help' => 'Décris le sujet, le mouvement et l’ambiance. Un prompt en anglais est conseillé pour ces modèles.', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 1500, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['rows' => 6, 'maxlength' => 1500, 'placeholder' => 'Une caméra suit un cycliste au lever du soleil…']])
             ->add('model', ChoiceType::class, ['label' => 'Modèle, résolution et fournisseur', 'placeholder' => 'Choisir un modèle', 'choices' => $choices, 'choice_attr' => static fn (string $id): array => isset($options['connected_providers'][AiCatalog::MODELS[$id]['provider']]) && !$options['connected_providers'][AiCatalog::MODELS[$id]['provider']] ? ['class' => 'catalog-option-disconnected'] : [], 'constraints' => [new Assert\NotBlank(groups: ['Default', 'connection'])]])
@@ -55,6 +59,17 @@ final class AiIdeaType extends AbstractType
             }
             if (($model['image'] ?? false) && empty($data['reference'])) {
                 $form->get('reference')->addError(new FormError('Importe une image de départ avant de continuer.'));
+            }
+            if (($model['image'] ?? false) && ($data['useEnd'] ?? false)) {
+                if (!isset($model['endImageField'])) {
+                    $form->get('model')->addError(new FormError('Ce modèle n’accepte pas d’image de fin. Choisis un modèle Début + fin ou retire cette option.'));
+                }
+                if (empty($data['endReference'])) {
+                    $form->get('endReference')->addError(new FormError('Importe ton image de fin avant de continuer.'));
+                }
+            }
+            if (($model['requiresEnd'] ?? false) && !($data['useEnd'] ?? false)) {
+                $form->get('model')->addError(new FormError('Ce parcours nécessite une image de début et une image de fin.'));
             }
             if ('mcp' === ($data['accessMode'] ?? 'api') && 'fal' !== $model['provider']) {
                 $form->get('accessMode')->addError(new FormError('Ce fournisseur utilise une clé API dans VydFlow.'));

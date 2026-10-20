@@ -246,3 +246,61 @@ test('image mode filters out text models, keeps auto framing and preserves the p
   assert.equal(c.referencePanelTarget.hidden, true);
   assert.equal(c.cardTargets.at(-1).hidden, true);
 });
+
+test('two pending image uploads keep preparation disabled until both settle', () => {
+  const c = creation(), button = {};
+  c.hasEndReferenceTarget = true;
+  c.referenceTarget = {value:'',dispatchEvent(){}}; c.endReferenceTarget = {value:'',dispatchEvent(){}};
+  c.sourceTarget = {value:'image'};
+  c.changeSource = () => {};
+  c.element = {querySelectorAll:()=>[button]};
+  c.referenceChanged({detail:{slot:'start',pending:true}});
+  c.referenceChanged({detail:{slot:'end',pending:true}});
+  c.referenceChanged({detail:{slot:'start',reference:'first.jpg',pending:false}});
+  assert.equal(button.disabled, true);
+  c.referenceChanged({detail:{slot:'end',reference:'last.jpg',pending:false}});
+  assert.equal(button.disabled, false);
+  assert.equal(c.referenceTarget.value, 'first.jpg');
+  assert.equal(c.endReferenceTarget.value, 'last.jpg');
+});
+
+test('framing previews honor the selected ratio and fit without marking image loads as edits', () => {
+  const c = creation(); let edits = 0;
+  c.hasStartPreviewTarget = true; c.hasImageFitTarget = true; c.hasFramingNoticeTarget = true;
+  c.startPreviewTarget = {naturalWidth:400,naturalHeight:600,hidden:false,style:{}};
+  c.endPreviewTarget = {naturalWidth:640,naturalHeight:360,hidden:false,style:{}};
+  c.startFrameTarget = {style:{}}; c.endFrameTarget = {style:{}}; c.framingNoticeTarget = {};
+  c.referenceTarget = {dispatchEvent(){edits++;}};
+  c.imageFitTarget = {value:'contain'}; c.ratioTarget.value = '16:9'; c.frameChanged();
+  assert.equal(c.startFrameTarget.style.aspectRatio, '16 / 9');
+  assert.equal(c.endFrameTarget.style.aspectRatio, '16 / 9');
+  assert.equal(c.startPreviewTarget.style.objectFit, 'contain');
+  assert.equal(edits, 0);
+  c.ratioTarget.value = 'auto'; c.frameChanged({type:'change'});
+  assert.equal(c.endFrameTarget.style.aspectRatio, '400 / 600');
+  assert.equal(edits, 1);
+  assert.match(c.framingNoticeTarget.textContent, /Format d’origine/);
+});
+
+test('choosing a transition enables the ending frame; unchecking it can return to one image', () => {
+  const c = creation();
+  c.modelsValue.image = {...c.modelsValue.kling,image:true,endImageField:'tail_image_url'};
+  c.modelsValue.transition = {...c.modelsValue.image,requiresEnd:true};
+  c.hasSourceTarget = true; c.sourceTarget = {value:'image'}; c.referencePanelTarget = {};
+  c.hasUseEndTarget = true; c.useEndTarget = {checked:false};
+  c.hasEndPanelTarget = true; c.endPanelTarget = {};
+  c.modelTarget.value = 'transition'; c.modelTarget.dispatchEvent = () => c.changeModel();
+  c.changeModel();
+  assert.equal(c.useEndTarget.checked, true);
+  assert.equal(c.endPanelTarget.hidden, false);
+  c.useEndTarget.checked = false; c.changeEnd();
+  assert.equal(c.useEndTarget.checked, false);
+  assert.equal(c.modelTarget.value, 'image');
+  assert.equal(c.endPanelTarget.hidden, true);
+});
+
+test('image fees are included in the estimate and price ordering', () => {
+  const c = creation();
+  assert.equal(c.price({seconds:[5],rateMicros:70000,fixedMicros:2000},5),36);
+  assert.equal(c.price({seconds:[5],rateMicros:250000,fixedMicros:10000},5),126);
+});

@@ -8,7 +8,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class LtxVideoApi
 {
-    public function __construct(#[Autowire(service: 'ai.http')] private HttpClientInterface $http, private AiCatalog $catalog)
+    public function __construct(#[Autowire(service: 'ai.http')] private HttpClientInterface $http, private AiCatalog $catalog, private AiReferenceStorage $references)
     {
     }
 
@@ -25,7 +25,15 @@ final class LtxVideoApi
             '9:16' => $short.'x'.$wide, '16:9' => $wide.'x'.$short, '1:1' => $short.'x'.$short,
             default => throw new \LogicException('Format LTX indisponible.'),
         };
-        $data = $this->http->request('POST', 'https://api.ltx.io/v2/text-to-video', [...$this->options($key), 'json' => ['model' => $model['endpoint'], 'prompt' => $job->getPrompt(), 'duration' => $job->getSeconds(), 'resolution' => $resolution, 'fps' => 25, 'generate_audio' => true]])->toArray();
+        $input = ['model' => $model['endpoint'], 'prompt' => $job->getPrompt(), 'duration' => $job->getSeconds(), 'resolution' => $resolution, 'fps' => 25, 'generate_audio' => true];
+        $path = ($model['image'] ?? false) ? 'image-to-video' : 'text-to-video';
+        if ($model['image'] ?? false) {
+            $input['image_uri'] = $this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '', $job->getRatio(), $job->getImageFit());
+            if (null !== $job->getEndReferenceImage()) {
+                $input['last_frame_uri'] = $this->references->dataUri($job->getOwner(), $job->getEndReferenceImage(), $job->getRatio(), $job->getImageFit());
+            }
+        }
+        $data = $this->http->request('POST', 'https://api.ltx.io/v2/'.$path, [...$this->options($key), 'json' => $input])->toArray();
         $id = $data['id'] ?? null;
         if (!is_string($id) || !preg_match('/^[a-zA-Z0-9_-]{1,100}$/D', $id)) {
             throw new \RuntimeException('Référence LTX invalide.');
@@ -41,7 +49,7 @@ final class LtxVideoApi
         if (!preg_match('/^[a-zA-Z0-9_-]{1,100}$/D', $id)) {
             throw new \RuntimeException('Référence LTX invalide.');
         }
-        $data = $this->http->request('GET', 'https://api.ltx.io/v2/text-to-video/'.$id, $this->options($key))->toArray();
+        $data = $this->http->request('GET', 'https://api.ltx.io/v2/'.(($this->catalog->model($job->getModel())['image'] ?? false) ? 'image-to-video' : 'text-to-video').'/'.$id, $this->options($key))->toArray();
         if (in_array($data['status'] ?? '', ['pending', 'processing'], true)) {
             return ['ready' => false];
         }

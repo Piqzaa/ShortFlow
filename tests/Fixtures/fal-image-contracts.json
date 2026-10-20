@@ -1,0 +1,1817 @@
+{
+  "fal-ai/kling-video/v2.5-turbo/pro/image-to-video": {
+    "type": "object",
+    "title": "ImageToVideoV25ProRequest",
+    "properties": {
+      "duration": {
+        "type": "string",
+        "enum": [
+          "5",
+          "10"
+        ],
+        "description": "The duration of the generated video in seconds",
+        "title": "Duration",
+        "default": "5"
+      },
+      "cfg_scale": {
+        "type": "number",
+        "description": "\n            The CFG (Classifier Free Guidance) scale is a measure of how close you want\n            the model to stick to your prompt.\n        ",
+        "maximum": 1,
+        "title": "Cfg Scale",
+        "default": 0.5,
+        "minimum": 0
+      },
+      "enable_safety_checker": {
+        "type": "boolean",
+        "title": "Enable Safety Checker",
+        "description": "Disabling safety checks requires account authorization; unauthorized requests are always checked.",
+        "default": true
+      },
+      "negative_prompt": {
+        "type": "string",
+        "title": "Negative Prompt",
+        "default": "blur, distort, and low quality",
+        "maxLength": 2500
+      },
+      "image_url": {
+        "type": "string",
+        "title": "Image Url",
+        "description": "URL of the image to be used for the video",
+        "examples": [
+          "https://v3.fal.media/files/panda/HnY2yf-BbzlrVQxR-qP6m_9912d0932988453aadf3912fc1901f52.jpg"
+        ]
+      },
+      "prompt": {
+        "type": "string",
+        "title": "Prompt",
+        "examples": [
+          "A stark starting line divides two powerful cars, engines revving for the challenge ahead. They surge forward in the heat of competition, a blur of speed and chrome. The finish line looms as they vie for victory."
+        ],
+        "maxLength": 2500
+      },
+      "tail_image_url": {
+        "anyOf": [
+          {
+            "type": "string",
+            "ui": {
+              "field": "image"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Tail Image Url",
+        "description": "URL of the image to be used for the end of the video"
+      }
+    },
+    "x-fal-order-properties": [
+      "enable_safety_checker",
+      "prompt",
+      "image_url",
+      "duration",
+      "negative_prompt",
+      "cfg_scale",
+      "tail_image_url"
+    ],
+    "required": [
+      "prompt",
+      "image_url"
+    ]
+  },
+  "fal-ai/kling-video/v3/pro/image-to-video": {
+    "type": "object",
+    "title": "ImageToVideoV3ProRequest",
+    "properties": {
+      "duration": {
+        "type": "string",
+        "enum": [
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15"
+        ],
+        "description": "The duration of the generated video in seconds",
+        "default": "5",
+        "title": "Duration",
+        "examples": [
+          "12"
+        ]
+      },
+      "elements": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "title": "KlingV3ComboElementInput",
+              "properties": {
+                "video_url": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "ui": {
+                        "field": "video"
+                      },
+                      "limit_description": "Max file size: 200.0MB, Min width: 720px, Min height: 720px, Max width: 2160px, Max height: 2160px, Min duration: 3.0s, Max duration: 10.05s, Min FPS: 24.0, Max FPS: 60.0, Timeout: 30.0s",
+                      "x-fal": {
+                        "max_width": 2160,
+                        "min_duration": 3,
+                        "min_width": 720,
+                        "min_height": 720,
+                        "max_file_size": 209715200,
+                        "min_fps": 24,
+                        "max_fps": 60,
+                        "max_duration": 10.05,
+                        "max_height": 2160,
+                        "timeout": 30
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Video Url",
+                  "description": "The video URL of the element. A request can only have one element with a video."
+                },
+                "reference_image_urls": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "_fal_ui_field": "image",
+                        "ui": {
+                          "field": "image"
+                        },
+                        "limit_description": "Max file size: 50.0MB, Min width: 300px, Min height: 300px, Min aspect ratio: 0.40, Max aspect ratio: 2.50, Timeout: 20.0s",
+                        "x-fal": {
+                          "min_aspect_ratio": 0.4,
+                          "min_width": 300,
+                          "max_aspect_ratio": 2.5,
+                          "timeout": 20,
+                          "max_file_size": 52428800,
+                          "min_height": 300
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Reference Image Urls",
+                  "description": "Additional reference images from different angles. 1-3 images supported. At least one image is required."
+                },
+                "voice_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Voice Id",
+                  "description": "The voice ID for this element. The voice will be binded to the element and references to this element will use the binded voice. Get voice IDs from the following endpoint: https://fal.ai/models/fal-ai/kling-video/create-voice"
+                },
+                "frontal_image_url": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "ui": {
+                        "field": "image"
+                      },
+                      "limit_description": "Max file size: 50.0MB, Min width: 300px, Min height: 300px, Min aspect ratio: 0.40, Max aspect ratio: 2.50, Timeout: 20.0s",
+                      "x-fal": {
+                        "min_aspect_ratio": 0.4,
+                        "min_width": 300,
+                        "max_aspect_ratio": 2.5,
+                        "timeout": 20,
+                        "max_file_size": 52428800,
+                        "min_height": 300
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Frontal Image Url",
+                  "description": "The frontal image of the element (main view)."
+                }
+              },
+              "x-fal-order-properties": [
+                "frontal_image_url",
+                "reference_image_urls",
+                "video_url",
+                "voice_id"
+              ]
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Elements",
+        "description": "Elements (characters/objects) to include in the video. Each example can either be an image set (frontal + reference images) or a video. Reference in prompt as @Element1, @Element2, etc.",
+        "examples": [
+          [
+            {
+              "reference_image_urls": [
+                "https://v3b.fal.media/files/b/0a8cfd62/psPCmzrD1y9vDgdyNfKAL_glasses_back.png"
+              ],
+              "frontal_image_url": "https://v3b.fal.media/files/b/0a8cfd5f/-kZL-ha3Iuelku5IHXC-A_glasses.png"
+            },
+            {
+              "video_url": "https://v3b.fal.media/files/b/0a8cfd66/b03SOiQvKLlFx_jqdNZ9z_child_video.mp4"
+            }
+          ]
+        ]
+      },
+      "shot_type": {
+        "type": "string",
+        "enum": [
+          "customize",
+          "intelligent"
+        ],
+        "description": "The type of multi-shot video generation. 'intelligent' lets the model automatically determine shot structure.",
+        "title": "Shot Type",
+        "default": "customize"
+      },
+      "multi_prompt": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "title": "KlingV3MultiPromptElement",
+              "properties": {
+                "duration": {
+                  "type": "string",
+                  "enum": [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "10",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15"
+                  ],
+                  "description": "The duration of this shot in seconds",
+                  "title": "Duration",
+                  "default": "5"
+                },
+                "prompt": {
+                  "type": "string",
+                  "title": "Prompt",
+                  "description": "The prompt for this shot."
+                }
+              },
+              "x-fal-order-properties": [
+                "prompt",
+                "duration"
+              ],
+              "required": [
+                "prompt"
+              ]
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Multi Prompt",
+        "description": "List of prompts for multi-shot video generation. If provided, divides the video into multiple shots.",
+        "examples": [
+          null
+        ]
+      },
+      "end_image_url": {
+        "anyOf": [
+          {
+            "type": "string",
+            "ui": {
+              "field": "image"
+            },
+            "limit_description": "Max file size: 50.0MB, Min width: 300px, Min height: 300px, Min aspect ratio: 0.40, Max aspect ratio: 2.50, Timeout: 20.0s",
+            "x-fal": {
+              "min_aspect_ratio": 0.4,
+              "min_width": 300,
+              "max_aspect_ratio": 2.5,
+              "timeout": 20,
+              "max_file_size": 52428800,
+              "min_height": 300
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "End Image Url",
+        "description": "URL of the image to be used for the end of the video"
+      },
+      "cfg_scale": {
+        "type": "number",
+        "description": "\n            The CFG (Classifier Free Guidance) scale is a measure of how close you want\n            the model to stick to your prompt.\n        ",
+        "maximum": 1,
+        "title": "Cfg Scale",
+        "default": 0.5,
+        "minimum": 0
+      },
+      "prompt": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 2500
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Prompt",
+        "description": "Text prompt for video generation. Either prompt or multi_prompt must be provided, but not both.",
+        "examples": [
+          "The craftsman slowly examines the bowl, turning it gently in his weathered hands. His eyes reflect years of wisdom. Subtle smile forms on his face. Dust particles drift in warm light. Breathing motion, blinking eyes."
+        ]
+      },
+      "generate_audio": {
+        "type": "boolean",
+        "title": "Generate Audio",
+        "description": "Whether to generate native audio for the video. Supports Chinese and English voice output. Other languages are automatically translated to English. For English speech, use lowercase letters; for acronyms or proper nouns, use uppercase.",
+        "default": true
+      },
+      "enable_safety_checker": {
+        "type": "boolean",
+        "title": "Enable Safety Checker",
+        "description": "Disabling safety checks requires account authorization; unauthorized requests are always checked.",
+        "default": true
+      },
+      "negative_prompt": {
+        "type": "string",
+        "title": "Negative Prompt",
+        "default": "blur, distort, and low quality",
+        "maxLength": 2500
+      },
+      "start_image_url": {
+        "type": "string",
+        "title": "Start Image Url",
+        "description": "URL of the image to be used for the video",
+        "examples": [
+          "https://storage.googleapis.com/falserverless/example_inputs/kling-v3/pro-i2v/start_image.png"
+        ],
+        "limit_description": "Max file size: 50.0MB, Min width: 300px, Min height: 300px, Min aspect ratio: 0.40, Max aspect ratio: 2.50, Timeout: 20.0s",
+        "x-fal": {
+          "min_aspect_ratio": 0.4,
+          "min_width": 300,
+          "max_aspect_ratio": 2.5,
+          "timeout": 20,
+          "max_file_size": 52428800,
+          "min_height": 300
+        }
+      }
+    },
+    "x-fal-order-properties": [
+      "enable_safety_checker",
+      "prompt",
+      "multi_prompt",
+      "start_image_url",
+      "duration",
+      "generate_audio",
+      "end_image_url",
+      "elements",
+      "shot_type",
+      "negative_prompt",
+      "cfg_scale"
+    ],
+    "required": [
+      "start_image_url"
+    ]
+  },
+  "fal-ai/wan-25-preview/image-to-video": {
+    "properties": {
+      "negative_prompt": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Negative Prompt",
+        "examples": [
+          "low resolution, error, worst quality, low quality, defects"
+        ],
+        "description": "Negative prompt to describe content to avoid. Max 500 characters."
+      },
+      "prompt": {
+        "minLength": 1,
+        "type": "string",
+        "title": "Prompt",
+        "examples": [
+          "The white dragon warrior stands still, eyes full of determination and strength. The camera slowly moves closer or circles around the warrior, highlighting the powerful presence and heroic spirit of the character."
+        ],
+        "description": "The text prompt describing the desired video motion. Max 1500 characters."
+      },
+      "resolution": {
+        "type": "string",
+        "title": "Resolution",
+        "description": "Video resolution. Valid values: 480p, 720p, 1080p",
+        "enum": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "default": "1080p"
+      },
+      "enable_safety_checker": {
+        "type": "boolean",
+        "title": "Enable Safety Checker",
+        "examples": [
+          true
+        ],
+        "description": "If set to true, the safety checker will be enabled. Disabling it requires account authorization; unauthorized requests are always checked.",
+        "default": true
+      },
+      "duration": {
+        "type": "string",
+        "title": "Duration",
+        "examples": [
+          "5",
+          "10"
+        ],
+        "description": "Duration of the generated video in seconds. Choose between 5 or 10 seconds.",
+        "enum": [
+          "5",
+          "10"
+        ],
+        "default": "5"
+      },
+      "audio_url": {
+        "anyOf": [
+          {
+            "type": "string",
+            "ui": {
+              "field": "audio"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Audio Url",
+        "description": "\nURL of the audio to use as the background music. Must be publicly accessible.\nLimit handling: If the audio duration exceeds the duration value (5 or 10 seconds),\nthe audio is truncated to the first 5 or 10 seconds, and the rest is discarded. If\nthe audio is shorter than the video, the remaining part of the video will be silent.\nFor example, if the audio is 3 seconds long and the video duration is 5 seconds, the\nfirst 3 seconds of the output video will have sound, and the last 2 seconds will be silent.\n- Format: WAV, MP3.\n- Duration: 3 to 30 s.\n- File size: Up to 15 MB.\n"
+      },
+      "image_url": {
+        "type": "string",
+        "title": "Image URL",
+        "examples": [
+          "https://storage.googleapis.com/falserverless/model_tests/wan/dragon-warrior.jpg"
+        ],
+        "description": "URL of the image to use as the first frame. Must be publicly accessible or base64 data URI.",
+        "max_height": 8000,
+        "min_height": 240,
+        "min_width": 240,
+        "max_file_size": 26214400,
+        "max_width": 8000
+      },
+      "enable_prompt_expansion": {
+        "type": "boolean",
+        "title": "Enable Prompt Expansion",
+        "description": "Whether to enable prompt rewriting using LLM.",
+        "default": true
+      },
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Seed",
+        "description": "Random seed for reproducibility. If None, a random seed is chosen."
+      }
+    },
+    "type": "object",
+    "required": [
+      "prompt",
+      "image_url"
+    ],
+    "title": "ImageToVideoInput",
+    "description": "Input for image-to-video generation",
+    "x-fal-order-properties": [
+      "prompt",
+      "image_url",
+      "audio_url",
+      "resolution",
+      "duration",
+      "negative_prompt",
+      "enable_prompt_expansion",
+      "seed",
+      "enable_safety_checker"
+    ]
+  },
+  "fal-ai/pika/v2.2/image-to-video": {
+    "title": "Pika22ImageToVideoRequest",
+    "properties": {
+      "duration": {
+        "title": "Duration",
+        "default": 5,
+        "type": "integer",
+        "description": "The duration of the generated video in seconds",
+        "enum": [
+          5,
+          10
+        ]
+      },
+      "prompt": {
+        "examples": [
+          "The man and the horse are slowly walking towards the camera, the camera orbits and dolly out"
+        ],
+        "type": "string",
+        "title": "Prompt"
+      },
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The seed for the random number generator",
+        "title": "Seed"
+      },
+      "image_url": {
+        "examples": [
+          "https://storage.googleapis.com/falserverless/example_inputs/pika/pika_i2v_v22_input.png"
+        ],
+        "type": "string",
+        "description": "URL of the image to use as the first frame",
+        "title": "Image Url"
+      },
+      "negative_prompt": {
+        "default": "",
+        "type": "string",
+        "description": "A negative prompt to guide the model",
+        "title": "Negative Prompt"
+      },
+      "resolution": {
+        "examples": [
+          "1080p",
+          "720p"
+        ],
+        "title": "Resolution",
+        "default": "720p",
+        "type": "string",
+        "description": "The resolution of the generated video",
+        "enum": [
+          "720p",
+          "1080p"
+        ]
+      }
+    },
+    "type": "object",
+    "required": [
+      "prompt",
+      "image_url"
+    ],
+    "description": "Request model for Pika 2.2 image-to-video generation",
+    "x-fal-order-properties": [
+      "image_url",
+      "prompt",
+      "seed",
+      "negative_prompt",
+      "resolution",
+      "duration"
+    ]
+  },
+  "fal-ai/pika/v2.2/pikaframes": {
+    "properties": {
+      "prompt": {
+        "examples": [
+          "smooth cinematic transition",
+          "seamless blend between scenes"
+        ],
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Default prompt for all transitions. Individual transition prompts override this.",
+        "title": "Prompt"
+      },
+      "transitions": {
+        "examples": [],
+        "type": "array",
+        "items": {
+          "properties": {
+            "duration": {
+              "title": "Duration",
+              "default": 5,
+              "type": "integer",
+              "minimum": 1,
+              "description": "Duration of this transition in seconds",
+              "maximum": 25
+            },
+            "prompt": {
+              "examples": [
+                null
+              ],
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Specific prompt for this transition. Overrides the global prompt if provided.",
+              "title": "Prompt"
+            }
+          },
+          "type": "object",
+          "x-fal-order-properties": [
+            "duration",
+            "prompt"
+          ],
+          "description": "Configuration for a transition between two keyframes",
+          "title": "KeyframeTransition"
+        },
+        "description": "Configuration for each transition. Length must be len(image_urls) - 1. Total duration of all transitions must not exceed 25 seconds. If not provided, uses default 5-second transitions with the global prompt.",
+        "title": "Transitions"
+      },
+      "image_urls": {
+        "examples": [
+          [
+            "https://v3b.fal.media/files/b/tiger/-YohU0xcPcWe_eiUB9_i6_keyframes-apple-start.png",
+            "https://v3b.fal.media/files/b/tiger/LarvwQGEFqEmF8fkgDB8R_keyframes-apple-end.png"
+          ]
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "description": "URLs of keyframe images (2-5 images) to create transitions between",
+        "title": "Image Urls"
+      },
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The seed for the random number generator",
+        "title": "Seed"
+      },
+      "negative_prompt": {
+        "default": "",
+        "type": "string",
+        "description": "A negative prompt to guide the model",
+        "title": "Negative Prompt"
+      },
+      "resolution": {
+        "examples": [
+          "1080p",
+          "720p"
+        ],
+        "title": "Resolution",
+        "default": "720p",
+        "type": "string",
+        "description": "The resolution of the generated video",
+        "enum": [
+          "720p",
+          "1080p"
+        ]
+      }
+    },
+    "type": "object",
+    "required": [
+      "image_urls"
+    ],
+    "title": "Pika22KeyframesToVideoRequest",
+    "x-fal-order-properties": [
+      "image_urls",
+      "transitions",
+      "prompt",
+      "negative_prompt",
+      "seed",
+      "resolution"
+    ]
+  },
+  "fal-ai/vidu/q1/image-to-video": {
+    "x-fal-order-properties": [
+      "prompt",
+      "image_url",
+      "seed",
+      "movement_amplitude"
+    ],
+    "properties": {
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Seed for the random number generator",
+        "title": "Seed"
+      },
+      "movement_amplitude": {
+        "default": "auto",
+        "description": "The movement amplitude of objects in the frame",
+        "title": "Movement Amplitude",
+        "type": "string",
+        "enum": [
+          "auto",
+          "small",
+          "medium",
+          "large"
+        ]
+      },
+      "prompt": {
+        "examples": [
+          "The astronaut waved and the camera moved up."
+        ],
+        "description": "Text prompt for video generation, max 1500 characters",
+        "title": "Prompt",
+        "type": "string",
+        "maxLength": 1500
+      },
+      "image_url": {
+        "examples": [
+          "https://storage.googleapis.com/falserverless/model_tests/video_models/vidu_i2v.jpg"
+        ],
+        "description": "URL of the image to use as the first frame",
+        "title": "Image Url",
+        "type": "string"
+      }
+    },
+    "title": "Q1ImageToVideoRequest",
+    "required": [
+      "prompt",
+      "image_url"
+    ],
+    "type": "object"
+  },
+  "fal-ai/vidu/q1/start-end-to-video": {
+    "x-fal-order-properties": [
+      "prompt",
+      "start_image_url",
+      "end_image_url",
+      "seed",
+      "movement_amplitude"
+    ],
+    "properties": {
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Seed for the random number generator",
+        "title": "Seed"
+      },
+      "start_image_url": {
+        "examples": [
+          "https://v3.fal.media/files/zebra/sgsdKvPigPhJ1S7Hl5bWc_first_frame_q1.png"
+        ],
+        "description": "URL of the image to use as the first frame",
+        "title": "Start Image Url",
+        "type": "string"
+      },
+      "prompt": {
+        "examples": [
+          "Dragon lands on a rock"
+        ],
+        "description": "Text prompt for video generation, max 1500 characters",
+        "title": "Prompt",
+        "type": "string",
+        "maxLength": 1500
+      },
+      "end_image_url": {
+        "examples": [
+          "https://v3.fal.media/files/kangaroo/CASBu_OmOnZ8IafirarFL_last_frame_q1.png"
+        ],
+        "description": "URL of the image to use as the last frame",
+        "title": "End Image Url",
+        "type": "string"
+      },
+      "movement_amplitude": {
+        "default": "auto",
+        "description": "The movement amplitude of objects in the frame",
+        "title": "Movement Amplitude",
+        "type": "string",
+        "enum": [
+          "auto",
+          "small",
+          "medium",
+          "large"
+        ]
+      }
+    },
+    "title": "Q1StartEndToVideoRequest",
+    "required": [
+      "prompt",
+      "start_image_url",
+      "end_image_url"
+    ],
+    "type": "object"
+  },
+  "xai/grok-imagine-video/image-to-video": {
+    "properties": {
+      "enable_safety_checker": {
+        "description": "Authorized callers may set false to request relaxed screening.",
+        "type": "boolean",
+        "default": true,
+        "title": "Enable Safety Checker"
+      },
+      "aspect_ratio": {
+        "description": "Aspect ratio of the generated video.",
+        "default": "auto",
+        "anyOf": [
+          {
+            "enum": [
+              "auto",
+              "16:9",
+              "4:3",
+              "3:2",
+              "1:1",
+              "2:3",
+              "3:4",
+              "9:16"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Aspect Ratio"
+      },
+      "image_url": {
+        "description": "URL of the input image for video generation.",
+        "type": "string",
+        "examples": [
+          "https://v3b.fal.media/files/b/0a8b90e0/BFLE9VDlZqsryU-UA3BoD_image_004.png"
+        ],
+        "title": "Image URL"
+      },
+      "duration": {
+        "maximum": 15,
+        "description": "Video duration in seconds.",
+        "default": 6,
+        "type": "integer",
+        "title": "Duration",
+        "minimum": 1
+      },
+      "resolution": {
+        "enum": [
+          "480p",
+          "720p"
+        ],
+        "description": "Resolution of the output video.",
+        "default": "720p",
+        "type": "string",
+        "title": "Resolution"
+      },
+      "prompt": {
+        "title": "Prompt",
+        "description": "Text description of desired changes or motion in the video.",
+        "type": "string",
+        "examples": [
+          "Medieval knight in ornate armor walking through a mystical forest, bioluminescent plants pulsing with light, ancient stone ruins overgrown with glowing vines, over-the-shoulder camera, dark fantasy aesthetic, volumetric fog and Lumen lighting"
+        ],
+        "maxLength": 4096
+      }
+    },
+    "type": "object",
+    "required": [
+      "prompt",
+      "image_url"
+    ],
+    "title": "XAIImageToVideoInput",
+    "x-fal-order-properties": [
+      "prompt",
+      "duration",
+      "resolution",
+      "image_url",
+      "aspect_ratio",
+      "enable_safety_checker"
+    ]
+  },
+  "xai/grok-imagine-video/v1.5/image-to-video": {
+    "properties": {
+      "enable_safety_checker": {
+        "description": "Authorized callers may set false to request relaxed screening.",
+        "type": "boolean",
+        "default": true,
+        "title": "Enable Safety Checker"
+      },
+      "resolution": {
+        "enum": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "description": "Resolution of the output video.",
+        "default": "720p",
+        "type": "string",
+        "title": "Resolution"
+      },
+      "image_url": {
+        "description": "URL of the input image for video generation.",
+        "type": "string",
+        "examples": [
+          "https://v3b.fal.media/files/b/0a8b90e0/BFLE9VDlZqsryU-UA3BoD_image_004.png"
+        ],
+        "title": "Image URL"
+      },
+      "duration": {
+        "maximum": 15,
+        "description": "Video duration in seconds.",
+        "default": 6,
+        "type": "integer",
+        "title": "Duration",
+        "minimum": 1
+      },
+      "prompt": {
+        "title": "Prompt",
+        "description": "Text description of desired changes or motion in the video.",
+        "type": "string",
+        "examples": [
+          "Medieval knight in ornate armor walking through a mystical forest, bioluminescent plants pulsing with light, ancient stone ruins overgrown with glowing vines, over-the-shoulder camera, dark fantasy aesthetic, volumetric fog and Lumen lighting"
+        ],
+        "maxLength": 4096
+      }
+    },
+    "description": "``grok-imagine-video-1.5`` image-to-video (no ``aspect_ratio``).\n\nWidens ``resolution`` to add the 1080p tier supported by the 1.5 model\n(the standard model remains 480p/720p only).",
+    "type": "object",
+    "required": [
+      "prompt",
+      "image_url"
+    ],
+    "title": "XAIImageToVideoV15Input",
+    "x-fal-order-properties": [
+      "prompt",
+      "duration",
+      "resolution",
+      "image_url",
+      "enable_safety_checker"
+    ]
+  },
+  "fal-ai/minimax/hailuo-02/standard/image-to-video": {
+    "properties": {
+      "prompt": {
+        "title": "Prompt",
+        "type": "string",
+        "maxLength": 2000,
+        "examples": [
+          "Man walked into winter cave with polar bear"
+        ]
+      },
+      "image_url": {
+        "title": "Image Url",
+        "type": "string",
+        "examples": [
+          "https://storage.googleapis.com/falserverless/model_tests/minimax/1749891352437225630-389852416840474630_1749891352.png"
+        ]
+      },
+      "prompt_optimizer": {
+        "title": "Prompt Optimizer",
+        "type": "boolean",
+        "description": "Whether to use the model's prompt optimizer",
+        "default": true
+      },
+      "duration": {
+        "title": "Duration",
+        "type": "string",
+        "enum": [
+          "6",
+          "10"
+        ],
+        "description": "The duration of the video in seconds. 10 seconds videos are not supported for 1080p resolution.",
+        "default": "6"
+      },
+      "enable_safety_checker": {
+        "title": "Enable Safety Checker",
+        "type": "boolean",
+        "description": "Authorized callers may set false to request relaxed screening.",
+        "default": true
+      },
+      "resolution": {
+        "title": "Resolution",
+        "type": "string",
+        "enum": [
+          "512P",
+          "768P"
+        ],
+        "description": "The resolution of the generated video.",
+        "default": "768P"
+      },
+      "end_image_url": {
+        "title": "End Image Url",
+        "anyOf": [
+          {
+            "type": "string",
+            "ui": {
+              "field": "image"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Optional URL of the image to use as the last frame of the video"
+      }
+    },
+    "type": "object",
+    "title": "StandardImageToVideoHailuo02Input",
+    "x-fal-order-properties": [
+      "prompt",
+      "image_url",
+      "duration",
+      "prompt_optimizer",
+      "resolution",
+      "end_image_url",
+      "enable_safety_checker"
+    ],
+    "required": [
+      "prompt",
+      "image_url"
+    ]
+  },
+  "fal-ai/pixverse/v5.6/image-to-video": {
+    "properties": {
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Seed",
+        "description": "\n            The same seed and the same prompt given to the same version of the model\n            will output the same video every time.\n        "
+      },
+      "enable_safety_checker": {
+        "default": true,
+        "title": "Enable Safety Checker",
+        "description": "Authorized callers may set false to request relaxed screening.",
+        "type": "boolean"
+      },
+      "negative_prompt": {
+        "default": "",
+        "examples": [
+          "blurry, low quality, low resolution, pixelated, noisy, grainy, out of focus, poorly lit, poorly exposed, poorly composed, poorly framed, poorly cropped, poorly color corrected, poorly color graded"
+        ],
+        "title": "Negative Prompt",
+        "description": "Negative prompt to be used for the generation. Limited to 2048 UTF-8 encoded bytes. Because the limit counts bytes rather than characters, emoji and non-Latin or accented characters (which use multiple bytes each) can push a visually short prompt over the cap.",
+        "type": "string"
+      },
+      "duration": {
+        "enum": [
+          "5",
+          "8",
+          "10"
+        ],
+        "default": "5",
+        "title": "Duration",
+        "description": "The duration of the generated video in seconds. 1080p videos are limited to 5 or 8 seconds",
+        "type": "string"
+      },
+      "thinking_type": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "enabled",
+              "disabled",
+              "auto"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Thinking Type",
+        "description": "Prompt optimization mode: 'enabled' to optimize, 'disabled' to turn off, 'auto' for model decision"
+      },
+      "generate_audio_switch": {
+        "default": false,
+        "title": "Generate Audio Switch",
+        "description": "Enable audio generation (BGM, SFX, dialogue)",
+        "type": "boolean"
+      },
+      "prompt": {
+        "examples": [
+          "A woman warrior with her hammer walking with his glacier wolf."
+        ],
+        "title": "Prompt",
+        "description": "Text prompt for the video generation. Limited to 2048 UTF-8 encoded bytes. Because the limit counts bytes rather than characters, emoji and non-Latin or accented characters (which use multiple bytes each) can push a visually short prompt over the cap.",
+        "type": "string"
+      },
+      "resolution": {
+        "enum": [
+          "360p",
+          "540p",
+          "720p",
+          "1080p"
+        ],
+        "default": "720p",
+        "title": "Resolution",
+        "description": "The resolution of the generated video",
+        "type": "string"
+      },
+      "image_url": {
+        "examples": [
+          "https://v3.fal.media/files/zebra/qL93Je8ezvzQgDOEzTjKF_KhGKZTEebZcDw6T5rwQPK_output.png"
+        ],
+        "title": "Image Url",
+        "description": "URL of the image to use as the first frame",
+        "type": "string"
+      },
+      "style": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "anime",
+              "3d_animation",
+              "clay",
+              "comic",
+              "cyberpunk"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Style",
+        "description": "The style of the generated video"
+      }
+    },
+    "required": [
+      "prompt",
+      "image_url"
+    ],
+    "title": "ImageToVideoRequestV5_6",
+    "x-fal-order-properties": [
+      "prompt",
+      "resolution",
+      "duration",
+      "negative_prompt",
+      "style",
+      "seed",
+      "generate_audio_switch",
+      "thinking_type",
+      "image_url",
+      "enable_safety_checker"
+    ],
+    "type": "object"
+  },
+  "fal-ai/pixverse/v5.6/transition": {
+    "properties": {
+      "aspect_ratio": {
+        "enum": [
+          "16:9",
+          "4:3",
+          "1:1",
+          "3:4",
+          "9:16"
+        ],
+        "default": "16:9",
+        "title": "Aspect Ratio",
+        "description": "The aspect ratio of the generated video",
+        "type": "string"
+      },
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Seed",
+        "description": "\n            The same seed and the same prompt given to the same version of the model\n            will output the same video every time.\n        "
+      },
+      "enable_safety_checker": {
+        "default": true,
+        "title": "Enable Safety Checker",
+        "description": "Authorized callers may set false to request relaxed screening.",
+        "type": "boolean"
+      },
+      "negative_prompt": {
+        "default": "",
+        "examples": [
+          "blurry, low quality, low resolution, pixelated, noisy, grainy, out of focus, poorly lit, poorly exposed, poorly composed, poorly framed, poorly cropped, poorly color corrected, poorly color graded"
+        ],
+        "title": "Negative Prompt",
+        "description": "Negative prompt to be used for the generation. Limited to 2048 UTF-8 encoded bytes. Because the limit counts bytes rather than characters, emoji and non-Latin or accented characters (which use multiple bytes each) can push a visually short prompt over the cap.",
+        "type": "string"
+      },
+      "duration": {
+        "enum": [
+          "5",
+          "8",
+          "10"
+        ],
+        "default": "5",
+        "title": "Duration",
+        "description": "The duration of the generated video in seconds. 1080p videos are limited to 5 or 8 seconds",
+        "type": "string"
+      },
+      "first_image_url": {
+        "examples": [
+          "https://v3.fal.media/files/zebra/owQh2DAzk8UU7J02nr5RY_Co2P4boLv6meIZ5t9gKvL_8685da151df343ab8bf82165c928e2a5.jpg"
+        ],
+        "title": "First Image Url",
+        "description": "URL of the image to use as the first frame",
+        "type": "string"
+      },
+      "thinking_type": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "enabled",
+              "disabled",
+              "auto"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Thinking Type",
+        "description": "Prompt optimization mode: 'enabled' to optimize, 'disabled' to turn off, 'auto' for model decision"
+      },
+      "generate_audio_switch": {
+        "default": false,
+        "title": "Generate Audio Switch",
+        "description": "Enable audio generation (BGM, SFX, dialogue)",
+        "type": "boolean"
+      },
+      "prompt": {
+        "examples": [
+          "Scene slowly transition into cat swimming under water"
+        ],
+        "title": "Prompt",
+        "description": "The prompt for the transition. Limited to 2048 UTF-8 encoded bytes. Because the limit counts bytes rather than characters, emoji and non-Latin or accented characters (which use multiple bytes each) can push a visually short prompt over the cap.",
+        "type": "string"
+      },
+      "resolution": {
+        "enum": [
+          "360p",
+          "540p",
+          "720p",
+          "1080p"
+        ],
+        "default": "720p",
+        "title": "Resolution",
+        "description": "The resolution of the generated video",
+        "type": "string"
+      },
+      "end_image_url": {
+        "examples": [
+          "https://v3.fal.media/files/kangaroo/RgedFs_WSnq5BgER7qDx1_ONrbTJ1YAGXz-9JnSsBoB_bdc8750387734bfe940319f469f7b0b2.jpg"
+        ],
+        "title": "End Image Url",
+        "description": "URL of the image to use as the last frame",
+        "type": "string"
+      },
+      "style": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "anime",
+              "3d_animation",
+              "clay",
+              "comic",
+              "cyberpunk"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Style",
+        "description": "The style of the generated video"
+      }
+    },
+    "required": [
+      "prompt",
+      "first_image_url",
+      "end_image_url"
+    ],
+    "title": "TransitionRequestV5_6",
+    "x-fal-order-properties": [
+      "prompt",
+      "aspect_ratio",
+      "resolution",
+      "duration",
+      "negative_prompt",
+      "style",
+      "seed",
+      "generate_audio_switch",
+      "thinking_type",
+      "first_image_url",
+      "end_image_url",
+      "enable_safety_checker"
+    ],
+    "type": "object"
+  },
+  "fal-ai/pixverse/v6/image-to-video": {
+    "properties": {
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Seed",
+        "description": "\n            The same seed and the same prompt given to the same version of the model\n            will output the same video every time.\n        "
+      },
+      "enable_safety_checker": {
+        "default": true,
+        "title": "Enable Safety Checker",
+        "description": "Authorized callers may set false to request relaxed screening.",
+        "type": "boolean"
+      },
+      "negative_prompt": {
+        "default": "",
+        "examples": [
+          "blurry, low quality, low resolution, pixelated, noisy, grainy, out of focus, poorly lit, poorly exposed, poorly composed, poorly framed, poorly cropped, poorly color corrected, poorly color graded"
+        ],
+        "title": "Negative Prompt",
+        "description": "Negative prompt to be used for the generation. Limited to 2048 UTF-8 encoded bytes. Because the limit counts bytes rather than characters, emoji and non-Latin or accented characters (which use multiple bytes each) can push a visually short prompt over the cap.",
+        "type": "string"
+      },
+      "duration": {
+        "minimum": 1,
+        "default": 5,
+        "maximum": 15,
+        "title": "Duration",
+        "description": "The duration of the generated video in seconds. v6 supports values from 1 to 15 seconds",
+        "type": "integer"
+      },
+      "thinking_type": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "enabled",
+              "disabled",
+              "auto"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Thinking Type",
+        "description": "Prompt optimization mode: 'enabled' to optimize, 'disabled' to turn off, 'auto' for model decision"
+      },
+      "generate_multi_clip_switch": {
+        "default": false,
+        "title": "Generate Multi Clip Switch",
+        "description": "Enable multi-clip generation with dynamic camera changes",
+        "type": "boolean"
+      },
+      "generate_audio_switch": {
+        "default": false,
+        "title": "Generate Audio Switch",
+        "description": "Enable audio generation (BGM, SFX, dialogue)",
+        "type": "boolean"
+      },
+      "prompt": {
+        "examples": [
+          "A woman warrior with her hammer walking with his glacier wolf."
+        ],
+        "title": "Prompt",
+        "description": "Text prompt for the video generation. Limited to 2048 UTF-8 encoded bytes. Because the limit counts bytes rather than characters, emoji and non-Latin or accented characters (which use multiple bytes each) can push a visually short prompt over the cap.",
+        "type": "string"
+      },
+      "resolution": {
+        "enum": [
+          "360p",
+          "540p",
+          "720p",
+          "1080p"
+        ],
+        "default": "720p",
+        "title": "Resolution",
+        "description": "The resolution of the generated video",
+        "type": "string"
+      },
+      "image_url": {
+        "examples": [
+          "https://v3.fal.media/files/zebra/qL93Je8ezvzQgDOEzTjKF_KhGKZTEebZcDw6T5rwQPK_output.png"
+        ],
+        "title": "Image Url",
+        "description": "URL of the image to use as the first frame",
+        "type": "string"
+      },
+      "style": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "anime",
+              "3d_animation",
+              "clay",
+              "comic",
+              "cyberpunk"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Style",
+        "description": "The style of the generated video"
+      }
+    },
+    "required": [
+      "prompt",
+      "image_url"
+    ],
+    "title": "ImageToVideoRequestV6",
+    "x-fal-order-properties": [
+      "prompt",
+      "resolution",
+      "duration",
+      "negative_prompt",
+      "style",
+      "seed",
+      "generate_audio_switch",
+      "generate_multi_clip_switch",
+      "thinking_type",
+      "image_url",
+      "enable_safety_checker"
+    ],
+    "type": "object"
+  },
+  "fal-ai/pixverse/v6/transition": {
+    "properties": {
+      "aspect_ratio": {
+        "enum": [
+          "16:9",
+          "4:3",
+          "1:1",
+          "3:4",
+          "9:16",
+          "2:3",
+          "3:2",
+          "21:9"
+        ],
+        "default": "16:9",
+        "title": "Aspect Ratio",
+        "description": "The aspect ratio of the generated video",
+        "type": "string"
+      },
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Seed",
+        "description": "\n            The same seed and the same prompt given to the same version of the model\n            will output the same video every time.\n        "
+      },
+      "enable_safety_checker": {
+        "default": true,
+        "title": "Enable Safety Checker",
+        "description": "Authorized callers may set false to request relaxed screening.",
+        "type": "boolean"
+      },
+      "negative_prompt": {
+        "default": "",
+        "examples": [
+          "blurry, low quality, low resolution, pixelated, noisy, grainy, out of focus, poorly lit, poorly exposed, poorly composed, poorly framed, poorly cropped, poorly color corrected, poorly color graded"
+        ],
+        "title": "Negative Prompt",
+        "description": "Negative prompt to be used for the generation. Limited to 2048 UTF-8 encoded bytes. Because the limit counts bytes rather than characters, emoji and non-Latin or accented characters (which use multiple bytes each) can push a visually short prompt over the cap.",
+        "type": "string"
+      },
+      "duration": {
+        "minimum": 1,
+        "default": 5,
+        "maximum": 15,
+        "title": "Duration",
+        "description": "The duration of the generated video in seconds. v6 supports values from 1 to 15 seconds",
+        "type": "integer"
+      },
+      "first_image_url": {
+        "examples": [
+          "https://v3.fal.media/files/zebra/owQh2DAzk8UU7J02nr5RY_Co2P4boLv6meIZ5t9gKvL_8685da151df343ab8bf82165c928e2a5.jpg"
+        ],
+        "title": "First Image Url",
+        "description": "URL of the image to use as the first frame",
+        "type": "string"
+      },
+      "thinking_type": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "enabled",
+              "disabled",
+              "auto"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Thinking Type",
+        "description": "Prompt optimization mode: 'enabled' to optimize, 'disabled' to turn off, 'auto' for model decision"
+      },
+      "generate_multi_clip_switch": {
+        "default": false,
+        "title": "Generate Multi Clip Switch",
+        "description": "Enable multi-clip generation with dynamic camera changes",
+        "type": "boolean"
+      },
+      "generate_audio_switch": {
+        "default": false,
+        "title": "Generate Audio Switch",
+        "description": "Enable audio generation (BGM, SFX, dialogue)",
+        "type": "boolean"
+      },
+      "prompt": {
+        "examples": [
+          "Scene slowly transition into cat swimming under water"
+        ],
+        "title": "Prompt",
+        "description": "The prompt for the transition. Limited to 2048 UTF-8 encoded bytes. Because the limit counts bytes rather than characters, emoji and non-Latin or accented characters (which use multiple bytes each) can push a visually short prompt over the cap.",
+        "type": "string"
+      },
+      "resolution": {
+        "enum": [
+          "360p",
+          "540p",
+          "720p",
+          "1080p"
+        ],
+        "default": "720p",
+        "title": "Resolution",
+        "description": "The resolution of the generated video",
+        "type": "string"
+      },
+      "end_image_url": {
+        "examples": [
+          "https://v3.fal.media/files/kangaroo/RgedFs_WSnq5BgER7qDx1_ONrbTJ1YAGXz-9JnSsBoB_bdc8750387734bfe940319f469f7b0b2.jpg"
+        ],
+        "title": "End Image Url",
+        "description": "URL of the image to use as the last frame",
+        "type": "string"
+      },
+      "style": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "anime",
+              "3d_animation",
+              "clay",
+              "comic",
+              "cyberpunk"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Style",
+        "description": "The style of the generated video"
+      }
+    },
+    "required": [
+      "prompt",
+      "first_image_url",
+      "end_image_url"
+    ],
+    "title": "TransitionRequestV6",
+    "x-fal-order-properties": [
+      "prompt",
+      "aspect_ratio",
+      "resolution",
+      "duration",
+      "negative_prompt",
+      "style",
+      "seed",
+      "generate_audio_switch",
+      "generate_multi_clip_switch",
+      "thinking_type",
+      "first_image_url",
+      "end_image_url",
+      "enable_safety_checker"
+    ],
+    "type": "object"
+  },
+  "bytedance/seedance-2.5/image-to-video": {
+    "x-fal-order-properties": [
+      "prompt",
+      "image_url",
+      "end_image_url",
+      "resolution",
+      "draft",
+      "duration",
+      "aspect_ratio",
+      "generate_audio",
+      "bitrate_mode",
+      "codec",
+      "end_user_id"
+    ],
+    "properties": {
+      "aspect_ratio": {
+        "description": "The aspect ratio of the generated video. Always \"auto\" for image-to-video",
+        "const": "auto",
+        "type": "string",
+        "default": "auto",
+        "title": "Aspect Ratio"
+      },
+      "prompt": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "examples": [
+          "An octopus finds a football in the ocean and excitedly calls its octopus friends to come and play. Cut scene to an octopus football game under the sea."
+        ],
+        "description": "The text prompt describing the desired motion and action for the video.",
+        "title": "Prompt"
+      },
+      "resolution": {
+        "description": "Video resolution - 480p for faster generation, 720p for balance, 1080p for high quality.",
+        "enum": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "type": "string",
+        "default": "720p",
+        "title": "Resolution"
+      },
+      "duration": {
+        "description": "Duration of the video in seconds. Supports 4 to 30 seconds, or auto to let the model decide based on the prompt.",
+        "enum": [
+          "auto",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30"
+        ],
+        "type": "string",
+        "default": "auto",
+        "title": "Duration"
+      },
+      "generate_audio": {
+        "description": "Whether to generate synchronized audio for the video, including sound effects, ambient sounds, and lip-synced speech. The cost of video generation is the same regardless of whether audio is generated or not.",
+        "type": "boolean",
+        "default": true,
+        "title": "Generate Audio"
+      },
+      "codec": {
+        "description": "'auto' retains default video codec behaviour; 'H264' uses H.264; 'H265' uses H.265.",
+        "examples": [
+          "auto",
+          "H264",
+          "H265"
+        ],
+        "type": "string",
+        "default": "auto",
+        "enum": [
+          "auto",
+          "H264",
+          "H265"
+        ],
+        "title": "Codec"
+      },
+      "bitrate_mode": {
+        "description": "Output bitrate mode. 'high' requests a higher-quality, larger-file encode from the model; 'standard' uses the default bitrate.",
+        "examples": [
+          "standard"
+        ],
+        "type": "string",
+        "default": "standard",
+        "enum": [
+          "standard",
+          "high"
+        ],
+        "title": "Bitrate Mode"
+      },
+      "image_url": {
+        "description": "The URL of the starting frame image to animate. Supported formats: JPEG, PNG, WebP. Max 30 MB.",
+        "examples": [
+          "https://v3b.fal.media/files/b/0a8eba37/Cqg-4Uwzyz4DELfceT1CF_a17e588773ec45b1a9e6f100a787b80b.jpg"
+        ],
+        "type": "string",
+        "title": "Image Url"
+      },
+      "end_user_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The unique user ID of the end user.",
+        "title": "End User Id"
+      },
+      "draft": {
+        "description": "Generate a draft preview at 480p, overriding resolution. Returns a draft_id for completing the draft at 1080p within seven days.",
+        "type": "boolean",
+        "default": false,
+        "title": "Draft"
+      },
+      "end_image_url": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The URL of the image to use as the last frame of the video. When provided, the generated video will transition from the starting image to this ending image. Supported formats: JPEG, PNG, WebP. Max 30 MB.",
+        "title": "End Image Url"
+      }
+    },
+    "type": "object",
+    "required": [
+      "image_url"
+    ],
+    "title": "Seedance2I2VInput"
+  }
+}

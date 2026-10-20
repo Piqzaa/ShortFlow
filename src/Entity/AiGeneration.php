@@ -45,6 +45,10 @@ class AiGeneration
     private ?VideoAsset $video = null;
     #[ORM\Column(length: 52, nullable: true)]
     private ?string $referenceImage = null;
+    #[ORM\Column(length: 52, nullable: true)]
+    private ?string $endReferenceImage = null;
+    #[ORM\Column(length: 8, options: ['default' => 'crop'])]
+    private string $imageFit = 'crop';
 
     public function __construct(User $owner, string $title, string $prompt, string $model, int $seconds, string $ratio, int $estimatedCents)
     {
@@ -70,6 +74,32 @@ class AiGeneration
             throw new \LogicException('Image de référence invalide ou déjà fixée.');
         }
         $this->referenceImage = $name;
+    }
+
+    public function getEndReferenceImage(): ?string
+    {
+        return $this->endReferenceImage;
+    }
+
+    public function attachEndReference(string $name): void
+    {
+        if ('prepared' !== $this->status || !preg_match('/^[a-f0-9]{48}\.jpg$/D', $name)) {
+            throw new \LogicException('Image de fin invalide ou déjà fixée.');
+        }
+        $this->endReferenceImage = $name;
+    }
+
+    public function getImageFit(): string
+    {
+        return $this->imageFit;
+    }
+
+    public function frameImages(string $fit): void
+    {
+        if ('prepared' !== $this->status || !in_array($fit, ['crop', 'contain'], true)) {
+            throw new \LogicException('Cadrage invalide ou déjà fixé.');
+        }
+        $this->imageFit = $fit;
     }
 
     public function getId(): ?int

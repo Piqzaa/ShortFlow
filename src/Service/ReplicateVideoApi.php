@@ -8,7 +8,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class ReplicateVideoApi
 {
-    public function __construct(#[Autowire(service: 'ai.http')] private HttpClientInterface $http, private AiCatalog $catalog)
+    public function __construct(#[Autowire(service: 'ai.http')] private HttpClientInterface $http, private AiCatalog $catalog, private AiReferenceStorage $references)
     {
     }
 
@@ -18,11 +18,22 @@ final class ReplicateVideoApi
         $model = $this->catalog->model($job->getModel());
         $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
         $input = ['prompt' => $job->getPrompt(), 'duration' => $job->getSeconds()];
-        $input += match ($job->getModel()) {
-            'wan-25-replicate' => ['size' => '9:16' === $job->getRatio() ? '720*1280' : '1280*720', 'enable_prompt_expansion' => false],
-            'veo-31-fast-replicate' => ['aspect_ratio' => $job->getRatio(), 'resolution' => '720p', 'generate_audio' => true],
-            default => throw new \LogicException('Schéma Replicate indisponible.'),
-        };
+        if ($model['image'] ?? false) {
+            $input += $model['input'] ?? [];
+            $input[$model['imageField'] ?? 'image'] = $this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '', $job->getRatio(), $job->getImageFit());
+            if (isset($model['endImageField'])) {
+                $input['aspect_ratio'] = $job->getRatio();
+                if (null !== $job->getEndReferenceImage()) {
+                    $input[$model['endImageField']] = $this->references->dataUri($job->getOwner(), $job->getEndReferenceImage(), $job->getRatio(), $job->getImageFit(), 'auto' === $job->getRatio() ? $job->getReferenceImage() : null);
+                }
+            }
+        } else {
+            $input += match ($job->getModel()) {
+                'wan-25-replicate' => ['size' => '9:16' === $job->getRatio() ? '720*1280' : '1280*720', 'enable_prompt_expansion' => false],
+                'veo-31-fast-replicate' => ['aspect_ratio' => $job->getRatio(), 'resolution' => '720p', 'generate_audio' => true],
+                default => throw new \LogicException('Schéma Replicate indisponible.'),
+            };
+        }
         $data = $this->http->request('POST', 'https://api.replicate.com/v1/models/'.$model['endpoint'].'/predictions', [...$this->options($key), 'json' => ['input' => $input]])->toArray();
         $id = $data['id'] ?? null;
         if (!is_string($id) || !preg_match('/^[a-zA-Z0-9_-]{1,100}$/D', $id)) {

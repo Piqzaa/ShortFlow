@@ -9,6 +9,7 @@ use App\Service\AiCatalog;
 use App\Service\AiGenerations;
 use App\Service\AiKeys;
 use App\Service\AiReferenceStorage;
+use App\Service\FalMcpVideoApi;
 use App\Service\PrivateVideoStorage;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -133,14 +134,15 @@ final class AiStudioTest extends WebTestCase
         parent::tearDown();
     }
 
-    private function imageUpload(): string
+    private function imageUpload(string $slot = 'start'): string
     {
         $file = tempnam(sys_get_temp_dir(), 'ai-image-');
         $this->files[] = $file;
         (new Process(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=purple:s=360x640', '-frames:v', '1', '-c:v', 'png', '-f', 'image2', $file]))->mustRun();
         $crawler = $this->client->request('GET', '/studio/creation');
-        $token = $crawler->filter('input[name="ai_reference[_token]"]')->attr('value');
-        $this->client->request('POST', '/studio/creation/images', ['ai_reference' => ['_token' => $token]], ['ai_reference' => ['image' => new UploadedFile($file, 'test.png', 'image/png', null, true)]], ['HTTP_ACCEPT' => 'application/json']);
+        $root = 'end' === $slot ? 'ai_end_reference' : 'ai_reference';
+        $token = $crawler->filter('input[name="'.$root.'[_token]"]')->attr('value');
+        $this->client->request('POST', '/studio/creation/images'.('end' === $slot ? '?slot=end' : ''), [$root => ['_token' => $token]], [$root => ['image' => new UploadedFile($file, 'test.png', 'image/png', null, true)]], ['HTTP_ACCEPT' => 'application/json']);
         self::assertResponseIsSuccessful();
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->files[] = static::getContainer()->get(AiReferenceStorage::class)->path($this->owner, $data['reference']);
@@ -253,6 +255,90 @@ final class AiStudioTest extends WebTestCase
         self::assertSelectorTextContains('.creation-form', 'compatible avec ton point de départ');
         self::assertSame(0, $this->submissions);
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+    }
+
+    public function testFramesPreparationRetainsBothImagesAndRejectsUnsupportedModels(): void
+    {
+        $first = $this->imageUpload();
+        $last = $this->imageUpload('end');
+        $this->client->request('GET', '/studio/creation/images/'.$last.'?ratio=16:9&fit=contain');
+        self::assertResponseIsSuccessful();
+        self::assertSame([1920, 1080], array_slice(getimagesizefromstring($this->client->getResponse()->getContent()), 0, 2));
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[useEnd]' => '1', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => $last, 'ai_idea[imageFit]' => 'contain', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Transition gently', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => '16:9']));
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertSelectorExists('img[alt="Image de fin de cette génération"]');
+        $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
+        self::assertSame($last, $job->getEndReferenceImage());
+        self::assertSame('contain', $job->getImageFit());
+        self::assertSame('16:9', $job->getRatio());
+        $this->client->submit($this->client->getCrawler()->selectButton('Réutiliser cette idée ↗')->form());
+        $this->client->followRedirect();
+        self::assertSelectorExists('input[name="ai_idea[endReference]"][value="'.$last.'"]');
+        self::assertSelectorExists('input[name="ai_idea[useEnd]"][checked]');
+        $crawler = $this->client->getCrawler();
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[model]' => 'wan-25-image-720p']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.creation-form', 'n’accepte pas d’image de fin');
+        self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/creation/images/'.$last.'?ratio=9:16&fit=crop');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/studio/creation/images/'.$last.'?match='.$first);
+        self::assertResponseStatusCodeSame(404);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testFramesModelsRequireTheirEndingImageBeforePreparation(): void
+    {
+        $first = $this->imageUpload();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[useEnd]' => '1', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => '', 'ai_idea[model]' => 'vidu-q1-frames', 'ai_idea[prompt]' => 'Transition gently', 'ai_idea[seconds]' => 4, 'ai_idea[ratio]' => 'auto']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.creation-form', 'Importe ton image de fin');
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => '../../secret.jpg', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Transition gently']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorNotExists('img[alt="Image de fin"][src]');
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testMcpImagePayloadKeepsBothConfirmedFramesAndCropping(): void
+    {
+        $name = $this->imageUpload();
+        $job = new AiGeneration($this->owner, 'MCP frames', 'A gentle transition', 'kling-25-image', 5, '1:1', 35);
+        $job->attachReference($name);
+        $job->attachEndReference($name);
+        $job->frameImages('contain');
+        $job->useMcp();
+        $job->bindAccessAccount('synthetic-account');
+        $this->httpScenario = function (string $method, string $url, array $options): MockResponse {
+            self::assertSame('https://mcp.fal.ai/mcp-relay', $url);
+            $body = json_decode($options['body'], true, 64, JSON_THROW_ON_ERROR);
+            if ('initialize' === $body['method']) {
+                return new MockResponse('{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-03-26"}}');
+            }
+            if ('notifications/initialized' === $body['method']) {
+                return new MockResponse('', ['http_code' => 202]);
+            }
+            self::assertSame('submit_job', $body['params']['name']);
+            ++$this->submissions;
+            $args = $body['params']['arguments'];
+            self::assertFalse($args['store_payload']);
+            self::assertSame('fal-ai/kling-video/v2.5-turbo/pro/image-to-video', $args['endpoint_id']);
+            self::assertArrayNotHasKey('aspect_ratio', $args['input']);
+            foreach (['image_url', 'tail_image_url'] as $key) {
+                $bytes = base64_decode(substr($args['input'][$key], strlen('data:image/jpeg;base64,')), true);
+                self::assertSame([1080, 1080], array_slice(getimagesizefromstring($bytes), 0, 2));
+            }
+
+            return new MockResponse('{"jsonrpc":"2.0","id":2,"result":{"structuredContent":{"request_id":"synthetic-frames"}}}');
+        };
+        $receipt = static::getContainer()->get(FalMcpVideoApi::class)->submit($job, json_encode(['access_token' => 'synthetic-not-a-real-token', 'account_id' => 'synthetic-account'], JSON_THROW_ON_ERROR));
+        self::assertArrayHasKey('mcp_receipt', $receipt);
+        self::assertSame(1, $this->submissions);
     }
 
     public function testIdeaAutosaveKeepsIncompleteInputsWithoutCreatingGeneration(): void

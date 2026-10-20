@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult', 'source', 'reference', 'referencePanel'];
+  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult', 'source', 'reference', 'referencePanel', 'useEnd', 'endReference', 'endPanel', 'imageFit', 'imageSettings', 'startFrame', 'endFrame', 'startPreview', 'endPreview', 'framingNotice'];
   static values = { models: Object, connected: Object, providers: Object };
 
   connect() {
@@ -27,33 +27,76 @@ export default class extends Controller {
     if (!this.hasSourceTarget) return;
     const image = this.sourceMode() === 'image';
     this.referencePanelTarget.hidden = !image;
-    if (this.hasFourKTarget) this.fourKTarget.closest('.catalog-fourk').hidden = image;
-    const allowed = Object.keys(this.modelsValue).filter(id => Boolean(this.modelsValue[id].image) === image);
-    if (!allowed.includes(this.modelTarget.value)) this.modelTarget.value = image ? allowed[0] || '' : '';
+    if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = !image;
+    const allowed = Object.keys(this.modelsValue).filter(id => Boolean(this.modelsValue[id].image) === image && (!image || !this.hasUseEndTarget || !this.useEndTarget.checked || this.modelsValue[id].endImageField));
+    if (!allowed.includes(this.modelTarget.value)) {
+      const previous = this.modelsValue[this.modelTarget.value];
+      const preferred = allowed.find(id => this.modelsValue[id].provider === previous?.provider && this.modelsValue[id].maker === previous?.maker && this.modelsValue[id].quality === previous?.quality)
+        || allowed.find(id => this.modelsValue[id].provider === previous?.provider);
+      this.modelTarget.value = image ? preferred || allowed[0] || '' : '';
+    }
     if (this.hasPickerTarget) Array.from(this.groupTarget.options).forEach(option => {
-      option.hidden = option.disabled = Boolean(option.value && option.dataset.source !== this.sourceMode());
+      option.hidden = option.disabled = Boolean(option.value && !this.cardTargets.some(card => card.dataset.groupId === option.value && this.variantIds(card).some(id => allowed.includes(id))));
     });
-    if (image) this.ratioTarget.value = 'auto';
-    else if (this.ratioTarget.value === 'auto') this.ratioTarget.value = '9:16';
+    if (!image && this.ratioTarget.value === 'auto') this.ratioTarget.value = '9:16';
     this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
     this.filter();
     if (this.hasPickerTarget) this.searchPicker();
   }
 
   referenceChanged(event) {
-    this.referenceTarget.value = event.detail.reference || '';
+    const slot = event.detail.slot || 'start';
+    const target = slot === 'end' && this.hasEndReferenceTarget ? this.endReferenceTarget : this.referenceTarget;
+    target.value = event.detail.reference || '';
+    this.pendingImages ??= new Set();
+    if (event.detail.pending) this.pendingImages.add(slot); else this.pendingImages.delete(slot);
     this.sourceTarget.value = 'image';
     this.changeSource();
-    this.referenceTarget.dispatchEvent(new Event('change', {bubbles:true}));
-    this.element.querySelectorAll('#ai-idea-form button[type="submit"]').forEach(button => { button.disabled = Boolean(event.detail.pending); });
+    target.dispatchEvent(new Event('change', {bubbles:true}));
+    this.element.querySelectorAll('#ai-idea-form button[type="submit"]').forEach(button => { button.disabled = this.pendingImages.size > 0; });
+  }
+
+  changeEnd() {
+    if (!this.useEndTarget.checked && this.modelsValue[this.modelTarget.value]?.requiresEnd) this.modelTarget.value = '';
+    this.changeSource();
+    this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+
+  frameChanged(event) {
+    if (!this.hasStartPreviewTarget) return;
+    const ratio = this.ratioTarget.value;
+    const start = this.startPreviewTarget;
+    const nativeRatio = start.naturalWidth && start.naturalHeight ? `${start.naturalWidth} / ${start.naturalHeight}` : '9 / 16';
+    const aspect = ratio && ratio !== 'auto' ? ratio.replace(':', ' / ') : nativeRatio;
+    const [a,b] = aspect.split('/').map(Number);
+    if (this.hasReferencePanelTarget) this.referencePanelTarget.dataset.end = String(this.hasUseEndTarget && this.useEndTarget.checked);
+    const fit = this.hasImageFitTarget && this.imageFitTarget.value === 'contain' ? 'contain' : 'cover';
+    for (const [frame, preview] of [[this.startFrameTarget, start], [this.endFrameTarget, this.endPreviewTarget]]) {
+      frame.hidden = preview.hidden;
+      frame.style.aspectRatio = aspect;
+      frame.style.maxWidth = `calc(var(--reference-height, 300px) * ${a / b})`;
+      preview.style.objectFit = fit;
+    }
+    if (this.hasFramingNoticeTarget) this.framingNoticeTarget.textContent = ratio === 'auto'
+      ? 'Format d’origine conservé. L’image de fin est ajustée au même cadre.'
+      : `${ratio || 'Choisis un format'} · ${fit === 'contain' ? 'image entière, bandes noires si nécessaire' : 'recadrage centré'}. Cet aperçu sera repris au récapitulatif.`;
+    if (event?.type === 'change') this.referenceTarget.dispatchEvent(new Event('change', {bubbles:true}));
   }
 
   changeModel() {
     if (this.hasPickerTarget) this.syncPicker();
     const model = this.modelsValue[this.modelTarget.value];
+    if (model?.requiresEnd && this.hasUseEndTarget && !this.useEndTarget.checked) {
+      this.useEndTarget.checked = true;
+      this.changeSource();
+      return;
+    }
+    if (this.hasEndPanelTarget) this.endPanelTarget.hidden = this.sourceMode() !== 'image' || !this.useEndTarget.checked;
     this.restrict(this.durationTarget, model?.seconds);
     this.restrict(this.ratioTarget, model?.ratios);
+    if (model?.image && !this.ratioTarget.value) this.ratioTarget.value = model.ratios[0];
     if (this.hasAccessTarget) this.restrict(this.accessTarget, !model || model.provider === 'fal' ? ['api', 'mcp'] : ['api']);
+    this.frameChanged();
     this.estimate();
     this.cardTargets.forEach(card => {
       const selected = this.variantIds(card).includes(this.modelTarget.value);
@@ -91,7 +134,7 @@ export default class extends Controller {
       this.pickerResultsTarget.hidden = !query;
       this.pickerResultTargets.forEach(button => {
         const option = Array.from(this.groupTarget.options).find(option => option.value === button.dataset.groupId);
-        const matches = Boolean(option?.textContent.toLocaleLowerCase('fr').includes(query)) && (!this.hasSourceTarget || button.dataset.source === this.sourceMode());
+        const matches = Boolean(option?.textContent.toLocaleLowerCase('fr').includes(query)) && (!this.hasSourceTarget || button.dataset.source === this.sourceMode()) && (!this.hasUseEndTarget || !this.useEndTarget.checked || this.sourceMode() !== 'image' || this.cardTargets.some(card => card.dataset.groupId === button.dataset.groupId && this.variantIds(card).some(id => this.modelsValue[id]?.endImageField)));
         button.hidden = !matches;
         if (matches) count++;
       });
@@ -124,8 +167,8 @@ export default class extends Controller {
     const quality = model.quality === '4k' ? '4K' : model.quality;
     set('[data-card-quality]', quality);
     set('[data-card-description]', model.description);
-    set('[data-card-capabilities]', `${model.seconds.length > 4 ? `${model.seconds[0]}–${model.seconds.at(-1)}` : model.seconds.join(' / ')} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.image ? 'Format de l’image' : model.ratios.join(' · ')}`);
-    set('[data-card-price]', model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.money(c)} $ US`).join(' · ') : `${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3}).format(model.rateMicros / 1000000)} $ US / s`);
+    set('[data-card-capabilities]', `${model.seconds.length > 4 ? `${model.seconds[0]}–${model.seconds.at(-1)}` : model.seconds.join(' / ')} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.ratios.map(ratio => ratio === 'auto' ? 'Image d’origine' : ratio).join(' · ')}`);
+    set('[data-card-price]', model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.money(c)} $ US`).join(' · ') : `${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3}).format(model.rateMicros / 1000000)} $ US / s${model.fixedMicros ? ` + ${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:3}).format(model.fixedMicros / 1000000)} $ US d’image` : ''}`);
     const select = card.querySelector?.('.catalog-variant'); if (select) select.value = id;
     const button = card.querySelector?.('[data-creation-target="choose"]'); if (button) button.dataset.modelId = id;
   }
@@ -146,7 +189,6 @@ export default class extends Controller {
   }
 
   showFourK() {
-    if (this.hasSourceTarget) { this.sourceTarget.value = 'text'; this.changeSource(); }
     this.catalogTarget.open = true;
     this.qualityTarget.value = '4k'; this.searchTarget.value = ''; this.providerTarget.value = '';
     this.audioTarget.value = ''; this.minimumTarget.value = ''; this.onlyConnectedTarget.checked = false;
@@ -214,7 +256,7 @@ export default class extends Controller {
     this.cardTargets.forEach(card => {
       const matches = this.variantIds(card).filter(id => {
       const model = this.modelsValue[id];
-      return Boolean(model) && Boolean(model.image) === (this.sourceMode() === 'image') && `${model.name} ${model.maker} ${model.provider} ${model.quality}`.toLocaleLowerCase('fr').includes(query)
+      return Boolean(model) && Boolean(model.image) === (this.sourceMode() === 'image') && (!model.image || !this.hasUseEndTarget || !this.useEndTarget.checked || model.endImageField) && `${model.name} ${model.maker} ${model.provider} ${model.quality}`.toLocaleLowerCase('fr').includes(query)
         && (!this.providerTarget.value || model.provider === this.providerTarget.value)
         && (!this.audioTarget.value || model.audio === (this.audioTarget.value === 'yes'))
         && (!this.minimumTarget.value || Math.max(...model.seconds) >= Number(this.minimumTarget.value))
@@ -260,7 +302,7 @@ export default class extends Controller {
 
   price(model, seconds) {
     if (!model || !model.seconds.includes(seconds)) return null;
-    const cents = model.pricesCents ? model.pricesCents[seconds] : Math.ceil(model.rateMicros * seconds / 10000);
+    const cents = model.pricesCents ? model.pricesCents[seconds] : Math.ceil((model.rateMicros * seconds + (model.fixedMicros || 0)) / 10000);
     return Number.isSafeInteger(cents) && cents > 0 ? cents : null;
   }
 
