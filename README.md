@@ -1,5 +1,7 @@
 # VydFlow — bêta, comptes et bibliothèque privée
 
+Navigation locale : `APP_DEBUG=0` dans `.env.local` évite les coûteuses vérifications de fichiers Windows/Docker pour utiliser le studio ; remettre `1` pour déboguer. Après modification des routes/services/configuration sans debug : `docker compose exec php php bin/console cache:clear --env=dev --no-debug`. Les templates restent actualisés en dev. Mesures et aperçu local avant import : [docs/performance-import.md](docs/performance-import.md).
+
 Micro-SaaS Symfony : landing immersive avec inscription, comptes confirmés, dashboard et bibliothèque vidéo privée. Import MP4/WebM, lecture, renommage et suppression. Le lot YouTube ajoute sélection multiple, connexion OAuth, préparation et suivi des envois Messenger, avec worker Docker automatique. Résultats des essais réels : docs/verification.md. Brouillons, programmation ponctuelle et calendrier disponibles localement ; premier Reel Instagram programmé testé réellement et premier envoi TikTok Sandbox réussi le 19 octobre. IA et abonnement viennent ensuite. Aucun service cloud ni compte payant nécessaire pour explorer localement ; les essais YouTube réels demandent une application Google. La liste d’attente historique est conservée sur /liste-attente, hors parcours principal.
 
 Le studio et l’espace personnel ont été remaniés le 18 octobre : galerie et brouillons, préparation sur un écran, photo privée et préférences du compte. Parcours et guide Symfony dans [docs/studio-compte.md](docs/studio-compte.md).
@@ -10,7 +12,7 @@ Vision validée le 15 octobre 2026 : « Importe ou génère tes vidéos courtes,
 
 ## Démarrage local
 
-Catalogue IA étendu localement : **21 configurations fournisseur/modèle chez Fal, Replicate et LTX**, dont Seedance 2.5 jusqu'à 30 secondes natives ; formats, audio et estimations propres à chaque configuration. Guide et limites : [docs/ia-catalogue-etendu.md](docs/ia-catalogue-etendu.md). Nouvelles configurations HD/4K et connexion navigateur Fal OAuth/MCP testées avec API simulées ; premier accès OAuth réel encore à valider et génération payante globale désactivée. Téléchargement privé et filtres qualité/prix : [guide du lot](docs/ia-connexions-hd.md).
+Catalogue IA étendu localement : **21 configurations fournisseur/modèle chez Fal, Replicate et LTX**, dont Seedance 2.5 jusqu'à 30 secondes natives ; formats, audio et estimations propres à chaque configuration. Guide et limites : [docs/ia-catalogue-etendu.md](docs/ia-catalogue-etendu.md). Nouvelles configurations HD/4K et connexion navigateur Fal OAuth/MCP testées avec API simulées ; première connexion OAuth Fal réelle validée par le propriétaire, génération MCP payante non testée et génération payante globale désactivée. Téléchargement privé et filtres qualité/prix : [guide du lot](docs/ia-connexions-hd.md).
 
 Prérequis : Docker Desktop démarré (conteneurs Linux), Docker Compose et Git. Node local est optionnel : un conteneur outils est prévu.
 

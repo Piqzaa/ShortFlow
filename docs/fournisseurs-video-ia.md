@@ -85,4 +85,4 @@ Tests attendus lors de l'implémentation : réponses API/MCP simulées, échange
 
 ## État de livraison après le lot HD/4K
 
-Trois fournisseurs sont implémentés localement : Fal, Replicate et LTX direct, 21 configurations au total. Fal dispose aussi du client OAuth/MCP, vérifié avec HTTP simulé mais sans première autorisation réelle. Les autres fournisseurs de cet inventaire restent des candidats, sans bouton de connexion fictif. Détails : [ia-connexions-hd.md](ia-connexions-hd.md).
+Trois fournisseurs sont implémentés localement : Fal, Replicate et LTX direct, 21 configurations au total. Fal dispose aussi du client OAuth/MCP, vérifié avec HTTP simulé mais avec première connexion OAuth réelle confirmée par le propriétaire, sans génération MCP payante. Les autres fournisseurs de cet inventaire restent des candidats, sans bouton de connexion fictif. Détails : [ia-connexions-hd.md](ia-connexions-hd.md).

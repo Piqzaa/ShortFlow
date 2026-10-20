@@ -13,7 +13,7 @@ Lot du 19 octobre 2026. Objectif : retrouver ses fichiers facilement et choisir 
 
 ## Limites réelles
 
-Seul le premier essai Fal par clé API a été effectué en réel dans le lot précédent. Les nouvelles variantes HD/4K, LTX et OAuth/MCP sont implémentés et vérifiés avec HTTP simulé. Les métadonnées publiques Fal ont été consultées ; l'inscription du client OAuth, l'autorisation d'un vrai compte et la forme exacte de ses réponses restent à valider avec le propriétaire. Une réponse inconnue bloque l'opération. Aucun essai payant supplémentaire n'a été lancé ; `AI_GENERATION_ENABLED=0` reste en place.
+Seul le premier essai Fal par clé API a été effectué en réel dans le lot précédent. Les nouvelles variantes HD/4K, LTX et OAuth/MCP sont implémentés et vérifiés avec HTTP simulé. Après le signalement du propriétaire, la déclaration publique OAuth a été corrigée et vérifiée réellement : Fal répond 201 à l'inscription du client et 200 à l'obtention d'un code d'autorisation. La première connexion OAuth réelle est désormais confirmée par le propriétaire ; les générations MCP payantes restent à tester séparément. Voir le correctif PKCE dans ia-favoris-oauth.md. Une réponse inconnue bloque l'opération. Aucun essai payant supplémentaire n'a été lancé ; `AI_GENERATION_ENABLED=0` reste en place.
 
 Fal choisit un compte MCP actif commun aux applications connectées. VydFlow mémorise son identifiant, l'affiche au récapitulatif et le vérifie immédiatement avant l'envoi. Une modification détectée bloque l'envoi. Cette vérification et le POST ne sont pas atomiques chez Fal : éviter de changer le compte actif pendant une génération en attente. Les demandes déjà envoyées conservent leur reçu d'origine pour le suivi. Aucun repli automatique vers la clé API ou un autre compte.
 
@@ -29,6 +29,16 @@ Les vidéos restent limitées par l'import privé existant (100 Mo), y compris e
 - `FalMcpClient` limite les outils et le transport JSON-RPC/SSE à l'hôte Fal officiel, avec délais, taille bornée et erreurs neutres. Aucun serveur MCP arbitraire ni interprétation de consignes distantes.
 - `FalMcpVideoApi` réutilise les paramètres natifs Fal et chiffre le reçu de suivi. Les URL du reçu ne deviennent jamais des cibles HTTP directes.
 - `AiGeneration`, `AiKeys` et `AiGenerations` conservent le mode d'accès et le compte confirmé jusqu'au worker Messenger. La migration additive `Version20261019030000` préserve les anciens travaux en mode API.
+
+## Correctif OAuth et lisibilité du choix des modèles
+
+Le premier code déclarait un tableau `response_types` vide et omettait `redirect_uris`. Fal refusait ces métadonnées avec HTTP 400 (`invalid_client_metadata`), avant toute autorisation de compte. La déclaration contient maintenant `response_types: [code]` et l'URL absolue de la page de connexion VydFlow ; le flux d'appareil continue à utiliser son code, sans redirection ni nouvel échange de code OAuth. Les erreurs de découverte, déclaration et obtention du code donnent l'étape et le statut, jamais le corps fournisseur ni ses secrets.
+
+Résolution affichée dans le sélecteur, les cartes, l'estimation, le récapitulatif et l'historique. Les anciens libellés Pro/Q1/Standard étaient des noms de gamme : Kling 2.5 Pro et Kling 3 Pro sont présentés en 1080p, Vidu Q1 en 1080p, Hailuo 02 Standard en 768p (filtre dédié). Ceci précise l'affichage sans changer les endpoints, les prix ni les paramètres des travaux existants. Références : [Kling 3](https://fal.ai/kling-3), [Vidu Q1](https://fal.ai/models/fal-ai/vidu/q1/text-to-video), [Hailuo Standard](https://fal.ai/models/fal-ai/minimax/hailuo-02/standard/text-to-video) ; Kling 2.5 a aussi été vérifié en réel en 1080 × 1920 dans notre essai autorisé.
+
+Les cartes sans fournisseur connecté ont une présentation grisée et un bouton Connecter. Leur sélection montre une invitation ciblée qui conserve le modèle et l'idée, même sans prompt ou durée terminés. Dans Symfony, le groupe de validation `connection` autorise cette préparation partielle mais conserve CSRF, types/choix et limites de texte ; le groupe `Default` et les validations métier complètes restent obligatoires avant toute préparation de génération. Une connexion enregistrée ne garantit ni des crédits ni les droits sur un modèle : les contrôles serveur restent en place.
+
+« Recommandé pour débuter » est un conseil éditorial limité au parcours Kling 2.5 testé en réel, pas un classement de qualité. « Le moins cher ici » est calculé parmi les résultats filtrés compatibles avec la durée de comparaison, toutes configurations affichées confondues. Il peut y avoir des ex æquo ; aucune durée incompatible ne reçoit ce badge. Le prix dépend de l'audio et de la résolution, qui restent visibles.
 
 ## Flux Symfony à comprendre
 
@@ -52,3 +62,7 @@ Les tests fonctionnels utilisent exclusivement `shortflow_test`, migrations appl
 - [LTX : tarifs](https://docs.ltx.io/pricing/), [modèles 2.3](https://docs.ltx.io/models/ltx-2-3), [2.5](https://docs.ltx.io/models/ltx-2-5), [suivi asynchrone](https://docs.ltx.io/async-jobs).
 
 L'inventaire général des autres prestataires reste dans [fournisseurs-video-ia.md](fournisseurs-video-ia.md). Une présence dans cet inventaire ne signifie pas que son connecteur VydFlow est livré.
+
+## Remplacement du flux d'appareil et favoris
+
+Le flux d'appareil décrit historiquement ci-dessus a été remplacé après le refus d'activation dans le navigateur : VydFlow utilise désormais OAuth navigateur avec PKCE S256 et retour automatique. Catalogue regroupé en 15 cartes / 21 configurations, favoris persistants par compte et accès direct aux modèles 4K : voir [ia-favoris-oauth.md](ia-favoris-oauth.md). La première connexion réelle est confirmée par le propriétaire après le correctif PKCE et l'acceptation des identifiants Fal opaques. Aucune nouvelle génération payante.

@@ -137,4 +137,4 @@ Aucun client OAuth/MCP VydFlow ajouté dans cette étude. Le premier essai réel
 
 ## Lot HD/4K et connexion navigateur Fal
 
-Le catalogue local couvre désormais 21 configurations et trois fournisseurs (Fal, Replicate, LTX). Téléchargement privé, filtres de résolution, prix à durée commune et client Fal OAuth/MCP : voir [ia-connexions-hd.md](ia-connexions-hd.md). Les paragraphes précédents décrivent les lots antérieurs ; les nouveaux accès et modèles sont testés avec HTTP simulé, sans nouvel essai payant. La première connexion OAuth réelle reste à valider.
+Le catalogue local couvre désormais 21 configurations et trois fournisseurs (Fal, Replicate, LTX). Téléchargement privé, filtres de résolution, prix à durée commune et client Fal OAuth/MCP : voir [ia-connexions-hd.md](ia-connexions-hd.md). Les paragraphes précédents décrivent les lots antérieurs ; les nouveaux accès et modèles sont testés avec HTTP simulé, sans nouvel essai payant. La première connexion OAuth réelle est validée par le propriétaire ; une génération MCP payante reste à tester séparément.
