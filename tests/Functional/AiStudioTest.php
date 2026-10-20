@@ -8,6 +8,7 @@ use App\Entity\VideoAsset;
 use App\Service\AiCatalog;
 use App\Service\AiGenerations;
 use App\Service\AiKeys;
+use App\Service\AiReferenceStorage;
 use App\Service\PrivateVideoStorage;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,6 +16,8 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Process\Process;
 
 final class AiStudioTest extends WebTestCase
 {
@@ -128,6 +131,128 @@ final class AiStudioTest extends WebTestCase
         }
         $_ENV['AI_GENERATION_ENABLED'] = '1';
         parent::tearDown();
+    }
+
+    private function imageUpload(): string
+    {
+        $file = tempnam(sys_get_temp_dir(), 'ai-image-');
+        $this->files[] = $file;
+        (new Process(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=purple:s=360x640', '-frames:v', '1', '-c:v', 'png', '-f', 'image2', $file]))->mustRun();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $token = $crawler->filter('input[name="ai_reference[_token]"]')->attr('value');
+        $this->client->request('POST', '/studio/creation/images', ['ai_reference' => ['_token' => $token]], ['ai_reference' => ['image' => new UploadedFile($file, 'test.png', 'image/png', null, true)]], ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseIsSuccessful();
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->files[] = static::getContainer()->get(AiReferenceStorage::class)->path($this->owner, $data['reference']);
+
+        return $data['reference'];
+    }
+
+    public function testImageReferenceIsPrivateAndPreparationRetainsTheImageWithoutSubmitting(): void
+    {
+        $name = $this->imageUpload();
+        self::assertSame(0, $this->submissions);
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        $this->client->request('GET', '/studio/creation/images/'.$name);
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'image/jpeg');
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/creation/images/'.$name);
+        self::assertResponseStatusCodeSame(404);
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[reference]' => $name, 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Animate the trees', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => 'auto']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        $this->client->loginUser($this->owner);
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[reference]' => $name, 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Animate the trees', 'ai_idea[seconds]' => 10, 'ai_idea[ratio]' => 'auto']));
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertSelectorExists('img[alt="Image de départ de cette génération"]');
+        self::assertSelectorTextContains('.profile-facts', '0,70');
+        $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
+        self::assertSame($name, $job->getReferenceImage());
+        self::assertSame('auto', $job->getRatio());
+        $reuse = $this->client->getCrawler()->selectButton('Réutiliser cette idée ↗')->form();
+        $this->client->submit($reuse);
+        $this->client->followRedirect();
+        self::assertSelectorExists('input[name="ai_idea[reference]"][value="'.$name.'"]');
+        self::assertSelectorExists('#ai_idea_source option[value="image"][selected]');
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testImageWorkerUsesOnlyTheConfirmedOwnedImageAndNeverSubmitsTwice(): void
+    {
+        $name = $this->imageUpload();
+        $this->key();
+        $job = new AiGeneration($this->owner, 'Image animée', 'A slow camera movement', 'kling-25-image', 5, 'auto', 35);
+        $job->attachReference($name);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $this->httpScenario = function (string $method, string $url, array $options): MockResponse {
+            if ('POST' === $method) {
+                ++$this->submissions;
+                self::assertSame('https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/image-to-video', $url);
+                $input = json_decode($options['body'], true, 32, JSON_THROW_ON_ERROR);
+                self::assertSame(['prompt', 'duration', 'enable_safety_checker', 'image_url'], array_keys($input));
+                self::assertSame('5', $input['duration']);
+                self::assertTrue($input['enable_safety_checker']);
+                self::assertStringStartsWith('data:image/jpeg;base64,', $input['image_url']);
+                $image = getimagesizefromstring(base64_decode(substr($input['image_url'], strlen('data:image/jpeg;base64,')), true));
+                self::assertSame(360, $image[0]);
+                self::assertSame(640, $image[1]);
+
+                return new MockResponse('{"status_url":"https://queue.fal.run/fal-ai/kling-video/requests/image-test/status","response_url":"https://queue.fal.run/fal-ai/kling-video/requests/image-test"}');
+            }
+            if (str_ends_with($url, '/status')) {
+                return new MockResponse('{"status":"IN_PROGRESS"}');
+            }
+            throw new \LogicException('Unexpected request.');
+        };
+        $this->service()->confirm($this->owner, $job->getId());
+        self::assertSame(0, $this->submissions);
+        $this->service()->process($job->getId());
+        self::assertSame(1, $this->submissions);
+        self::assertSame('processing', $job->getStatus());
+        $this->service()->process($job->getId());
+        self::assertSame(1, $this->submissions);
+        $missing = new AiGeneration($this->owner, 'Missing', 'A camera move', 'kling-25-image', 5, 'auto', 35);
+        $missing->attachReference(str_repeat('b', 48).'.jpg');
+        $missing->progress('queued');
+        $this->em()->persist($missing);
+        $this->em()->flush();
+        $this->service()->process($missing->getId());
+        self::assertSame('review', $missing->getStatus());
+        self::assertSame(1, $this->submissions);
+    }
+
+    public function testImageUploadRejectsCsrfMalformedFilesAndModelsMissingTheirReference(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->request('POST', '/studio/creation/images', ['ai_reference' => ['_token' => 'forged']], [], ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseStatusCodeSame(422);
+        $file = tempnam(sys_get_temp_dir(), 'bad-image-');
+        file_put_contents($file, '<svg onload="evil()"></svg>');
+        $this->files[] = $file;
+        $token = $crawler->filter('input[name="ai_reference[_token]"]')->attr('value');
+        $this->client->request('POST', '/studio/creation/images', ['ai_reference' => ['_token' => $token]], ['ai_reference' => ['image' => new UploadedFile($file, 'fake.jpg', 'image/jpeg', null, true)]], ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseStatusCodeSame(422);
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'A camera move', 'ai_idea[ratio]' => 'auto']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.creation-form', 'Importe une image');
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[reference]' => '../../secret.jpg', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'A camera move', 'ai_idea[ratio]' => 'auto']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorNotExists('img.creation-reference-preview[src]');
+
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[model]' => 'kling-25', 'ai_idea[prompt]' => 'A camera move']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.creation-form', 'compatible avec ton point de départ');
+        self::assertSame(0, $this->submissions);
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
     }
 
     public function testIdeaAutosaveKeepsIncompleteInputsWithoutCreatingGeneration(): void

@@ -5,6 +5,7 @@ namespace App\Tests\Unit;
 use App\Entity\AiGeneration;
 use App\Entity\User;
 use App\Service\AiCatalog;
+use App\Service\AiReferenceStorage;
 use App\Service\FalVideoApi;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -16,7 +17,7 @@ final class FalVideoApiTest extends TestCase
     public static function models(): iterable
     {
         foreach (AiCatalog::MODELS as $id => $model) {
-            if ('fal' !== $model['provider']) {
+            if ('fal' !== $model['provider'] || ($model['image'] ?? false)) {
                 continue;
             }
             foreach (array_unique([$model['seconds'][0], $model['seconds'][array_key_last($model['seconds'])]]) as $seconds) {
@@ -74,7 +75,7 @@ final class FalVideoApiTest extends TestCase
             }
 
             return new MockResponse(json_encode(['status_url' => $base.'/status', 'response_url' => $base], JSON_THROW_ON_ERROR));
-        }), new AiCatalog());
+        }), new AiCatalog(), new AiReferenceStorage(sys_get_temp_dir().'/vydflow-ai-unit'));
         self::assertSame(['status_url' => $base.'/status', 'response_url' => $base], $api->submit($job, 'synthetic-key'));
         self::assertSame(1, $calls);
     }
@@ -94,7 +95,7 @@ final class FalVideoApiTest extends TestCase
         $http = new MockHttpClient(static function (): never { throw new \LogicException('No authenticated request should be made.'); });
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Adresse fournisseur invalide.');
-        (new FalVideoApi($http, new AiCatalog()))->poll($job, 'synthetic-key');
+        (new FalVideoApi($http, new AiCatalog(), new AiReferenceStorage(sys_get_temp_dir().'/vydflow-ai-unit')))->poll($job, 'synthetic-key');
     }
 
     public function testTieredPricingNeverExtrapolatesTheFiveSecondRate(): void

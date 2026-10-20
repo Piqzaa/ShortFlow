@@ -43,6 +43,8 @@ class AiGeneration
     private \DateTimeImmutable $updatedAt;
     #[ORM\ManyToOne, ORM\JoinColumn(onDelete: 'SET NULL')]
     private ?VideoAsset $video = null;
+    #[ORM\Column(length: 52, nullable: true)]
+    private ?string $referenceImage = null;
 
     public function __construct(User $owner, string $title, string $prompt, string $model, int $seconds, string $ratio, int $estimatedCents)
     {
@@ -53,8 +55,21 @@ class AiGeneration
         $this->seconds = $seconds;
         $this->ratio = $ratio;
         $this->estimatedCents = $estimatedCents;
-        $this->priceChecked = \App\Service\AiCatalog::CHECKED;
+        $this->priceChecked = \App\Service\AiCatalog::MODELS[$model]['checked'] ?? \App\Service\AiCatalog::CHECKED;
         $this->createdAt = $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function getReferenceImage(): ?string
+    {
+        return $this->referenceImage;
+    }
+
+    public function attachReference(string $name): void
+    {
+        if ('prepared' !== $this->status || !preg_match('/^[a-f0-9]{48}\.jpg$/D', $name)) {
+            throw new \LogicException('Image de référence invalide ou déjà fixée.');
+        }
+        $this->referenceImage = $name;
     }
 
     public function getId(): ?int

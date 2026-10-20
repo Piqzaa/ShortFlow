@@ -228,3 +228,21 @@ test('model search exposes clickable results and picking one changes the real co
   assert.equal(c.pickerResultsTarget.hidden, true);
   assert.equal(c.resolutionTarget.focused, true);
 });
+
+test('image mode filters out text models, keeps auto framing and preserves the prompt-independent selection', () => {
+  const c = creation();
+  c.modelsValue.image = {...c.modelsValue.kling,image:true,ratios:['auto']};
+  c.cardTargets.push({dataset:{modelId:'image',groupId:'image'},classList:{toggle(){}}});
+  c.hasSourceTarget = true; c.sourceTarget = {value:'image'}; c.referencePanelTarget = {};
+  c.ratioTarget.options.push({value:'auto'});
+  c.modelTarget.dispatchEvent = () => c.changeModel();
+  c.changeSource();
+  assert.equal(c.modelTarget.value, 'image');
+  assert.equal(c.ratioTarget.value, 'auto');
+  assert.equal(c.referencePanelTarget.hidden, false);
+  assert.deepEqual(c.cardTargets.filter(card=>!card.hidden).map(card=>card.dataset.modelId), ['image']);
+  c.sourceTarget.value = 'text'; c.changeSource();
+  assert.equal(c.modelTarget.value, '');
+  assert.equal(c.referencePanelTarget.hidden, true);
+  assert.equal(c.cardTargets.at(-1).hidden, true);
+});

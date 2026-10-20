@@ -16,7 +16,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiGenerations
 {
-    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry, private VideoAssetRepository $videos)
+    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry, private VideoAssetRepository $videos, private AiReferenceStorage $references)
     {
     }
 
@@ -53,6 +53,7 @@ final class AiGenerations
             }
             $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
             $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
+            $this->assertReference($job);
             if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
                 throw new \RuntimeException('Le tarif doit être revérifié. Prépare une nouvelle estimation avant de lancer.');
             }
@@ -86,6 +87,7 @@ final class AiGenerations
                 }
                 $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
                 $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
+                $this->assertReference($job);
                 if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
                     throw new \RuntimeException('Le tarif doit être revérifié avant de reprendre.');
                 }
@@ -143,6 +145,7 @@ final class AiGenerations
                     $this->api->checkAccess($job, $key);
                     $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
                     $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
+                    $this->assertReference($job);
                     if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->catalog->estimate($job->getModel(), $job->getSeconds()) !== $job->getEstimatedCents()) {
                         throw new \RuntimeException('Le tarif doit être revérifié avant de lancer. Prépare une nouvelle estimation.');
                     }
@@ -209,6 +212,17 @@ final class AiGenerations
                 }
             }
         });
+    }
+
+    private function assertReference(AiGeneration $job): void
+    {
+        $image = $this->catalog->model($job->getModel())['image'] ?? false;
+        if ($image !== (null !== $job->getReferenceImage())) {
+            throw new \RuntimeException('Vérifie l’image de départ et le modèle puis prépare une nouvelle estimation.');
+        }
+        if ($image) {
+            $this->references->path($job->getOwner(), $job->getReferenceImage());
+        }
     }
 
     private function assertCapacity(AiGeneration $job): void

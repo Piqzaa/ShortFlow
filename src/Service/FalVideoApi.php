@@ -8,7 +8,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class FalVideoApi
 {
-    public function __construct(#[Autowire(service: 'ai.http')] private HttpClientInterface $http, private AiCatalog $catalog)
+    public function __construct(#[Autowire(service: 'ai.http')] private HttpClientInterface $http, private AiCatalog $catalog, private AiReferenceStorage $references)
     {
     }
 
@@ -39,6 +39,10 @@ final class FalVideoApi
         if ('kling-3' === $job->getModel()) {
             $payload['generate_audio'] = true;
             $payload['shot_type'] = 'customize';
+        }
+
+        if ($model['image'] ?? false) {
+            $payload['image_url'] = $this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '');
         }
 
         return $payload;

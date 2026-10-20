@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult'];
+  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult', 'source', 'reference', 'referencePanel'];
   static values = { models: Object, connected: Object, providers: Object };
 
   connect() {
@@ -16,8 +16,36 @@ export default class extends Controller {
       this.groupTarget.disabled = false;
       this.pickerSearchTarget.disabled = false;
     }
+    this.changeSource();
     this.changeModel();
     this.filter();
+  }
+
+  sourceMode() { return this.hasSourceTarget ? this.sourceTarget.value || 'text' : 'text'; }
+
+  changeSource() {
+    if (!this.hasSourceTarget) return;
+    const image = this.sourceMode() === 'image';
+    this.referencePanelTarget.hidden = !image;
+    if (this.hasFourKTarget) this.fourKTarget.closest('.catalog-fourk').hidden = image;
+    const allowed = Object.keys(this.modelsValue).filter(id => Boolean(this.modelsValue[id].image) === image);
+    if (!allowed.includes(this.modelTarget.value)) this.modelTarget.value = image ? allowed[0] || '' : '';
+    if (this.hasPickerTarget) Array.from(this.groupTarget.options).forEach(option => {
+      option.hidden = option.disabled = Boolean(option.value && option.dataset.source !== this.sourceMode());
+    });
+    if (image) this.ratioTarget.value = 'auto';
+    else if (this.ratioTarget.value === 'auto') this.ratioTarget.value = '9:16';
+    this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
+    this.filter();
+    if (this.hasPickerTarget) this.searchPicker();
+  }
+
+  referenceChanged(event) {
+    this.referenceTarget.value = event.detail.reference || '';
+    this.sourceTarget.value = 'image';
+    this.changeSource();
+    this.referenceTarget.dispatchEvent(new Event('change', {bubbles:true}));
+    this.element.querySelectorAll('#ai-idea-form button[type="submit"]').forEach(button => { button.disabled = Boolean(event.detail.pending); });
   }
 
   changeModel() {
@@ -63,7 +91,7 @@ export default class extends Controller {
       this.pickerResultsTarget.hidden = !query;
       this.pickerResultTargets.forEach(button => {
         const option = Array.from(this.groupTarget.options).find(option => option.value === button.dataset.groupId);
-        const matches = Boolean(option?.textContent.toLocaleLowerCase('fr').includes(query));
+        const matches = Boolean(option?.textContent.toLocaleLowerCase('fr').includes(query)) && (!this.hasSourceTarget || button.dataset.source === this.sourceMode());
         button.hidden = !matches;
         if (matches) count++;
       });
@@ -96,7 +124,7 @@ export default class extends Controller {
     const quality = model.quality === '4k' ? '4K' : model.quality;
     set('[data-card-quality]', quality);
     set('[data-card-description]', model.description);
-    set('[data-card-capabilities]', `${model.seconds.length > 4 ? `${model.seconds[0]}–${model.seconds.at(-1)}` : model.seconds.join(' / ')} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.ratios.join(' · ')}`);
+    set('[data-card-capabilities]', `${model.seconds.length > 4 ? `${model.seconds[0]}–${model.seconds.at(-1)}` : model.seconds.join(' / ')} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.image ? 'Format de l’image' : model.ratios.join(' · ')}`);
     set('[data-card-price]', model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.money(c)} $ US`).join(' · ') : `${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3}).format(model.rateMicros / 1000000)} $ US / s`);
     const select = card.querySelector?.('.catalog-variant'); if (select) select.value = id;
     const button = card.querySelector?.('[data-creation-target="choose"]'); if (button) button.dataset.modelId = id;
@@ -118,6 +146,7 @@ export default class extends Controller {
   }
 
   showFourK() {
+    if (this.hasSourceTarget) { this.sourceTarget.value = 'text'; this.changeSource(); }
     this.catalogTarget.open = true;
     this.qualityTarget.value = '4k'; this.searchTarget.value = ''; this.providerTarget.value = '';
     this.audioTarget.value = ''; this.minimumTarget.value = ''; this.onlyConnectedTarget.checked = false;
@@ -185,7 +214,7 @@ export default class extends Controller {
     this.cardTargets.forEach(card => {
       const matches = this.variantIds(card).filter(id => {
       const model = this.modelsValue[id];
-      return Boolean(model) && `${model.name} ${model.maker} ${model.provider} ${model.quality}`.toLocaleLowerCase('fr').includes(query)
+      return Boolean(model) && Boolean(model.image) === (this.sourceMode() === 'image') && `${model.name} ${model.maker} ${model.provider} ${model.quality}`.toLocaleLowerCase('fr').includes(query)
         && (!this.providerTarget.value || model.provider === this.providerTarget.value)
         && (!this.audioTarget.value || model.audio === (this.audioTarget.value === 'yes'))
         && (!this.minimumTarget.value || Math.max(...model.seconds) >= Number(this.minimumTarget.value))

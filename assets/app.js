@@ -51,3 +51,6 @@ app.register('options', OptionsController);
 
 import IdeaSaveController from './controllers/idea_save_controller.js';
 app.register('idea-save', IdeaSaveController);
+
+import ImageReferenceController from './controllers/image_reference_controller.js';
+app.register('image-reference', ImageReferenceController);

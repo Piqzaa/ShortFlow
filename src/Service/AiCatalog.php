@@ -29,9 +29,10 @@ final class AiCatalog
         'ltx-25-fast-720' => ['name' => 'LTX 2.5 Fast · 720p', 'maker' => 'Lightricks', 'provider' => 'ltx', 'description' => 'Scènes avec audio natif, jusqu’à 20 secondes.', 'endpoint' => 'ltx-2-5-fast', 'rateMicros' => 90000, 'audio' => true, 'seconds' => [6, 8, 10, 12, 14, 16, 18, 20], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p'],
         'ltx-25-fast-1080' => ['name' => 'LTX 2.5 Fast · 1080p', 'maker' => 'Lightricks', 'provider' => 'ltx', 'description' => 'Scènes Full HD avec audio natif, jusqu’à 20 secondes.', 'endpoint' => 'ltx-2-5-fast', 'rateMicros' => 130000, 'audio' => true, 'seconds' => [6, 8, 10, 12, 14, 16, 18, 20], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
         'ltx-25-fast-4k' => ['name' => 'LTX 2.5 Fast · 4K', 'maker' => 'Lightricks', 'provider' => 'ltx', 'description' => 'Scènes 2160p avec audio natif.', 'endpoint' => 'ltx-2-5-fast', 'rateMicros' => 300000, 'audio' => true, 'seconds' => [6, 8, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '4k'],
+        'kling-25-image' => ['name' => 'Kling 2.5 Turbo Pro · Image', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Anime ton image de départ. Le cadrage suit l’image, sans recadrage demandé au modèle.', 'endpoint' => 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video', 'rateMicros' => 70000, 'audio' => false, 'seconds' => [5, 10], 'ratios' => ['auto'], 'quality' => '1080p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20'],
     ];
 
-    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int} */
+    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,checked?:string} */
     public function model(string $id): array
     {
         return self::MODELS[$id] ?? throw new \InvalidArgumentException('Choisis un modèle disponible.');
