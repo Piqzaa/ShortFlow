@@ -2,6 +2,8 @@
 
 Navigation locale : `APP_DEBUG=0` dans `.env.local` évite les coûteuses vérifications de fichiers Windows/Docker pour utiliser le studio ; remettre `1` pour déboguer. Après modification des routes/services/configuration sans debug : `docker compose exec php php bin/console cache:clear --env=dev --no-debug`. Les templates restent actualisés en dev. Mesures et aperçu local avant import : [docs/performance-import.md](docs/performance-import.md).
 
+Studio IA guidé : modèle et résolution séparés, aide aux connexions, suivi automatique, reprise d'idées et historique complet. Parcours, contrôles de stockage et repères Symfony : [docs/studio-ia-guide.md](docs/studio-ia-guide.md).
+
 Micro-SaaS Symfony : landing immersive avec inscription, comptes confirmés, dashboard et bibliothèque vidéo privée. Import MP4/WebM, lecture, renommage et suppression. Le lot YouTube ajoute sélection multiple, connexion OAuth, préparation et suivi des envois Messenger, avec worker Docker automatique. Résultats des essais réels : docs/verification.md. Brouillons, programmation ponctuelle et calendrier disponibles localement ; premier Reel Instagram programmé testé réellement et premier envoi TikTok Sandbox réussi le 19 octobre. IA et abonnement viennent ensuite. Aucun service cloud ni compte payant nécessaire pour explorer localement ; les essais YouTube réels demandent une application Google. La liste d’attente historique est conservée sur /liste-attente, hors parcours principal.
 
 Le studio et l’espace personnel ont été remaniés le 18 octobre : galerie et brouillons, préparation sur un écran, photo privée et préférences du compte. Parcours et guide Symfony dans [docs/studio-compte.md](docs/studio-compte.md).

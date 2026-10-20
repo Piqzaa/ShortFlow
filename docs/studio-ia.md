@@ -1,5 +1,7 @@
 # Studio IA BYOK — cadrage du 19 octobre 2026
 
+Parcours guidé livré localement le 20 octobre : choix modèle/résolution séparé, aide aux connexions, historique paginé, réutilisation et suivi automatique local, contrôle de capacité avant envoi. Voir [studio-ia-guide.md](studio-ia-guide.md). Image vers vidéo, montage et séries restent à développer dans leurs lots.
+
 Statut : catalogue Fal/Replicate implémenté localement, API simulées en tests et premier essai Fal réel réussi le 19 octobre ; activation payante globale désactivée après cet essai unique. Le propriétaire demande que les utilisateurs puissent choisir leurs IA et modèles vidéo, par clé API ou connexion navigateur/MCP quand disponible. Cette décision remplace la limite antérieure « un fournisseur/un modèle ». La disponibilité de chaque modèle reste conditionnée à son API, ses accès, ses capacités et ses tests. Voir l'[inventaire des fournisseurs et modes de connexion](fournisseurs-video-ia.md) et le [bilan du premier essai](ia-premier-essai.md).
 
 ## Expérience visée
