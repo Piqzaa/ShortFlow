@@ -34,7 +34,7 @@ final class AiStudioController extends AbstractController
             $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
         }
         $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16']);
-        $idea += ['accessMode' => 'api', 'source' => 'text', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop'];
+        $idea += ['accessMode' => null !== $keys->connection($user, 'fal') ? 'api' : 'mcp', 'source' => 'text', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop'];
         $connected = [];
         foreach (AiCatalog::PROVIDERS as $id => $name) {
             $connected[$id] = null !== $keys->connection($user, $id) || ('fal' === $id && null !== $falOAuth->connection($user));
@@ -332,8 +332,10 @@ final class AiStudioController extends AbstractController
         }
 
         $connections = [];
+        $maskedKeys = [];
         foreach (AiCatalog::PROVIDERS as $id => $name) {
             $connections[$id] = $keys->connection($user, $id);
+            $maskedKeys[$id] = $keys->masked($user, $id);
         }
         $preferred = $request->query->getString('provider', 'fal');
         $providers = AiCatalog::PROVIDERS;
@@ -341,7 +343,7 @@ final class AiStudioController extends AbstractController
             $providers = [$preferred => $providers[$preferred]] + $providers;
         }
 
-        return $this->render('ai/keys.html.twig', ['connections' => $connections, 'providers' => $providers, 'ready' => $keys->ready(), 'back' => $back, 'falMcpConnected' => null !== $falOAuth->connection($user)], new Response(headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'no-referrer']));
+        return $this->render('ai/keys.html.twig', ['connections' => $connections, 'maskedKeys' => $maskedKeys, 'providers' => $providers, 'ready' => $keys->ready(), 'back' => $back, 'falMcpConnected' => null !== $falOAuth->connection($user)], new Response(headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'no-referrer']));
     }
 
     #[Route('/studio/connexions/ia/fal', name: 'app_ai_fal_connect', methods: ['GET', 'POST'])]

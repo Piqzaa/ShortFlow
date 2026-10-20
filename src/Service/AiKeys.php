@@ -25,6 +25,19 @@ final class AiKeys
         return $this->em->getRepository(AiCredential::class)->findOneBy(['owner' => $owner, 'provider' => $provider]);
     }
 
+    public function masked(User $owner, string $provider = 'fal'): ?string
+    {
+        $connection = $this->connection($owner, $provider);
+        if (!$connection) {
+            return null;
+        }
+        try {
+            return '•••• '.substr($this->vault->decrypt($connection->getEncryptedKey()), -4);
+        } catch (PublicationException) {
+            return null;
+        }
+    }
+
     public function save(User $owner, #[\SensitiveParameter] string $key, string $provider = 'fal'): void
     {
         $this->catalog->provider($provider);

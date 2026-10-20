@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult', 'source', 'reference', 'referencePanel', 'useEnd', 'endReference', 'endPanel', 'imageFit', 'imageSettings', 'startFrame', 'endFrame', 'startPreview', 'endPreview', 'framingNotice'];
+  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult', 'source', 'reference', 'referencePanel', 'useEnd', 'endReference', 'endPanel', 'imageFit', 'imageSettings', 'startFrame', 'endFrame', 'startPreview', 'endPreview', 'framingNotice', 'recommendations', 'recommendation', 'modelDetails', 'selectedModel'];
   static values = { models: Object, connected: Object, providers: Object };
 
   connect() {
@@ -14,11 +14,13 @@ export default class extends Controller {
       this.nativeTarget.hidden = true;
       this.modelTarget.required = false;
       this.groupTarget.disabled = false;
+      if (this.hasRecommendationsTarget) this.groupTarget.required = false;
       this.pickerSearchTarget.disabled = false;
     }
     this.changeSource();
     this.changeModel();
     this.filter();
+    if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = Boolean(this.modelTarget.value && !this.recommendationTargets.some(button => button.dataset.modelId === this.modelTarget.value));
   }
 
   sourceMode() { return this.hasSourceTarget ? this.sourceTarget.value || 'text' : 'text'; }
@@ -95,14 +97,35 @@ export default class extends Controller {
     this.restrict(this.durationTarget, model?.seconds);
     this.restrict(this.ratioTarget, model?.ratios);
     if (model?.image && !this.ratioTarget.value) this.ratioTarget.value = model.ratios[0];
-    if (this.hasAccessTarget) this.restrict(this.accessTarget, !model || model.provider === 'fal' ? ['api', 'mcp'] : ['api']);
+    if (this.hasAccessTarget) {
+      this.restrict(this.accessTarget, !model || model.provider === 'fal' ? ['api', 'mcp'] : ['api']);
+      if (model && model.provider !== 'fal') this.accessTarget.value = 'api';
+    }
     this.frameChanged();
+    this.updateRecommendations();
     this.estimate();
     this.cardTargets.forEach(card => {
       const selected = this.variantIds(card).includes(this.modelTarget.value);
       if (selected) this.renderVariant(card, this.modelTarget.value);
       card.classList?.toggle('is-selected', selected);
     });
+  }
+
+  updateRecommendations() {
+    if (!this.hasRecommendationsTarget) return;
+    this.recommendationsTarget.hidden = false;
+    const image = this.sourceMode() === 'image';
+    this.recommendationTargets.forEach(button => {
+      const id = image ? (this.useEndTarget.checked ? button.dataset.framesModel : button.dataset.imageModel) : button.dataset.textModel;
+      const model = this.modelsValue[id];
+      button.hidden = !model;
+      button.dataset.modelId = id;
+      button.setAttribute('aria-pressed', String(this.modelTarget.value === id));
+      const name = button.querySelector('[data-recommendation-name]');
+      if (name && model) name.textContent = model.name;
+    });
+    const selected = this.modelsValue[this.modelTarget.value];
+    this.selectedModelTarget.textContent = selected ? `Sélection : ${selected.name} · ${selected.quality === '4k' ? '4K' : selected.quality}` : 'Choisis une option ou explore les autres modèles.';
   }
 
   syncPicker() {
@@ -243,6 +266,7 @@ export default class extends Controller {
     if (!this.modelsValue[id]) return;
     this.modelTarget.value = id;
     this.modelTarget.dispatchEvent(new Event('change', { bubbles: true }));
+    if (this.hasModelDetailsTarget && event.currentTarget.classList.contains('creation-recommendation')) this.modelDetailsTarget.open = false;
     if (this.hasConnectionTarget && !this.connectionTarget.hidden) {
       this.connectionTarget.focus();
     } else {
@@ -315,12 +339,12 @@ export default class extends Controller {
     const seconds = Number(this.durationTarget.value);
     const mcp = this.hasAccessTarget && this.accessTarget.value === 'mcp';
     const connected = model?.provider === 'fal' ? (mcp ? this.connectedValue['fal-mcp'] : this.connectedValue['fal-api'] ?? this.connectedValue.fal) : this.connectedValue[model?.provider];
-    if (this.hasAccessDetailsTarget && (!this.accessTarget.value || (model && !connected))) this.accessDetailsTarget.open = true;
+    if (this.hasAccessDetailsTarget && !this.accessTarget.value) this.accessDetailsTarget.open = true;
     if (this.hasBillingTarget) {
       const name = this.providersValue?.[model?.provider] || model?.provider || '';
       this.billingTarget.textContent = model ? `${name} · ${mcp ? 'connexion navigateur' : 'clé API'} ${connected ? 'enregistrée' : 'à connecter'} · facturation chez ${name}` : 'Connexion et facturation';
     }
-    this.connectTarget.hidden = Boolean(model && connected);
+    this.connectTarget.hidden = Boolean(this.hasConnectionTarget || (model && connected));
     this.connectTarget.textContent = mcp ? 'Connecter Fal en gardant l’idée' : 'Ajouter ma clé en gardant l’idée';
     if (this.hasConnectionTarget) {
       this.connectionTarget.hidden = !model || Boolean(connected);

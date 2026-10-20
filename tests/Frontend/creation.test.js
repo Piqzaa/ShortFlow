@@ -304,3 +304,18 @@ test('image fees are included in the estimate and price ordering', () => {
   assert.equal(c.price({seconds:[5],rateMicros:70000,fixedMicros:2000},5),36);
   assert.equal(c.price({seconds:[5],rateMicros:250000,fixedMicros:10000},5),126);
 });
+
+
+test('recommendations follow image/end-frame capabilities and keep the chosen account mode', () => {
+  const c = creation();
+  c.modelsValue.image = {...c.modelsValue.kling, name:'Kling Image', image:true, endImageField:'tail_image_url'};
+  c.modelsValue.frames = {...c.modelsValue.kling, name:'Pika Frames', image:true, requiresEnd:true, endImageField:'image_urls'};
+  const button = {dataset:{textModel:'kling', imageModel:'image', framesModel:'frames'},attrs:{},setAttribute(k,v){this.attrs[k]=v;},querySelector(){return this.label ||= {};}};
+  Object.assign(c,{hasRecommendationsTarget:true,recommendationsTarget:{hidden:true},recommendationTargets:[button],selectedModelTarget:{},hasSourceTarget:true,sourceTarget:{value:'text'},useEndTarget:{checked:false},accessTarget:{value:'mcp'}});
+  c.updateRecommendations(); assert.equal(button.dataset.modelId, 'kling'); assert.equal(button.attrs['aria-pressed'], 'true');
+  c.sourceTarget.value='image'; c.useEndTarget.checked=true; c.modelTarget.value='frames';
+  c.updateRecommendations(); assert.equal(button.dataset.modelId, 'frames'); assert.equal(button.label.textContent, 'Pika Frames');
+  assert.equal(button.attrs['aria-pressed'], 'true'); assert.equal(c.accessTarget.value, 'mcp');
+  assert.match(c.selectedModelTarget.textContent, /Pika Frames/);
+  c.useEndTarget.checked=false; c.updateRecommendations(); assert.equal(button.dataset.modelId, 'image');
+});

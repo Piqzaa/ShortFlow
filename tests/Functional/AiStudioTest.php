@@ -402,7 +402,7 @@ final class AiStudioTest extends WebTestCase
         self::assertSelectorTextContains('#ai_idea_model option[value="ltx-23-fast-4k"]', 'à connecter');
         self::assertSelectorExists('article.is-disconnected[data-group-id="ltx-23-fast-720"] option[value="ltx-23-fast-4k"]');
         self::assertSelectorNotExists('article.is-disconnected[data-model-id="kling-3"]');
-        $form = $crawler->selectButton('Ajouter ma clé en gardant l’idée')->form(['ai_idea[model]' => 'ltx-23-fast-4k', 'ai_idea[prompt]' => '', 'ai_idea[seconds]' => '', 'ai_idea[title]' => 'Mon futur plan']);
+        $form = $crawler->selectButton('Connecter mon fournisseur')->form(['ai_idea[accessMode]' => 'api', 'ai_idea[model]' => 'ltx-23-fast-4k', 'ai_idea[prompt]' => '', 'ai_idea[seconds]' => '', 'ai_idea[title]' => 'Mon futur plan']);
         $values = $form->getPhpValues();
         unset($values['ai_idea']['_token']);
         $this->client->request('POST', '/studio/creation', $values);
@@ -431,6 +431,10 @@ final class AiStudioTest extends WebTestCase
         self::assertResponseRedirects('/studio/connexions/ia', 303);
         $crawler = $this->client->followRedirect();
         self::assertStringNotContainsString(self::KEY, $this->client->getResponse()->getContent());
+        self::assertSelectorTextContains('.ai-key-mask', '•••• 7890');
+        self::assertSelectorNotExists('details .ai-key-removal');
+        self::assertSelectorNotExists('details.ai-other-providers');
+        self::assertSelectorNotExists('input[name="apiKey"][value]');
         $keys = static::getContainer()->get(AiKeys::class);
         self::assertNotSame(self::KEY, $keys->connection($this->owner)->getEncryptedKey());
         self::assertSame(self::KEY, $keys->plain($this->owner));
@@ -441,9 +445,35 @@ final class AiStudioTest extends WebTestCase
         $this->client->loginUser($this->owner);
         $crawler = $this->client->request('GET', '/studio/connexions/ia');
         $form = $crawler->selectButton('Retirer ma clé')->form(['confirm' => '1']);
+        $values = $form->getPhpValues();
+        unset($values['confirm']);
+        $this->client->request('POST', '/studio/connexions/ia', $values);
+        self::assertResponseStatusCodeSame(303);
+        self::assertNotNull($keys->connection($this->owner));
+        $values = $form->getPhpValues();
+        unset($values['_token']);
+        $this->client->request('POST', '/studio/connexions/ia', $values);
+        self::assertResponseStatusCodeSame(403);
+        self::assertNotNull($keys->connection($this->owner));
         $this->client->submit($form);
         self::assertResponseStatusCodeSame(303);
         self::assertNull($keys->connection($this->owner));
+    }
+
+    public function testUnreadableKeyStillHasADirectRemovalAction(): void
+    {
+        $this->key();
+        $keys = static::getContainer()->get(AiKeys::class);
+        $keys->connection($this->owner)->replace('unreadable-ciphertext');
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+        $crawler = $this->client->request('GET', '/studio/connexions/ia');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.ai-key-mask', '•••• ••••');
+        self::assertSelectorNotExists('details .ai-key-removal');
+        $this->client->submit($crawler->selectButton('Retirer ma clé')->form(['confirm' => '1']));
+        self::assertResponseStatusCodeSame(303);
+        self::assertNull($keys->connection($this->owner));
+        self::assertSame(0, $this->submissions);
     }
 
     public function testModelFavoritesRequireCsrfAndBelongToTheSignedInOwner(): void
@@ -472,7 +502,7 @@ final class AiStudioTest extends WebTestCase
     public function testIdeaSurvivesKeySetupAndInvalidModelCannotBePrepared(): void
     {
         $crawler = $this->client->request('GET', '/studio/ia');
-        $form = $crawler->selectButton('Ajouter ma clé en gardant l’idée')->form(['ai_idea[title]' => 'Mon idée', 'ai_idea[prompt]' => 'Un paysage <privé>', 'ai_idea[model]' => 'wan-25']);
+        $form = $crawler->selectButton('Connecter mon fournisseur')->form(['ai_idea[accessMode]' => 'api', 'ai_idea[title]' => 'Mon idée', 'ai_idea[prompt]' => 'Un paysage <privé>', 'ai_idea[model]' => 'wan-25']);
         $this->client->submit($form);
         self::assertResponseRedirects('/studio/connexions/ia?next=idea&provider=fal', 303);
         $crawler = $this->client->followRedirect();
@@ -767,6 +797,8 @@ final class AiStudioTest extends WebTestCase
         self::assertNotSame('synthetic-replicate-only-key-123456', $keys->connection($this->owner, 'replicate')->getEncryptedKey());
         $crawler = $this->client->followRedirect();
         self::assertStringNotContainsString('synthetic-replicate-only-key-123456', $this->client->getResponse()->getContent());
+        self::assertSelectorTextContains('.ai-api-alternative .ai-key-mask', '•••• 7890');
+        self::assertSelectorTextContains('.ai-other-providers .ai-key-mask', '•••• 3456');
         $this->client->submit($crawler->selectButton('Retirer ma clé Replicate')->form(['confirm' => '1']));
         self::assertNull($keys->connection($this->owner, 'replicate'));
         self::assertSame(self::KEY, $keys->plain($this->owner));
@@ -785,10 +817,10 @@ final class AiStudioTest extends WebTestCase
     {
         $this->key();
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Ajouter ma clé en gardant l’idée')->form(['ai_idea[prompt]' => 'Une forêt sous la pluie', 'ai_idea[model]' => 'wan-25-replicate', 'ai_idea[seconds]' => 10]));
+        $this->client->submit($crawler->selectButton('Connecter mon fournisseur')->form(['ai_idea[prompt]' => 'Une forêt sous la pluie', 'ai_idea[model]' => 'wan-25-replicate', 'ai_idea[seconds]' => 10]));
         self::assertResponseRedirects('/studio/connexions/ia?next=idea&provider=replicate', 303);
         $crawler = $this->client->followRedirect();
-        self::assertSelectorTextSame('.ai-key-panel h2', 'Replicate');
+        self::assertSelectorTextSame('#ai-replicate-title', 'Replicate');
         $this->client->submit($crawler->selectButton('Enregistrer ma clé Replicate')->form(['apiKey' => 'synthetic-replicate-only-key-123456']));
         $crawler = $this->client->followRedirect();
         self::assertSelectorExists('option[value="wan-25-replicate"][selected]');
@@ -1138,6 +1170,26 @@ final class AiStudioTest extends WebTestCase
         self::assertSame('review', $job->getStatus());
         self::assertStringContainsString('Place insuffisante', $job->getIssue());
         self::assertSame([], $job->getRemote());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testSimpleStudioRecommendsExistingModelsAndDefaultsOnlyNewIdeasToBrowserAccess(): void
+    {
+        $this->client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(3, '.creation-recommendation');
+        self::assertSelectorExists('select[name="ai_idea[accessMode]"] option[value="mcp"][selected]');
+        self::assertSelectorExists('details[data-creation-target="modelDetails"][open]');
+        self::assertSelectorExists('select[name="ai_idea[model]"] option[value="ltx-25-fast-4k-image"]');
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        $this->client->request('GET', '/studio/connexions/ia');
+        self::assertSelectorTextContains('.ai-fal-primary', 'Connecter mon compte Fal');
+        self::assertSelectorTextContains('.ai-billing-guide', 'Aucun abonnement VydFlow');
+        self::assertSelectorCount(1, '.ai-api-alternative input[name="apiKey"]');
+        self::assertSelectorCount(2, '.ai-other-providers input[name="apiKey"]');
+        $this->key();
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorExists('select[name="ai_idea[accessMode]"] option[value="api"][selected]');
         self::assertSame(0, $this->submissions);
     }
 }
