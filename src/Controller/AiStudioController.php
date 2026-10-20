@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\AiGeneration;
 use App\Entity\User;
 use App\Form\AiIdeaType;
+use App\Repository\AiGenerationRepository;
 use App\Service\AiCatalog;
 use App\Service\AiGenerations;
 use App\Service\AiKeys;
@@ -25,6 +26,9 @@ final class AiStudioController extends AbstractController
     #[Route('/studio/ia', name: 'app_ai_studio', methods: ['GET', 'POST'])]
     public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, EntityManagerInterface $em, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
+        if (!$request->getSession()->has('ai_idea_revision')) {
+            $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
+        }
         $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16']);
         $idea += ['accessMode' => 'api'];
         $connected = [];
@@ -38,6 +42,7 @@ final class AiStudioController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             $request->getSession()->set('ai_idea', $data);
+            $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
             if (!$limiter->create('ai-idea-'.$user->getId())->consume()->isAccepted()) {
                 $form->addError(new FormError('Trop de préparations rapprochées. Réessaie plus tard.'));
             } elseif ('connect' === $request->request->getString('intent')) {
@@ -64,6 +69,34 @@ final class AiStudioController extends AbstractController
         $jobs = $em->getRepository(AiGeneration::class)->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 12);
 
         return $this->render('ai/studio.html.twig', ['ideaForm' => $form, 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+    }
+
+    #[Route('/studio/creation/idee', name: 'app_ai_save_idea', methods: ['POST'])]
+    public function saveIdea(Request $request, #[CurrentUser] User $user): Response
+    {
+        $session = $request->getSession();
+        $form = $this->createForm(AiIdeaType::class, null, ['validation_groups' => ['autosave']])->handleRequest($request);
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
+        }
+        $revision = $request->request->getString('revision');
+        $editor = $request->request->getString('editor');
+        $sequence = $request->request->getInt('sequence');
+        if ('' === $revision || !hash_equals((string) $session->get('ai_idea_revision', ''), $revision) || !preg_match('/^[a-f0-9]{32}$/D', $editor) || $sequence < 1) {
+            return $this->json(['saved' => false], 409, ['Cache-Control' => 'private, no-store']);
+        }
+        // Keep late requests from overwriting a newer edit, confirmation or reuse.
+        $sequences = $session->get('ai_idea_sequences', []);
+        $key = $user->getId().':'.$editor;
+        if ($sequence <= ($sequences[$key] ?? 0)) {
+            return $this->json(['saved' => false], 409, ['Cache-Control' => 'private, no-store']);
+        }
+        unset($sequences[$key]);
+        $sequences[$key] = $sequence;
+        $session->set('ai_idea_sequences', array_slice($sequences, -10, null, true));
+        $session->set('ai_idea', $form->getData());
+
+        return $this->json(['saved' => true], headers: ['Cache-Control' => 'private, no-store']);
     }
 
     #[Route('/studio/creation/favoris/{id}', name: 'app_ai_favorite', methods: ['POST'])]
@@ -113,6 +146,40 @@ final class AiStudioController extends AbstractController
         $model = $catalog->model($job->getModel());
 
         return $this->render('ai/generation.html.twig', ['job' => $job, 'model' => $model, 'providerName' => $catalog->provider($model['provider']), 'enabled' => $generations->enabled(), 'hasKey' => $keys->hasAccess($user, $model['provider'], $job->getAccessMode()), 'mcpAccount' => 'mcp' === $job->getAccessMode() ? $falOAuth->accountId($user) : null], new Response(headers: ['Cache-Control' => 'private, no-store']));
+    }
+
+    #[Route('/studio/creation/historique', name: 'app_ai_history', methods: ['GET'])]
+    public function history(Request $request, #[CurrentUser] User $user, AiGenerationRepository $jobs): Response
+    {
+        $query = mb_substr(trim($request->query->getString('q')), 0, 120);
+        $status = $request->query->getString('status');
+        if ('' !== $status && !isset(AiGeneration::LABELS[$status])) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->render('ai/history.html.twig', ['history' => $jobs->history($user, $query, $status, $request->query->getInt('page', 1)), 'query' => $query, 'status' => $status, 'labels' => AiGeneration::LABELS, 'models' => AiCatalog::MODELS, 'providers' => AiCatalog::PROVIDERS], new Response(headers: ['Cache-Control' => 'private, no-store']));
+    }
+
+    #[Route('/studio/ia/generations/{id}/etat', name: 'app_ai_status', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function status(int $id, #[CurrentUser] User $user, AiGenerations $generations): Response
+    {
+        $job = $generations->owned($id, $user) ?? throw $this->createNotFoundException();
+
+        return $this->json(['status' => $job->getStatus(), 'updatedAt' => $job->getUpdatedAt()->format('U.u')], headers: ['Cache-Control' => 'private, no-store']);
+    }
+
+    #[Route('/studio/ia/generations/{id}/reutiliser', name: 'app_ai_reuse', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function reuse(int $id, Request $request, #[CurrentUser] User $user, AiGenerations $generations): Response
+    {
+        $job = $generations->owned($id, $user) ?? throw $this->createNotFoundException();
+        if (!$this->isCsrfTokenValid('ai_reuse_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
+        $request->getSession()->set('ai_idea', ['title' => $job->getTitle(), 'prompt' => $job->getPrompt(), 'model' => $job->getModel(), 'seconds' => $job->getSeconds(), 'ratio' => $job->getRatio(), 'accessMode' => $job->getAccessMode()]);
+        $this->addFlash('success', 'Ton idée et ses réglages sont repris. Modifie-les puis vérifie une nouvelle estimation avant de générer.');
+
+        return $this->redirectToRoute('app_studio', status: 303);
     }
 
     #[Route('/studio/connexions/ia', name: 'app_ai_keys', methods: ['GET', 'POST'])]

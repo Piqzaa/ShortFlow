@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK'];
+  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult'];
   static values = { models: Object, connected: Object, providers: Object };
 
   connect() {
@@ -9,11 +9,19 @@ export default class extends Controller {
     if (this.hasFourKTarget) this.fourKTarget.hidden = false;
     this.chooseTargets.forEach(button => { button.hidden = false; });
     this.cardTargets.forEach(card => { const select = card.querySelector?.('.catalog-variant'); if (select) select.disabled = select.options.length < 2; });
+    if (this.hasPickerTarget) {
+      this.pickerTarget.hidden = false;
+      this.nativeTarget.hidden = true;
+      this.modelTarget.required = false;
+      this.groupTarget.disabled = false;
+      this.pickerSearchTarget.disabled = false;
+    }
     this.changeModel();
     this.filter();
   }
 
   changeModel() {
+    if (this.hasPickerTarget) this.syncPicker();
     const model = this.modelsValue[this.modelTarget.value];
     this.restrict(this.durationTarget, model?.seconds);
     this.restrict(this.ratioTarget, model?.ratios);
@@ -25,6 +33,55 @@ export default class extends Controller {
       card.classList?.toggle('is-selected', selected);
     });
   }
+
+  syncPicker() {
+    const card = this.cardTargets.find(card => this.variantIds(card).includes(this.modelTarget.value));
+    this.groupTarget.value = card?.dataset.groupId || '';
+    this.restrict(this.resolutionTarget, card ? this.variantIds(card) : []);
+    this.resolutionTarget.disabled = !card;
+    this.resolutionTarget.value = this.modelTarget.value;
+  }
+
+  selectGroup() {
+    const card = this.cardTargets.find(card => card.dataset.groupId === this.groupTarget.value);
+    this.modelTarget.value = card ? this.variantIds(card)[0] : '';
+    this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+
+  selectResolution() {
+    const card = this.cardTargets.find(card => card.dataset.groupId === this.groupTarget.value);
+    if (!card || !this.variantIds(card).includes(this.resolutionTarget.value)) return;
+    this.modelTarget.value = this.resolutionTarget.value;
+    this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+
+  searchPicker(event) {
+    event?.stopPropagation();
+    const query = this.pickerSearchTarget.value.trim().toLocaleLowerCase('fr');
+    let count = 0;
+    if (this.hasPickerResultsTarget) {
+      this.pickerResultsTarget.hidden = !query;
+      this.pickerResultTargets.forEach(button => {
+        const option = Array.from(this.groupTarget.options).find(option => option.value === button.dataset.groupId);
+        const matches = Boolean(option?.textContent.toLocaleLowerCase('fr').includes(query));
+        button.hidden = !matches;
+        if (matches) count++;
+      });
+    }
+    this.pickerCountTarget.textContent = !query ? 'Tes favoris sont marqués d’une étoile ★.' : count ? `${count} modèle${count > 1 ? 's' : ''} : clique sur un résultat pour le sélectionner.` : 'Aucun modèle trouvé. Modifie la recherche ; ta sélection est conservée.';
+  }
+
+  pickResult(event) {
+    const id = event.currentTarget.dataset.groupId;
+    if (!this.cardTargets.some(card => card.dataset.groupId === id)) return;
+    this.groupTarget.value = id;
+    this.selectGroup();
+    this.pickerSearchTarget.value = '';
+    this.searchPicker();
+    this.resolutionTarget.focus();
+  }
+
+  preventPickerSubmit(event) { event.preventDefault(); }
 
   variantIds(card) {
     try { return card.dataset.variants ? JSON.parse(card.dataset.variants) : [card.dataset.modelId]; }
@@ -96,6 +153,15 @@ export default class extends Controller {
 
   markFavoriteOptions(card, favorite) {
     const ids = this.variantIds(card);
+    if (this.hasPickerTarget) {
+      const option = Array.from(this.groupTarget.options).find(option => option.value === card.dataset.groupId);
+      if (option) option.textContent = `${favorite ? '★ ' : ''}${option.textContent.replace(/^★\s*/u, '')}`;
+      if (this.hasPickerResultsTarget) {
+        const label = this.pickerResultTargets.find(button => button.dataset.groupId === card.dataset.groupId)?.querySelector('[data-result-label]');
+        if (label) label.textContent = `${favorite ? '★ ' : ''}${label.textContent.replace(/^★\s*/u, '')}`;
+        this.searchPicker();
+      }
+    }
     Array.from(this.modelTarget.options).forEach(option => {
       if (ids.includes(option.value)) option.textContent = `${favorite ? '★ ' : ''}${option.textContent.replace(/^★\s*/u, '')}`;
     });
@@ -178,6 +244,11 @@ export default class extends Controller {
     const seconds = Number(this.durationTarget.value);
     const mcp = this.hasAccessTarget && this.accessTarget.value === 'mcp';
     const connected = model?.provider === 'fal' ? (mcp ? this.connectedValue['fal-mcp'] : this.connectedValue['fal-api'] ?? this.connectedValue.fal) : this.connectedValue[model?.provider];
+    if (this.hasAccessDetailsTarget && (!this.accessTarget.value || (model && !connected))) this.accessDetailsTarget.open = true;
+    if (this.hasBillingTarget) {
+      const name = this.providersValue?.[model?.provider] || model?.provider || '';
+      this.billingTarget.textContent = model ? `${name} · ${mcp ? 'connexion navigateur' : 'clé API'} ${connected ? 'enregistrée' : 'à connecter'} · facturation chez ${name}` : 'Connexion et facturation';
+    }
     this.connectTarget.hidden = Boolean(model && connected);
     this.connectTarget.textContent = mcp ? 'Connecter Fal en gardant l’idée' : 'Ajouter ma clé en gardant l’idée';
     if (this.hasConnectionTarget) {

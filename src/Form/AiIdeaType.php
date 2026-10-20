@@ -31,8 +31,8 @@ final class AiIdeaType extends AbstractType
             $choices[(in_array($id, $favoriteVariants, true) ? '★ ' : '').$model['name'].$resolution.' · '.AiCatalog::PROVIDERS[$model['provider']].($disconnected ? ' · à connecter' : '')] = $id;
         }
         $builder
-            ->add('title', TextType::class, ['label' => 'Nom de ta création', 'required' => false, 'help' => 'Facultatif : un nom sera proposé à partir de ton idée.', 'constraints' => [new Assert\Length(max: 120, groups: ['Default', 'connection'])], 'attr' => ['maxlength' => 120]])
-            ->add('prompt', TextareaType::class, ['label' => 'Ton idée', 'help' => 'Décris le sujet, le mouvement et l’ambiance. Un prompt en anglais est conseillé pour ces modèles.', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 1500, groups: ['Default', 'connection'])], 'attr' => ['rows' => 6, 'maxlength' => 1500, 'placeholder' => 'Une caméra suit un cycliste au lever du soleil…']])
+            ->add('title', TextType::class, ['label' => 'Nom de ta création', 'required' => false, 'help' => 'Facultatif : un nom sera proposé à partir de ton idée.', 'constraints' => [new Assert\Length(max: 120, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['maxlength' => 120]])
+            ->add('prompt', TextareaType::class, ['label' => 'Ton idée', 'help' => 'Décris le sujet, le mouvement et l’ambiance. Un prompt en anglais est conseillé pour ces modèles.', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 1500, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['rows' => 6, 'maxlength' => 1500, 'placeholder' => 'Une caméra suit un cycliste au lever du soleil…']])
             ->add('model', ChoiceType::class, ['label' => 'Modèle, résolution et fournisseur', 'placeholder' => 'Choisir un modèle', 'choices' => $choices, 'choice_attr' => static fn (string $id): array => isset($options['connected_providers'][AiCatalog::MODELS[$id]['provider']]) && !$options['connected_providers'][AiCatalog::MODELS[$id]['provider']] ? ['class' => 'catalog-option-disconnected'] : [], 'constraints' => [new Assert\NotBlank(groups: ['Default', 'connection'])]])
             ->add('accessMode', ChoiceType::class, ['label' => 'Connexion à utiliser', 'choices' => ['Ma clé API' => 'api', 'Mon compte Fal connecté par navigateur' => 'mcp'], 'help' => 'La connexion navigateur concerne Fal. Elle utilise les crédits du compte MCP actif chez Fal.', 'constraints' => [new Assert\NotBlank()]])
             ->add('seconds', ChoiceType::class, ['label' => 'Durée du plan', 'placeholder' => 'Choisir une durée', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', (new AiCatalog())->durations()), (new AiCatalog())->durations()), 'constraints' => [new Assert\NotBlank()]])
@@ -41,6 +41,9 @@ final class AiIdeaType extends AbstractType
             $data = $event->getData();
             $form = $event->getForm();
             if (!isset(AiCatalog::MODELS[$data['model'] ?? ''])) {
+                return;
+            }
+            if (in_array('autosave', $form->getConfig()->getOption('validation_groups') ?? [], true)) {
                 return;
             }
             $model = AiCatalog::MODELS[$data['model']];

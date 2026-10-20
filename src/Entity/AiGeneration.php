@@ -4,10 +4,11 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: \App\Repository\AiGenerationRepository::class)]
 #[ORM\Table(name: 'ai_generation')]
 class AiGeneration
 {
+    public const LABELS = ['prepared' => 'À confirmer', 'queued' => 'En attente', 'submitting' => 'Demande en cours', 'processing' => 'Génération en cours', 'waiting_key' => 'Connexion à vérifier', 'review' => 'À vérifier', 'available' => 'Vidéo prête'];
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]

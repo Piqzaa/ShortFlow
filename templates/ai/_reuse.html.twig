@@ -1,0 +1,1 @@
+<form method="post" action="{{ path('app_ai_reuse',{id:job.id}) }}" class="ai-reuse"><input type="hidden" name="_token" value="{{ csrf_token('ai_reuse_' ~ job.id) }}"><button class="account-secondary" type="submit">Réutiliser cette idée ↗</button></form>

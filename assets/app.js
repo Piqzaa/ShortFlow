@@ -44,5 +44,10 @@ import './styles/ai-studio.css';
 
 import CreationController from './controllers/creation_controller.js';
 app.register('creation', CreationController);
+import GenerationWatchController from './controllers/generation_watch_controller.js';
+app.register('generation-watch', GenerationWatchController);
 import OptionsController from './controllers/options_controller.js';
 app.register('options', OptionsController);
+
+import IdeaSaveController from './controllers/idea_save_controller.js';
+app.register('idea-save', IdeaSaveController);

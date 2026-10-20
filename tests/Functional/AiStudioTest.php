@@ -130,11 +130,47 @@ final class AiStudioTest extends WebTestCase
         parent::tearDown();
     }
 
+    public function testIdeaAutosaveKeepsIncompleteInputsWithoutCreatingGeneration(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $before = $this->em()->getRepository(AiGeneration::class)->count([]);
+        $revision = $crawler->filter('#ai-idea-form')->attr('data-idea-save-revision-value');
+        $token = $crawler->filter('input[name="ai_idea[_token]"]')->attr('value');
+        $payload = ['revision' => $revision, 'editor' => str_repeat('a', 32), 'sequence' => 2, 'ai_idea' => ['_token' => $token, 'prompt' => 'Une idée privée <test>', 'title' => '', 'model' => '', 'seconds' => '', 'ratio' => '9:16', 'accessMode' => 'api']];
+        $this->client->request('POST', '/studio/creation/idee', $payload);
+        self::assertResponseIsSuccessful();
+        self::assertSame($before, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->submissions);
+        $payload['sequence'] = 1;
+        $payload['ai_idea']['prompt'] = 'Ancienne idée';
+        $this->client->request('POST', '/studio/creation/idee', $payload);
+        self::assertResponseStatusCodeSame(409);
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorTextContains('#ai_idea_prompt', 'Une idée privée <test>');
+        self::assertSelectorNotExists('[data-controller="unsaved"]');
+        $payload['sequence'] = 3;
+        $payload['ai_idea']['_token'] = 'forged';
+        $this->client->request('POST', '/studio/creation/idee', $payload);
+        self::assertResponseStatusCodeSame(422);
+        $payload['ai_idea']['_token'] = $token;
+        $payload['ai_idea']['model'] = 'forged-model';
+        $this->client->request('POST', '/studio/creation/idee', $payload);
+        self::assertResponseStatusCodeSame(422);
+        $payload['ai_idea']['model'] = '';
+        $payload['ai_idea']['prompt'] = str_repeat('x', 1501);
+        $this->client->request('POST', '/studio/creation/idee', $payload);
+        self::assertResponseStatusCodeSame(422);
+        $payload['ai_idea']['prompt'] = 'Stale';
+        $payload['revision'] = 'old-page';
+        $this->client->request('POST', '/studio/creation/idee', $payload);
+        self::assertResponseStatusCodeSame(409);
+    }
+
     public function testCatalogShowsResolutionAndMissingAccessAndConnectionPreservesAnIncompleteIdea(): void
     {
         $this->key();
         $crawler = $this->client->request('GET', '/studio/creation');
-        self::assertSelectorTextContains('option[value="kling-3"]', '1080p');
+        self::assertSelectorTextContains('#ai_idea_model option[value="kling-3"]', '1080p');
         self::assertSelectorTextContains('#ai_idea_model option[value="ltx-23-fast-4k"]', 'à connecter');
         self::assertSelectorExists('article.is-disconnected[data-group-id="ltx-23-fast-720"] option[value="ltx-23-fast-4k"]');
         self::assertSelectorNotExists('article.is-disconnected[data-model-id="kling-3"]');
@@ -235,7 +271,7 @@ final class AiStudioTest extends WebTestCase
         $job = $this->job();
         $id = $job->getId();
         $crawler = $this->client->request('GET', '/studio/ia/generations/'.$id);
-        $token = $crawler->filter('input[name="_token"]')->last()->attr('value');
+        $token = $crawler->filter('.ai-status form.account-form input[name="_token"]')->first()->attr('value');
         $this->client->request('POST', '/studio/ia/generations/'.$id, ['confirm' => '1']);
         self::assertResponseStatusCodeSame(403);
         $this->client->request('POST', '/studio/ia/generations/'.$id, ['_token' => $token]);
@@ -343,12 +379,12 @@ final class AiStudioTest extends WebTestCase
         $this->key();
         $job = $this->job();
         $id = $job->getId();
+        $this->service()->confirm($this->owner, $id);
+        $this->service()->process($id);
         $full = new VideoAsset($this->owner, 'Synthetic quota', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1073741824, 4, 720, 1280, 'h264');
         $this->em()->persist($full);
         $this->em()->flush();
         $fullId = $full->getId();
-        $this->service()->confirm($this->owner, $id);
-        $this->service()->process($id);
         $this->service()->process($id);
         self::assertSame('review', $this->reload($id)->getStatus());
         self::assertSame(1, $this->em()->getRepository(VideoAsset::class)->count([]));
@@ -770,6 +806,96 @@ final class AiStudioTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.creation-form', 'Cette durée n’est pas disponible');
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testGuideHistorySearchAndPaginationArePrivate(): void
+    {
+        for ($i = 0; $i < 14; ++$i) {
+            $job = new AiGeneration($this->owner, 13 === $i ? '100% privé' : 'Plan '.$i, 'Prompt privé', 'kling-25', 5, '9:16', 35);
+            $this->em()->persist($job);
+        }
+        $other = new AiGeneration($this->other, '100% autre propriétaire', 'Secret', 'kling-25', 5, '9:16', 35);
+        $this->em()->persist($other);
+        $this->em()->flush();
+        $this->client->request('GET', '/studio/creation/historique');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(12, '.ai-history-row');
+        self::assertSelectorTextContains('.library-pagination', '1 / 2');
+        self::assertSelectorTextNotContains('.ai-history-list', 'autre propriétaire');
+        $this->client->request('GET', '/studio/creation/historique?page=2');
+        self::assertSelectorCount(2, '.ai-history-row');
+        $this->client->request('GET', '/studio/creation/historique?q=100%25&status=prepared');
+        self::assertSelectorCount(1, '.ai-history-row');
+        self::assertSelectorTextContains('.ai-history-row', '100% privé');
+        $this->client->request('GET', '/studio/creation/historique?status=forged');
+        self::assertResponseStatusCodeSame(404);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testGuideStatusAndReuseNeverSendARequestAndRequireOwnershipAndCsrf(): void
+    {
+        $job = $this->job();
+        $job->useMcp();
+        $job->progress('processing', remote: ['secret' => 'receipt-must-stay-private']);
+        $this->em()->flush();
+        $id = $job->getId();
+        $this->client->request('GET', '/studio/ia/generations/'.$id.'/etat');
+        self::assertResponseIsSuccessful();
+        $state = json_decode($this->client->getResponse()->getContent(), true);
+        self::assertSame(['status', 'updatedAt'], array_keys($state));
+        self::assertSame('processing', $state['status']);
+        self::assertStringNotContainsString('receipt-must-stay-private', $this->client->getResponse()->getContent());
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        $crawler = $this->client->request('GET', '/studio/ia/generations/'.$id);
+        self::assertSelectorExists('[data-controller="generation-watch"]');
+        $form = $crawler->selectButton('Réutiliser cette idée ↗')->form();
+        $this->client->request('POST', '/studio/ia/generations/'.$id.'/reutiliser');
+        self::assertResponseStatusCodeSame(403);
+        $this->client->submit($form);
+        self::assertResponseRedirects('/studio/creation', 303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('textarea[name="ai_idea[prompt]"]', 'Un oiseau au soleil <script>');
+        self::assertSelectorExists('select[name="ai_idea[accessMode]"] option[value="mcp"][selected]');
+        self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/ia/generations/'.$id.'/etat');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(404);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testGuideCapacityIncludesOtherActiveGenerationsBeforeConfirmation(): void
+    {
+        $this->key();
+        $job = $this->job();
+        $active = $this->job();
+        $active->progress('queued');
+        $used = new VideoAsset($this->owner, 'Synthetic occupancy', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1073741824 - 150000000, 4, 720, 1280, 'h264');
+        $this->em()->persist($used);
+        $this->em()->flush();
+        $crawler = $this->client->request('GET', '/studio/ia/generations/'.$job->getId());
+        $this->client->submit($crawler->selectButton('Confirmer et générer →')->form(['confirm' => '1']));
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[role="alert"]', 'Place insuffisante');
+        self::assertSame('prepared', static::getContainer()->get(Connection::class)->fetchOne('SELECT status FROM ai_generation WHERE id = ?', [$job->getId()]));
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testGuideWorkerChecksCapacityAgainBeforeAnyBillablePost(): void
+    {
+        $this->key();
+        $job = $this->job();
+        $this->service()->confirm($this->owner, $job->getId());
+        $used = new VideoAsset($this->owner, 'Synthetic full storage', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1073741824, 4, 720, 1280, 'h264');
+        $this->em()->persist($used);
+        $this->em()->flush();
+        $this->service()->process($job->getId());
+        self::assertSame('review', $job->getStatus());
+        self::assertStringContainsString('Place insuffisante', $job->getIssue());
+        self::assertSame([], $job->getRemote());
         self::assertSame(0, $this->submissions);
     }
 }

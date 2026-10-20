@@ -6,7 +6,7 @@ import { runInNewContext } from 'node:vm';
 function creation() {
   const source = readFileSync(new URL('../../assets/controllers/creation_controller.js', import.meta.url), 'utf8')
     .replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class CreationController');
-  const Creation = runInNewContext(`${source}\nCreationController;`, { Controller: class {}, Intl });
+  const Creation = runInNewContext(`${source}\nCreationController;`, { Controller: class {}, Intl, Event: class {} });
   const controller = new Creation();
   controller.modelsValue = { kling: { name: 'Kling', maker: 'Kling', rateMicros: 70000, audio: false, seconds: [5, 10], ratios: ['9:16','16:9','1:1'], provider: 'fal', quality: 'Pro' }, wan: { name: 'Wan', maker: 'Alibaba', rateMicros: 100000, audio: true, seconds: [5, 10], ratios: ['9:16','16:9'], provider: 'replicate', quality: '720p' }, long: { name: 'Kling 3', maker: 'Kling', rateMicros: 168000, audio: true, seconds: [3,5,10,15], ratios: ['9:16','16:9'], provider: 'fal', quality: 'Pro' } };
   controller.connectedValue = { fal: true, replicate: false };
@@ -169,4 +169,62 @@ test('grouped cards retain every resolution and favorites combine with the quali
   assert.equal(controller.modelTarget.value, 'kling');
   card.dataset.favorite = 'false'; controller.filter();
   assert.equal(card.hidden, true);
+});
+
+
+test('guided picker keeps configuration IDs, constrains resolutions and clears incompatible durations', () => {
+  const c = creation();
+  c.hasPickerTarget = true;
+  c.modelsValue['kling-4k'] = {...c.modelsValue.kling,quality:'4k'};
+  c.cardTargets[0].dataset = {groupId:'kling',modelId:'kling',variants:JSON.stringify(['kling','kling-4k'])};
+  c.cardTargets[1].dataset.groupId = 'wan';
+  c.cardTargets[2].dataset.groupId = 'long';
+  c.groupTarget = {value:''};
+  c.resolutionTarget = {value:'',options:['','kling','kling-4k','wan','long'].map(value=>({value}))};
+  c.modelTarget.value = 'kling-4k'; c.syncPicker();
+  assert.equal(c.groupTarget.value, 'kling');
+  assert.equal(c.resolutionTarget.value, 'kling-4k');
+  assert.equal(c.resolutionTarget.options.find(o=>o.value==='wan').disabled, true);
+  c.resolutionTarget.value = 'wan'; c.selectResolution();
+  assert.equal(c.modelTarget.value, 'kling-4k');
+  c.modelTarget.dispatchEvent = () => c.changeModel();
+  c.groupTarget.value = 'wan'; c.durationTarget.value = '15'; c.selectGroup();
+  assert.equal(c.modelTarget.value, 'wan');
+  assert.equal(c.durationTarget.value, '');
+  assert.equal(c.resolutionTarget.value, 'wan');
+});
+
+test('searching guided models preserves the current selection even when no names match', () => {
+  const c = creation();
+  c.pickerSearchTarget = {value:'introuvable'};
+  c.pickerCountTarget = {};
+  c.groupTarget = {options:[{value:''},{value:'kling',textContent:'★ Kling · Fal',selected:true},{value:'wan',textContent:'Wan · Replicate',selected:false}]};
+  let stopped = 0, prevented = 0;
+  c.searchPicker({stopPropagation(){stopped++;}});
+  c.preventPickerSubmit({preventDefault(){prevented++;}});
+  assert.equal(stopped, 1); assert.equal(prevented, 1);
+  assert.equal(c.groupTarget.options[1].hidden, undefined);
+  assert.equal(c.groupTarget.options[2].hidden, undefined);
+  assert.match(c.pickerCountTarget.textContent, /sélection est conservée/);
+  assert.equal(c.modelTarget.value, 'kling');
+});
+
+test('model search exposes clickable results and picking one changes the real configuration', () => {
+  const c = creation();
+  c.hasPickerResultsTarget = true; c.pickerResultsTarget = {};
+  c.pickerSearchTarget = {value:'wan'}; c.pickerCountTarget = {};
+  c.groupTarget = {options:[{value:'kling',textContent:'★ Kling · Fal'},{value:'wan',textContent:'Wan · Replicate'}]};
+  c.pickerResultTargets = ['kling','wan'].map(groupId=>({dataset:{groupId}}));
+  c.cardTargets[1].dataset.groupId = 'wan';
+  c.resolutionTarget = {focus(){this.focused=true;}};
+  c.searchPicker();
+  assert.equal(c.pickerResultsTarget.hidden, false);
+  assert.deepEqual(c.pickerResultTargets.map(b=>b.hidden), [true,false]);
+  assert.match(c.pickerCountTarget.textContent, /clique sur un résultat/);
+  c.modelTarget.dispatchEvent = () => {};
+  c.pickResult({currentTarget:c.pickerResultTargets[1]});
+  assert.equal(c.modelTarget.value, 'wan');
+  assert.equal(c.pickerSearchTarget.value, '');
+  assert.equal(c.pickerResultsTarget.hidden, true);
+  assert.equal(c.resolutionTarget.focused, true);
 });

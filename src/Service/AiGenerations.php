@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\AiGeneration;
 use App\Entity\User;
 use App\Message\GenerateAiVideo;
+use App\Repository\VideoAssetRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -15,7 +16,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiGenerations
 {
-    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry)
+    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry, private VideoAssetRepository $videos)
     {
     }
 
@@ -59,6 +60,7 @@ final class AiGenerations
             if ($active >= 3) {
                 throw new \RuntimeException('Trois générations sont déjà en cours. Attends leur résultat.');
             }
+            $this->assertCapacity($job);
             if ('mcp' === $job->getAccessMode()) {
                 $credential = json_decode($this->keys->plain($owner, $provider, 'mcp'), true, 32, JSON_THROW_ON_ERROR);
                 $job->bindAccessAccount($credential['account_id']);
@@ -90,6 +92,7 @@ final class AiGenerations
                 if ($this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]) >= 3) {
                     throw new \RuntimeException('Trois générations sont déjà en cours.');
                 }
+                $this->assertCapacity($job);
                 $job->progress('queued');
                 $this->em->flush();
                 $this->bus->dispatch(new GenerateAiVideo($id));
@@ -136,6 +139,7 @@ final class AiGenerations
             }
             if ('queued' === $job->getStatus()) {
                 try {
+                    $this->assertCapacity($job);
                     $this->api->checkAccess($job, $key);
                     $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
                     $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
@@ -205,6 +209,16 @@ final class AiGenerations
                 }
             }
         });
+    }
+
+    private function assertCapacity(AiGeneration $job): void
+    {
+        $usage = $this->videos->usage($job->getOwner());
+        $active = $this->em->getRepository(AiGeneration::class)->count(['owner' => $job->getOwner(), 'status' => ['queued', 'submitting', 'processing']]);
+        $slots = $active + (in_array($job->getStatus(), ['queued', 'submitting', 'processing'], true) ? 0 : 1);
+        if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > VideoLibrary::MAX_STORAGE) {
+            throw new \RuntimeException('Place insuffisante dans ta bibliothèque. Prévois une place et 100 Mo libres par génération en attente ou en cours, puis confirme à nouveau. Aucune nouvelle génération n’a été envoyée.');
+        }
     }
 
     private function later(int $id): void
