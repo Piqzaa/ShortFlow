@@ -1,0 +1,5 @@
+{% set searchQuery = query|default('') %}
+<form method="get" action="{{ path(searchRoute) }}" class="library-search" role="search" aria-label="Recherche dans tes vidéos">
+{% if searchRoute == 'app_dashboard' %}<input type="hidden" name="tab" value="videos">{% if choosing|default(false) %}<input type="hidden" name="choose" value="1">{% endif %}{% if date|default('') %}<input type="hidden" name="date" value="{{ date }}">{% endif %}{% if zone|default('') %}<input type="hidden" name="zone" value="{{ zone }}">{% endif %}{% endif %}
+<div><label for="library-query">Trouver une vidéo</label><input type="search" id="library-query" name="q" value="{{ searchQuery }}" maxlength="120" placeholder="Rechercher par nom…"></div><button class="account-secondary" type="submit">Rechercher</button>{% if searchQuery %}<a class="library-search-clear" href="{{ searchRoute == 'app_dashboard' ? path(searchRoute,{choose:choosing|default(false) ? 1 : null,date:date|default(''),zone:zone|default('')}) : path(searchRoute) }}">Effacer</a><p class="library-note">{{ resultCount|default(0) }} résultat{{ resultCount|default(0) > 1 ? 's' : '' }} pour « {{ searchQuery }} »</p>{% endif %}
+</form>

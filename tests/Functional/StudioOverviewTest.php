@@ -272,4 +272,41 @@ final class StudioOverviewTest extends WebTestCase
         self::assertSelectorCount(3, '[aria-labelledby="upcoming-title"] .dashboard-preparation');
         self::assertSelectorCount(2, '[aria-labelledby="drafts-title"] .dashboard-preparation');
     }
+
+    public function testVideoSearchIsPrivateLiteralPaginatedAndKeepsTheCalendarContext(): void
+    {
+        for ($i = 0; $i < 13; ++$i) {
+            $this->em()->persist(new VideoAsset($this->alice, 'Recette été '.sprintf('%02d', $i), bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1000, 5, 720, 1280, 'h264'));
+        }
+        foreach ([[$this->alice, '100%_unique'], [$this->alice, '100XAunique'], [$this->bob, 'Recette été secrète']] as [$owner, $title]) {
+            $this->em()->persist(new VideoAsset($owner, $title, bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1000, 5, 720, 1280, 'h264'));
+        }
+        $this->em()->flush();
+        $this->client->loginUser($this->alice);
+        $crawler = $this->client->request('GET', '/studio?'.http_build_query(['q' => 'RECETTE été', 'page' => 2, 'choose' => 1, 'date' => '2026-11-04', 'zone' => 'Europe/Paris']));
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(1, '.workspace-card');
+        self::assertSelectorTextContains('.library-search', '13 résultats');
+        self::assertSelectorNotExists('input[value="Recette été secrète"]');
+        self::assertStringNotContainsString('Recette été secrète', $this->client->getResponse()->getContent());
+        self::assertSelectorExists('.library-search input[name="date"][value="2026-11-04"]');
+        self::assertSelectorExists('.library-search input[name="choose"][value="1"]');
+        parse_str(parse_url($crawler->filter('.library-pagination a')->first()->attr('href'), PHP_URL_QUERY), $params);
+        self::assertSame('RECETTE été', $params['q']);
+        self::assertSame('Europe/Paris', $params['zone']);
+        self::assertSame('2026-11-04', $params['date']);
+        $this->client->request('GET', '/studio?'.http_build_query(['q' => '100%_']));
+        self::assertSelectorCount(1, '.workspace-card');
+        self::assertSelectorTextContains('.workspace-card', '100%_unique');
+        $this->client->request('GET', '/studio/bibliotheque?'.http_build_query(['q' => '100%_']));
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.library-search', '1 résultat');
+        self::assertStringNotContainsString('100XAunique', $this->client->getResponse()->getContent());
+        $this->client->request('GET', '/studio?'.http_build_query(['q' => '<script>absent</script>']));
+        self::assertSelectorTextContains('.workspace-empty', 'Aucune vidéo trouvée');
+        self::assertSelectorNotExists('script:not([src])');
+        self::assertSelectorExists('input[name="q"][value="<script>absent</script>"]');
+        $this->client->request('GET', '/studio?tab=drafts&q=Recette');
+        self::assertSelectorNotExists('.library-search');
+    }
 }

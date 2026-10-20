@@ -24,9 +24,11 @@ final class WorkspaceController extends AbstractController
         }
         $usage = $videos->usage($user);
         $draftCount = $drafts->count(['owner' => $user, 'status' => 'draft']);
-        $pages = max(1, (int) ceil(('videos' === $tab ? $usage['count'] : $draftCount) / 12));
-        $page = min($pages, max(1, $request->query->getInt('page', 1)));
-        $recent = 'videos' === $tab ? $videos->page($user, $page) : [];
+        $query = 'videos' === $tab ? mb_substr(trim($request->query->getString('q')), 0, 120) : '';
+        $results = 'videos' === $tab ? $videos->search($user, $query, $request->query->getInt('page', 1)) : null;
+        $pages = $results['pages'] ?? max(1, (int) ceil($draftCount / 12));
+        $page = $results['page'] ?? min($pages, max(1, $request->query->getInt('page', 1)));
+        $recent = $results['items'] ?? [];
         $preparations = $drafts->dashboard($user, $clock->now());
         $date = $request->query->getString('date');
         $zone = $request->query->getString('zone', $user->getTimezone());
@@ -37,6 +39,6 @@ final class WorkspaceController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        return $this->render('studio/workspace.html.twig', ['tab' => $tab, 'usage' => $usage, 'videos' => $recent, 'draftCount' => $draftCount, 'drafts' => 'drafts' === $tab ? $drafts->findBy(['owner' => $user, 'status' => 'draft'], ['updatedAt' => 'DESC', 'id' => 'DESC'], 12, ($page - 1) * 12) : [], 'publishedPlatforms' => $videos->publishedPlatforms($user, $recent), 'preparations' => $preparations, 'preparationStates' => $calendar->states(array_merge($preparations['upcoming'], $preparations['problems'])), 'preparationLabels' => PublicationCalendar::LABELS, 'pages' => $pages, 'page' => $page, 'choosing' => $request->query->getBoolean('choose'), 'date' => $date, 'zone' => $zone], new Response(headers: ['Cache-Control' => 'no-store, private']));
+        return $this->render('studio/workspace.html.twig', ['query' => $query, 'resultCount' => $results['total'] ?? 0, 'tab' => $tab, 'usage' => $usage, 'videos' => $recent, 'draftCount' => $draftCount, 'drafts' => 'drafts' === $tab ? $drafts->findBy(['owner' => $user, 'status' => 'draft'], ['updatedAt' => 'DESC', 'id' => 'DESC'], 12, ($page - 1) * 12) : [], 'publishedPlatforms' => $videos->publishedPlatforms($user, $recent), 'preparations' => $preparations, 'preparationStates' => $calendar->states(array_merge($preparations['upcoming'], $preparations['problems'])), 'preparationLabels' => PublicationCalendar::LABELS, 'pages' => $pages, 'page' => $page, 'choosing' => $request->query->getBoolean('choose'), 'date' => $date, 'zone' => $zone], new Response(headers: ['Cache-Control' => 'no-store, private']));
     }
 }

@@ -33,12 +33,13 @@ final class VideoController extends AbstractController
     public function index(Request $request, #[CurrentUser] User $user): Response
     {
         $usage = $this->videos->usage($user);
-        $pages = max(1, (int) ceil($usage['count'] / 12));
-        $page = max(1, min($pages, $request->query->getInt('page', 1)));
+        $query = mb_substr(trim($request->query->getString('q')), 0, 120);
+        $results = $this->videos->search($user, $query, $request->query->getInt('page', 1));
+        $pages = $results['pages'];
+        $page = $results['page'];
+        $videos = $results['items'];
 
-        $videos = $this->videos->page($user, $page);
-
-        return $this->page('library/index.html.twig', ['videos' => $videos, 'usage' => $usage, 'page' => $page, 'pages' => $pages, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, $videos)]);
+        return $this->page('library/index.html.twig', ['query' => $query, 'resultCount' => $results['total'], 'videos' => $videos, 'usage' => $usage, 'page' => $page, 'pages' => $pages, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, $videos)]);
     }
 
     #[Route('/importer', name: 'app_video_upload', methods: ['GET', 'POST'])]
