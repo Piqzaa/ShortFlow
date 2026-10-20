@@ -1,12 +1,14 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access'];
+  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK'];
   static values = { models: Object, connected: Object, providers: Object };
 
   connect() {
     this.filtersTarget.hidden = false;
+    if (this.hasFourKTarget) this.fourKTarget.hidden = false;
     this.chooseTargets.forEach(button => { button.hidden = false; });
+    this.cardTargets.forEach(card => { const select = card.querySelector?.('.catalog-variant'); if (select) select.disabled = select.options.length < 2; });
     this.changeModel();
     this.filter();
   }
@@ -17,6 +19,71 @@ export default class extends Controller {
     this.restrict(this.ratioTarget, model?.ratios);
     if (this.hasAccessTarget) this.restrict(this.accessTarget, !model || model.provider === 'fal' ? ['api', 'mcp'] : ['api']);
     this.estimate();
+    this.cardTargets.forEach(card => {
+      const selected = this.variantIds(card).includes(this.modelTarget.value);
+      if (selected) this.renderVariant(card, this.modelTarget.value);
+      card.classList?.toggle('is-selected', selected);
+    });
+  }
+
+  variantIds(card) {
+    try { return card.dataset.variants ? JSON.parse(card.dataset.variants) : [card.dataset.modelId]; }
+    catch { return [card.dataset.modelId]; }
+  }
+
+  renderVariant(card, id) {
+    if (card.dataset.modelId === id) return;
+    card.dataset.modelId = id;
+    const model = this.modelsValue[id];
+    const set = (selector, text) => { const node = card.querySelector?.(selector); if (node) node.textContent = text; };
+    const quality = model.quality === '4k' ? '4K' : model.quality;
+    set('[data-card-quality]', quality);
+    set('[data-card-description]', model.description);
+    set('[data-card-capabilities]', `${model.seconds.length > 4 ? `${model.seconds[0]}–${model.seconds.at(-1)}` : model.seconds.join(' / ')} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.ratios.join(' · ')}`);
+    set('[data-card-price]', model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.money(c)} $ US`).join(' · ') : `${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3}).format(model.rateMicros / 1000000)} $ US / s`);
+    const select = card.querySelector?.('.catalog-variant'); if (select) select.value = id;
+    const button = card.querySelector?.('[data-creation-target="choose"]'); if (button) button.dataset.modelId = id;
+  }
+
+  variant(event) {
+    const card = event.currentTarget.closest('[data-group-id]');
+    const id = event.currentTarget.value;
+    if (!card || !this.variantIds(card).includes(id)) return;
+    const selected = this.variantIds(card).includes(this.modelTarget.value);
+    card.dataset.preferredId = id;
+    if (this.hasQualityTarget && this.qualityTarget.value && this.qualityTarget.value !== this.modelsValue[id].quality) this.qualityTarget.value = '';
+    this.renderVariant(card, id);
+    if (selected) {
+      this.modelTarget.value = id;
+      this.modelTarget.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    this.filter();
+  }
+
+  showFourK() {
+    this.catalogTarget.open = true;
+    this.qualityTarget.value = '4k'; this.searchTarget.value = ''; this.providerTarget.value = '';
+    this.audioTarget.value = ''; this.minimumTarget.value = ''; this.onlyConnectedTarget.checked = false;
+    this.onlyFavoritesTarget.checked = false; this.comparisonTarget.value = '6';
+    this.filter(); this.qualityTarget.focus();
+  }
+
+  async favorite(event) {
+    event.preventDefault();
+    const form = event.currentTarget, button = form.querySelector('button'), status = form.querySelector('[role="status"]');
+    button.disabled = true; status.textContent = '';
+    try {
+      const response = await fetch(form.action,{method:'POST',body:new FormData(form),headers:{Accept:'application/json'},credentials:'same-origin',redirect:'error'});
+      if (!response.ok) throw new Error('favorite');
+      const data = await response.json();
+      if (typeof data.favorite !== 'boolean') throw new Error('favorite');
+      form.closest('[data-group-id]').dataset.favorite = String(data.favorite);
+      this.markFavoriteOptions(form.closest('[data-group-id]'), data.favorite);
+      form.querySelector('[name="favorite"]').value = data.favorite ? '0' : '1';
+      button.setAttribute('aria-pressed', String(data.favorite)); button.textContent = data.favorite ? '★ En favori' : '☆ Favori';
+      this.filter();
+    } catch { status.textContent = 'Enregistrement impossible. Réessaie.'; }
+    finally { button.disabled = false; }
   }
 
   restrict(select, allowed) {
@@ -27,36 +94,62 @@ export default class extends Controller {
     if (allowed && !allowed.map(String).includes(select.value)) select.value = '';
   }
 
+  markFavoriteOptions(card, favorite) {
+    const ids = this.variantIds(card);
+    Array.from(this.modelTarget.options).forEach(option => {
+      if (ids.includes(option.value)) option.textContent = `${favorite ? '★ ' : ''}${option.textContent.replace(/^★\s*/u, '')}`;
+    });
+  }
+
   choose(event) {
     const id = event.currentTarget.dataset.modelId;
     if (!this.modelsValue[id]) return;
     this.modelTarget.value = id;
     this.modelTarget.dispatchEvent(new Event('change', { bubbles: true }));
-    this.durationTarget.focus();
+    if (this.hasConnectionTarget && !this.connectionTarget.hidden) {
+      this.connectionTarget.focus();
+    } else {
+      this.durationTarget.focus();
+    }
   }
 
   filter() {
     const query = this.searchTarget.value.trim().toLocaleLowerCase('fr');
     let count = 0;
     this.cardTargets.forEach(card => {
-      const model = this.modelsValue[card.dataset.modelId];
-      const visible = Boolean(model) && `${model.name} ${model.maker} ${model.provider}`.toLocaleLowerCase('fr').includes(query)
+      const matches = this.variantIds(card).filter(id => {
+      const model = this.modelsValue[id];
+      return Boolean(model) && `${model.name} ${model.maker} ${model.provider} ${model.quality}`.toLocaleLowerCase('fr').includes(query)
         && (!this.providerTarget.value || model.provider === this.providerTarget.value)
         && (!this.audioTarget.value || model.audio === (this.audioTarget.value === 'yes'))
         && (!this.minimumTarget.value || Math.max(...model.seconds) >= Number(this.minimumTarget.value))
         && (!this.hasQualityTarget || !this.qualityTarget.value || model.quality === this.qualityTarget.value)
-        && (!this.onlyConnectedTarget.checked || this.connectedValue[model.provider]);
+        && (!this.onlyConnectedTarget.checked || this.connectedValue[model.provider])
+        && (!this.hasOnlyFavoritesTarget || !this.onlyFavoritesTarget.checked || card.dataset.favorite === 'true');
+      });
+      const visible = matches.length > 0;
+      if (visible) this.renderVariant(card, matches.includes(card.dataset.preferredId) ? card.dataset.preferredId : matches.includes(card.dataset.modelId) ? card.dataset.modelId : matches[0]);
       card.hidden = !visible;
       if (visible) count += 1;
     });
-    this.countTarget.textContent = `${count} choix modèle / fournisseur`;
+    this.countTarget.textContent = `${count} ${count === 1 ? 'modèle' : 'modèles'} / fournisseur`;
     this.emptyTarget.hidden = count !== 0;
+    this.emptyTarget.textContent = this.hasOnlyFavoritesTarget && this.onlyFavoritesTarget.checked ? 'Aucun favori ne correspond. Ajoute un favori avec ☆ ou modifie les filtres.' : 'Aucun modèle ne correspond. Modifie les filtres ou affiche les fournisseurs non connectés.';
+    const seconds = this.hasComparisonTarget ? Number(this.comparisonTarget.value) : 5;
+    const visiblePrices = this.cardTargets.filter(card => !card.hidden).map(card => this.price(this.modelsValue[card.dataset.modelId], seconds)).filter(price => price !== null);
+    const minimumPrice = visiblePrices.length ? Math.min(...visiblePrices) : null;
+    this.cardTargets.forEach(card => {
+      const badge = card.querySelector?.('[data-economy-badge]');
+      if (!badge) return;
+      badge.hidden = card.hidden || minimumPrice === null || this.price(this.modelsValue[card.dataset.modelId], seconds) !== minimumPrice;
+      badge.textContent = `Le moins cher ici · ${seconds} s`;
+    });
     if (this.hasSortTarget && this.hasGridTarget) {
       const seconds = Number(this.comparisonTarget.value);
       const ids = Object.keys(this.modelsValue);
       const price = card => this.price(this.modelsValue[card.dataset.modelId], seconds);
       this.cardTargets.slice().sort((a,b) => {
-        if (!this.sortTarget.value) return ids.indexOf(a.dataset.modelId) - ids.indexOf(b.dataset.modelId);
+        if (!this.sortTarget.value) return ids.indexOf(a.dataset.groupId || a.dataset.modelId) - ids.indexOf(b.dataset.groupId || b.dataset.modelId);
         const left = price(a), right = price(b);
         if (left === null || right === null) return left === right ? 0 : left === null ? 1 : -1;
         return this.sortTarget.value === 'price-desc' ? right - left : left - right;
@@ -87,6 +180,12 @@ export default class extends Controller {
     const connected = model?.provider === 'fal' ? (mcp ? this.connectedValue['fal-mcp'] : this.connectedValue['fal-api'] ?? this.connectedValue.fal) : this.connectedValue[model?.provider];
     this.connectTarget.hidden = Boolean(model && connected);
     this.connectTarget.textContent = mcp ? 'Connecter Fal en gardant l’idée' : 'Ajouter ma clé en gardant l’idée';
+    if (this.hasConnectionTarget) {
+      this.connectionTarget.hidden = !model || Boolean(connected);
+      const name = this.providersValue?.[model?.provider] || model?.provider || '';
+      this.connectionMessageTarget.textContent = mcp ? 'Connecte ton compte Fal par navigateur pour utiliser ce modèle avec cet accès.' : `Ajoute ta clé ${name} pour utiliser ce modèle. Ton idée sera conservée.`;
+      this.connectionButtonTarget.textContent = mcp ? 'Connecter mon compte Fal' : `Connecter ${name}`;
+    }
     if (!model || !Number.isSafeInteger(model.rateMicros) || model.rateMicros < 0 || !model.seconds.includes(seconds)) {
       this.costTarget.textContent = model ? 'Choisis une durée compatible pour voir l’estimation' : 'Choisis un modèle pour voir l’estimation';
       this.descriptionTarget.textContent = 'Le coût sera vérifié au récapitulatif.';
@@ -100,6 +199,6 @@ export default class extends Controller {
     }
     const amount = this.money(cents);
     this.costTarget.textContent = `Estimation : ${amount} $ US`;
-    this.descriptionTarget.textContent = `${seconds} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.quality} · Facturé par ${this.providersValue?.[model.provider] || model.provider}`;
+    this.descriptionTarget.textContent = `${seconds} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.quality === '4k' ? '4K' : model.quality} · Facturé par ${this.providersValue?.[model.provider] || model.provider}`;
   }
 }

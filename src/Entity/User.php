@@ -30,6 +30,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 52, nullable: true)]
     private ?string $avatarName = null;
 
+    /** @var list<string> */
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $aiFavorites = [];
+
     public function getDisplayName(): string
     {
         return $this->displayName;
@@ -69,6 +73,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /** @return list<string> */
+    public function getAiFavorites(): array
+    {
+        return $this->aiFavorites;
+    }
+
+    public function favoriteAiModel(string $id, bool $favorite): void
+    {
+        $this->aiFavorites = array_values(array_filter($this->aiFavorites, static fn (string $value): bool => $value !== $id));
+        if ($favorite) {
+            $this->aiFavorites[] = $id;
+        }
     }
 
     public function getEmail(): string

@@ -8,15 +8,15 @@ final class AiCatalog
     public const PROVIDERS = ['fal' => 'Fal', 'replicate' => 'Replicate', 'ltx' => 'LTX'];
     // IDs are durable execution choices: never rebind one to another provider/schema.
     public const MODELS = [
-        'kling-25' => ['name' => 'Kling 2.5 Turbo Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Mouvements et plans cinématiques.', 'endpoint' => 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video', 'rateMicros' => 70000, 'audio' => false, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => 'Pro'],
+        'kling-25' => ['name' => 'Kling 2.5 Turbo Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Mouvements et plans cinématiques.', 'endpoint' => 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video', 'rateMicros' => 70000, 'audio' => false, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
         'wan-25' => ['name' => 'Wan 2.5', 'maker' => 'Alibaba', 'provider' => 'fal', 'description' => 'Scènes créatives avec audio généré.', 'endpoint' => 'fal-ai/wan-25-preview/text-to-video', 'rateMicros' => 100000, 'audio' => true, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p'],
-        'kling-3' => ['name' => 'Kling 3.0 Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Plans jusqu’à 15 secondes avec audio natif. Voix chinoises ou anglaises.', 'endpoint' => 'fal-ai/kling-video/v3/pro/text-to-video', 'rateMicros' => 168000, 'audio' => true, 'seconds' => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => 'Pro'],
+        'kling-3' => ['name' => 'Kling 3.0 Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Plans jusqu’à 15 secondes avec audio natif. Voix chinoises ou anglaises.', 'endpoint' => 'fal-ai/kling-video/v3/pro/text-to-video', 'rateMicros' => 168000, 'audio' => true, 'seconds' => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
         'wan-25-replicate' => ['name' => 'Wan 2.5', 'maker' => 'Alibaba', 'provider' => 'replicate', 'description' => 'Le même modèle via ton compte Replicate, avec audio généré.', 'endpoint' => 'wan-video/wan-2.5-t2v', 'rateMicros' => 100000, 'audio' => true, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9'], 'quality' => '720p'],
         'veo-31-fast-replicate' => ['name' => 'Veo 3.1 Fast', 'maker' => 'Google', 'provider' => 'replicate', 'description' => 'Plans avec sons, ambiances et dialogues synchronisés.', 'endpoint' => 'google/veo-3.1-fast', 'rateMicros' => 150000, 'audio' => true, 'seconds' => [4, 6, 8], 'ratios' => ['9:16', '16:9'], 'quality' => '720p'],
         'pika-22' => ['name' => 'Pika 2.2', 'maker' => 'Pika', 'provider' => 'fal', 'description' => 'Plans créatifs courts. Première configuration à 720p, sans audio.', 'endpoint' => 'fal-ai/pika/v2.2/text-to-video', 'rateMicros' => 40000, 'audio' => false, 'seconds' => [5], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p', 'input' => ['resolution' => '720p'], 'durationType' => 'integer'],
-        'vidu-q1' => ['name' => 'Vidu Q1', 'maker' => 'Vidu', 'provider' => 'fal', 'description' => 'Un plan de 5 secondes à partir de ton texte, sans audio.', 'endpoint' => 'fal-ai/vidu/q1/text-to-video', 'rateMicros' => 80000, 'audio' => false, 'seconds' => [5], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => 'Q1', 'input' => ['style' => 'general', 'movement_amplitude' => 'auto'], 'durationType' => 'none'],
+        'vidu-q1' => ['name' => 'Vidu Q1', 'maker' => 'Vidu', 'provider' => 'fal', 'description' => 'Un plan de 5 secondes à partir de ton texte, sans audio.', 'endpoint' => 'fal-ai/vidu/q1/text-to-video', 'rateMicros' => 80000, 'audio' => false, 'seconds' => [5], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p', 'input' => ['style' => 'general', 'movement_amplitude' => 'auto'], 'durationType' => 'none'],
         'grok-video' => ['name' => 'Grok Imagine Video', 'maker' => 'xAI', 'provider' => 'fal', 'description' => 'Plans avec audio natif, de 1 à 15 secondes.', 'endpoint' => 'xai/grok-imagine-video/text-to-video', 'rateMicros' => 70000, 'audio' => true, 'seconds' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p', 'input' => ['resolution' => '720p'], 'durationType' => 'integer'],
-        'hailuo-02' => ['name' => 'Hailuo 02 Standard', 'maker' => 'MiniMax', 'provider' => 'fal', 'description' => 'Plans sans audio. Cette configuration produit uniquement du paysage.', 'endpoint' => 'fal-ai/minimax/hailuo-02/standard/text-to-video', 'rateMicros' => 45000, 'audio' => false, 'seconds' => [6, 10], 'ratios' => ['16:9'], 'quality' => 'Standard', 'input' => ['prompt_optimizer' => false], 'omitRatio' => true],
+        'hailuo-02' => ['name' => 'Hailuo 02 Standard', 'maker' => 'MiniMax', 'provider' => 'fal', 'description' => 'Plans sans audio. Cette configuration produit uniquement du paysage.', 'endpoint' => 'fal-ai/minimax/hailuo-02/standard/text-to-video', 'rateMicros' => 45000, 'audio' => false, 'seconds' => [6, 10], 'ratios' => ['16:9'], 'quality' => '768p', 'input' => ['prompt_optimizer' => false], 'omitRatio' => true],
         'pixverse-56' => ['name' => 'PixVerse 5.6', 'maker' => 'PixVerse', 'provider' => 'fal', 'description' => 'Plans créatifs à 720p, sans audio. Prix par durée.', 'endpoint' => 'fal-ai/pixverse/v5.6/text-to-video', 'rateMicros' => 90000, 'audio' => false, 'seconds' => [5, 8, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p', 'input' => ['resolution' => '720p', 'generate_audio_switch' => false, 'thinking_type' => 'disabled'], 'pricesCents' => [5 => 45, 8 => 90, 10 => 99], 'promptBytes' => 2048],
         'pixverse-6' => ['name' => 'PixVerse V6', 'maker' => 'PixVerse', 'provider' => 'fal', 'description' => 'Plans avec sons et dialogues, jusqu’à 15 secondes.', 'endpoint' => 'fal-ai/pixverse/v6/text-to-video', 'rateMicros' => 60000, 'audio' => true, 'seconds' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p', 'input' => ['resolution' => '720p', 'generate_audio_switch' => true, 'generate_multi_clip_switch' => false, 'thinking_type' => 'disabled'], 'durationType' => 'integer', 'promptBytes' => 2048],
         'seedance-25' => ['name' => 'Seedance 2.5', 'maker' => 'ByteDance', 'provider' => 'fal', 'description' => 'Vidéo native jusqu’à 30 secondes avec audio. Estimation indicative : facturation aux tokens et accès fournisseur requis.', 'endpoint' => 'bytedance/seedance-2.5/text-to-video', 'rateMicros' => 473000, 'audio' => true, 'seconds' => [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30], 'ratios' => ['9:16', '16:9'], 'quality' => '720p', 'input' => ['resolution' => '720p', 'generate_audio' => true, 'draft' => false, 'codec' => 'H264', 'bitrate_mode' => 'standard']],
@@ -80,5 +80,20 @@ final class AiCatalog
         sort($seconds);
 
         return $seconds;
+    }
+
+    /** @return array<string,array{name:string,variants:list<string>}> */
+    public function groups(): array
+    {
+        $groups = [];
+        $keys = [];
+        foreach (self::MODELS as $id => $model) {
+            $key = $model['provider'].'/'.$model['endpoint'];
+            $first = $keys[$key] ??= $id;
+            $groups[$first] ??= ['name' => preg_replace('/ · (720p|1080p|4K)$/i', '', $model['name']), 'variants' => []];
+            $groups[$first]['variants'][] = $id;
+        }
+
+        return $groups;
     }
 }

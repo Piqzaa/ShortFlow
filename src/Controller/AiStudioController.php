@@ -27,7 +27,14 @@ final class AiStudioController extends AbstractController
     {
         $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16']);
         $idea += ['accessMode' => 'api'];
-        $form = $this->createForm(AiIdeaType::class, $idea)->handleRequest($request);
+        $connected = [];
+        foreach (AiCatalog::PROVIDERS as $id => $name) {
+            $connected[$id] = null !== $keys->connection($user, $id) || ('fal' === $id && null !== $falOAuth->connection($user));
+        }
+        $connected['fal-api'] = null !== $keys->connection($user, 'fal');
+        $connected['fal-mcp'] = null !== $falOAuth->connection($user);
+        $connecting = $request->isMethod('POST') && 'connect' === $request->request->getString('intent');
+        $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites()])->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             $request->getSession()->set('ai_idea', $data);
@@ -56,14 +63,28 @@ final class AiStudioController extends AbstractController
         }
         $jobs = $em->getRepository(AiGeneration::class)->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 12);
 
-        $connected = [];
-        foreach (AiCatalog::PROVIDERS as $id => $name) {
-            $connected[$id] = null !== $keys->connection($user, $id) || ('fal' === $id && null !== $falOAuth->connection($user));
-        }
-        $connected['fal-api'] = null !== $keys->connection($user, 'fal');
-        $connected['fal-mcp'] = null !== $falOAuth->connection($user);
+        return $this->render('ai/studio.html.twig', ['ideaForm' => $form, 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+    }
 
-        return $this->render('ai/studio.html.twig', ['ideaForm' => $form, 'models' => AiCatalog::MODELS, 'providers' => AiCatalog::PROVIDERS, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+    #[Route('/studio/creation/favoris/{id}', name: 'app_ai_favorite', methods: ['POST'])]
+    public function favorite(string $id, Request $request, #[CurrentUser] User $user, AiCatalog $catalog, EntityManagerInterface $em): Response
+    {
+        if (!isset($catalog->groups()[$id])) {
+            throw $this->createNotFoundException();
+        }
+        if (!$this->isCsrfTokenValid('ai_favorite_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $favorite = $request->request->getBoolean('favorite');
+        $em->wrapInTransaction(function () use ($em, $user, $id, $favorite): void {
+            $em->refresh($user, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $user->favoriteAiModel($id, $favorite);
+        });
+        if ('application/json' === $request->headers->get('Accept')) {
+            return $this->json(['favorite' => $favorite], headers: ['Cache-Control' => 'private, no-store']);
+        }
+
+        return $this->redirectToRoute('app_studio', status: 303);
     }
 
     #[Route('/studio/ia/generations/{id}', name: 'app_ai_generation', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]

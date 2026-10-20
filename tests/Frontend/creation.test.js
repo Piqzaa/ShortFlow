@@ -21,6 +21,25 @@ function creation() {
   return controller;
 }
 
+test('favorite stars follow every resolution without changing the selected model', () => {
+  const controller = creation();
+  controller.modelTarget.options = [
+    {value:'kling',textContent:'Kling · 1080p'},
+    {value:'kling-4k',textContent:'Kling · 4K'},
+    {value:'wan',textContent:'Wan · 720p · à connecter'},
+  ];
+  const card = {dataset:{variants:JSON.stringify(['kling','kling-4k'])}};
+  controller.markFavoriteOptions(card, true);
+  controller.markFavoriteOptions(card, true);
+  assert.equal(controller.modelTarget.options[0].textContent, '★ Kling · 1080p');
+  assert.equal(controller.modelTarget.options[1].textContent, '★ Kling · 4K');
+  assert.equal(controller.modelTarget.options[2].textContent, 'Wan · 720p · à connecter');
+  assert.equal(controller.modelTarget.value, 'kling');
+  controller.markFavoriteOptions(card, false);
+  assert.equal(controller.modelTarget.options[0].textContent, 'Kling · 1080p');
+  assert.equal(controller.modelTarget.options[1].textContent, 'Kling · 4K');
+});
+
 test('changing model or duration updates the indicative price without submitting the idea', () => {
   const controller = creation();
   controller.connect();
@@ -101,4 +120,53 @@ test('resolution filter and price sort compare the same duration with exact tier
   assert.deepEqual(ordered, ['long','kling','wan']);
   assert.equal(controller.cardTargets.find(card => card.dataset.modelId === 'wan').hidden, true);
   assert.match(controller.cardTargets.find(card => card.dataset.modelId === 'long').note.textContent, /10 s : 0,65/);
+});
+
+test('missing access explains the chosen provider and never substitutes another access mode', () => {
+  const controller = creation();
+  controller.hasConnectionTarget = true; controller.connectionTarget = {};
+  controller.connectionMessageTarget = {}; controller.connectionButtonTarget = {};
+  controller.providersValue = {fal:'Fal',replicate:'Replicate'};
+  controller.modelTarget.value = 'wan'; controller.estimate();
+  assert.equal(controller.connectionTarget.hidden, false);
+  assert.match(controller.connectionMessageTarget.textContent, /clé Replicate/);
+  assert.equal(controller.connectionButtonTarget.textContent, 'Connecter Replicate');
+  controller.modelTarget.value = 'kling'; controller.estimate();
+  assert.equal(controller.connectionTarget.hidden, true);
+  controller.connectedValue['fal-mcp'] = true; controller.connectedValue['fal-api'] = false;
+  controller.hasAccessTarget = true; controller.accessTarget = {value:'api'};
+  controller.estimate();
+  assert.equal(controller.connectionTarget.hidden, false);
+  controller.accessTarget.value = 'mcp'; controller.estimate();
+  assert.equal(controller.connectionTarget.hidden, true);
+});
+
+test('economy badges follow the filtered results and the comparable duration', () => {
+  const controller = creation();
+  controller.hasComparisonTarget = true; controller.comparisonTarget = {value:'5'};
+  controller.cardTargets.forEach(card => { card.badge = {}; card.querySelector = () => card.badge; });
+  controller.filter();
+  assert.equal(controller.cardTargets[0].badge.hidden, false);
+  assert.equal(controller.cardTargets[1].badge.hidden, true);
+  controller.providerTarget.value = 'replicate'; controller.filter();
+  assert.equal(controller.cardTargets[0].badge.hidden, true);
+  assert.equal(controller.cardTargets[1].badge.hidden, false);
+  controller.comparisonTarget.value = '6'; controller.filter();
+  assert.equal(controller.cardTargets[1].badge.hidden, true);
+});
+
+test('grouped cards retain every resolution and favorites combine with the quality filter', () => {
+  const controller = creation();
+  controller.modelsValue['kling-4k'] = {...controller.modelsValue.kling,quality:'4k',rateMicros:240000};
+  const card = controller.cardTargets[0];
+  card.dataset.variants = JSON.stringify(['kling','kling-4k']); card.dataset.favorite = 'true';
+  controller.hasQualityTarget = true; controller.qualityTarget = {value:'4k'};
+  controller.hasOnlyFavoritesTarget = true; controller.onlyFavoritesTarget = {checked:true};
+  controller.filter();
+  assert.equal(card.hidden, false);
+  assert.equal(card.dataset.modelId, 'kling-4k');
+  assert.equal(controller.cardTargets[1].hidden, true);
+  assert.equal(controller.modelTarget.value, 'kling');
+  card.dataset.favorite = 'false'; controller.filter();
+  assert.equal(card.hidden, true);
 });

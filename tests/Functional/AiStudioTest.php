@@ -130,6 +130,28 @@ final class AiStudioTest extends WebTestCase
         parent::tearDown();
     }
 
+    public function testCatalogShowsResolutionAndMissingAccessAndConnectionPreservesAnIncompleteIdea(): void
+    {
+        $this->key();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        self::assertSelectorTextContains('option[value="kling-3"]', '1080p');
+        self::assertSelectorTextContains('#ai_idea_model option[value="ltx-23-fast-4k"]', 'à connecter');
+        self::assertSelectorExists('article.is-disconnected[data-group-id="ltx-23-fast-720"] option[value="ltx-23-fast-4k"]');
+        self::assertSelectorNotExists('article.is-disconnected[data-model-id="kling-3"]');
+        $form = $crawler->selectButton('Ajouter ma clé en gardant l’idée')->form(['ai_idea[model]' => 'ltx-23-fast-4k', 'ai_idea[prompt]' => '', 'ai_idea[seconds]' => '', 'ai_idea[title]' => 'Mon futur plan']);
+        $values = $form->getPhpValues();
+        unset($values['ai_idea']['_token']);
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(422);
+        $this->client->submit($form);
+        self::assertResponseRedirects('/studio/connexions/ia?next=idea&provider=ltx', 303);
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorExists('input[name="ai_idea[title]"][value="Mon futur plan"]');
+        self::assertSelectorExists('option[value="ltx-23-fast-4k"][selected]');
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testKeyIsEncryptedNeverRedisplayedAndRemovalIsOwnerScoped(): void
     {
         $crawler = $this->client->request('GET', '/studio/connexions/ia');
@@ -158,6 +180,29 @@ final class AiStudioTest extends WebTestCase
         $this->client->submit($form);
         self::assertResponseStatusCodeSame(303);
         self::assertNull($keys->connection($this->owner));
+    }
+
+    public function testModelFavoritesRequireCsrfAndBelongToTheSignedInOwner(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        self::assertSelectorCount(1, 'article[data-group-id="pika-22"]');
+        self::assertSelectorCount(2, 'article[data-group-id="pika-22"] .catalog-variant option');
+        $form = $crawler->filter('article[data-group-id="pika-22"] .catalog-favorite')->form();
+        $data = $form->getPhpValues();
+        $this->client->request('POST', '/studio/creation/favoris/pika-22', ['favorite' => '1']);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', '/studio/creation/favoris/pika-22', $data, [], ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['favorite' => true], json_decode($this->client->getResponse()->getContent(), true));
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorExists('article[data-group-id="pika-22"][data-favorite="true"]');
+        self::assertSelectorTextContains('select[name="ai_idea[model]"] option[value="pika-22"]', '★ Pika');
+        self::assertSelectorTextContains('select[name="ai_idea[model]"] option[value="pika-22-1080"]', '★ Pika');
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorExists('article[data-group-id="pika-22"][data-favorite="false"]');
+        self::assertSelectorTextNotContains('select[name="ai_idea[model]"] option[value="pika-22"]', '★');
+        self::assertSame(0, $this->submissions);
     }
 
     public function testIdeaSurvivesKeySetupAndInvalidModelCannotBePrepared(): void
@@ -480,7 +525,7 @@ final class AiStudioTest extends WebTestCase
         self::assertSelectorExists('option[value="wan-25-replicate"][selected]');
         $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form());
         $this->client->followRedirect();
-        self::assertSelectorTextContains('.studio-heading', 'Wan 2.5 · Replicate · 10 secondes');
+        self::assertSelectorTextContains('.studio-heading', 'Wan 2.5 · Replicate · 720p · 10 secondes');
         self::assertSelectorTextContains('.ai-review', '1,00 $ US');
         self::assertSelectorTextContains('.ai-confirm', 'chez Replicate');
         $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
