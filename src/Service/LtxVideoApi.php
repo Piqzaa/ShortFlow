@@ -42,7 +42,7 @@ final class LtxVideoApi
         return ['ltx_id' => $id];
     }
 
-    /** @return array{ready:bool,url?:string} */
+    /** @return array{ready:bool,url?:string,stage?:string} */
     public function poll(AiGeneration $job, #[\SensitiveParameter] string $key): array
     {
         $id = $job->getRemote()['ltx_id'] ?? '';
@@ -51,7 +51,7 @@ final class LtxVideoApi
         }
         $data = $this->http->request('GET', 'https://api.ltx.io/v2/'.(($this->catalog->model($job->getModel())['image'] ?? false) ? 'image-to-video' : 'text-to-video').'/'.$id, $this->options($key))->toArray();
         if (in_array($data['status'] ?? '', ['pending', 'processing'], true)) {
-            return ['ready' => false];
+            return ['ready' => false, 'stage' => 'pending' === $data['status'] ? 'queued' : 'running'];
         }
         $url = $data['result']['video_url'] ?? null;
         if ('completed' !== ($data['status'] ?? '') || !is_string($url)) {

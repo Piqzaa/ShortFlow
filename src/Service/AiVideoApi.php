@@ -41,7 +41,7 @@ final class AiVideoApi
         return $this->api($job)->submit($job, $key);
     }
 
-    /** @return array{ready:bool,url?:string} */
+    /** @return array{ready:bool,url?:string,stage?:string} */
     public function poll(AiGeneration $job, #[\SensitiveParameter] string $key): array
     {
         return $this->api($job)->poll($job, $key);

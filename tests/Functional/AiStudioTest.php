@@ -338,6 +338,23 @@ final class AiStudioTest extends WebTestCase
         };
         $receipt = static::getContainer()->get(FalMcpVideoApi::class)->submit($job, json_encode(['access_token' => 'synthetic-not-a-real-token', 'account_id' => 'synthetic-account'], JSON_THROW_ON_ERROR));
         self::assertArrayHasKey('mcp_receipt', $receipt);
+        $job->progress('processing', remote: $receipt);
+        foreach (['IN_QUEUE' => 'queued', 'IN_PROGRESS' => 'running'] as $remoteState => $stage) {
+            $this->httpScenario = function (string $method, string $url, array $options) use ($remoteState): MockResponse {
+                $body = json_decode($options['body'], true, 64, JSON_THROW_ON_ERROR);
+                if ('initialize' === $body['method']) {
+                    return new MockResponse('{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-03-26"}}');
+                }
+                if ('notifications/initialized' === $body['method']) {
+                    return new MockResponse('', ['http_code' => 202]);
+                }
+                self::assertSame('check_job', $body['params']['name']);
+                self::assertSame(0, $body['params']['arguments']['wait_seconds']);
+
+                return new MockResponse(json_encode(['jsonrpc' => '2.0', 'id' => 2, 'result' => ['structuredContent' => ['status' => $remoteState, 'logs' => 'never-visible']]], JSON_THROW_ON_ERROR));
+            };
+            self::assertSame(['ready' => false, 'stage' => $stage], static::getContainer()->get(FalMcpVideoApi::class)->poll($job, json_encode(['access_token' => 'synthetic-not-a-real-token', 'account_id' => 'synthetic-account'], JSON_THROW_ON_ERROR)));
+        }
         self::assertSame(1, $this->submissions);
     }
 
@@ -568,13 +585,18 @@ final class AiStudioTest extends WebTestCase
         $id = $job->getId();
         $this->service()->confirm($this->owner, $id);
         $this->service()->process($id);
+        $deadline = $this->reload($id)->getUpdatedAt()->format('U.u');
         $this->waiting = true;
         $this->service()->process($id);
         self::assertSame('processing', $this->reload($id)->getStatus());
+        self::assertSame('running', $this->reload($id)->getProviderStage());
+        self::assertNotNull($this->reload($id)->getProviderCheckedAt());
+        self::assertSame($deadline, $this->reload($id)->getUpdatedAt()->format('U.u'));
         $this->waiting = false;
         $this->badFile = true;
         $this->service()->process($id);
         self::assertSame('review', $this->reload($id)->getStatus());
+        self::assertSame('importing', $this->reload($id)->getProviderStage());
         self::assertSame(0, $this->em()->getRepository(VideoAsset::class)->count([]));
         $this->badFile = false;
         $this->owner = $this->em()->find(User::class, $this->owner->getId());
@@ -834,9 +856,13 @@ final class AiStudioTest extends WebTestCase
         $this->service()->confirm($this->owner, $id);
         $this->service()->process($id);
         self::assertSame(['prediction_id' => 'synthetic-prediction'], $this->reload($id)->getRemote());
+        $deadline = $this->reload($id)->getUpdatedAt()->format('U.u');
         $this->waiting = true;
         $this->service()->process($id);
         self::assertSame('processing', $this->reload($id)->getStatus());
+        self::assertSame('running', $this->reload($id)->getProviderStage());
+        self::assertNotNull($this->reload($id)->getProviderCheckedAt());
+        self::assertSame($deadline, $this->reload($id)->getUpdatedAt()->format('U.u'));
         $this->waiting = false;
         $this->badUrl = true;
         $this->service()->process($id);
@@ -1049,17 +1075,22 @@ final class AiStudioTest extends WebTestCase
         $job = $this->job();
         $job->useMcp();
         $job->progress('processing', remote: ['secret' => 'receipt-must-stay-private']);
+        $job->observeProvider('running');
         $this->em()->flush();
         $id = $job->getId();
         $this->client->request('GET', '/studio/ia/generations/'.$id.'/etat');
         self::assertResponseIsSuccessful();
         $state = json_decode($this->client->getResponse()->getContent(), true);
-        self::assertSame(['status', 'updatedAt'], array_keys($state));
+        self::assertSame(['status', 'updatedAt', 'stage', 'checkedAt'], array_keys($state));
+        self::assertSame('running', $state['stage']);
+        self::assertNotNull($state['checkedAt']);
         self::assertSame('processing', $state['status']);
         self::assertStringNotContainsString('receipt-must-stay-private', $this->client->getResponse()->getContent());
         self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
         $crawler = $this->client->request('GET', '/studio/ia/generations/'.$id);
         self::assertSelectorExists('[data-controller="generation-watch"]');
+        self::assertSelectorExists('[role="progressbar"]:not([aria-valuenow])');
+        self::assertSelectorCount(4, '.generation-progress-steps li');
         $form = $crawler->selectButton('Réutiliser cette idée ↗')->form();
         $this->client->request('POST', '/studio/ia/generations/'.$id.'/reutiliser');
         self::assertResponseStatusCodeSame(403);

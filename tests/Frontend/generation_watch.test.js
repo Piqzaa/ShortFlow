@@ -16,7 +16,8 @@ function watcher(fetchResult) {
     fetch:async(url, options)=>{calls.push({url,options});return fetchResult(options);},
   });
   const c = new Watcher();
-  Object.assign(c, {urlValue:'/private/state',statusValue:'processing',revisionValue:'123.456',messageTarget:{}});
+  const node = () => ({textContent:'', attrs:new Map(), classes:new Set(), setAttribute(k,v){this.attrs.set(k,v);}, removeAttribute(k){this.attrs.delete(k);}, classList:{toggle(){},add(){},remove(){}}});
+  Object.assign(c, {urlValue:'/private/state',statusValue:'processing',revisionValue:'123.456',messageTarget:node(),titleTarget:node(),detailTarget:node(),checkedTarget:node(),indicatorTarget:node(),stepTargets:[node(),node(),node(),node()]});
   return {c,document,timers,events,calls,reloads:()=>reloads};
 }
 
@@ -51,4 +52,31 @@ test('prepared ideas never poll and leaving cancels a pending state request', as
   x.c.disconnect(); await pending;
   assert.equal(x.calls[0].options.signal.aborted, true);
   assert.equal(x.reloads(), 0); assert.equal(x.c.failures, 0);
+});
+
+
+test('provider steps update in place without reload or fabricated percentage, then reveal the result', async () => {
+  let state = {status:'processing',updatedAt:'123.456',stage:'queued',checkedAt:'2026-10-20T12:00:00+00:00'};
+  const x = watcher(()=>({ok:true,json:async()=>state}));
+  x.c.connect(); await x.c.poll();
+  assert.match(x.c.titleTarget.textContent, /file du fournisseur/);
+  assert.equal(x.c.stepTargets[1].attrs.get('aria-current'), 'step');
+  assert.equal(x.c.indicatorTarget.attrs.has('aria-valuenow'), false);
+  assert.match(x.c.checkedTarget.textContent, /Dernier retour fournisseur/);
+  state = {...state,stage:'running',updatedAt:'234.567'};
+  await x.c.poll(); assert.match(x.c.detailTarget.textContent, /confirme/);
+  state = {...state,stage:'importing'};
+  await x.c.poll(); assert.equal(x.c.stepTargets[1].attrs.has('aria-current'), false);
+  assert.equal(x.c.stepTargets[2].attrs.get('aria-current'), 'step');
+  assert.equal(x.reloads(), 0); assert.equal(x.c.delay, 4000);
+  state = {...state,status:'available'};
+  await x.c.poll(); assert.equal(x.reloads(), 1); assert.equal(x.c.disposed, true);
+  x.c.disconnect();
+});
+
+test('malformed progress does not advance the displayed stage', async () => {
+  const x = watcher(()=>({ok:true,json:async()=>({status:'processing',updatedAt:'1',stage:'fabricated'})}));
+  x.c.connect(); await x.c.poll();
+  assert.equal(x.c.failures, 1); assert.equal(x.c.titleTarget.textContent, '');
+  assert.equal(x.reloads(), 0); x.c.disconnect();
 });

@@ -43,7 +43,7 @@ final class FalMcpVideoApi
         return ['mcp_receipt' => $this->vault->encrypt(json_encode($receipt, JSON_THROW_ON_ERROR))];
     }
 
-    /** @return array{ready:bool,url?:string} */
+    /** @return array{ready:bool,url?:string,stage?:string} */
     public function poll(AiGeneration $job, #[\SensitiveParameter] string $credential): array
     {
         $bundle = json_decode($credential, true, 32, JSON_THROW_ON_ERROR);
@@ -54,7 +54,7 @@ final class FalMcpVideoApi
         $arguments = ['endpoint_id' => $this->catalog->model($job->getModel())['endpoint'], 'request_id' => $receipt['request_id']];
         $status = $this->client->call($bundle['access_token'], 'check_job', $arguments + ['wait_seconds' => 0] + (isset($receipt['status_url']) ? ['status_url' => $receipt['status_url']] : []));
         if (in_array($status['status'] ?? '', ['IN_QUEUE', 'IN_PROGRESS', 'processing'], true)) {
-            return ['ready' => false];
+            return ['ready' => false, 'stage' => 'IN_QUEUE' === $status['status'] ? 'queued' : 'running'];
         }
         if ('COMPLETED' !== ($status['status'] ?? '') || isset($status['error'])) {
             throw new \RuntimeException('La génération MCP Fal n’a pas abouti.');

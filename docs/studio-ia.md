@@ -144,3 +144,5 @@ Le catalogue local couvre désormais 21 configurations et trois fournisseurs (Fa
 Image vers vidéo : premier parcours local documenté dans [studio-image-video.md](studio-image-video.md), sans nouvel essai fournisseur réel.
 
 Extension locale du 20/10/2026 : [modèles image, début/fin et cadrage](studio-image-video-complet.md).
+
+Suivi visible des générations : loader indéterminé, étapes issues du worker/fournisseur, actualisation locale sans rechargement intermédiaire et récupération automatique du résultat. Guide : [suivi-generation-ia.md](suivi-generation-ia.md).

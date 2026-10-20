@@ -84,7 +84,7 @@ final class FalVideoApi
         return $remote;
     }
 
-    /** @return array{ready:bool,url?:string} */
+    /** @return array{ready:bool,url?:string,stage?:string} */
     public function poll(AiGeneration $job, #[\SensitiveParameter] string $key): array
     {
         $remote = $job->getRemote();
@@ -92,7 +92,7 @@ final class FalVideoApi
         $options = ['headers' => ['Authorization' => 'Key '.$key], 'max_redirects' => 0, 'timeout' => 20, 'max_duration' => 30];
         $status = $this->http->request('GET', $remote['status_url'], $options)->toArray();
         if (in_array($status['status'] ?? '', ['IN_QUEUE', 'IN_PROGRESS'], true)) {
-            return ['ready' => false];
+            return ['ready' => false, 'stage' => 'IN_QUEUE' === $status['status'] ? 'queued' : 'running'];
         }
         if ('COMPLETED' !== ($status['status'] ?? '') || isset($status['error'])) {
             throw new \RuntimeException('Le fournisseur a refusé ou interrompu la génération.');

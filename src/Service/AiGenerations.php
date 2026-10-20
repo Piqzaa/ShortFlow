@@ -181,10 +181,14 @@ final class AiGenerations
             try {
                 $result = $this->api->poll($job, $key);
                 if (!$result['ready']) {
+                    $job->observeProvider($result['stage'] ?? 'running');
+                    $this->em->flush();
                     $this->later($id);
 
                     return;
                 }
+                $job->observeProvider('importing');
+                $this->em->flush();
                 $path = $this->api->download($job, $result['url']);
                 // The job result and imported asset commit together, including on message redelivery.
                 $this->em->wrapInTransaction(function () use ($job, $path, &$video): void {

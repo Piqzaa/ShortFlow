@@ -1,0 +1,10 @@
+{% set importing = job.status == 'processing' and job.providerStage == 'importing' %}
+{% set currentStep = importing ? 2 : (job.status == 'processing' ? 1 : 0) %}
+<div class="generation-progress">
+  <div class="generation-progress-orbit" role="progressbar" aria-label="Génération de la vidéo" aria-valuetext="{{ importing ? 'Récupération de la vidéo' : 'Génération en cours' }}" data-generation-watch-target="indicator"><span aria-hidden="true">✦</span></div>
+  <p class="generation-progress-detail" aria-live="polite" aria-atomic="true" data-generation-watch-target="detail">{% if importing %}La génération est terminée. VydFlow récupère et vérifie le fichier dans ta bibliothèque.{% elseif job.status == 'processing' and job.providerStage == 'queued' %}Ta demande est acceptée. Le fournisseur attend une place disponible.{% elseif job.status == 'processing' and job.providerStage == 'running' %}Le fournisseur confirme que la génération est en cours.{% elseif job.status == 'processing' %}Demande acceptée. En attente du prochain retour du fournisseur.{% elseif job.status == 'submitting' %}Les réglages et les images sont transmis une seule fois.{% else %}La demande attend son envoi au fournisseur.{% endif %}</p>
+  <ol class="generation-progress-steps" aria-label="Étapes de ta création">{% for label in ['Préparation','Génération','Récupération','Prête'] %}<li data-generation-watch-target="step" class="{{ loop.index0 == currentStep ? 'is-current' : (loop.index0 < currentStep ? 'is-done' : '') }}"{% if loop.index0 == currentStep %} aria-current="step"{% endif %}><span aria-hidden="true">{{ loop.index }}</span>{{ label }}</li>{% endfor %}</ol>
+  <p class="library-note generation-progress-checked" data-generation-watch-target="checked">{{ job.providerCheckedAt ? 'Dernier retour fournisseur à ' ~ job.providerCheckedAt|date('H:i:s', app.user.timezone) ~ '.' : 'En attente du premier retour fournisseur.' }}</p>
+  <p class="library-note">Le suivi se met à jour automatiquement. Le fournisseur ne communique pas de pourcentage de progression.</p>
+  <noscript><p>Actualise le suivi pour voir la prochaine étape.</p></noscript>
+</div>

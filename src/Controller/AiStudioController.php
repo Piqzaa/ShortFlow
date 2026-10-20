@@ -274,7 +274,7 @@ final class AiStudioController extends AbstractController
     {
         $job = $generations->owned($id, $user) ?? throw $this->createNotFoundException();
 
-        return $this->json(['status' => $job->getStatus(), 'updatedAt' => $job->getUpdatedAt()->format('U.u')], headers: ['Cache-Control' => 'private, no-store']);
+        return $this->json(['status' => $job->getStatus(), 'updatedAt' => $job->getUpdatedAt()->format('U.u'), 'stage' => $job->getProviderStage(), 'checkedAt' => $job->getProviderCheckedAt()?->format(DATE_ATOM)], headers: ['Cache-Control' => 'private, no-store']);
     }
 
     #[Route('/studio/ia/generations/{id}/reutiliser', name: 'app_ai_reuse', requirements: ['id' => '\d+'], methods: ['POST'])]

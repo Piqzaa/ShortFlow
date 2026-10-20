@@ -50,6 +50,31 @@ class AiGeneration
     #[ORM\Column(length: 8, options: ['default' => 'crop'])]
     private string $imageFit = 'crop';
 
+    #[ORM\Column(length: 12, nullable: true)]
+    private ?string $providerStage = null;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $providerCheckedAt = null;
+
+    public function getProviderStage(): ?string
+    {
+        return $this->providerStage;
+    }
+
+    public function getProviderCheckedAt(): ?\DateTimeImmutable
+    {
+        return $this->providerCheckedAt;
+    }
+
+    public function observeProvider(string $stage): void
+    {
+        if ('processing' !== $this->status || !in_array($stage, ['queued', 'running', 'importing'], true)) {
+            throw new \LogicException('Étape fournisseur invalide.');
+        }
+        $this->providerStage = $stage;
+        // Observations must not reset the 45-minute recovery deadline.
+        $this->providerCheckedAt = new \DateTimeImmutable();
+    }
+
     public function __construct(User $owner, string $title, string $prompt, string $model, int $seconds, string $ratio, int $estimatedCents)
     {
         $this->owner = $owner;

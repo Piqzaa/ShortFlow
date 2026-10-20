@@ -44,7 +44,7 @@ final class ReplicateVideoApi
         return ['prediction_id' => $id];
     }
 
-    /** @return array{ready:bool,url?:string} */
+    /** @return array{ready:bool,url?:string,stage?:string} */
     public function poll(AiGeneration $job, #[\SensitiveParameter] string $key): array
     {
         $id = $job->getRemote()['prediction_id'] ?? '';
@@ -53,7 +53,7 @@ final class ReplicateVideoApi
         }
         $data = $this->http->request('GET', 'https://api.replicate.com/v1/predictions/'.$id, $this->options($key))->toArray();
         if (in_array($data['status'] ?? '', ['starting', 'processing'], true)) {
-            return ['ready' => false];
+            return ['ready' => false, 'stage' => 'starting' === $data['status'] ? 'queued' : 'running'];
         }
         if ('succeeded' !== ($data['status'] ?? '') || !is_string($data['output'] ?? null) || null !== ($data['error'] ?? null)) {
             throw new \RuntimeException('Le fournisseur a refusé ou interrompu la génération.');
