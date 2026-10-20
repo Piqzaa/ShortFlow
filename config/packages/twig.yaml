@@ -15,3 +15,8 @@ twig:
 when@test:
     twig:
         strict_variables: true
+
+when@dev:
+    twig:
+        # Keep template edits visible in the local fast mode (APP_DEBUG=0).
+        auto_reload: true

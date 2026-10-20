@@ -6,7 +6,8 @@
 <div class="upload-layout"><section class="upload-panel" data-upload-panel aria-label="Importer une vidéo">
 {{ form_start(form, {attr: {class: 'account-form upload-form', 'data-controller': 'upload', 'data-action': 'submit->upload#submit'}}) }}
 {{ form_errors(form) }}
-<div class="upload-file-zone"><span class="upload-symbol" aria-hidden="true">↥</span>{{ form_row(form.file) }}<p>MP4 ou WebM · 100 Mo maximum</p></div>
+<div class="upload-file-zone" data-upload-target="zone" data-action="dragover->upload#drag dragleave->upload#leave drop->upload#drop"><span class="upload-symbol" aria-hidden="true">↥</span>{{ form_row(form.file) }}<p>Glisse ta vidéo ici ou choisis un fichier.<br>MP4 ou WebM · 100 Mo maximum</p></div>
+<section class="upload-preview" data-upload-target="preview" aria-label="Aperçu avant import" hidden><video controls playsinline muted preload="metadata" data-upload-target="player" data-action="loadedmetadata->upload#metadata error->upload#previewFailed" aria-label="Aperçu de la vidéo sélectionnée"></video><div class="upload-preview-heading"><strong data-upload-target="fileName"></strong><button type="button" class="account-secondary" data-action="upload#remove">Retirer</button></div><p class="library-note" data-upload-target="previewInfo" role="status" aria-live="polite"></p><p class="library-note" data-upload-target="previewError" hidden>Ce navigateur ne peut pas afficher l’aperçu. Tu peux importer la vidéo pour vérifier son format.</p><small>Rien n’est envoyé avant « Importer ma vidéo ».</small></section>
 {{ form_row(form.title) }}
 <div class="upload-progress" data-upload-target="progressPanel" hidden><label for="upload-progress" data-upload-target="status" role="status" aria-live="polite">Préparation de l’import…</label><progress id="upload-progress" max="100" value="0" data-upload-target="progress">0 %</progress></div>
 <p class="upload-feedback" data-upload-target="error" role="alert" hidden></p>

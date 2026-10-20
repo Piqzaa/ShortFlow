@@ -125,6 +125,21 @@ final class VideoLibraryTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    public function testUploadPreviewIsLocalAndLibraryCoversAreDeferred(): void
+    {
+        $this->asUser('alice@example.test');
+        $this->client->request('GET', '/studio/bibliotheque/importer');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[type="file"][data-action="change->upload#selected"]');
+        self::assertSelectorExists('[data-upload-target="preview"][hidden] video[controls]:not([src])');
+        self::assertSelectorExists('[data-upload-target="zone"][data-action*="drop->upload#drop"]');
+        $this->upload('tests/Fixtures/library-valid.mp4', 'Aperçu différé');
+        $this->client->request('GET', '/studio');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-controller="video-thumbnails"] video[data-preview-src][preload="none"]');
+        self::assertSelectorNotExists('video[data-video-thumbnails-target="video"][src]');
+    }
+
     public function testWebmUploadAndDefaultName(): void
     {
         $this->asUser('alice@example.test');

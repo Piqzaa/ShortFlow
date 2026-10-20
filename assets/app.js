@@ -19,6 +19,8 @@ app.register('studio', StudioController);
 app.register('account-token', AccountTokenController);
 app.register('cursor', CursorController);
 app.register('upload', UploadController);
+import VideoThumbnailsController from './controllers/video_thumbnails_controller.js';
+app.register('video-thumbnails', VideoThumbnailsController);
 
 import './styles/publication.css';
 import StudioNavigationController from './controllers/studio_navigation_controller.js';
