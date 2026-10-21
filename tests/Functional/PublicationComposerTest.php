@@ -104,6 +104,80 @@ final class PublicationComposerTest extends WebTestCase
         }
     }
 
+    public function testContextualEditingPreservesPreparationAndRequiresAnExport(): void
+    {
+        $crawler = $this->networks($this->start(), ['youtube']);
+        $this->post($crawler, 'edit_'.$this->video->getId(), [
+            'settings' => ['youtube' => ['videos' => [$this->video->getId() => ['title' => 'Texte conservé', 'description' => 'Ma description', 'privacy' => 'private', 'audience' => 'no']]]],
+            'mode' => 'scheduled', 'local' => '2026-10-20T12:30', 'timezone' => 'America/Toronto',
+        ]);
+        self::assertResponseStatusCodeSame(303);
+        $project = $this->em()->getRepository(\App\Entity\VideoEdit::class)->findOneBy(['owner' => $this->owner]);
+        self::assertSame($this->stored()->getId(), $project->getPublicationContext()['draft']);
+        self::assertSame($this->stored()->getRevision(), $project->getPublicationContext()['revision']);
+        $this->client->followRedirect();
+        self::assertSelectorExists('a.editor-back[href="/studio/composer?draft='.$this->stored()->getId().'"]');
+        $applyUrl = '/studio/montage/'.$project->getId().'/appliquer';
+        $this->client->request('POST', $applyUrl);
+        self::assertResponseStatusCodeSame(403);
+        $project = $this->em()->find(\App\Entity\VideoEdit::class, $project->getId());
+        try {
+            static::getContainer()->get(\App\Service\PublicationDrafts::class)->applyEdit($project->getOwner(), $project);
+            self::fail('An unfinished montage must not be applied.');
+        } catch (\App\Service\PublicationException $error) {
+            self::assertStringContainsString('exporté', $error->getMessage());
+        }
+        self::assertSame([$this->video->getId()], $this->stored()->videoIds());
+        $output = new VideoAsset($project->getOwner(), 'Version montée', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 4, 720, 1280, 'h264');
+        $this->em()->persist($output);
+        $project->complete($output);
+        $this->em()->flush();
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $form = $crawler->selectButton('Appliquer et revenir →')->form();
+        $this->client->submit($form);
+        self::assertResponseRedirects('/studio/composer?draft='.$this->stored()->getId(), 303);
+        self::assertSame([$output->getId()], $this->stored()->videoIds());
+        self::assertSame('draft', $this->stored()->getStatus());
+        self::assertSame(['youtube'], $this->stored()->getNetworks());
+        self::assertSame('2026-10-20T16:30:00+00:00', $this->stored()->getScheduledAt()->format('c'));
+        self::assertSame('America/Toronto', $this->stored()->getTimezone());
+        $content = $this->stored()->content()['youtube']['videos'][$output->getId()];
+        self::assertSame('Texte conservé', $content['title']);
+        self::assertSame('Ma description', $content['description']);
+        self::assertSame('private', $content['privacy']);
+        self::assertSame('no', $content['audience']);
+        self::assertNotNull($this->em()->find(VideoAsset::class, $this->video->getId()));
+        $revision = $this->stored()->getRevision();
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame($revision, $this->stored()->getRevision());
+        $this->noSend();
+        $this->client->loginUser($this->other);
+        $this->client->request('POST', $applyUrl);
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testChangedPreparationRejectsAnOlderMontage(): void
+    {
+        $crawler = $this->start();
+        $this->post($crawler, 'edit_'.$this->video->getId());
+        self::assertResponseStatusCodeSame(303);
+        $project = $this->em()->getRepository(\App\Entity\VideoEdit::class)->findOneBy(['owner' => $this->owner]);
+        $project->complete($this->em()->find(VideoAsset::class, $this->video->getId()));
+        $this->em()->flush();
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $apply = $crawler->selectButton('Appliquer et revenir →')->form();
+        $crawler = $this->start(['draft' => $this->stored()->getId()]);
+        $this->post($crawler, 'save');
+        self::assertResponseStatusCodeSame(303);
+        $this->client->submit($apply);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[role="alert"]', 'préparation a changé');
+        self::assertFalse($this->em()->find(\App\Entity\VideoEdit::class, $project->getId())->getPublicationContext()['applied']);
+        $this->noSend();
+    }
+
     public function testWorkspaceIsPrivateAndCalendarDateAndZoneReachComposer(): void
     {
         $otherVideo = new VideoAsset($this->other, 'Invisible', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 4, 720, 1280, 'h264');

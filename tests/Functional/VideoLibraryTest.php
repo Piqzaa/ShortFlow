@@ -440,6 +440,19 @@ final class VideoLibraryTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    public function testImportFromMontagePreselectsTheNewClipWithoutStartingAnExport(): void
+    {
+        $this->asUser('alice@example.test');
+        $crawler = $this->client->request('GET', '/studio/bibliotheque/importer?next=edit');
+        $form = $crawler->selectButton('Importer ma vidéo')->form(['video_upload[title]' => 'À monter']);
+        $this->client->request('POST', '/studio/bibliotheque/importer?next=edit', $form->getPhpValues(), ['video_upload' => ['file' => $this->fixture('tests/Fixtures/library-valid.mp4')]]);
+        self::assertResponseStatusCodeSame(303);
+        self::assertStringStartsWith('/studio/montage?', $this->client->getResponse()->headers->get('Location'));
+        $this->client->followRedirect();
+        self::assertSelectorExists('.edit-pick input[checked]');
+        self::assertSame(0, static::getContainer()->get(EntityManagerInterface::class)->getRepository(\App\Entity\VideoEdit::class)->count([]));
+    }
+
     private function upload(string $source, string $title = 'Ma vidéo', ?string $name = null): VideoAsset
     {
         $this->submitUpload($this->fixture($source, $name), $title);

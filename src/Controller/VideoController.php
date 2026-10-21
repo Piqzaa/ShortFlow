@@ -43,8 +43,12 @@ final class VideoController extends AbstractController
     }
 
     #[Route('/importer', name: 'app_video_upload', methods: ['GET', 'POST'])]
-    public function upload(Request $request, #[CurrentUser] User $user, #[Autowire(service: 'limiter.video_upload')] RateLimiterFactory $limiter): Response
+    public function upload(Request $request, #[CurrentUser] User $user, #[Autowire(service: 'limiter.video_upload')] RateLimiterFactory $limiter, \App\Service\VideoEdits $edits): Response
     {
+        $editing = $request->query->has('montage') ? ($edits->owned($request->query->getInt('montage'), $user) ?? throw $this->createNotFoundException()) : null;
+        if ($editing && ($editing->isActive() || 'ready' === $editing->getStatus())) {
+            return $this->redirectToRoute('app_edit_show', ['id' => $editing->getId()], 303);
+        }
         $form = $this->createForm(VideoUploadType::class)->handleRequest($request);
         $status = $form->isSubmitted() ? 422 : 200;
         if ($form->isSubmitted() && !$limiter->create((string) $user->getId())->consume()->isAccepted()) {
@@ -56,10 +60,22 @@ final class VideoController extends AbstractController
                 $video = $this->library->import($user, $data['file'], $data['title']);
                 $this->addFlash('success', 'Ta vidéo a rejoint ta bibliothèque.');
 
-                $redirect = 'compose' === $request->query->getString('next')
+                $redirect = 'edit' === $request->request->getString('intent') || 'edit' === $request->query->getString('next')
+                    ? $this->generateUrl('app_edit_index', ['videos' => [$video->getId()]])
+                    : ('compose' === $request->query->getString('next')
                     ? $this->generateUrl('app_composer_start', array_filter(['videos' => [$video->getId()], 'date' => $request->query->getString('date'), 'zone' => $request->query->getString('zone', $user->getTimezone())]))
-                    : $this->generateUrl('app_video_show', ['id' => $video->getId()]);
+                    : $this->generateUrl('app_video_show', ['id' => $video->getId()]));
 
+                if ($editing) {
+                    try {
+                        $clips = $editing->getClips();
+                        $clips[] = ['id' => (int) $video->getId(), 'start' => 0.0, 'end' => round($video->getDuration(), 3)];
+                        $edits->save($editing, $editing->getTitle(), $editing->getFormat(), $clips, false);
+                    } catch (VideoLibraryException $error) {
+                        $this->addFlash('error', $error->getMessage().' La vidéo importée reste dans ta bibliothèque.');
+                    }
+                    $redirect = $this->generateUrl('app_edit_show', ['id' => $editing->getId()]);
+                }
                 if ($request->isXmlHttpRequest()) {
                     return new JsonResponse(['redirect' => $redirect], 201, ['Cache-Control' => 'no-store, private']);
                 }

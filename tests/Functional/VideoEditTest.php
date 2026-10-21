@@ -1,0 +1,614 @@
+<?php
+
+namespace App\Tests\Functional;
+
+use App\Entity\AiGeneration;
+use App\Entity\User;
+use App\Entity\VideoAsset;
+use App\Entity\VideoEdit;
+use App\Service\PrivateVideoStorage;
+use App\Service\VideoEdits;
+use App\Service\VideoLibrary;
+use App\Service\VideoLibraryException;
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Process\Process;
+
+final class VideoEditTest extends WebTestCase
+{
+    private KernelBrowser $client;
+    private User $owner;
+    private User $other;
+    private VideoAsset $imported;
+    private VideoAsset $generated;
+    /** @var list<string> */ private array $before = [];
+
+    protected function setUp(): void
+    {
+        $_ENV['LOCAL_CAPTIONS_ENABLED'] = '1';
+        $this->client = static::createClient();
+        $this->client->disableReboot();
+        $db = static::getContainer()->get(Connection::class);
+        self::assertSame('shortflow_test', $db->fetchOne('SELECT current_database()'));
+        $db->executeStatement('DELETE FROM messenger_messages');
+        $db->executeStatement('DELETE FROM app_user');
+        $storage = static::getContainer()->get(PrivateVideoStorage::class);
+        self::assertStringEndsWith('/videos/test', $storage->directory());
+        $this->before = glob($storage->directory().'/*') ?: [];
+        foreach (['owner', 'other'] as $name) {
+            $user = new User($name.'-edit@example.test');
+            $user->verify();
+            $user->setPassword('unused');
+            $this->em()->persist($user);
+            $this->$name = $user;
+        }
+        $this->em()->flush();
+        $this->imported = $this->source('red', false, 'Un clip importé');
+        $this->generated = $this->source('blue', true, 'Un clip IA');
+        $job = new AiGeneration($this->owner, 'Essai fictif', 'Une scène bleue', 'kling-25', 5, '9:16', 35);
+        $job->complete($this->generated);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $this->client->loginUser($this->owner);
+    }
+
+    protected function tearDown(): void
+    {
+        if (static::$booted) {
+            $root = static::getContainer()->get(PrivateVideoStorage::class)->directory();
+            foreach (array_diff(glob($root.'/*') ?: [], $this->before) as $path) {
+                if (is_file($path) && !is_link($path)) {
+                    unlink($path);
+                }
+            }
+        }
+        parent::tearDown();
+    }
+
+    private function em(): EntityManagerInterface
+    {
+        return static::getContainer()->get(EntityManagerInterface::class);
+    }
+
+    private function edits(): VideoEdits
+    {
+        return static::getContainer()->get(VideoEdits::class);
+    }
+
+    private function source(string $color, bool $audio, string $title): VideoAsset
+    {
+        $path = tempnam(sys_get_temp_dir(), 'edit-test-').'.mp4';
+        $command = ['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c='.$color.':s=96x64:r=30:d=1'];
+        if ($audio) {
+            array_push($command, '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000:duration=1');
+        }
+        array_push($command, '-c:v', 'libx264', '-threads', '1', '-pix_fmt', 'yuv420p');
+        if ($audio) {
+            array_push($command, '-c:a', 'aac');
+        }
+        $command[] = $path;
+        (new Process($command))->mustRun();
+        try {
+            return static::getContainer()->get(VideoLibrary::class)->import($this->owner, new UploadedFile($path, 'source.mp4', null, null, true), $title);
+        } finally {
+            if (is_file($path)) {
+                unlink($path);
+            } @unlink(substr($path, 0, -4));
+        }
+    }
+
+    private function project(): VideoEdit
+    {
+        return $this->edits()->create($this->owner, [$this->imported->getId(), $this->generated->getId()]);
+    }
+
+    /** @return list<array{id:int,start:float,end:float,position:int}> */
+    private function cuts(): array
+    {
+        return [['id' => $this->imported->getId(), 'start' => 0.2, 'end' => 0.7, 'position' => 2], ['id' => $this->generated->getId(), 'start' => 0.1, 'end' => 0.6, 'position' => 1]];
+    }
+
+    public function testStudioIsFocusedAndBothSourcesShareTheMontageEntry(): void
+    {
+        $this->client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('.ai-history');
+        self::assertSelectorExists('a[href="/studio/creation/historique"]');
+        self::assertSelectorNotExists('.creation-tools a[href="/studio/montage"]');
+        foreach ([$this->imported, $this->generated] as $video) {
+            $this->client->request('GET', '/studio/bibliotheque/'.$video->getId());
+            self::assertResponseIsSuccessful();
+            self::assertSelectorExists('form[action="/studio/montage/video/'.$video->getId().'"] button');
+            $form = $this->client->getCrawler()->selectButton('Éditer la vidéo')->form();
+            $this->client->submit($form);
+            self::assertResponseStatusCodeSame(303);
+            $this->client->followRedirect();
+            self::assertSelectorCount(1, '[data-edit-target=list] > .edit-clip');
+        }
+        $crawler = $this->client->request('GET', '/studio/montage');
+        self::assertSelectorCount(2, '.edit-pick');
+        $values = $crawler->selectButton('Continuer le montage →')->form()->getPhpValues();
+        $values['videos'] = [$this->imported->getId(), $this->generated->getId()];
+        $this->client->request('POST', '/studio/montage', $values);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertSelectorCount(2, '[data-edit-target=list] > .edit-clip');
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testAccessCsrfAndSourceIsolation(): void
+    {
+        $project = $this->project();
+        $this->client->request('POST', '/studio/montage/video/'.$this->imported->getId());
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', '/studio/montage', ['videos' => [$this->imported->getId()]]);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->loginUser($this->other);
+        foreach (['', '/etat'] as $suffix) {
+            $this->client->request('GET', '/studio/montage/'.$project->getId().$suffix);
+            self::assertResponseStatusCodeSame(404);
+        }
+        $this->client->request('POST', '/studio/montage/video/'.$this->imported->getId());
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/studio/bibliotheque/importer?montage='.$project->getId());
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('POST', '/studio/montage/'.$project->getId().'/retirer');
+        self::assertResponseStatusCodeSame(404);
+        $crawler = $this->client->request('GET', '/studio/montage');
+        self::assertSelectorNotExists('.edit-pick');
+        $token = $crawler->filter('input[name="_token"]')->attr('value');
+        $this->client->request('POST', '/studio/montage', ['_token' => $token, 'videos' => [$this->imported->getId()]]);
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame(1, $this->em()->getRepository(VideoEdit::class)->count([]));
+        $this->client->getCookieJar()->clear();
+        $this->client->restart();
+        $this->client->request('GET', '/studio/montage');
+        self::assertResponseRedirects('http://localhost/connexion');
+    }
+
+    public function testImportFromEditorReturnsToTheSameProject(): void
+    {
+        $project = $this->project();
+        $id = $project->getId();
+        $url = '/studio/bibliotheque/importer?next=edit&montage='.$id;
+        $crawler = $this->client->request('GET', $url);
+        self::assertSelectorExists('a[href="/studio/montage/'.$id.'"]');
+        $form = $crawler->selectButton('Importer ma vidéo')->form(['video_upload[title]' => 'Un nouveau plan']);
+        $path = tempnam(sys_get_temp_dir(), 'edit-upload-');
+        copy(static::getContainer()->get(PrivateVideoStorage::class)->path($this->imported->getStorageName()), $path);
+        try {
+            $this->client->request('POST', $url, $form->getPhpValues(), ['video_upload' => ['file' => new UploadedFile($path, 'clip.mp4', null, null, true)]], ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+            self::assertResponseStatusCodeSame(201);
+            self::assertSame('/studio/montage/'.$id, json_decode($this->client->getResponse()->getContent(), true)['redirect']);
+            $project = $this->edits()->owned($id, $this->owner);
+            self::assertCount(3, $project->getClips());
+            self::assertSame($this->imported->getId(), $project->getClips()[0]['id']);
+            self::assertSame(1, $this->em()->getRepository(VideoEdit::class)->count([]));
+        } finally {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+    }
+
+    public function testCutsOrderDraftAndExportConfirmation(): void
+    {
+        $project = $this->project();
+        $id = $project->getId();
+        $crawler = $this->client->request('GET', '/studio/montage/'.$id);
+        $form = $crawler->selectButton('Enregistrer le montage')->form();
+        $values = $form->getPhpValues();
+        $values['clips'] = $this->cuts();
+        $values['video_edit']['title'] = 'Mon histoire';
+        $values['video_edit']['format'] = '16:9';
+        $this->client->request('POST', '/studio/montage/'.$id, $values);
+        self::assertResponseStatusCodeSame(303);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('draft', $project->getStatus());
+        self::assertSame('16:9', $project->getFormat());
+        self::assertSame($this->generated->getId(), $project->getClips()[0]['id']);
+        $values['intent'] = 'export';
+        unset($values['confirm']);
+        $this->client->request('POST', '/studio/montage/'.$id, $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.form-errors, .form-error-message, .account-form', 'Confirme l’export');
+        $values['confirm'] = '1';
+        $values['clips'][0]['start'] = -2;
+        $this->client->request('POST', '/studio/montage/'.$id, $values);
+        self::assertResponseStatusCodeSame(422);
+        $values['clips'] = $this->cuts();
+        unset($values['video_edit']['_token']);
+        $this->client->request('POST', '/studio/montage/'.$id, $values);
+        self::assertResponseStatusCodeSame(422);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('draft', $project->getStatus());
+    }
+
+    public function testRealLocalExportJoinsImportedAndAiClipsWithAudioAndIsIdempotent(): void
+    {
+        $project = $this->project();
+        $this->edits()->save($project, 'Notre montage', '9:16', $this->cuts(), true);
+        self::assertSame('queued', $project->getStatus());
+        self::assertSame('video_edits', static::getContainer()->get(Connection::class)->fetchOne('SELECT queue_name FROM messenger_messages LIMIT 1'));
+        $this->edits()->save($project, 'Notre montage', '9:16', $this->cuts(), true);
+        self::assertSame(1, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+        $this->client->request('GET', '/studio/montage/'.$project->getId().'/etat');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['status' => 'queued', 'label' => 'Export en attente'], json_decode($this->client->getResponse()->getContent(), true));
+        $this->edits()->process($project->getId());
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
+        $output = $project->getOutput();
+        self::assertNotNull($output);
+        self::assertSame(1080, $output->getWidth());
+        self::assertSame(1920, $output->getHeight());
+        self::assertEqualsWithDelta(1.0, $output->getDuration(), 0.15);
+        $storage = static::getContainer()->get(PrivateVideoStorage::class);
+        $path = $storage->path($output->getStorageName());
+        $probe = new Process(['ffprobe', '-v', 'error', '-show_entries', 'stream=codec_type,codec_name', '-of', 'json', $path]);
+        $probe->mustRun();
+        self::assertStringContainsString('aac', $probe->getOutput());
+        self::assertStringContainsString('h264', $probe->getOutput());
+        foreach ([['0.2', true], ['0.8', false]] as [$time, $blue]) {
+            $pixel = new Process(['ffmpeg', '-v', 'error', '-ss', $time, '-i', $path, '-vf', 'crop=2:2:540:960,format=rgb24', '-frames:v', '1', '-f', 'rawvideo', '-']);
+            $pixel->mustRun();
+            $bytes = $pixel->getOutput();
+            self::assertGreaterThanOrEqual(3, strlen($bytes));
+            self::assertTrue($blue ? ord($bytes[2]) > ord($bytes[0]) : ord($bytes[0]) > ord($bytes[2]), 'The exported clips keep their selected order.');
+        }
+        self::assertFileExists($storage->path($this->imported->getStorageName()));
+        self::assertFileExists($storage->path($this->generated->getStorageName()));
+        $this->edits()->process($project->getId());
+        self::assertSame(3, $this->em()->getRepository(VideoAsset::class)->count([]));
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        self::assertSelectorExists('.ai-result-player');
+        $this->client->submit($crawler->selectButton('Modifier une copie')->form());
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame(2, $this->em()->getRepository(VideoEdit::class)->count([]));
+        $this->client->request('GET', '/studio/bibliotheque/'.$output->getId().'/telecharger');
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'video/mp4');
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $this->client->submit($crawler->selectButton('Retirer le projet')->form(['confirm' => '1']));
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame(3, $this->em()->getRepository(VideoAsset::class)->count([]));
+        self::assertFileExists($path);
+    }
+
+    public function testActiveExportProtectsSourcesAndCannotBeQueuedTwice(): void
+    {
+        $project = $this->project();
+        $this->edits()->save($project, 'Export', '1:1', $this->cuts(), true);
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        self::assertSelectorExists('[data-controller="edit-watch"]');
+        self::assertSelectorNotExists('button[name="intent"]');
+        try {
+            static::getContainer()->get(VideoLibrary::class)->delete($this->imported);
+            self::fail('Active sources must be protected.');
+        } catch (VideoLibraryException $error) {
+            self::assertStringContainsString('export de montage', $error->getMessage());
+        }
+        self::assertSame(1, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testUnavailableSourceFailsWithoutAddingAnAssetAndCanBeRemoved(): void
+    {
+        $project = $this->project();
+        $this->edits()->save($project, 'Export', '1:1', $this->cuts(), true);
+        static::getContainer()->get(PrivateVideoStorage::class)->discard($this->imported->getStorageName());
+        $this->edits()->process($project->getId());
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('failed', $project->getStatus());
+        self::assertSame(2, $this->em()->getRepository(VideoAsset::class)->count([]));
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        self::assertSelectorTextContains('[role="alert"]', 'clip source');
+        $this->client->submit($crawler->selectButton('Retirer le projet')->form(['confirm' => '1']));
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame(0, $this->em()->getRepository(VideoEdit::class)->count([]));
+        self::assertSame(2, $this->em()->getRepository(VideoAsset::class)->count([]));
+    }
+
+    public function testInvalidRangesForeignSourcesAndOversizedSelectionsNeverQueue(): void
+    {
+        $project = $this->project();
+        $foreign = new VideoAsset($this->other, 'Privé', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1, 1, 96, 64, 'h264');
+        $this->em()->persist($foreign);
+        $this->em()->flush();
+        $invalid = [
+            [['id' => $this->imported->getId(), 'start' => 0, 'end' => 2]],
+            [['id' => $this->imported->getId(), 'start' => 'INF', 'end' => 1]],
+            [['id' => $this->imported->getId(), 'start' => 0.5, 'end' => 0.5]],
+            [['id' => $foreign->getId(), 'start' => 0, 'end' => 1]],
+            [['id' => $this->imported->getId(), 'start' => 0, 'end' => 1, 'omit' => '1']],
+            array_fill(0, 9, $this->cuts()[0]),
+        ];
+        foreach ($invalid as $clips) {
+            try {
+                $this->edits()->save($project, 'Vérification', '9:16', $clips, true);
+                self::fail('Invalid cuts must be refused.');
+            } catch (VideoLibraryException) {
+                self::assertSame('draft', $project->getStatus());
+            }
+        }
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+        $this->edits()->save($project, 'Un seul clip', '1:1', [$this->cuts()[0], $this->cuts()[1] + ['omit' => '1']], false);
+        self::assertCount(1, $project->getClips());
+    }
+
+    public function testExportRequiresAvailableStorage(): void
+    {
+        $project = $this->project();
+        $full = new VideoAsset($this->owner, 'Occupation fictive', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', VideoLibrary::MAX_STORAGE, 1, 96, 64, 'h264');
+        $this->em()->persist($full);
+        $this->em()->flush();
+        try {
+            $this->edits()->save($project, 'Export', '9:16', $this->cuts(), true);
+            self::fail('Quota must be checked before export.');
+        } catch (VideoLibraryException $error) {
+            self::assertStringContainsString('100 Mo', $error->getMessage());
+        }
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testLocalCaptionsQueueProducesEditableTextWithoutCreatingAVideo(): void
+    {
+        $speech = new class implements \App\Service\SpeechTranscriber {
+            public int $calls = 0;
+
+            public function transcribe(string $audio, string $language = 'fr'): array
+            {
+                ++$this->calls;
+                if (!is_file($audio) || 'fr' !== $language) {
+                    throw new \RuntimeException('Bad local input.');
+                }
+
+                return [['start' => 0.0, 'end' => 0.5, 'text' => 'Bonjour VydFlow'], ['start' => 0.5, 'end' => 1.0, 'text' => 'Une vidéo courte.']];
+            }
+        };
+        static::getContainer()->set(\App\Service\SpeechTranscriber::class, $speech);
+        $project = $this->project();
+        $this->edits()->save($project, 'La voix', '9:16', $this->cuts(), false);
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $this->client->submit($crawler->selectButton('Générer les sous-titres')->form());
+        self::assertResponseStatusCodeSame(303);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('transcribing', $project->getStatus());
+        $service = static::getContainer()->get(\App\Service\VideoTranscriptions::class);
+        $service->process($project->getId());
+        self::assertSame('draft', $project->getStatus());
+        self::assertCount(2, $project->getCaptions());
+        self::assertSame(2, $this->em()->getRepository(VideoAsset::class)->count([]));
+        $service->process($project->getId());
+        self::assertSame(1, $speech->calls);
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        self::assertSelectorTextContains('[data-caption-text]', 'Bonjour VydFlow');
+        $this->client->request('GET', '/studio/montage/'.$project->getId().'/sous-titres.srt');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('00:00:00,000 --> 00:00:00,500', $this->client->getResponse()->getContent());
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/montage/'.$project->getId().'/sous-titres.srt');
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testRealOfflineTranscriberReturnsAnEditableDraftForSourcesWithoutSpeech(): void
+    {
+        $project = $this->project();
+        $this->edits()->save($project, 'Sans paroles', '9:16', $this->cuts(), false);
+        $service = static::getContainer()->get(\App\Service\VideoTranscriptions::class);
+        $service->queue($project);
+        $service->process($project->getId());
+        self::assertSame('draft', $project->getStatus(), (string) $project->getIssue());
+        self::assertSame([], $project->getCaptions());
+        self::assertStringContainsString('Aucune parole', $project->getIssue());
+        self::assertSame(2, $this->em()->getRepository(VideoAsset::class)->count([]));
+    }
+
+    public function testAutomaticRecipePreparesCaptionsAndFramingWithoutExporting(): void
+    {
+        $project = $this->project();
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $form = $crawler->selectButton('Préparer l’assemblage ✦')->form();
+        $values = $form->getPhpValues();
+        $values['autoCaptions'] = '1';
+        $this->client->request('POST', '/studio/montage/'.$project->getId(), $values);
+        self::assertResponseStatusCodeSame(303);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('transcribing', $project->getStatus());
+        self::assertSame('9:16', $project->getFormat());
+        self::assertSame('contain', $project->getSettings()['fit']);
+        self::assertFalse($project->getSettings()['intro']);
+        self::assertNull($project->getOutput());
+    }
+
+    public function testAutomaticAssemblyWithoutCaptionsDoesNotRunTranscriptionOrChangeFraming(): void
+    {
+        $project = $this->project();
+        $this->edits()->save($project, 'Mes plans', '16:9', $project->getClips(), false);
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $this->client->submit($crawler->selectButton('Préparer l’assemblage ✦')->form());
+        self::assertResponseStatusCodeSame(303);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('draft', $project->getStatus());
+        self::assertSame('16:9', $project->getFormat());
+        self::assertSame('off', $project->getSettings()['captionStyle']);
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testSplitPiecesOfTheSameSourceCanBeReorderedAndExported(): void
+    {
+        $project = $this->project();
+        $id = $this->imported->getId();
+        $pieces = [['id' => $id, 'start' => 0.6, 'end' => 1.0], ['id' => $id, 'start' => 0.0, 'end' => 0.4]];
+        $this->edits()->save($project, 'Deux morceaux', '1:1', $pieces, true);
+        $this->edits()->process($project->getId());
+        self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
+        self::assertEquals($pieces, $project->getClips());
+        self::assertEqualsWithDelta(0.8, $project->getOutput()->getDuration(), 0.1);
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $this->client->submit($crawler->selectButton('Modifier une copie')->form());
+        self::assertResponseStatusCodeSame(303);
+        $copy = $this->em()->getRepository(VideoEdit::class)->findOneBy(['title' => 'Deux morceaux · copie']);
+        self::assertEquals($pieces, $copy->getClips());
+    }
+
+    private function musicFile(): UploadedFile
+    {
+        $path = sys_get_temp_dir().'/edit-music-'.bin2hex(random_bytes(8)).'.wav';
+        (new Process(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=880:sample_rate=48000:duration=0.4', $path]))->mustRun();
+
+        return new UploadedFile($path, 'Ma musique.wav', 'audio/wav', null, true);
+    }
+
+    public function testPrivateMusicUploadMixesLoopsAndPreservesTheSources(): void
+    {
+        $project = $this->project();
+        $file = $this->musicFile();
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $form = $crawler->selectButton('Importer la piste')->form();
+        $values = $form->getPhpValues();
+        $values['rights'] = '1';
+        $this->client->request('POST', '/studio/montage/'.$project->getId().'/musique', $values, ['music' => $file]);
+        @unlink($file->getPathname());
+        self::assertResponseStatusCodeSame(303);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('Ma musique.wav', $project->getMusicTitle());
+        $name = $project->getMusicName();
+        $music = static::getContainer()->get(\App\Service\EditMusic::class);
+        self::assertFileExists($music->path($name));
+        $this->client->request('GET', '/studio/montage/'.$project->getId().'/musique/lecture');
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('private'), (string) $this->client->getResponse()->headers->get('Cache-Control'));
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/montage/'.$project->getId().'/musique/lecture');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('POST', '/studio/montage/'.$project->getId().'/musique', ['remove' => '1']);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->owner);
+        $this->client->request('POST', '/studio/montage/'.$project->getId().'/musique', ['remove' => '1']);
+        self::assertResponseStatusCodeSame(403);
+        $cuts = [['id' => $this->imported->getId(), 'start' => 0.0, 'end' => 0.9]];
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        $this->edits()->save($project, 'Avec musique', '1:1', $cuts, true, array_replace($project->getSettings(), ['sourceVolume' => 0, 'musicVolume' => 100, 'musicLoop' => true]));
+        $this->edits()->process($project->getId());
+        self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
+        $output = static::getContainer()->get(PrivateVideoStorage::class)->path($project->getOutput()->getStorageName());
+        $audio = new Process(['ffmpeg', '-v', 'error', '-ss', '0.6', '-i', $output, '-t', '0.1', '-vn', '-ac', '1', '-f', 's16le', '-']);
+        $audio->mustRun();
+        $samples = unpack('v*', $audio->getOutput());
+        self::assertGreaterThan(500, max(array_map(static fn (int $sample): int => abs($sample > 32767 ? $sample - 65536 : $sample), $samples)));
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
+        $this->client->submit($crawler->selectButton('Modifier une copie')->form());
+        $copy = $this->em()->getRepository(VideoEdit::class)->findOneBy(['title' => 'Avec musique · copie']);
+        self::assertNotSame($name, $copy->getMusicName());
+        $copyMusic = $copy->getMusicName();
+        $this->edits()->attachMusic($copy, null, false);
+        self::assertFileDoesNotExist($music->path($copyMusic));
+        self::assertFileExists($music->path($name));
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        $this->edits()->remove($project);
+        self::assertFileDoesNotExist($music->path($name));
+        self::assertFileExists($output);
+    }
+
+    public function testMusicRejectsFakeAudioAndRequiresRightsAndValidOffsets(): void
+    {
+        $project = $this->project();
+        $file = $this->musicFile();
+        try {
+            $this->edits()->attachMusic($project, $file, false);
+            self::fail('Rights must be confirmed.');
+        } catch (VideoLibraryException $error) {
+            self::assertStringContainsString('droits', $error->getMessage());
+        }
+        $this->edits()->attachMusic($project, $file, true);
+        @unlink($file->getPathname());
+        $name = $project->getMusicName();
+        try {
+            $this->edits()->save($project, 'Audio', '9:16', $project->getClips(), false, array_replace($project->getSettings(), ['musicOffset' => 500]));
+            self::fail('Offset beyond duration.');
+        } catch (VideoLibraryException $error) {
+            self::assertStringContainsString('intérieur', $error->getMessage());
+        }
+        $bad = tempnam(sys_get_temp_dir(), 'bad-audio');
+        file_put_contents($bad, 'not audio');
+        try {
+            $this->edits()->attachMusic($project, new UploadedFile($bad, 'fake.mp3', null, null, true), true);
+            self::fail('Fake audio accepted.');
+        } catch (VideoLibraryException $error) {
+            self::assertStringContainsString('uniquement du son', $error->getMessage());
+        } finally {
+            @unlink($bad);
+        }
+        self::assertSame($name, $project->getMusicName());
+        $this->edits()->attachMusic($project, null, false);
+        self::assertNull($project->getMusicName());
+    }
+
+    public function testCaptionTimingIsKeptForUnchangedCutsAndClearedWhenCutsChange(): void
+    {
+        $project = $this->project();
+        $rows = [['start' => 0.0, 'end' => 0.7, 'text' => '<script>Texte privé</script>']];
+        $settings = ['fit' => 'cover', 'captionStyle' => 'clean', 'intro' => false, 'language' => 'fr'];
+        $this->edits()->save($project, 'Un titre', '9:16', $project->getClips(), false, $settings, $rows);
+        $this->em()->clear();
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        $this->edits()->save($project, 'Un autre titre', '16:9', $project->getClips(), false);
+        self::assertCount(1, $project->getCaptions());
+        $this->client->request('GET', '/studio/montage/'.$project->getId());
+        self::assertStringNotContainsString('<script>Texte privé</script>', $this->client->getResponse()->getContent());
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        $this->edits()->save($project, 'Des coupes', '16:9', $this->cuts(), false);
+        self::assertSame([], $project->getCaptions());
+        try {
+            $this->edits()->save($project, 'Des coupes', '16:9', $project->getClips(), true);
+            self::fail('Missing captions must block styled export.');
+        } catch (VideoLibraryException $error) {
+            self::assertStringContainsString('sous-titres', $error->getMessage());
+        }
+    }
+
+    public function testStyledExportBurnsCaptionsAndAnOpeningTitleWithoutTouchingSources(): void
+    {
+        $project = $this->project();
+        $this->edits()->save($project, 'Le titre', '9:16', $this->cuts(), false);
+        $this->edits()->save($project, 'Le titre', '9:16', $project->getClips(), true, ['fit' => 'cover', 'captionStyle' => 'clean', 'intro' => true, 'language' => 'fr'], [['start' => 0.0, 'end' => 0.9, 'text' => 'Bonjour VydFlow']]);
+        $this->edits()->process($project->getId());
+        self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
+        self::assertNotNull($project->getOutput());
+        self::assertSame(1080, $project->getOutput()->getWidth());
+        self::assertSame(3, $this->em()->getRepository(VideoAsset::class)->count([]));
+        $path = static::getContainer()->get(PrivateVideoStorage::class)->path($project->getOutput()->getStorageName());
+        $frame = new Process(['ffmpeg', '-v', 'error', '-ss', '0.2', '-i', $path, '-vf', 'crop=1080:400:0:1300,format=rgb24', '-frames:v', '1', '-f', 'rawvideo', '-']);
+        $frame->mustRun();
+        $pixels = $frame->getOutput();
+        $white = false;
+        for ($i = 0; $i + 2 < strlen($pixels); $i += 3) {
+            if (ord($pixels[$i]) > 210 && ord($pixels[$i + 1]) > 210 && ord($pixels[$i + 2]) > 210) {
+                $white = true;
+                break;
+            }
+        }
+        self::assertTrue($white, 'Caption glyphs must be visible in the exported lower band.');
+    }
+
+    public function testSearchAndAddAnotherOwnedClipWithoutLosingSavedCuts(): void
+    {
+        $project = $this->edits()->create($this->owner, [$this->imported->getId()]);
+        $this->edits()->save($project, 'À compléter', '16:9', [['id' => $this->imported->getId(), 'start' => 0.2, 'end' => 0.8]], false);
+        $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId().'?q=IA');
+        self::assertSelectorTextContains('.edit-add-list', 'Un clip IA');
+        self::assertSelectorCount(1, '.edit-add-list form');
+        $this->client->submit($crawler->filter('.edit-add-list form')->last()->selectButton('Ajouter')->form());
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.account-notice', 'Clip ajouté');
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertCount(2, $project->getClips());
+        self::assertEquals(0.2, $project->getClips()[0]['start']);
+        self::assertSame('16:9', $project->getFormat());
+    }
+}

@@ -77,7 +77,7 @@ final class PublicationComposerController extends AbstractController
     }
 
     #[Route('/studio/composer/{key}', name: 'app_composer', requirements: ['key' => '[a-f0-9]{48}'], methods: ['GET', 'POST'])]
-    public function compose(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts, PublicationDraftRepository $repository): Response
+    public function compose(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts, PublicationDraftRepository $repository, \App\Service\VideoEdits $edits): Response
     {
         $state = $request->getSession()->get('composer_workspaces', [])[$key] ?? null;
         if (!is_array($state) || $state['owner'] !== $user->getId()) {
@@ -97,7 +97,11 @@ final class PublicationComposerController extends AbstractController
         }
         $submitted = $request->isMethod('POST') ? $request->request->all('publication_composer') : [];
         $intent = $request->request->getString('intent', 'review');
-        $partial = in_array($intent, ['refresh', 'save'], true);
+        $editSource = preg_match('/^edit_(\d+)$/D', $intent, $match) ? (int) $match[1] : null;
+        if (null !== $editSource && !in_array($editSource, $state['ids'], true)) {
+            throw $this->createNotFoundException();
+        }
+        $partial = null !== $editSource || in_array($intent, ['refresh', 'save'], true);
         $selected = $state['networks'];
         if ($submitted) {
             $values = $submitted['networks'] ?? [];
@@ -177,6 +181,13 @@ final class PublicationComposerController extends AbstractController
                     $drafts->plan($user, (int) $stored->getId(), $stored->getRevision(), $local, $next['timezone']);
                     $next['persistentRevision'] = $stored->getRevision();
                     $this->save($request, $key, $next);
+                    if (null !== $editSource) {
+                        $next['revision'] = bin2hex(random_bytes(16));
+                        $this->save($request, $key, $next);
+                        $project = $edits->forPublication($stored, $editSource);
+
+                        return $this->redirectToRoute('app_edit_show', ['id' => $project->getId()], 303);
+                    }
                     if ('review' === $intent) {
                         return $this->redirectToRoute('app_draft_confirm', ['id' => $stored->getId()], 303);
                     }
@@ -186,7 +197,7 @@ final class PublicationComposerController extends AbstractController
                 $this->save($request, $key, $next);
 
                 return $this->redirectToRoute('app_composer', ['key' => $key], 303);
-            } catch (PublicationException $error) {
+            } catch (PublicationException|\App\Service\VideoLibraryException $error) {
                 $form->addError(new FormError($error->getMessage()));
             }
         }
