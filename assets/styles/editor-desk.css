@@ -178,3 +178,15 @@
 .editor-desk .editor-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
 .editor-desk .editor-tabs button{min-width:0;padding:7px 2px;font-size:10px;min-height:40px}
 @media(max-width:767px){.editor-desk .editor-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.editor-desk .editor-tabs button{font-size:12px;min-height:44px}}
+
+.editor-audio-lanes {display:grid;gap:5px;min-height:34px;font-size:11px;color:var(--muted)}
+.editor-audio-lane {min-height:30px}
+.editor-audio-lane .editor-layer-block {background:#193b35;border-color:#3b8f76}
+.editor-audio-row>button {width:100%;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.editor-audio-row .editor-cue-times {grid-template-columns:1fr 1fr}
+.editor-audio-lanes:empty {border:1px dashed var(--line)}
+
+@media(min-width:768px){
+ .editor-desk .editor-timeline-panel{display:flex;flex-direction:column}
+ .editor-desk .editor-tracks{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:4px}
+}

@@ -601,6 +601,84 @@ final class VideoEditTest extends WebTestCase
         self::assertFileExists($output);
     }
 
+    public function testIndependentAudioFragmentsKeepTheirTimingAndRejectForeignSources(): void
+    {
+        $project = $this->project();
+        $file = $this->musicFile();
+        $this->edits()->attachMusic($project, $file, true);
+        @unlink($file->getPathname());
+        $url = '/studio/montage/'.$project->getId();
+        $crawler = $this->client->request('GET', $url);
+        $values = $crawler->selectButton('Enregistrer le montage')->form()->getPhpValues();
+        $values['intent'] = 'save';
+        $values['audio_current'] = '1';
+        $values['video_edit']['sourceVolume'] = 0;
+        $rows = [
+            ['id' => 'musical', 'kind' => 'music', 'source' => 0, 'start' => 0.2, 'end' => 0.6, 'offset' => 0.05, 'volume' => 80, 'loop' => '1'],
+            ['id' => 'detached', 'kind' => 'video', 'source' => $this->generated->getId(), 'start' => 1, 'end' => 1.5, 'offset' => 0.1, 'volume' => 70, 'loop' => '0'],
+        ];
+        $values['audio'] = $rows;
+        $this->client->request('POST', $url, $values, server: ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseIsSuccessful();
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertCount(2, $project->getAudioClips());
+        self::assertEquals(1, $project->getAudioClips()[1]['start']);
+        $foreign = new VideoAsset($this->em()->find(User::class, $this->other->getId()), 'Son étranger', str_repeat('a', 48).'.mp4', 'video/mp4', 100, 5, 96, 64, 'h264');
+        $this->em()->persist($foreign);
+        $this->em()->flush();
+        $bad = $values;
+        $bad['edit_revision'] = $project->getRevision();
+        $bad['audio'][1]['source'] = $foreign->getId();
+        $this->client->request('POST', $url, $bad, server: ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('indisponible', $this->client->getResponse()->getContent());
+        $bad['audio'] = $rows;
+        $bad['audio'][1]['offset'] = 0.9;
+        $this->client->request('POST', $url, $bad, server: ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('dépasse', json_decode($this->client->getResponse()->getContent(), true)['message']);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertEquals(0.1, $project->getAudioClips()[1]['offset']);
+        $extractor = static::getContainer()->get(\App\Service\EditAudio::class);
+        $speechFile = $extractor->extract($project);
+        try {
+            foreach ([[0.3, false], [1.15, true]] as [$time, $audible]) {
+                $sample = new Process(['ffmpeg', '-v', 'error', '-ss', (string) $time, '-i', $speechFile, '-t', '0.05', '-f', 's16le', '-']);
+                $sample->mustRun();
+                $peak = max(array_map(static fn (int $value): int => abs($value > 32767 ? $value - 65536 : $value), unpack('v*', $sample->getOutput())));
+                if ($audible) {
+                    self::assertGreaterThan(400, $peak);
+                } else {
+                    self::assertLessThan(150, $peak, 'La musique est exclue de la transcription.');
+                }
+            }
+        } finally {
+            $extractor->discard($speechFile);
+        }
+        $this->edits()->save($project, 'Son indépendant', '1:1', $project->getClips(), true);
+        $this->edits()->process($project->getId());
+        self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
+        $output = static::getContainer()->get(PrivateVideoStorage::class)->path($project->getOutput()->getStorageName());
+        foreach ([[0.05, false], [0.3, true], [0.8, false], [1.15, true], [1.8, false]] as [$time, $audible]) {
+            $audio = new Process(['ffmpeg', '-v', 'error', '-ss', (string) $time, '-i', $output, '-t', '0.05', '-vn', '-ac', '1', '-f', 's16le', '-']);
+            $audio->mustRun();
+            $samples = unpack('v*', $audio->getOutput());
+            $peak = max(array_map(static fn (int $value): int => abs($value > 32767 ? $value - 65536 : $value), $samples));
+            if ($audible) {
+                self::assertGreaterThan(400, $peak, 'Son attendu à '.$time);
+            } else {
+                self::assertLessThan(150, $peak, 'Silence attendu à '.$time);
+            }
+        }
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->selectButton('Modifier une copie')->form());
+        $copy = $this->em()->getRepository(VideoEdit::class)->findOneBy(['title' => 'Son indépendant · copie']);
+        self::assertSame($project->getAudioClips(), $copy->getAudioClips());
+        $this->edits()->attachMusic($copy, null, false);
+        self::assertCount(1, $copy->getAudioClips());
+        self::assertSame('video', $copy->getAudioClips()[0]['kind']);
+    }
+
     public function testMusicRejectsFakeAudioAndRequiresRightsAndValidOffsets(): void
     {
         $project = $this->project();

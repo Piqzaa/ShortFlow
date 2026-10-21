@@ -4,6 +4,42 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { remapCaptions } from '../../assets/edit-timing.js';
 
+function audioRow(values, duration = 10) {
+  const fields = Object.fromEntries(Object.entries({text:'Son',...values}).map(([key,value])=>[`[data-audio-${key}]`,{value}]));
+  return {dataset:{audioDuration:String(duration),audioUrl:'/private/audio'},querySelector:key=>fields[key],fields};
+}
+
+test('audio moves independently and trimming its left edge advances the source offset', () => {
+  const c=editor(),row=audioRow({id:'a',kind:'video',source:1,start:2,end:4,offset:1,volume:70,loop:0},4);
+  c.layerRow=()=>row;c.playheadTarget={max:8};c.audioChange=()=>{};
+  c.shiftAudio('a','move',2,4,2,1);assert.equal(c.readAudio(row).start,4);assert.equal(c.readAudio(row).offset,1);
+  c.shiftAudio('a','start',2,4,.5,1);assert.equal(c.readAudio(row).offset,1.5);assert.equal(c.readAudio(row).start,2.5);
+  c.shiftAudio('a','end',2,4,9,1);assert.equal(c.readAudio(row).end,5);
+  assert.equal(c.clipTargets[0].nodes['[data-edit-start]'].value,1);
+});
+
+test('splitting audio preserves source continuity and handles a repeating musical file', () => {
+  const c=editor(),row=audioRow({id:'a',kind:'music',source:0,start:1,end:5,offset:1.5,volume:70,loop:1},2);
+  c.selectedLayer={kind:'audio',key:'a'};c.layerRow=()=>row;c.layerRows=()=>[row];c.playheadTarget={value:3};c.audioChange=()=>{};c.remember=()=>{};
+  let added;c.appendAudio=values=>{added=values;};c.splitAudio();
+  assert.equal(c.readAudio(row).end,3);assert.equal(added.start,3);assert.equal(added.offset,1.5);assert.equal(added.volume,70);
+});
+
+test('trimming repeated music wraps its source offset instead of exceeding the file', () => {
+  const c=editor(),row=audioRow({id:'a',kind:'music',source:0,start:1,end:9,offset:1.5,volume:20,loop:1},2);
+  c.layerRow=()=>row;c.playheadTarget={max:10};c.audioChange=()=>{};
+  c.shiftAudio('a','start',1,9,3,1.5);assert.equal(c.readAudio(row).start,4);assert.equal(c.readAudio(row).offset,.5);
+});
+
+test('audio preview respects fragment timing, volume, trimming and pause', () => {
+  const c=editor(),row=audioRow({id:'a',kind:'video',source:1,start:1,end:3,offset:.5,volume:40,loop:0},4);
+  const player={duration:4,currentTime:0,paused:true,pause(){this.paused=true;},play(){this.paused=false;return Promise.resolve();}};
+  c.audioPlayers=new Map([['a',player]]);c.layerRows=()=>[row];c.playing=true;
+  c.syncAudio(.5);assert.equal(player.paused,true);
+  c.syncAudio(2);assert.equal(player.currentTime,1.5);assert.equal(player.volume,.4);assert.equal(player.paused,false);
+  c.syncAudio(3);assert.equal(player.paused,true);c.syncAudio(2);c.stop();assert.equal(player.paused,true);
+});
+
 function editor(extra = {}) {
   const source = readFileSync(new URL('../../assets/controllers/edit_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { remapCaptions } from '../edit-timing.js';", '').replace('export default class', 'class Editor');
   const Editor = runInNewContext(`${source}\nEditor;`, {Controller:class {},remapCaptions,AbortController,setTimeout,clearTimeout,...extra});

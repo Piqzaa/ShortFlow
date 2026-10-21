@@ -29,6 +29,26 @@ class VideoEdit
     /** @var list<array<string, mixed>> */
     #[ORM\Column(type: 'json')]
     private array $texts = [];
+    /** @var list<array<string, mixed>>|null */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $audioClips = null;
+
+    /** @return list<array<string, mixed>> */
+    public function getAudioClips(): array
+    {
+        if (null !== $this->audioClips) {
+            return $this->audioClips;
+        }
+        $settings = $this->getSettings();
+
+        return $this->musicName ? [['id' => 'music-original', 'kind' => 'music', 'source' => 0, 'start' => 0.0, 'end' => $this->getDuration(), 'offset' => (float) $settings['musicOffset'], 'volume' => (float) $settings['musicVolume'], 'loop' => $settings['musicLoop']]] : [];
+    }
+
+    /** @param list<array<string, mixed>> $clips */
+    public function setAudioClips(array $clips): void
+    {
+        $this->audioClips = $clips;
+    }
 
     /** @return list<array<string, mixed>> */
     public function getTexts(): array

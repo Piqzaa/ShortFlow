@@ -9,7 +9,7 @@ use Symfony\Component\Process\Process;
 
 final class EditAudio
 {
-    public function __construct(private VideoAssetRepository $videos, private PrivateVideoStorage $storage, #[Autowire('%kernel.project_dir%/var/storage/edit-audio/%kernel.environment%')] private string $directory)
+    public function __construct(private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private EditAudioClips $audioClips, #[Autowire('%kernel.project_dir%/var/storage/edit-audio/%kernel.environment%')] private string $directory)
     {
     }
 
@@ -50,8 +50,16 @@ final class EditAudio
                 $list .= 'file clip-'.$i.".wav\n";
             }
             file_put_contents($work.'/list.txt', $list);
-            $process = new Process(['ffmpeg', '-v', 'error', '-nostdin', '-y', '-protocol_whitelist', 'file', '-f', 'concat', '-safe', '1', '-i', 'list.txt', '-c', 'copy', 'audio.wav'], $work);
+            $process = new Process(['ffmpeg', '-v', 'error', '-nostdin', '-y', '-protocol_whitelist', 'file', '-f', 'concat', '-safe', '1', '-i', 'list.txt', '-c', 'copy', 'assembled.wav'], $work);
             $process->setTimeout(20);
+            $process->disableOutput();
+            $process->mustRun();
+
+            $command = ['ffmpeg', '-v', 'error', '-nostdin', '-y', '-threads', '2', '-filter_complex_threads', '1', '-protocol_whitelist', 'file', '-i', 'assembled.wav'];
+            $this->audioClips->appendMix($project, $command, video: false, includeMusic: false);
+            array_push($command, '-t', sprintf('%.6F', $project->getDuration()), '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', 'audio.wav');
+            $process = new Process($command, $work);
+            $process->setTimeout(45);
             $process->disableOutput();
             $process->mustRun();
 

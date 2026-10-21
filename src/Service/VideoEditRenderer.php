@@ -10,7 +10,7 @@ use Symfony\Component\Process\Process;
 
 final class VideoEditRenderer
 {
-    public function __construct(private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoProbe $probe, private EditCaptions $captions, private EditMusic $music, #[Autowire('%kernel.project_dir%/var/storage/edits/%kernel.environment%')] private string $directory)
+    public function __construct(private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoProbe $probe, private EditCaptions $captions, private EditAudioClips $audioClips, #[Autowire('%kernel.project_dir%/var/storage/edits/%kernel.environment%')] private string $directory)
     {
     }
 
@@ -56,7 +56,7 @@ final class VideoEditRenderer
             }
             file_put_contents($work.'/clips.txt', $list);
             $settings = $project->getSettings();
-            $effects = $project->getTexts() || $settings['intro'] || ('off' !== $settings['captionStyle'] && $project->getCaptions()) || $project->getMusicName() || 100 != $settings['sourceVolume'];
+            $effects = $project->getTexts() || $settings['intro'] || ('off' !== $settings['captionStyle'] && $project->getCaptions()) || $project->getAudioClips() || 100 != $settings['sourceVolume'];
             $this->run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin', '-y', '-protocol_whitelist', 'file', '-f', 'concat', '-safe', '1', '-i', 'clips.txt', '-c', 'copy', '-map_metadata', '-1', '-movflags', '+faststart', '-fs', (string) (VideoLibrary::MAX_BYTES + 1), $effects ? 'assembled.mp4' : 'result.mp4'], $work, $deadline);
             if ($effects) {
                 $filters = [];
@@ -70,15 +70,7 @@ final class VideoEditRenderer
                     $filters[] = "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=title.txt:expansion=none:fontsize=48:fontcolor=white:box=1:boxcolor=black@0.65:boxborderw=16:x=(w-tw)/2:y=h*0.10:enable='lt(t,2.5)'";
                 }
                 $command = ['ffmpeg', '-v', 'error', '-nostdin', '-y', '-threads', '2', '-filter_threads', '1', '-filter_complex_threads', '1', '-protocol_whitelist', 'file', '-i', 'assembled.mp4'];
-                $audio = 'volume='.sprintf('%.4F', $settings['sourceVolume'] / 100);
-                if ($project->getMusicName()) {
-                    if ($settings['musicLoop']) {
-                        array_push($command, '-stream_loop', '-1');
-                    }
-                    array_push($command, '-ss', sprintf('%.3F', $settings['musicOffset']), '-protocol_whitelist', 'file', '-i', $this->music->path($project->getMusicName()), '-filter_complex', '[0:a]'.$audio.'[voice];[1:a]volume='.sprintf('%.4F', $settings['musicVolume'] / 100).',apad[music];[voice][music]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:latency=1[mix]', '-map', '0:v:0', '-map', '[mix]');
-                } else {
-                    array_push($command, '-map', '0:v:0', '-map', '0:a:0', '-af', $audio);
-                }
+                $this->audioClips->appendMix($project, $command);
                 if ($filters) {
                     array_push($command, '-vf', implode(',', $filters));
                 }

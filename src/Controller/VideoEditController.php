@@ -107,7 +107,7 @@ final class VideoEditController extends AbstractController
                 if ('auto' === $intent && !$withCaptions) {
                     $settings['captionStyle'] = 'off';
                 }
-                $this->edits->save($project, $data['title'], $data['format'], $request->request->all('clips'), $export, $settings, $request->request->all('captions'), $request->request->getInt('edit_revision'), $request->request->getBoolean('captions_current'), $request->request->all('texts'));
+                $this->edits->save($project, $data['title'], $data['format'], $request->request->all('clips'), $export, $settings, $request->request->all('captions'), $request->request->getInt('edit_revision'), $request->request->getBoolean('captions_current'), $request->request->all('texts'), $request->request->has('audio_current') ? $request->request->all('audio') : null);
                 if ($withCaptions) {
                     $this->transcriptions->queue($project);
                 }
@@ -147,10 +147,15 @@ final class VideoEditController extends AbstractController
         foreach ($clips as $clip) {
             $sources[$clip['id']] = $this->videos->owned($clip['id'], $user);
         }
+        foreach ($project->getAudioClips() as $audio) {
+            if ('video' === $audio['kind']) {
+                $sources[$audio['source']] = $this->videos->owned($audio['source'], $user);
+            }
+        }
         $query = mb_substr(trim($request->query->getString('q')), 0, 120);
         $results = $this->videos->search($user, $query, $request->query->getInt('page', 1));
 
-        return $this->render('edit/show.html.twig', ['project' => $project, 'clips' => $clips, 'sources' => $sources, 'form' => $form, 'labels' => VideoEdit::LABELS, 'query' => $query, 'results' => $results, 'captionsEnabled' => $this->transcriptions->enabled()], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('edit/show.html.twig', ['project' => $project, 'clips' => $clips, 'sources' => $sources, 'form' => $form, 'labels' => VideoEdit::LABELS, 'query' => $query, 'results' => $results, 'captionsEnabled' => $this->transcriptions->enabled(), 'musicDuration' => $project->getMusicName() ? $this->music->duration($project->getMusicName()) : 0], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/{id}/ajouter', name: 'app_edit_add', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -187,6 +192,7 @@ final class VideoEditController extends AbstractController
             $copy->configure($project->getSettings());
             $copy->caption($project->getCaptions());
             $copy->textLayers($project->getTexts());
+            $copy->setAudioClips($project->getAudioClips());
             if ($project->getMusicName()) {
                 $copy->music($this->music->duplicate($project->getMusicName()), $project->getMusicTitle());
             }

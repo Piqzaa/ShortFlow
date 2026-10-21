@@ -14,7 +14,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class VideoEdits
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoLibrary $library, private VideoEditRenderer $renderer, private MessageBusInterface $bus, private ManagerRegistry $registry, private EditCaptions $captionTools, private EditMusic $music, private CaptionTiming $timing, private EditTextLayers $textLayers)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoLibrary $library, private VideoEditRenderer $renderer, private MessageBusInterface $bus, private ManagerRegistry $registry, private EditCaptions $captionTools, private EditMusic $music, private CaptionTiming $timing, private EditTextLayers $textLayers, private EditAudioClips $audioClips)
     {
     }
 
@@ -61,7 +61,7 @@ final class VideoEdits
     }
 
     /** @param array<mixed> $input */
-    public function save(VideoEdit $project, string $title, string $format, array $input, bool $export, ?array $settings = null, ?array $captions = null, ?int $revision = null, bool $captionsCurrent = true, ?array $texts = null): void
+    public function save(VideoEdit $project, string $title, string $format, array $input, bool $export, ?array $settings = null, ?array $captions = null, ?int $revision = null, bool $captionsCurrent = true, ?array $texts = null, ?array $audioClips = null): void
     {
         $title = trim($title);
         if ('' === $title || mb_strlen($title) > 120 || !isset(VideoEdit::FORMATS[$format]) || count($input) < 1 || count($input) > 8) {
@@ -114,14 +114,32 @@ final class VideoEdits
         $duration = array_sum(array_map(static fn (array $c): float => $c['end'] - $c['start'], $clips));
         $captionRows = null === $captions ? $project->getCaptions() : $captions;
         if (null === $captions || !$captionsCurrent) {
-            $captionRows = $this->timing->remap($this->captionTools->validate($captionRows, $project->getDuration()), $project->getClips(), $clips);
+            $detached = array_filter($project->getAudioClips(), static fn (array $row): bool => 'video' === $row['kind']);
+            if ($detached) {
+                $captionRows = array_values(array_filter($captionRows, static fn (array $row): bool => $row['start'] < $duration - 0.01));
+                foreach ($captionRows as &$captionRow) {
+                    $captionRow['end'] = min($captionRow['end'], $duration);
+                }
+                unset($captionRow);
+            } else {
+                $captionRows = $this->timing->remap($this->captionTools->validate($captionRows, $project->getDuration()), $project->getClips(), $clips);
+            }
         }
         $rows = $this->captionTools->validate($captionRows, $duration);
         $layers = $this->textLayers->validate($texts ?? $project->getTexts(), $duration);
+        $audioInput = $audioClips ?? $project->getAudioClips();
+        if (null === $audioClips) {
+            $audioInput = array_values(array_filter($audioInput, static fn (array $row): bool => $row['start'] < $duration - 0.1));
+            foreach ($audioInput as &$audioRow) {
+                $audioRow['end'] = min($audioRow['end'], $duration);
+            }
+            unset($audioRow);
+        }
+        $audioRows = $this->audioClips->validate($project, $audioInput, $duration);
         if ($export && 'off' !== $settings['captionStyle'] && !$rows) {
             throw new VideoLibraryException('Génère ou ajoute les sous-titres avant d’exporter avec ce style.');
         }
-        $this->em->wrapInTransaction(function () use ($project, $title, $format, $clips, $export, $settings, $rows, $revision, $layers): void {
+        $this->em->wrapInTransaction(function () use ($project, $title, $format, $clips, $export, $settings, $rows, $revision, $layers, $audioRows): void {
             $this->em->lock($project->getOwner(), LockMode::PESSIMISTIC_WRITE);
             $this->em->refresh($project, LockMode::PESSIMISTIC_WRITE);
             if (null !== $revision && $project->getRevision() !== $revision) {
@@ -144,6 +162,7 @@ final class VideoEdits
             $project->configure($settings);
             $project->caption($rows);
             $project->textLayers($layers);
+            $project->setAudioClips($audioRows);
             if ($export) {
                 $project->progress('queued');
                 $this->em->flush();
@@ -212,6 +231,11 @@ final class VideoEdits
                 $old = $project->getMusicName();
                 $project->music($name, $file ? mb_substr($file->getClientOriginalName(), 0, 120) : null);
                 $project->configure(array_replace($project->getSettings(), ['musicOffset' => 0]));
+                $audio = array_values(array_filter($project->getAudioClips(), static fn (array $row): bool => 'music' !== $row['kind']));
+                if ($name) {
+                    $audio[] = ['id' => bin2hex(random_bytes(12)), 'kind' => 'music', 'source' => 0, 'start' => 0.0, 'end' => $project->getDuration(), 'offset' => 0.0, 'volume' => 20.0, 'loop' => true];
+                }
+                $project->setAudioClips($audio);
             });
         } catch (\Throwable $error) {
             $this->music->discard($name);

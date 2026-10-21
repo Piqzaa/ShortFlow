@@ -3,9 +3,9 @@ import { remapCaptions } from '../edit-timing.js';
 
 export default class extends Controller {
   static values = {initialPanel:String,stateUrl:String,transcribing:Boolean};
-  static targets = ['clip', 'form', 'list', 'format', 'summary', 'notice', 'preview', 'screen', 'canvas', 'stage', 'fit', 'captionStyle', 'intro', 'timeline', 'timelinePanel', 'playhead', 'current', 'captionText', 'hook', 'captionRows', 'music', 'sourceVolume', 'musicVolume', 'musicOffset', 'musicLoop', 'captionTrack', 'cursor', 'tracks', 'ruler', 'undoButton', 'exportPanel', 'exportDialog', 'musicDialog', 'projectDialog', 'revision', 'captionsCurrent', 'textOverlays', 'textRows', 'textTemplate', 'textTrack', 'captionX', 'captionY', 'captionSize', 'captionScope', 'redoButton'];
+  static targets = ['clip', 'form', 'list', 'format', 'summary', 'notice', 'preview', 'screen', 'canvas', 'stage', 'fit', 'captionStyle', 'intro', 'timeline', 'timelinePanel', 'playhead', 'current', 'captionText', 'hook', 'captionRows', 'music', 'sourceVolume', 'musicVolume', 'musicOffset', 'musicLoop', 'captionTrack', 'cursor', 'tracks', 'ruler', 'undoButton', 'exportPanel', 'exportDialog', 'musicDialog', 'projectDialog', 'revision', 'captionsCurrent', 'textOverlays', 'textRows', 'textTemplate', 'textTrack', 'captionX', 'captionY', 'captionSize', 'captionScope', 'redoButton', 'audioRows', 'audioTemplate', 'audioTrack'];
   connect() {
-    this.playing = false;
+    this.playing = false;this.audioPlayers=new Map();
     this.history=[];this.future=[];this.timelineNodes=new Map();
     if(this.hasExportDialogTarget)this.exportDialogTarget.close();
     if(this.hasMusicDialogTarget)this.musicDialogTarget.close();
@@ -27,7 +27,7 @@ export default class extends Controller {
     this.visibility=()=>{if(!document.hidden&&this.transcribing)this.pollCaptions();};
     document.addEventListener('visibilitychange',this.visibility);
   }
-  disconnect() { this.disconnected=true;clearTimeout(this.saveTimer);clearTimeout(this.captionTimer);this.captionAbort?.abort();document.removeEventListener('visibilitychange',this.visibility); this.stop();this.endTrim?.();this.endLayerDrag?.();this.endOverlayDrag?.();this.history=[];this.future=[];this.timelineNodes?.clear(); }
+  disconnect() { this.disconnected=true;clearTimeout(this.saveTimer);clearTimeout(this.captionTimer);this.captionAbort?.abort();document.removeEventListener('visibilitychange',this.visibility); this.stop();this.endTrim?.();this.endLayerDrag?.();this.endOverlayDrag?.();this.history=[];this.future=[];this.timelineNodes?.clear();this.releaseAudio?.(); }
   active() { return this.clipTargets.filter(row => !row.querySelector('[data-edit-omit]').checked); }
   bounds(row) { return { start: Number(row.querySelector('[data-edit-start]').value), end: Number(row.querySelector('[data-edit-end]').value) }; }
   refresh() {
@@ -132,7 +132,7 @@ export default class extends Controller {
     row.scrollIntoView({ block: 'nearest', behavior: 'auto' });
     player.play().catch(() => { this.stop(); this.noticeTarget.textContent = 'La lecture est indisponible. Essaie le lecteur de ce clip.'; });
   }
-  stop() { this.playing = false; if(this.hasMusicTarget)this.musicTarget.pause(); if (this.hasStageTarget) {this.stageTarget.pause();this.pendingPlay=false;this.mediaVersion=(this.mediaVersion||0)+1;} this.clipTargets.forEach(row => row.querySelector('video')?.pause()); if (this.hasPreviewTarget) this.previewTarget.textContent = 'Lire l’assemblage ▶'; }
+  stop() { this.playing = false;this.audioPlayers?.forEach(audio=>audio.pause()); if(this.hasMusicTarget)this.musicTarget.pause(); if (this.hasStageTarget) {this.stageTarget.pause();this.pendingPlay=false;this.mediaVersion=(this.mediaVersion||0)+1;} this.clipTargets.forEach(row => row.querySelector('video')?.pause()); if (this.hasPreviewTarget) this.previewTarget.textContent = 'Lire l’assemblage ▶'; }
   split() {
     if(this.selectedLayer)return this.splitLayer();
     this.stop(); const row=this.selectedRow;
@@ -265,6 +265,7 @@ export default class extends Controller {
     this.drawCaptionTrack();
   }
   syncMusic(position) {
+    if(this.hasAudioRowsTarget){this.syncAudio(position);return;}
     if(!this.hasMusicTarget)return;
     const audio=this.musicTarget;
     audio.volume=Math.max(0,Math.min(1,Number(this.musicVolumeTarget.value)/100));
@@ -277,7 +278,7 @@ export default class extends Controller {
     if(this.playing&&audio.paused)audio.play().catch(()=>{this.noticeTarget.textContent='L’aperçu musical est indisponible. Tu peux écouter la piste dans Audio.';});
     else if(!this.playing)audio.pause();
   }
-  audioChange() { this.paint(); this.noticeTarget.textContent='Réglages audio à enregistrer.'; }
+  audioChange() { this.paint(); this.scheduleSave(); this.noticeTarget.textContent='Audio modifié · enregistrement à venir.'; }
   openMusic(event) {
     event.preventDefault(); this.stop();
     const section=this.element.querySelector('.edit-music');
@@ -346,9 +347,13 @@ export default class extends Controller {
     if(next.some(c=>!Number.isFinite(c.start)||!Number.isFinite(c.end)||c.end<=c.start)||rows.some(c=>!Number.isFinite(c.start)||!Number.isFinite(c.end)||c.end<=c.start))return;
     const active=document.activeElement;
     // Replace only after geometry changes; ordinary typing must retain its focus.
-    if(this.captionBasis&&JSON.stringify(this.captionBasis)!==JSON.stringify(next))this.writeCaptions(remapCaptions(rows,this.trimCaptions?.before||this.captionBasis,next));
+    if(this.captionBasis&&JSON.stringify(this.captionBasis)!==JSON.stringify(next)){
+      const detached=this.hasAudioRowsTarget&&this.layerRows('audio').some(row=>this.readAudio(row).kind==='video');
+      const duration=next.reduce((sum,clip)=>sum+clip.end-clip.start,0);
+      this.writeCaptions(detached?rows.filter(cue=>cue.start<duration).map(cue=>({...cue,end:Math.min(cue.end,duration)})):remapCaptions(rows,this.trimCaptions?.before||this.captionBasis,next));
+    }
     this.captionBasis=next;
-    this.clampTextTimes?.();
+    this.clampTextTimes?.();this.clampAudioTimes?.();
     if(this.hasCaptionsCurrentTarget)this.captionsCurrentTarget.value='1';
     if(active?.isConnected&&active!==document.activeElement)active.focus();
   }
@@ -456,6 +461,7 @@ export default class extends Controller {
     if(!this.hasCaptionTrackTarget)return;
     this.drawLayerTrack('caption',this.captionTrackTarget);
     if(this.hasTextTrackTarget)this.drawLayerTrack('text',this.textTrackTarget);
+    if(this.hasAudioTrackTarget)this.drawAudioTrack();
   }
   paintText(position) {
     const rows=this.captionRowsTarget.querySelectorAll('[data-caption-row]'); let text='';
@@ -481,14 +487,14 @@ export default class extends Controller {
     this.remember();rows.push({start,end,text:''});this.writeCaptions(rows);this.selectLayer('caption',String(rows.length-1));
     this.captionRowsTarget.querySelectorAll('textarea')[rows.length-1]?.focus();
   }
-  layerRows(kind) {return [...(kind==='text'?this.textRowsTarget:this.captionRowsTarget).querySelectorAll(kind==='text'?'[data-text-row]':'[data-caption-row]')];}
-  layerRow(kind,key) {return kind==='caption'?this.layerRows(kind)[Number(key)]:this.layerRows(kind).find(row=>row.querySelector('[data-text-id]').value===key);}
+  layerRows(kind) {return [...(kind==='audio'?this.audioRowsTarget:kind==='text'?this.textRowsTarget:this.captionRowsTarget).querySelectorAll(`[data-${kind}-row]`)];}
+  layerRow(kind,key) {return kind==='caption'?this.layerRows(kind)[Number(key)]:this.layerRows(kind).find(row=>this.layerValue(row,kind,'id').value===key);}
   layerValue(row,kind,field) {return row.querySelector(`[data-${kind}-${field}]`);}
   selectLayer(kind,key) {
     this.stop();this.selectedLayer={kind,key};const row=this.layerRow(kind,key);if(!row)return;
     const start=Number(this.layerValue(row,kind,'start').value),end=Number(this.layerValue(row,kind,'end').value),now=Number(this.playheadTarget.value);
     if(now<start||now>=end)this.jump(start,false);
-    this.panel({currentTarget:this.element.querySelector(`[data-panel="${kind==='text'?'text':'captions'}"]`)});this.drawCaptionTrack();
+    this.panel({currentTarget:this.element.querySelector(`[data-panel="${kind==='audio'?'audio':kind==='text'?'text':'captions'}"]`)});this.drawCaptionTrack();
   }
   selectTextRow(event) {this.selectLayer('text',event.currentTarget.dataset.textId);}
   readText(row) {return Object.fromEntries(['id','start','end','text','x','y','size','color'].map(key=>[key,['id','text','color'].includes(key)?this.layerValue(row,'text',key).value:Number(this.layerValue(row,'text',key).value)]));}
@@ -505,7 +511,7 @@ export default class extends Controller {
     if(!this.hasTextRowsTarget)return;const duration=this.recipe().reduce((sum,c)=>sum+c.end-c.start,0);
     this.layerRows('text').forEach(row=>{const start=Number(this.layerValue(row,'text','start').value);if(start>=duration-0.1)row.remove();else this.layerValue(row,'text','end').value=Math.min(duration,Number(this.layerValue(row,'text','end').value));});this.reindexTexts();
   }
-  textChange() {this.paintText(Number(this.playheadTarget.value));this.drawCaptionTrack();this.scheduleSave();this.noticeTarget.textContent='Texte modifié · enregistrement à venir.';}
+  textChange() {this.syncMusic(Number(this.playheadTarget.value));this.paintText(Number(this.playheadTarget.value));this.drawCaptionTrack();this.scheduleSave();this.noticeTarget.textContent='Texte modifié · enregistrement à venir.';}
   positionOverlay(node,x,y,size) {
     Object.assign(node.style,{left:`${x*100}%`,top:`${y*100}%`,fontSize:`${this.canvasTarget.clientHeight*size/100}px`});
   }
@@ -550,17 +556,17 @@ export default class extends Controller {
     else if(index!=='-1')this.placeLayer({kind:'caption',key:index},.5,Number(event.currentTarget.dataset.y));
     else this.noticeTarget.textContent='Sélectionne un sous-titre dans la timeline.';
   }
-  drawLayerTrack(kind,track) {
+  drawLayerTrack(kind,track,rows=null) {
     track.replaceChildren();if(kind==='caption'&&this.captionStyleTarget.value==='off'){track.textContent='Sous-titres désactivés';return;}
     const duration=Number(this.playheadTarget.max)||1;
-    this.layerRows(kind).forEach((row,index)=>{
-      const start=Number(this.layerValue(row,kind,'start').value),end=Number(this.layerValue(row,kind,'end').value),key=kind==='text'?this.layerValue(row,kind,'id').value:String(index);
+    (rows||this.layerRows(kind)).forEach((row,index)=>{
+      const start=Number(this.layerValue(row,kind,'start').value),end=Number(this.layerValue(row,kind,'end').value),key=kind==='caption'?String(index):this.layerValue(row,kind,'id').value;
       if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)return;
       const block=document.createElement('div');block.className='editor-layer-block';block.style.left=`${start/duration*100}%`;block.style.width=`${(end-start)/duration*100}%`;
       for(const edge of ['move','start','end']){
         const button=document.createElement('button');button.type='button';button.dataset.layerKind=kind;button.dataset.layerKey=key;button.dataset.layerEdge=edge;
         button.className=edge==='move'?'editor-layer-label':`editor-layer-edge edge-${edge}`;button.textContent=edge==='move'?this.layerValue(row,kind,'text').value:'⋮';
-        button.setAttribute('aria-label',`${edge==='move'?'Déplacer':edge==='start'?'Début':'Fin'} ${kind==='text'?'du texte':'du sous-titre'} ${index+1}`);button.setAttribute('data-action','pointerdown->edit#beginLayerDrag keydown->edit#layerKey');block.append(button);
+        button.setAttribute('aria-label',`${edge==='move'?'Déplacer':edge==='start'?'Début':'Fin'} ${kind==='audio'?`du fragment audio ${this.layerValue(row,kind,'text').value} à ${start.toFixed(1)} s`:kind==='text'?'du texte':'du sous-titre'} ${kind==='audio'?'':index+1}`);button.setAttribute('data-action','pointerdown->edit#beginLayerDrag keydown->edit#layerKey');block.append(button);
       }
       block.classList.toggle('is-selected',this.selectedLayer?.kind===kind&&this.selectedLayer.key===key);track.append(block);
     });
@@ -568,12 +574,14 @@ export default class extends Controller {
   beginLayerDrag(event) {
     if(this.transcribing)return;event.preventDefault();event.stopPropagation();this.endLayerDrag?.();const {layerKind:kind,layerKey:key,layerEdge:edge}=event.currentTarget.dataset;this.remember();this.selectLayer(kind,key);
     const row=this.layerRow(kind,key),start=Number(this.layerValue(row,kind,'start').value),end=Number(this.layerValue(row,kind,'end').value),x=event.clientX;
-    const track=kind==='text'?this.textTrackTarget:this.captionTrackTarget,ratio=Number(this.playheadTarget.max)/track.getBoundingClientRect().width;
-    const move=next=>this.shiftLayer(kind,key,edge,start,end,(next.clientX-x)*ratio);
+    const offset=kind==='audio'?Number(this.layerValue(row,kind,'offset').value):0;
+    const track=kind==='audio'?this.audioTrackTarget:kind==='text'?this.textTrackTarget:this.captionTrackTarget,ratio=Number(this.playheadTarget.max)/track.getBoundingClientRect().width;
+    const move=next=>this.shiftLayer(kind,key,edge,start,end,(next.clientX-x)*ratio,offset);
     const finish=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',finish);window.removeEventListener('pointercancel',finish);this.endLayerDrag=null;};this.endLayerDrag=finish;
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',finish,{once:true});window.addEventListener('pointercancel',finish,{once:true});
   }
-  shiftLayer(kind,key,edge,start,end,delta) {
+  shiftLayer(kind,key,edge,start,end,delta,offset=null) {
+    if(kind==='audio')return this.shiftAudio(key,edge,start,end,delta,offset);
     const row=this.layerRow(kind,key);if(!row)return;const rows=this.layerRows(kind),index=rows.indexOf(row);
     const min=kind==='caption'&&index>0?Number(this.layerValue(rows[index-1],kind,'end').value):0,max=kind==='caption'&&rows[index+1]?Number(this.layerValue(rows[index+1],kind,'start').value):Number(this.playheadTarget.max);
     let first=start,last=end;
@@ -585,9 +593,10 @@ export default class extends Controller {
   layerKey(event) {
     if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const {layerKind:kind,layerKey:key,layerEdge:edge}=event.currentTarget.dataset;this.remember();this.selectLayer(kind,key);const row=this.layerRow(kind,key);
     this.shiftLayer(kind,key,edge,Number(this.layerValue(row,kind,'start').value),Number(this.layerValue(row,kind,'end').value),(event.key==='ArrowLeft'?-1:1)*(event.shiftKey ? .5 : .1));
-    const track=kind==='text'?this.textTrackTarget:this.captionTrackTarget;[...track.querySelectorAll('button')].find(node=>node.dataset.layerKey===key&&node.dataset.layerEdge===edge)?.focus();
+    const track=kind==='audio'?this.audioTrackTarget:kind==='text'?this.textTrackTarget:this.captionTrackTarget;[...track.querySelectorAll('button')].find(node=>node.dataset.layerKey===key&&node.dataset.layerEdge===edge)?.focus();
   }
   splitLayer() {
+    if(this.selectedLayer.kind==='audio')return this.splitAudio();
     this.stop();
     const {kind,key}=this.selectedLayer,row=this.layerRow(kind,key);if(!row)return;const start=Number(this.layerValue(row,kind,'start').value),end=Number(this.layerValue(row,kind,'end').value),time=Number(this.playheadTarget.value);
     if(time-start<.1||end-time<.1){this.noticeTarget.textContent='Place le curseur à l’intérieur du bloc sélectionné.';return;}
@@ -601,12 +610,13 @@ export default class extends Controller {
   removeLayer() {
     this.stop();
     const {kind,key}=this.selectedLayer,row=this.layerRow(kind,key);if(!row)return;this.remember();row.remove();
-    if(kind==='text')this.reindexTexts();else this.writeCaptions(this.readCaptions());this.selectedLayer=null;this.textChange();
+    if(kind==='audio')this.reindexAudio();else if(kind==='text')this.reindexTexts();else this.writeCaptions(this.readCaptions());this.selectedLayer=null;this.textChange();
   }
   duplicateLayer() {
     this.stop();
     if(!this.selectedLayer){this.noticeTarget.textContent='Sélectionne un texte ou un sous-titre.';return;}
     const {kind,key}=this.selectedLayer,row=this.layerRow(kind,key);if(!row)return;
+    if(kind==='audio')return this.duplicateAudio(row);
     if(kind==='text'){
       if(this.layerRows(kind).length>=30)return;this.remember();const copy=this.cloneEditable(row),id=crypto.randomUUID();copy.querySelector('[data-text-id]').value=id;copy.querySelector('button[data-text-id]').dataset.textId=id;copy.querySelector('[data-text-y]').value=Math.min(.95,Number(copy.querySelector('[data-text-y]').value)+.05);row.after(copy);this.reindexTexts();this.selectLayer(kind,id);
     }else{
@@ -615,12 +625,96 @@ export default class extends Controller {
     }
     this.textChange();
   }
+  readAudio(row) {
+    return Object.fromEntries(['id','kind','source','start','end','offset','volume','loop'].map(key=>[key,['id','kind'].includes(key)?this.layerValue(row,'audio',key).value:Number(this.layerValue(row,'audio',key).value)]));
+  }
+  selectAudioRow(event) {this.selectLayer('audio',event.currentTarget.dataset.audioId);}
+  reindexAudio() {this.layerRows('audio').forEach((row,index)=>row.querySelectorAll('[name^="audio["]').forEach(input=>input.name=input.name.replace(/^audio\[[^\]]+\]/,`audio[${index}]`)));}
+  appendAudio(values,url,title,duration=0) {
+    const row=this.audioTemplateTarget.content.firstElementChild.cloneNode(true);values={...values,id:crypto.randomUUID()};
+    for(const [key,value] of Object.entries(values))this.layerValue(row,'audio',key).value=String(value);
+    row.querySelector('[data-audio-text]').value=title;row.querySelector('button[data-audio-id]').textContent=`♫ ${title}`;row.querySelector('button[data-audio-id]').dataset.audioId=values.id;
+    row.querySelector('[data-audio-loop]').closest('label').hidden=values.kind==='video';row.dataset.audioUrl=url;row.dataset.audioDuration=String(duration);this.audioRowsTarget.append(row);this.reindexAudio();return row;
+  }
+  detachAudio() {
+    this.stop();
+    if(this.layerRows('audio').some(row=>this.readAudio(row).kind==='video')){this.noticeTarget.textContent='Le son des clips est déjà détaché. Modifie ses fragments dans la piste Audio.';return;}
+    if(this.layerRows('audio').length+this.active().length>32){this.noticeTarget.textContent='32 fragments audio maximum.';return;}
+    this.remember();let time=0;
+    for(const clip of this.active()){
+      const {start,end}=this.bounds(clip),player=clip.querySelector('video');
+      if(player)this.appendAudio({kind:'video',source:clip.dataset.id,start:time,end:time+end-start,offset:start,volume:Number(this.sourceVolumeTarget.value),loop:0},player.getAttribute('src'),clip.querySelector('strong').textContent,Number(clip.querySelector('[data-edit-end]').max));
+      time+=end-start;
+    }
+    this.sourceVolumeTarget.value=0;this.selectedLayer=null;this.audioChange();this.panel({currentTarget:this.element.querySelector('[data-panel="audio"]')});this.noticeTarget.textContent='Son détaché · le son intégré aux clips est coupé pour éviter de le doubler.';
+  }
+  addMusicSegment() {
+    if(this.layerRows('audio').length>=32)return;
+    const start=Number(this.playheadTarget.value),end=Number(this.playheadTarget.max);if(end-start<.1)return;
+    this.remember();const sample=this.audioTemplateTarget.content.firstElementChild;
+    const row=this.appendAudio({kind:'music',source:0,start,end,offset:0,volume:20,loop:1},sample.dataset.audioUrl,sample.querySelector('[data-audio-text]').value,Number(sample.dataset.audioDuration));
+    this.selectLayer('audio',this.readAudio(row).id);this.audioChange();
+  }
+  drawAudioTrack() {
+    this.audioTrackTarget.replaceChildren();
+    const rows=this.layerRows('audio');if(!rows.length){this.audioTrackTarget.textContent='Musique ou son détaché';return;}
+    const lanes=[];
+    [...rows].sort((a,b)=>this.readAudio(a).start-this.readAudio(b).start).forEach(row=>{
+      const audio=this.readAudio(row);let lane=lanes.find(lane=>lane.end<=audio.start+.001);
+      if(!lane){lane={rows:[],end:0};lanes.push(lane);}lane.rows.push(row);lane.end=audio.end;
+    });
+    lanes.forEach(({rows})=>{const lane=document.createElement('div');lane.className='editor-caption-track editor-audio-lane';this.audioTrackTarget.append(lane);this.drawLayerTrack('audio',lane,rows);});
+  }
+  shiftAudio(key,edge,start,end,delta,baseOffset=null) {
+    const row=this.layerRow('audio',key);if(!row)return;const value=this.readAudio(row),offset=baseOffset??value.offset,max=Number(this.playheadTarget.max),sourceDuration=Number(row.dataset.audioDuration)||600;
+    let first=start,last=end,nextOffset=offset;
+    if(edge==='start'){first=Math.max(0,value.loop?0:start-offset,Math.min(end-.1,start+delta));nextOffset=offset+first-start;if(value.loop)nextOffset=((nextOffset%sourceDuration)+sourceDuration)%sourceDuration;}
+    else if(edge==='end')last=Math.min(max,value.loop?max:start+sourceDuration-offset,Math.max(start+.1,end+delta));
+    else{first=Math.max(0,Math.min(max-(end-start),start+delta));last=first+end-start;}
+    for(const [field,value] of Object.entries({start:first,end:last,offset:nextOffset}))this.layerValue(row,'audio',field).value=Math.round(value*1000)/1000;
+    this.audioChange();
+  }
+  splitAudio() {
+    this.stop();const row=this.layerRow('audio',this.selectedLayer.key);if(!row)return;const audio=this.readAudio(row),time=Number(this.playheadTarget.value);
+    if(time-audio.start<.1||audio.end-time<.1){this.noticeTarget.textContent='Place le curseur à l’intérieur du fragment audio.';return;}
+    if(this.layerRows('audio').length>=32)return;this.remember();const offset=audio.offset+time-audio.start,duration=Number(row.dataset.audioDuration);
+    this.layerValue(row,'audio','end').value=time;
+    this.appendAudio({...audio,start:time,offset:audio.loop&&duration?offset%duration:offset},row.dataset.audioUrl,row.querySelector('[data-audio-text]').value,duration);this.audioChange();
+  }
+  duplicateAudio(row) {
+    if(this.layerRows('audio').length>=32)return;const audio=this.readAudio(row),duration=audio.end-audio.start,start=audio.end,end=Math.min(Number(this.playheadTarget.max),start+duration);
+    if(end-start<.1){this.noticeTarget.textContent='Il faut de la place après ce fragment pour le dupliquer.';return;}this.remember();
+    this.appendAudio({...audio,start,end},row.dataset.audioUrl,row.querySelector('[data-audio-text]').value,Number(row.dataset.audioDuration));this.audioChange();
+  }
+  clampAudioTimes() {
+    if(!this.hasAudioRowsTarget)return;const duration=this.recipe().reduce((sum,c)=>sum+c.end-c.start,0);
+    this.layerRows('audio').forEach(row=>{const audio=this.readAudio(row);if(audio.start>=duration-.1)row.remove();else this.layerValue(row,'audio','end').value=Math.min(duration,audio.end);});this.reindexAudio();
+  }
+  releaseAudio() {this.audioPlayers?.forEach(player=>{player.pause();player.removeAttribute('src');player.load();});this.audioPlayers?.clear();}
+  syncAudio(position) {
+    this.audioPlayers??=new Map();const ids=new Set();
+    this.layerRows('audio').forEach(row=>{
+      const value=this.readAudio(row);ids.add(value.id);let player=this.audioPlayers.get(value.id);
+      if(position<value.start||position>=value.end||!row.dataset.audioUrl){player?.pause();return;}
+      if(!player){player=document.createElement('audio');player.preload='metadata';player.src=row.dataset.audioUrl;this.audioPlayers.set(value.id,player);
+        player.addEventListener('loadedmetadata',()=>{if(this.disconnected||!row.isConnected)return;row.dataset.audioDuration=String(player.duration);this.syncAudio(Number(this.playheadTarget.value));});
+        player.addEventListener('error',()=>{this.noticeTarget.textContent='Un fragment audio ne peut pas être préécouté. Vérifie sa source avant l’export.';});
+      }
+      player.volume=Math.max(0,Math.min(1,value.volume/100));const wanted=value.offset+position-value.start,duration=Number(player.duration);
+      if(!Number.isFinite(duration)||!duration)return;
+      if(!value.loop&&wanted>=duration){player.pause();return;}
+      const time=value.loop?wanted%duration:wanted;if(Math.abs(player.currentTime-time)>.12)player.currentTime=time;
+      if(this.playing&&player.paused)player.play().catch(()=>{this.noticeTarget.textContent='Clique sur Lire pour autoriser l’aperçu audio.';});else if(!this.playing)player.pause();
+    });
+    this.audioPlayers.forEach((player,id)=>{if(!ids.has(id)){player.pause();player.removeAttribute('src');player.load();this.audioPlayers.delete(id);}});
+  }
   cloneEditable(node) {const copy=node.cloneNode(true),fields=node.querySelectorAll('input,textarea,select');copy.querySelectorAll('input,textarea,select').forEach((field,index)=>{field.value=fields[index].value;field.checked=fields[index].checked;});return copy;}
   captureCurrent() {
     const clone=node=>{const copy=node.cloneNode(true);const fields=node.querySelectorAll('input,textarea,select');copy.querySelectorAll('input,textarea,select').forEach((field,i)=>{field.value=fields[i].value;field.checked=fields[i].checked;});return copy;};
-    return {time:Number(this.playheadTarget?.value||0),layer:this.selectedLayer?{...this.selectedLayer}:null,clips:this.clipTargets.map(clone),captions:clone(this.captionRowsTarget),texts:this.hasTextRowsTarget?clone(this.textRowsTarget):null,settings:this.formTarget?[...this.formTarget.querySelectorAll('[name^="video_edit["]')].map(field=>({name:field.name,value:field.value,checked:field.checked})):[]};
+    return {time:Number(this.playheadTarget?.value||0),layer:this.selectedLayer?{...this.selectedLayer}:null,clips:this.clipTargets.map(clone),captions:clone(this.captionRowsTarget),texts:this.hasTextRowsTarget?clone(this.textRowsTarget):null,audio:this.hasAudioRowsTarget?clone(this.audioRowsTarget):null,settings:this.formTarget?[...this.formTarget.querySelectorAll('[name^="video_edit["]')].map(field=>({name:field.name,value:field.value,checked:field.checked})):[]};
   }
   restoreExtras(snapshot) {
+    if(snapshot.audio&&this.hasAudioRowsTarget){this.releaseAudio();this.audioRowsTarget.replaceChildren(...snapshot.audio.childNodes);}
     if(snapshot.texts&&this.hasTextRowsTarget)this.textRowsTarget.replaceChildren(...snapshot.texts.childNodes);
     for(const saved of snapshot.settings||[]){const field=this.formTarget.querySelector(`[name="${saved.name}"]`);if(field){field.value=saved.value;if(field.type==='checkbox')field.checked=saved.checked;}}
   }
