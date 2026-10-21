@@ -27,9 +27,16 @@ test('only nearby covers load, at most two at a time; captured frames and page e
   observe(c.videoTargets.slice(0,4).map(target => ({target,isIntersecting:true})));
   assert.equal(c.active.size, 2); assert.equal(c.queue.length, 2);
   assert.equal(c.videoTargets[4].src, undefined);
-  const first = c.videoTargets[0]; first.events.get('loadeddata')();
+  const first = c.videoTargets[0]; first.currentTime=0;first.duration=4;
+  first.events.get('loadeddata')();
+  assert.equal(first.currentTime,0.1);assert.equal(first.poster,'');
+  first.events.get('seeked')();
   assert.match(first.poster, /^data:image\/jpeg/); assert.equal(first.src, undefined);
   assert.equal(c.active.size, 2); assert.equal(c.videoTargets[2].src, '/private/2');
+  c.videoTargetConnected(c.videoTargets[4]);
+  observe([{target:c.videoTargets[4],isIntersecting:true}]);
+  assert.equal(c.queue.length,2);
+  c.videoTargetDisconnected(c.videoTargets[4]);assert.equal(c.queue.length,1);
   pageEvents.get('pagehide')();
   assert.equal(c.active.size, 0); assert.equal(c.queue.length, 0); assert.equal(observerStopped, true);
   assert.equal(c.videoTargets.every(video => !video.src), true);

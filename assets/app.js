@@ -54,3 +54,12 @@ app.register('idea-save', IdeaSaveController);
 
 import ImageReferenceController from './controllers/image_reference_controller.js';
 app.register('image-reference', ImageReferenceController);
+
+import './styles/edit.css';
+import './styles/editor-desk.css';
+import EditController from './controllers/edit_controller.js';
+import EditWatchController from './controllers/edit_watch_controller.js';
+import EditPickerController from './controllers/edit_picker_controller.js';
+app.register('edit', EditController);
+app.register('edit-watch', EditWatchController);
+app.register('edit-picker', EditPickerController);

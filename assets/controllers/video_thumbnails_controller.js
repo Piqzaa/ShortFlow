@@ -39,11 +39,28 @@ export default class extends Controller {
     this.drain();
   }
 
+  videoTargetConnected(video) {
+    if (!this.queue || this.stopped || video.poster) return;
+    if (this.observer) this.observer.observe(video);
+    else this.enqueue(video);
+  }
+  videoTargetDisconnected(video) {
+    this.observer?.unobserve(video);
+    if (this.queue) this.queue=this.queue.filter(item=>item!==video);
+    this.finish(video);
+  }
+
   drain() {
     while (!this.stopped && this.active.size < 2 && this.queue.length) {
       const video = this.queue.shift();
       const ready = () => {
         if (video.seeking || video.readyState < 2) return;
+        // Decode a frame after the opening instant; some browsers expose a
+        // black compositor frame on loadeddata even though metadata is ready.
+        if (video.currentTime === 0 && Number.isFinite(video.duration) && video.duration > 0.15) {
+          video.currentTime = 0.1;
+          return;
+        }
         try {
           const scale = Math.min(1, 360 / video.videoWidth, 480 / video.videoHeight);
           const canvas = document.createElement('canvas');
@@ -51,6 +68,7 @@ export default class extends Controller {
           canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
           canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
           video.poster = canvas.toDataURL('image/jpeg', 0.75);
+          video.dispatchEvent?.(new CustomEvent('video-cover', {bubbles:true}));
         } catch { /* A missing cover never blocks the video link or navigation. */ }
         this.finish(video);
       };
@@ -73,7 +91,7 @@ export default class extends Controller {
   }
 
   finish(video) {
-    const cleanup = this.active.get(video);
+    const cleanup = this.active?.get(video);
     if (!cleanup) return;
     this.active.delete(video);
     cleanup();
