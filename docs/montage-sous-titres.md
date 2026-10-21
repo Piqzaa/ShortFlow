@@ -140,3 +140,29 @@ Objectif : ajouter des accroches indépendantes des sous-titres et modifier leur
 ## Vérification manuelle
 
 Ouvrir un montage, ajouter une accroche, la déplacer puis la séparer au curseur. Annuler/rétablir, changer la position d’un sous-titre seul puis de tous, enregistrer et rouvrir. Exporter et comparer le résultat. Importer un fichier de plus de trois minutes : le message doit être visible sans perdre le montage. La découpe et le déplacement indépendants de la musique restent le prochain lot ; cette livraison concerne les textes et les sous-titres.
+
+## Fragments audio indépendants — 21 octobre 2026
+
+Objectif : monter la musique et les paroles sans recouper obligatoirement l’image, pour les imports comme pour les vidéos IA.
+
+Dans **Audio**, importer une musique ou choisir **Détacher le son des clips**. Le détachement crée un fragment par clip et règle le son intégré à 0 % pour éviter le doublage. Un clip sans piste sonore reste silencieux. Les fragments se déplacent dans la timeline ; leurs poignées règlent début et fin. **Séparer** coupe le fragment sélectionné au curseur en conservant la continuité du fichier source. **Retirer**, **Dupliquer**, annuler et rétablir sont disponibles. Les réglages précis distinguent le début dans le montage du début dans le fichier, avec volume par fragment et répétition musicale. Les flèches déplacent/ajustent de 0,1 s, Maj de 0,5 s.
+
+Les fragments qui ne se chevauchent pas partagent une ligne ; les superpositions restent accessibles sur des lignes distinctes. La préécoute suit le curseur et libère les lecteurs retirés. Les pistes restent fixées dans le temps si l’image est réorganisée. Un raccourcissement du montage retire la portion audio située après sa nouvelle fin.
+
+### Fichiers et responsabilité des composants
+
+- `VideoEdit` stocke `audioClips` en JSON nullable ; `Version20261021060000` ajoute le champ sans réécrire les projets. Une valeur nulle reprend les anciens réglages musicaux ; une liste vide signifie que les fragments ont été retirés.
+- `EditAudioClips` valide les durées, volumes, limites et propriétaires des sources, puis construit le mixage FFmpeg commun. Maximum 32 fragments, aucun chemin ni URL fourni par l’utilisateur. Les arguments restent transmis à Process sous forme de tableau.
+- `VideoEdits` sauvegarde les fragments avec la recette et sa révision. Remplacer ou retirer le fichier musical réinitialise uniquement les fragments musicaux ; les sons détachés sont conservés. Une copie reprend les fragments avec sa propre copie du fichier musical.
+- `VideoEditController` reçoit les champs du formulaire existant protégé par CSRF. `_audio.html.twig` rend les réglages ; `edit_controller.js` gère manipulations, lecteurs et historique local ; `editor-desk.css` organise les lignes et le petit écran.
+- `VideoEditRenderer` utilise le mixage pour l’export. `EditAudio` utilise le même moteur pour extraire les paroles aux bons instants, en excluant la musique ajoutée de la transcription.
+
+### Flux et notion Symfony
+
+La modification passe de Stimulus au formulaire Symfony, puis au service métier qui valide avant la transaction Doctrine. L’export et la transcription reprennent les données enregistrées dans le worker. L’injection du service de mixage permet aux deux traitements de partager les mêmes règles de temps et de volume. L’interface ne remplace jamais la validation du serveur.
+
+### Essai manuel et limites
+
+Importer une musique, déplacer son début, séparer au curseur puis régler différemment les deux volumes. Détacher le son, déplacer un passage de paroles, annuler/rétablir et rouvrir après sauvegarde. Exporter et écouter le résultat. Après modification des paroles, régénérer les sous-titres : leurs anciens textes sont conservés jusqu’au résultat, mais ne se recalculent pas automatiquement pendant un déplacement audio.
+
+Ce lot conserve un seul fichier musical importé par projet, utilisable en plusieurs fragments, avec plusieurs sons de vidéos. Pas de forme d’onde, fondu, effet sonore, catalogue musical intégré ou enregistrement de voix dans cette livraison. La musique non répétée devient silencieuse après la fin du fichier. Les fichiers sources restent dans la bibliothèque et peuvent être retirés par leur propriétaire ; un son dont la source a disparu bloque la validation avec un message explicite.
