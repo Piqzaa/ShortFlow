@@ -100,3 +100,43 @@ Test manuel : saisir une légende et un horaire, modifier la vidéo, raccourcir,
 À comprendre en Symfony : un lien GET affiche ; un formulaire POST avec CSRF modifie. Le montage et le brouillon sont deux entités indépendantes. Le contrôle de révision évite d’écraser une préparation plus récente, le verrou sérialise les écritures, et Messenger calcule le fichier avant son application explicite. L’état de la session du compositeur est reconstruit à partir du brouillon durable au retour.
 
 Import depuis le mini éditeur : le lien transmet son identifiant de montage, validé par propriétaire au serveur. L’import revient au même projet et y ajoute le clip après sauvegarde des coupes. Si la limite de huit fragments est atteinte ou si un export a commencé, le fichier reste dans la bibliothèque et un message explique le refus de l’ajout. Annuler l’import revient aussi au montage.
+
+
+## Lot de fiabilité : sous-titres dans l’éditeur et sauvegarde
+
+Objectif : garder le contexte de montage et les corrections de texte pendant la transcription et les coupes. Ce lot précède les textes libres positionnables et le découpage audio.
+
+Composants :
+- `VideoEdit` et migration `Version20261021040000` : révision entière du projet. Les fragments possèdent une origine stable dans la recette JSON ; les anciennes recettes obtiennent des repères de repli sans modification immédiate des données.
+- `CaptionTiming` et `assets/edit-timing.js` : conversion des temps de sous-titres entre les anciennes et nouvelles positions des fragments. Une séparation garde l’origine ; un nouvel ajout du même fichier obtient une autre origine. Le serveur assure aussi le recalage pour les formulaires sans JavaScript. Les cas métier communs sont vérifiés depuis la même fixture dans PHPUnit et Node.
+- `VideoEdits` : valide les champs et sous-titres, recale ceux du projet lorsqu’ils ne sont pas déjà saisis pour la nouvelle recette, puis vérifie la révision sous verrou propriétaire avant toute écriture. Une page ancienne ne peut pas écraser une version plus récente.
+- `VideoEditController` : POST avec formulaire Symfony/CSRF, réponses JSON pour les requêtes de l’éditeur et redirection conservée sans JavaScript. Le suivi privé inclut statut, révision, sous-titres et éventuel message. Aucun contenu d’un autre propriétaire n’est accessible.
+- `VideoTranscriptions` : remplace le texte uniquement lorsqu’une transcription exploitable est produite. Les anciens sous-titres restent en cas d’erreur ou d’absence de parole.
+- `edit_controller.js` et Twig : sauvegarde temporisée après une seconde d’inactivité ; sauvegardes sérialisées, état de sauvegarde visible et navigation interne ordinaire attendue en cas de modifications. La transcription utilise une requête et un suivi JSON sans rechargement. L’aperçu et la timeline restent présents ; leurs outils de modification sont temporairement inertes, la lecture reste disponible. Fin/échec mettent à jour les blocs et réactivent les outils, sans remettre le curseur à zéro. Après une coupure réseau, le suivi réessaie avec un délai croissant, sans lancer une nouvelle transcription.
+
+Flux : modification → recalage navigateur → POST de sauvegarde avec révision → validation Symfony → contrôle sous verrou → nouvelle révision. Pour générer : sauvegarde et mise en file Messenger → suivi de l’état → insertion du résultat dans le panneau déjà ouvert. Une sauvegarde automatique ne crée ni export ni publication.
+
+À tester : corriger une phrase, séparer le clip, déplacer ses morceaux, retirer un passage et vérifier les temps restants ; ajouter deux fois la même source et garder leurs corrections distinctes. Générer les sous-titres pendant la lecture, constater que l’écran reste visible, puis retrouver les blocs sans navigation. Tester un échec de transcription : ancien texte conservé. Ouvrir deux onglets : la sauvegarde du plus ancien est refusée avec un message, ses champs restent affichés.
+
+Limites explicites : le recalage travaille sur les blocs de texte, sans redistribuer les mots d’une phrase partiellement coupée ; relire ces blocs. Le bouton Annuler reste celui des clips et de leurs sous-titres : l’historique universel, les textes libres et les positions dans l’image appartiennent à la suite. La sauvegarde temporisée ne constitue pas une récupération hors ligne ou après fermeture brutale du navigateur avant son départ. Les limites de fragments/durée et le moteur d’export restent celles du lot précédent.
+
+À comprendre en Symfony : une réponse JSON et une réponse HTML utilisent le même formulaire et les mêmes règles métier. La révision contrôle la concurrence ; le verrou rend l’écriture atomique. Messenger continue le calcul après la requête et le navigateur consulte uniquement le résultat enregistré.
+# Textes libres et positionnement — 21 octobre 2026
+
+Objectif : ajouter des accroches indépendantes des sous-titres et modifier leur durée directement dans le mini éditeur, sur une vidéo importée comme sur une vidéo IA.
+
+- Dans **Textes**, ajouter un bloc, saisir son texte, puis le déplacer dans l’aperçu. Sa piste permet déplacement et raccourcissement ; Séparer agit sur le bloc sélectionné au curseur. Retirer, Dupliquer, Annuler et Rétablir complètent ces opérations. Les clips vidéo restent indépendants.
+- Dans **Sous-titres**, choisir Haut, Centre ou Bas pour tous les blocs ou le bloc sélectionné ; les coordonnées précises restent accessibles. Une séparation répartit les mots approximativement : relire le résultat avant export.
+- L’import d’une vidéo de plus de trois minutes affiche désormais le motif du refus. La vérification navigateur est complétée par celle du serveur ; une erreur JSON reste dans le formulaire avec la sélection et l’aperçu.
+
+## Composants et flux Symfony
+
+`VideoEdit` conserve les textes dans un champ JSON ajouté par `Version20261021050000`. `VideoEditType` porte les réglages de position des sous-titres ; `VideoEditController` transmet les données à `VideoEdits`. `EditTextLayers` contrôle les identifiants, durées, positions, tailles et couleurs avant sauvegarde propriétaire avec révision. Les positions sont normalisées par rapport au cadre pour conserver leur sens à différentes résolutions.
+
+`templates/edit/_text.html.twig` décrit un bloc ; `edit_controller.js` gère aperçu, pistes et historique local. `EditCaptions` produit les instructions ASS autorisées à partir des valeurs validées et échappe le texte utilisateur. `VideoEditRenderer` les applique au rendu FFmpeg. L’aperçu est interactif, mais le serveur valide et fabrique toujours le véritable export : les données du navigateur ne sont jamais une autorité suffisante.
+
+`upload_controller.js` lit la durée du fichier et `VideoProbe` la vérifie côté serveur. `VideoController` renvoie les erreurs de formulaire en JSON lors d’un import asynchrone. La configuration PHP locale accepte 3000 variables pour les formulaires contenant de nombreux blocs ; le fichier INI est monté en lecture seule dans les services web Docker.
+
+## Vérification manuelle
+
+Ouvrir un montage, ajouter une accroche, la déplacer puis la séparer au curseur. Annuler/rétablir, changer la position d’un sous-titre seul puis de tous, enregistrer et rouvrir. Exporter et comparer le résultat. Importer un fichier de plus de trois minutes : le message doit être visible sans perdre le montage. La découpe et le déplacement indépendants de la musique restent le prochain lot ; cette livraison concerne les textes et les sous-titres.
