@@ -37,6 +37,9 @@ final class VideoProbe
         $duration = (float) ($data['format']['duration'] ?? 0);
         $width = (int) ($video['width'] ?? 0);
         $height = (int) ($video['height'] ?? 0);
+        if (is_finite($duration) && $duration > 180) {
+            throw new VideoLibraryException('Cette vidéo dépasse 3 minutes. Raccourcis-la avant de l’importer (3 minutes maximum).');
+        }
         if (!is_finite($duration) || $duration <= 0 || $duration > 180 || $width < 2 || $height < 2 || $width > 3840 || $height > 3840) {
             throw new VideoLibraryException('Limites de la bêta : 3 minutes maximum, dimensions de 2 à 3 840 pixels par côté.');
         }

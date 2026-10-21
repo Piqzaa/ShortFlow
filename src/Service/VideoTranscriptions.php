@@ -64,7 +64,9 @@ final class VideoTranscriptions
             $this->edits->validate($project->getOwner(), $project->getClips());
             $path = $this->audio->extract($project);
             $rows = $this->captions->validate($this->speech->transcribe($path, $project->getSettings()['language'] ?? 'fr'), $project->getDuration());
-            $project->caption($rows);
+            if ($rows) {
+                $project->caption($rows);
+            }
             $settings = $project->getSettings();
             if ($rows && 'off' === $settings['captionStyle']) {
                 $settings['captionStyle'] = 'clean';

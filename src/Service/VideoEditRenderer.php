@@ -56,12 +56,13 @@ final class VideoEditRenderer
             }
             file_put_contents($work.'/clips.txt', $list);
             $settings = $project->getSettings();
-            $effects = $settings['intro'] || ('off' !== $settings['captionStyle'] && $project->getCaptions()) || $project->getMusicName() || 100 != $settings['sourceVolume'];
+            $effects = $project->getTexts() || $settings['intro'] || ('off' !== $settings['captionStyle'] && $project->getCaptions()) || $project->getMusicName() || 100 != $settings['sourceVolume'];
             $this->run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin', '-y', '-protocol_whitelist', 'file', '-f', 'concat', '-safe', '1', '-i', 'clips.txt', '-c', 'copy', '-map_metadata', '-1', '-movflags', '+faststart', '-fs', (string) (VideoLibrary::MAX_BYTES + 1), $effects ? 'assembled.mp4' : 'result.mp4'], $work, $deadline);
             if ($effects) {
                 $filters = [];
-                if ('off' !== $settings['captionStyle'] && $project->getCaptions()) {
-                    file_put_contents($work.'/captions.ass', $this->captions->ass($project->getCaptions(), $width, $height, $settings['captionStyle']));
+                if ($project->getTexts() || ('off' !== $settings['captionStyle'] && $project->getCaptions())) {
+                    $overlays = array_merge('off' === $settings['captionStyle'] ? [] : $project->getCaptions(), $project->getTexts());
+                    file_put_contents($work.'/captions.ass', $this->captions->ass($overlays, $width, $height, $settings['captionStyle'], ['x' => $settings['captionX'], 'y' => $settings['captionY'], 'size' => $settings['captionSize']]));
                     $filters[] = 'subtitles=captions.ass';
                 }
                 if ($settings['intro']) {

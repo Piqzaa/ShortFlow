@@ -15,8 +15,9 @@ final class EditCaptionsTest extends TestCase
         self::assertStringContainsString('00:00:00,250 --> 00:00:01,500', $captions->srt($rows));
         $ass = $captions->ass($rows, 1080, 1920, 'social');
         self::assertStringContainsString('PlayResX: 1080', $ass);
-        self::assertStringNotContainsString('\\pos(', $ass);
-        self::assertStringNotContainsString('{', $ass);
+        self::assertStringNotContainsString('\\pos(0,0)', $ass);
+        self::assertStringContainsString('\\pos(540,1632)', $ass);
+        self::assertStringContainsString('Bonjour （／pos(0,0)）', $ass);
         self::assertStringContainsString('à tous', $ass);
     }
 

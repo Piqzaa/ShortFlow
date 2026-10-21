@@ -2,10 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import { remapCaptions } from '../../assets/edit-timing.js';
 
 function editor(extra = {}) {
-  const source = readFileSync(new URL('../../assets/controllers/edit_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Editor');
-  const Editor = runInNewContext(`${source}\nEditor;`, {Controller:class {},...extra});
+  const source = readFileSync(new URL('../../assets/controllers/edit_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { remapCaptions } from '../edit-timing.js';", '').replace('export default class', 'class Editor');
+  const Editor = runInNewContext(`${source}\nEditor;`, {Controller:class {},remapCaptions,AbortController,setTimeout,clearTimeout,...extra});
   const controller = new Editor();
   controller.summaryTarget = {}; controller.noticeTarget = {}; controller.previewTarget = {}; controller.hasPreviewTarget = true;
   controller.formatTarget = {value:'9:16'};
@@ -85,12 +86,15 @@ test('global playhead maps into the proper source cut without changing cuts', ()
   assert.equal(c.offset(c.clipTargets[1]),0);
 });
 
-test('trim changes invalidate captions while changing a style does not erase text', () => {
-  const c=editor();c.hasCaptionRowsTarget=true;let clears=0;
-  c.captionRowsTarget={replaceChildren(){clears++;}};c.refresh=()=>{};
-  c.change({target:{closest:()=>c.clipTargets[0]}});assert.equal(clears,1);assert.match(c.noticeTarget.textContent,/régénérer/);
-  c.change({target:{closest:()=>null}});assert.equal(clears,1);
+test('cut changes retime captions while style changes keep their current timing', () => {
+  const c=editor();let changes=0;c.hasCaptionRowsTarget=true;c.retimeCaptions=()=>changes++;c.refresh=()=>{};
+  c.change(null,true);assert.equal(changes,1);
+  c.change({target:{closest:()=>null}});assert.equal(changes,1);
 });
+
+for(const fixture of JSON.parse(readFileSync(new URL('../Fixtures/caption-timing.json',import.meta.url),'utf8'))) {
+  test(fixture.name,()=>assert.deepEqual(remapCaptions(fixture.rows,fixture.before,fixture.after),fixture.expected));
+}
 
 test('caption preview uses the correct timed block and hides the opening after 2.5 seconds', () => {
   const c=editor(); c.captionStyleTarget={value:'clean'}; c.captionTextTarget={};c.hookTarget={};c.introTarget={checked:true};
@@ -150,18 +154,74 @@ test('removing a selected fragment keeps at least one source and never deletes t
   assert.match(c.noticeTarget.textContent,/au moins un clip/);
 });
 
-test('background preservation always saves a draft and refuses validation or login redirects', async () => {
-  const requests=[];let response={ok:true,url:'http://localhost/studio/montage/7'};
-  const c=editor({URL,FormData:class {constructor(){this.values=new Map();}set(key,value){this.values.set(key,value);}},fetch:async(url,options)=>{requests.push(options);return response;}});
-  c.formTarget={action:'http://localhost/studio/montage/7'};c.element={};
-  assert.equal(await c.persist(),true);assert.equal(requests[0].body.values.get('intent'),'save');assert.equal(c.element.inert,false);
-  response={ok:false,url:c.formTarget.action};assert.equal(await c.persist(),false);
-  response={ok:true,url:'http://localhost/connexion'};assert.equal(await c.persist(),false);
-  assert.match(c.noticeTarget.textContent,/Enregistrement impossible/);
+test('background preservation saves a draft, updates revision and refuses validation or login redirects', async () => {
+  const requests=[];let response={ok:true,url:'http://localhost/studio/montage/1',headers:{get:()=> 'application/json'},json:async()=>({revision:4,status:'draft'})};
+  const c=editor({FormData:class{constructor(){this.values=new Map();}set(k,v){this.values.set(k,v);}},URL,fetch:async(url,options)=>{requests.push(options);return response;}});
+  c.formTarget={action:response.url};c.element={inert:false};c.hasRevisionTarget=true;c.revisionTarget={value:3};
+  assert.equal(await c.persist(),true);assert.equal(requests[0].body.values.get('intent'),'save');assert.equal(c.revisionTarget.value,'4');assert.equal(c.element.inert,false);
+  response={...response,ok:false,json:async()=>({message:'Le montage a changé'})};assert.equal(await c.persist(),false);assert.match(c.noticeTarget.textContent,/changé/);
+  response={...response,ok:true,url:'http://localhost/connexion'};assert.equal(await c.persist(),false);
 });
 
 test('music upload only continues after the draft was preserved', async () => {
   const c=editor();let submitted=0;const form={dataset:{},requestSubmit(){submitted++;}};
   c.persist=async()=>false;await c.saveBeforeMusic({currentTarget:form,preventDefault(){}});assert.equal(submitted,0);
   c.persist=async()=>true;await c.saveBeforeMusic({currentTarget:form,preventDefault(){}});assert.equal(submitted,1);assert.equal(form.dataset.saved,'yes');
+});
+
+
+test('inline transcription applies results without navigation or resetting the playhead', async()=>{
+  let applied=null,painted=0;const c=editor({document:{hidden:false},fetch:async()=>({ok:true,headers:{get:()=> 'application/json'},json:async()=>({status:'draft',revision:7,captions:[{start:0,end:1,text:'Corrigé'}],captionStyle:'clean',issue:null})})});
+  c.transcribing=true;c.playing=true;c.stateUrlValue='/state';c.playheadTarget={value:'2.4'};c.revisionTarget={value:'5'};c.captionStyleTarget={value:'off'};
+  c.writeCaptions=rows=>applied=rows;c.recipe=()=>[];c.setTranscribing=active=>c.transcribing=active;c.paint=()=>painted++;
+  await c.pollCaptions();assert.equal(c.transcribing,false);assert.equal(c.playheadTarget.value,'2.4');assert.equal(c.revisionTarget.value,'7');assert.equal(applied[0].text,'Corrigé');assert.equal(painted,1);assert.equal(c.playing,true);
+});
+
+test('temporary transcription follow-up failure keeps existing captions and continues to wait',async()=>{
+  let replaced=0;const c=editor({document:{hidden:false},setTimeout:()=>1,clearTimeout(){},fetch:async()=>{throw new Error('offline');}});
+  c.transcribing=true;c.writeCaptions=()=>replaced++;await c.pollCaptions();assert.equal(replaced,0);assert.equal(c.transcribing,true);assert.match(c.noticeTarget.textContent,/conservés/);
+});
+
+
+test('autosave stays serial and preserves playback while later edits wait for their revision',async()=>{
+  const pending=[];let requests=0;
+  const c=editor({FormData:class{set(){}},URL,fetch:async()=>{requests++;return new Promise(resolve=>pending.push(resolve));}});
+  c.element={inert:false};c.formTarget={action:'http://localhost/studio/montage/1'};c.hasRevisionTarget=true;c.revisionTarget={value:'1'};c.dirty=true;c.changeSerial=1;c.playing=true;
+  const response=revision=>({ok:true,url:c.formTarget.action,headers:{get:()=> 'application/json'},json:async()=>({status:'draft',revision})});
+  const first=c.persist({quiet:true});c.changeSerial=2;const second=c.persist({quiet:true});assert.equal(requests,1);
+  pending.shift()(response(2));await first;await Promise.resolve();assert.equal(requests,2);pending.shift()(response(3));await second;
+  assert.equal(c.revisionTarget.value,'3');assert.equal(c.dirty,false);assert.equal(c.playing,true);
+});
+
+
+function layerRow(values,kind='caption') {
+  const inputs=Object.fromEntries(Object.entries(values).map(([name,value])=>[`[data-${kind}-${name}]`,{value:String(value)}]));
+  return {querySelector:selector=>inputs[selector],inputs};
+}
+
+test('caption movement and trimming cannot overlap neighboring subtitles',()=>{
+  const c=editor();const rows=[layerRow({start:0,end:1}),layerRow({start:2,end:3}),layerRow({start:4,end:5})];
+  c.layerRows=()=>rows;c.playheadTarget={max:6};c.textChange=()=>{};
+  c.shiftLayer('caption','1','move',2,3,-10);assert.equal(rows[1].inputs['[data-caption-start]'].value,1);assert.equal(rows[1].inputs['[data-caption-end]'].value,2);
+  c.shiftLayer('caption','1','end',2,3,10);assert.equal(rows[1].inputs['[data-caption-end]'].value,4);
+});
+
+test('free text timing moves independently from the video fragments',()=>{
+  const c=editor();const row=layerRow({id:'t',start:1,end:3},'text');c.layerRows=()=>[row];c.playheadTarget={max:6};c.textChange=()=>{};
+  c.shiftLayer('text','t','move',1,3,2);assert.equal(row.inputs['[data-text-start]'].value,3);assert.equal(row.inputs['[data-text-end]'].value,5);assert.equal(c.clipTargets[0].nodes['[data-edit-start]'].value,1);
+});
+
+test('splitting a subtitle distributes words and preserves its individual position',()=>{
+  const c=editor();const row=layerRow({start:0,end:3});c.layerRows=()=>[row];c.selectedLayer={kind:'caption',key:'0'};c.playheadTarget={value:1.5};c.readCaptions=()=>[{start:0,end:3,text:'Un texte bien corrigé',x:.5,y:.15}];let result;
+  c.writeCaptions=rows=>result=rows;c.textChange=()=>{};c.splitLayer();assert.equal(result[0].text,'Un texte');assert.equal(result[1].text,'bien corrigé');assert.equal(result[0].end,1.5);assert.equal(result[1].y,.15);
+});
+
+test('moving all captions resets per-block overrides without changing their timing',()=>{
+  const c=editor();const row=layerRow({start:1,end:2,x:.2,y:.3});c.layerRows=()=>[row];c.captionScopeTarget={value:'all'};c.captionXTarget={};c.captionYTarget={};c.playheadTarget={value:1};c.paintText=()=>{};c.scheduleSave=()=>{};
+  c.placeLayer({kind:'caption',key:'0'},.5,.15);assert.equal(c.captionYTarget.value,.15);assert.equal(row.inputs['[data-caption-y]'].value,'');assert.equal(row.inputs['[data-caption-start]'].value,'1');
+});
+
+test('selecting a text block preserves an existing cursor inside that block',()=>{
+  const c=editor();const row=layerRow({id:'t',start:1,end:3},'text');c.layerRows=()=>[row];c.playheadTarget={value:2};c.element={querySelector:()=>({})};c.panel=()=>{};c.drawCaptionTrack=()=>{};let jumped=false;c.jump=()=>jumped=true;
+  c.selectLayer('text','t');assert.equal(jumped,false);assert.equal(c.playheadTarget.value,2);
 });

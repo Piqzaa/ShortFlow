@@ -103,13 +103,16 @@ final class VideoEditController extends AbstractController
                 if ($export && !$request->request->getBoolean('confirm')) {
                     throw new VideoLibraryException('Confirme l’export de cette nouvelle vidéo.');
                 }
-                $settings = array_intersect_key($data, array_flip(['fit', 'captionStyle', 'intro', 'language', 'sourceVolume', 'musicVolume', 'musicOffset', 'musicLoop']));
+                $settings = array_intersect_key($data, array_flip(['fit', 'captionStyle', 'intro', 'language', 'sourceVolume', 'musicVolume', 'musicOffset', 'musicLoop', 'captionX', 'captionY', 'captionSize']));
                 if ('auto' === $intent && !$withCaptions) {
                     $settings['captionStyle'] = 'off';
                 }
-                $this->edits->save($project, $data['title'], $data['format'], $request->request->all('clips'), $export, $settings, $withCaptions ? null : $request->request->all('captions'));
+                $this->edits->save($project, $data['title'], $data['format'], $request->request->all('clips'), $export, $settings, $request->request->all('captions'), $request->request->getInt('edit_revision'), $request->request->getBoolean('captions_current'), $request->request->all('texts'));
                 if ($withCaptions) {
                     $this->transcriptions->queue($project);
+                }
+                if (str_contains($request->headers->get('Accept', ''), 'application/json')) {
+                    return $this->json($this->editState($project), $withCaptions || $export ? 202 : 200, ['Cache-Control' => 'private, no-store']);
                 }
                 $this->addFlash('success', $export ? 'L’export est lancé. Tu peux quitter cette page.' : ($withCaptions ? 'Création des sous-titres en local. Tu pourras relire le texte avant d’exporter.' : 'Ton assemblage est enregistré et prêt à être exporté.'));
 
@@ -132,6 +135,14 @@ final class VideoEditController extends AbstractController
                 }
             }
         }
+        if ($form->isSubmitted() && str_contains($request->headers->get('Accept', ''), 'application/json')) {
+            $errors = [];
+            foreach ($form->getErrors(true) as $error) {
+                $errors[] = $error->getMessage();
+            }
+
+            return $this->json(['message' => implode(' ', array_unique($errors)) ?: 'Vérifie les champs du montage.'], 422, ['Cache-Control' => 'private, no-store']);
+        }
         $sources = [];
         foreach ($clips as $clip) {
             $sources[$clip['id']] = $this->videos->owned($clip['id'], $user);
@@ -152,7 +163,7 @@ final class VideoEditController extends AbstractController
         try {
             $source = $this->videos->owned($request->request->getInt('video'), $user) ?? throw new VideoLibraryException('Cette vidéo est indisponible.');
             $clips = $project->getClips();
-            $clips[] = ['id' => (int) $source->getId(), 'start' => 0.0, 'end' => round($source->getDuration(), 3)];
+            $clips[] = ['id' => (int) $source->getId(), 'start' => 0.0, 'end' => round($source->getDuration(), 3), 'origin' => bin2hex(random_bytes(8))];
             $this->edits->save($project, $project->getTitle(), $project->getFormat(), $clips, false);
             $this->addFlash('success', 'Clip ajouté au montage.');
         } catch (VideoLibraryException $error) {
@@ -175,6 +186,7 @@ final class VideoEditController extends AbstractController
             $this->edits->save($copy, mb_substr($project->getTitle(), 0, 110).' · copie', $project->getFormat(), $project->getClips(), false);
             $copy->configure($project->getSettings());
             $copy->caption($project->getCaptions());
+            $copy->textLayers($project->getTexts());
             if ($project->getMusicName()) {
                 $copy->music($this->music->duplicate($project->getMusicName()), $project->getMusicTitle());
             }
@@ -235,7 +247,13 @@ final class VideoEditController extends AbstractController
     {
         $project = $this->edits->owned($id, $user) ?? throw $this->createNotFoundException();
 
-        return $this->json(['status' => $project->getStatus(), 'label' => VideoEdit::LABELS[$project->getStatus()]], headers: ['Cache-Control' => 'private, no-store']);
+        return $this->json($this->editState($project), headers: ['Cache-Control' => 'private, no-store']);
+    }
+
+    /** @return array{status:string,label:string,revision:int,captions:list<array{start:float,end:float,text:string,x?:float,y?:float}>,captionStyle:string,issue:?string} */
+    private function editState(VideoEdit $project): array
+    {
+        return ['status' => $project->getStatus(), 'label' => VideoEdit::LABELS[$project->getStatus()], 'revision' => $project->getRevision(), 'captions' => $project->getCaptions(), 'captionStyle' => $project->getSettings()['captionStyle'], 'issue' => $project->getIssue()];
     }
 
     #[Route('/{id}/retirer', name: 'app_edit_remove', requirements: ['id' => '\d+'], methods: ['POST'])]

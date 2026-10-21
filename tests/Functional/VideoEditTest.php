@@ -194,6 +194,55 @@ final class VideoEditTest extends WebTestCase
         }
     }
 
+    public function testLongImportFromEditorExplainsRefusalWithoutChangingTheProject(): void
+    {
+        $project = $this->project();
+        $url = '/studio/bibliotheque/importer?montage='.$project->getId();
+        $crawler = $this->client->request('GET', $url);
+        $values = $crawler->selectButton('Importer ma vidéo')->form(['video_upload[title]' => 'Trop longue'])->getPhpValues();
+        $path = tempnam(sys_get_temp_dir(), 'long-edit-').'.mp4';
+        (new Process(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=red:s=96x64:r=1:d=181', '-c:v', 'libx264', '-threads', '1', '-pix_fmt', 'yuv420p', $path]))->mustRun();
+        try {
+            $this->client->request('POST', $url, $values, ['video_upload' => ['file' => new UploadedFile($path, 'long.mp4', null, null, true)]], ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+            self::assertResponseStatusCodeSame(422);
+            self::assertStringContainsString('3 minutes', json_decode($this->client->getResponse()->getContent(), true)['message']);
+            self::assertSame(2, $this->em()->getRepository(VideoAsset::class)->count([]));
+            self::assertCount(2, $this->edits()->owned($project->getId(), $this->owner)->getClips());
+        } finally {
+            @unlink($path);
+            @unlink(substr($path, 0, -4));
+        }
+    }
+
+    public function testFreeTextsAndIndividualCaptionPositionsAreSavedAndExported(): void
+    {
+        $project = $this->project();
+        $url = '/studio/montage/'.$project->getId();
+        $crawler = $this->client->request('GET', $url);
+        $values = $crawler->selectButton('Enregistrer le montage')->form()->getPhpValues();
+        $values['intent'] = 'save';
+        $values['texts'] = [['id' => 'heading', 'start' => 0, 'end' => 1, 'text' => '<Mon texte>', 'x' => 0.5, 'y' => 0.15, 'size' => 4, 'color' => '#ffffff']];
+        $values['captions'] = [['start' => 0.1, 'end' => 0.9, 'text' => 'Paroles', 'x' => 0.5, 'y' => 0.85]];
+        $values['captions_current'] = 1;
+        $values['video_edit']['captionStyle'] = 'clean';
+        $this->client->request('POST', $url, $values, server: ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseIsSuccessful();
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertSame('<Mon texte>', $project->getTexts()[0]['text']);
+        self::assertEquals(0.85, $project->getCaptions()[0]['y']);
+        $this->edits()->save($project, $project->getTitle(), $project->getFormat(), $project->getClips(), true);
+        $this->edits()->process($project->getId());
+        self::assertSame('ready', $project->getStatus());
+        self::assertNotNull($project->getOutput());
+        $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        $crawler = $this->client->getCrawler();
+        $this->client->submit($crawler->selectButton('Modifier une copie')->form());
+        self::assertResponseStatusCodeSame(303);
+        $copy = $this->em()->getRepository(VideoEdit::class)->findOneBy(['owner' => $project->getOwner(), 'status' => 'draft']);
+        self::assertSame($project->getTexts(), $copy->getTexts());
+    }
+
     public function testCutsOrderDraftAndExportConfirmation(): void
     {
         $project = $this->project();
@@ -237,7 +286,7 @@ final class VideoEditTest extends WebTestCase
         self::assertSame(1, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
         $this->client->request('GET', '/studio/montage/'.$project->getId().'/etat');
         self::assertResponseIsSuccessful();
-        self::assertSame(['status' => 'queued', 'label' => 'Export en attente'], json_decode($this->client->getResponse()->getContent(), true));
+        self::assertSame('queued', json_decode($this->client->getResponse()->getContent(), true)['status']);
         $this->edits()->process($project->getId());
         $project = $this->edits()->owned($project->getId(), $this->owner);
         self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
@@ -393,6 +442,44 @@ final class VideoEditTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    public function testInlineTranscriptionKeepsEditorAndFailureKeepsCorrections(): void
+    {
+        static::getContainer()->set(\App\Service\SpeechTranscriber::class, new class implements \App\Service\SpeechTranscriber {
+            public function transcribe(string $audio, string $language = 'fr'): array
+            {
+                throw new \RuntimeException('Synthetic failure');
+            }
+        });
+        $project = $this->project();
+        $this->edits()->save($project, 'Ma voix', '9:16', $project->getClips(), false, null, [['start' => 0.1, 'end' => 0.6, 'text' => 'Correction conservée']]);
+        $url = '/studio/montage/'.$project->getId();
+        $crawler = $this->client->request('GET', $url);
+        $values = $crawler->selectButton('Régénérer les sous-titres')->form()->getPhpValues();
+        $values['intent'] = 'captions';
+        $this->client->request('POST', $url, $values, server: ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseStatusCodeSame(202);
+        $state = json_decode($this->client->getResponse()->getContent(), true);
+        self::assertSame('transcribing', $state['status']);
+        self::assertSame('Correction conservée', $state['captions'][0]['text']);
+        $this->client->request('GET', $url);
+        self::assertSelectorExists('.editor-desk[data-edit-transcribing-value="true"]');
+        self::assertSelectorExists('[data-edit-target="timeline"]');
+        self::assertSelectorExists('[data-edit-target="stage"]');
+        self::assertSelectorNotExists('[data-controller="edit-watch"]');
+        static::getContainer()->get(\App\Service\VideoTranscriptions::class)->process($project->getId());
+        $this->client->request('GET', $url.'/etat');
+        $state = json_decode($this->client->getResponse()->getContent(), true);
+        self::assertSame('failed', $state['status']);
+        self::assertSame('Correction conservée', $state['captions'][0]['text']);
+        $values['intent'] = 'save';
+        $this->client->request('POST', $url, $values, server: ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('autre onglet', json_decode($this->client->getResponse()->getContent(), true)['message']);
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', $url.'/etat');
+        self::assertResponseStatusCodeSame(404);
+    }
+
     public function testRealOfflineTranscriberReturnsAnEditableDraftForSourcesWithoutSpeech(): void
     {
         $project = $this->project();
@@ -445,13 +532,13 @@ final class VideoEditTest extends WebTestCase
         $this->edits()->save($project, 'Deux morceaux', '1:1', $pieces, true);
         $this->edits()->process($project->getId());
         self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
-        self::assertEquals($pieces, $project->getClips());
+        self::assertEquals($pieces, array_map(static fn (array $clip): array => array_intersect_key($clip, array_flip(['id', 'start', 'end'])), $project->getClips()));
         self::assertEqualsWithDelta(0.8, $project->getOutput()->getDuration(), 0.1);
         $crawler = $this->client->request('GET', '/studio/montage/'.$project->getId());
         $this->client->submit($crawler->selectButton('Modifier une copie')->form());
         self::assertResponseStatusCodeSame(303);
         $copy = $this->em()->getRepository(VideoEdit::class)->findOneBy(['title' => 'Deux morceaux · copie']);
-        self::assertEquals($pieces, $copy->getClips());
+        self::assertEquals($pieces, array_map(static fn (array $clip): array => array_intersect_key($clip, array_flip(['id', 'start', 'end'])), $copy->getClips()));
     }
 
     private function musicFile(): UploadedFile
@@ -548,7 +635,7 @@ final class VideoEditTest extends WebTestCase
         self::assertNull($project->getMusicName());
     }
 
-    public function testCaptionTimingIsKeptForUnchangedCutsAndClearedWhenCutsChange(): void
+    public function testCaptionTimingAndCorrectedTextFollowCuts(): void
     {
         $project = $this->project();
         $rows = [['start' => 0.0, 'end' => 0.7, 'text' => '<script>Texte privé</script>']];
@@ -562,7 +649,9 @@ final class VideoEditTest extends WebTestCase
         self::assertStringNotContainsString('<script>Texte privé</script>', $this->client->getResponse()->getContent());
         $project = $this->edits()->owned($project->getId(), $this->owner);
         $this->edits()->save($project, 'Des coupes', '16:9', $this->cuts(), false);
-        self::assertSame([], $project->getCaptions());
+        self::assertEquals([['start' => 0.5, 'end' => 1.0, 'text' => '<script>Texte privé</script>']], $project->getCaptions());
+        $project->caption([]);
+        $this->em()->flush();
         try {
             $this->edits()->save($project, 'Des coupes', '16:9', $project->getClips(), true);
             self::fail('Missing captions must block styled export.');

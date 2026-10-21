@@ -1,0 +1,217 @@
+[
+  {
+    "name": "split keeps corrected sentence",
+    "before": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 4,
+        "origin": "a"
+      }
+    ],
+    "after": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "a"
+      },
+      {
+        "id": 1,
+        "start": 2,
+        "end": 4,
+        "origin": "a"
+      }
+    ],
+    "rows": [
+      {
+        "start": 1,
+        "end": 3,
+        "text": "Phrase corrigée"
+      }
+    ],
+    "expected": [
+      {
+        "start": 1,
+        "end": 3,
+        "text": "Phrase corrigée"
+      }
+    ]
+  },
+  {
+    "name": "trim shifts caption and removes deleted passage",
+    "before": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 4,
+        "origin": "a"
+      }
+    ],
+    "after": [
+      {
+        "id": 1,
+        "start": 1,
+        "end": 3,
+        "origin": "a"
+      }
+    ],
+    "rows": [
+      {
+        "start": 0,
+        "end": 0.5,
+        "text": "Retiré"
+      },
+      {
+        "start": 1.5,
+        "end": 2.5,
+        "text": "Conservé"
+      }
+    ],
+    "expected": [
+      {
+        "start": 0.5,
+        "end": 1.5,
+        "text": "Conservé"
+      }
+    ]
+  },
+  {
+    "name": "reordering repeated source occurrences keeps their own corrections",
+    "before": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "a"
+      },
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "b"
+      }
+    ],
+    "after": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "b"
+      },
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "a"
+      }
+    ],
+    "rows": [
+      {
+        "start": 0,
+        "end": 1,
+        "text": "Première correction"
+      },
+      {
+        "start": 2,
+        "end": 3,
+        "text": "Autre correction"
+      }
+    ],
+    "expected": [
+      {
+        "start": 0,
+        "end": 1,
+        "text": "Autre correction"
+      },
+      {
+        "start": 2,
+        "end": 3,
+        "text": "Première correction"
+      }
+    ]
+  },
+  {
+    "name": "removing a clip shifts only remaining captions",
+    "before": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "a"
+      },
+      {
+        "id": 2,
+        "start": 3,
+        "end": 6,
+        "origin": "b"
+      }
+    ],
+    "after": [
+      {
+        "id": 2,
+        "start": 3,
+        "end": 6,
+        "origin": "b"
+      }
+    ],
+    "rows": [
+      {
+        "start": 0.5,
+        "end": 1.5,
+        "text": "A"
+      },
+      {
+        "start": 2.5,
+        "end": 4,
+        "text": "B"
+      }
+    ],
+    "expected": [
+      {
+        "start": 0.5,
+        "end": 2,
+        "text": "B"
+      }
+    ]
+  },
+  {
+    "name": "new occurrence of same file does not inherit captions",
+    "before": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "a"
+      }
+    ],
+    "after": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "a"
+      },
+      {
+        "id": 1,
+        "start": 0,
+        "end": 2,
+        "origin": "c"
+      }
+    ],
+    "rows": [
+      {
+        "start": 0.5,
+        "end": 1.5,
+        "text": "A"
+      }
+    ],
+    "expected": [
+      {
+        "start": 0.5,
+        "end": 1.5,
+        "text": "A"
+      }
+    ]
+  }
+]

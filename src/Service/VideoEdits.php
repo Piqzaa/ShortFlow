@@ -14,7 +14,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class VideoEdits
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoLibrary $library, private VideoEditRenderer $renderer, private MessageBusInterface $bus, private ManagerRegistry $registry, private EditCaptions $captionTools, private EditMusic $music)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoLibrary $library, private VideoEditRenderer $renderer, private MessageBusInterface $bus, private ManagerRegistry $registry, private EditCaptions $captionTools, private EditMusic $music, private CaptionTiming $timing, private EditTextLayers $textLayers)
     {
     }
 
@@ -34,7 +34,7 @@ final class VideoEdits
             if (!is_scalar($id) || !ctype_digit((string) $id) || !$video = $this->videos->owned((int) $id, $owner)) {
                 throw new VideoLibraryException('Une vidéo de la sélection est indisponible.');
             }
-            $clips[] = ['id' => (int) $video->getId(), 'start' => 0.0, 'end' => round($video->getDuration(), 3)];
+            $clips[] = ['id' => (int) $video->getId(), 'start' => 0.0, 'end' => round($video->getDuration(), 3), 'origin' => bin2hex(random_bytes(8))];
         }
         $project = new VideoEdit($owner, 'Mon montage', $clips);
         $this->em->wrapInTransaction(function () use ($owner, $project): void {
@@ -61,7 +61,7 @@ final class VideoEdits
     }
 
     /** @param array<mixed> $input */
-    public function save(VideoEdit $project, string $title, string $format, array $input, bool $export, ?array $settings = null, ?array $captions = null): void
+    public function save(VideoEdit $project, string $title, string $format, array $input, bool $export, ?array $settings = null, ?array $captions = null, ?int $revision = null, bool $captionsCurrent = true, ?array $texts = null): void
     {
         $title = trim($title);
         if ('' === $title || mb_strlen($title) > 120 || !isset(VideoEdit::FORMATS[$format]) || count($input) < 1 || count($input) > 8) {
@@ -77,11 +77,21 @@ final class VideoEdits
             if (!is_array($row) || !isset($row['id'], $row['start'], $row['end']) || !is_scalar($row['id']) || !ctype_digit((string) $row['id']) || !is_scalar($row['start']) || !is_scalar($row['end']) || !is_numeric($row['start']) || !is_numeric($row['end'])) {
                 throw new VideoLibraryException('Vérifie le début et la fin de chaque clip, en secondes.');
             }
-            $clips[] = ['id' => (int) $row['id'], 'start' => (float) $row['start'], 'end' => (float) $row['end']];
+            $origin = $row['origin'] ?? null;
+            if (null !== $origin && (!is_string($origin) || !preg_match('/^[a-zA-Z0-9_-]{1,64}$/D', $origin))) {
+                throw new VideoLibraryException('Ce fragment est invalide. Recharge le montage.');
+            }
+            $clips[] = ['id' => (int) $row['id'], 'start' => (float) $row['start'], 'end' => (float) $row['end']] + (null !== $origin ? ['origin' => $origin] : []);
         }
         $this->validate($project->getOwner(), $clips, $export);
         $settings ??= $project->getSettings();
-        $settings += ['language' => 'fr'];
+        $settings += ['language' => 'fr', 'captionX' => 0.5, 'captionY' => 0.85, 'captionSize' => 4];
+        foreach (['captionX' => [0.05, 0.95], 'captionY' => [0.05, 0.95], 'captionSize' => [2, 10]] as $key => [$min, $max]) {
+            if (!is_numeric($settings[$key]) || !is_finite((float) $settings[$key]) || $settings[$key] < $min || $settings[$key] > $max) {
+                throw new VideoLibraryException('Vérifie la position et la taille des sous-titres.');
+            }
+            $settings[$key] = (float) $settings[$key];
+        }
         $settings += ['sourceVolume' => 100, 'musicVolume' => 20, 'musicOffset' => 0, 'musicLoop' => true];
         foreach (['sourceVolume' => 100, 'musicVolume' => 100, 'musicOffset' => 599] as $key => $maximum) {
             if (!is_numeric($settings[$key]) || !is_finite((float) $settings[$key]) || $settings[$key] < 0 || $settings[$key] > $maximum) {
@@ -102,13 +112,21 @@ final class VideoEdits
             throw new VideoLibraryException('Choisis un cadrage et un style valides.');
         }
         $duration = array_sum(array_map(static fn (array $c): float => $c['end'] - $c['start'], $clips));
-        $rows = $clips != $project->getClips() ? [] : $this->captionTools->validate($captions ?? $project->getCaptions(), $duration);
+        $captionRows = null === $captions ? $project->getCaptions() : $captions;
+        if (null === $captions || !$captionsCurrent) {
+            $captionRows = $this->timing->remap($this->captionTools->validate($captionRows, $project->getDuration()), $project->getClips(), $clips);
+        }
+        $rows = $this->captionTools->validate($captionRows, $duration);
+        $layers = $this->textLayers->validate($texts ?? $project->getTexts(), $duration);
         if ($export && 'off' !== $settings['captionStyle'] && !$rows) {
             throw new VideoLibraryException('Génère ou ajoute les sous-titres avant d’exporter avec ce style.');
         }
-        $this->em->wrapInTransaction(function () use ($project, $title, $format, $clips, $export, $settings, $rows): void {
+        $this->em->wrapInTransaction(function () use ($project, $title, $format, $clips, $export, $settings, $rows, $revision, $layers): void {
             $this->em->lock($project->getOwner(), LockMode::PESSIMISTIC_WRITE);
             $this->em->refresh($project, LockMode::PESSIMISTIC_WRITE);
+            if (null !== $revision && $project->getRevision() !== $revision) {
+                throw new VideoLibraryException('Le montage a changé dans un autre onglet. Recharge avant de continuer ; tes changements restent affichés ici.');
+            }
             if ($project->isActive() || 'ready' === $project->getStatus()) {
                 if ($export) {
                     return;
@@ -125,6 +143,7 @@ final class VideoEdits
             $project->revise($title, $format, $clips);
             $project->configure($settings);
             $project->caption($rows);
+            $project->textLayers($layers);
             if ($export) {
                 $project->progress('queued');
                 $this->em->flush();
@@ -133,7 +152,7 @@ final class VideoEdits
         });
     }
 
-    /** @param list<array{id:int,start:float,end:float}> $clips */
+    /** @param list<array{id:int,start:float,end:float,origin?:string}> $clips */
     public function validate(User $owner, array $clips, bool $export = true): void
     {
         $total = 0.0;

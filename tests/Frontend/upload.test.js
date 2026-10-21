@@ -79,3 +79,16 @@ test('drop accepts one file and upload captures it before disabling input, witho
   assert.equal(c.fileTarget.disabled, false);
   assert.equal(c.buttonTarget.disabled, false);
 });
+
+
+test('long video preview explains the three minute limit and never sends the file',()=>{
+  const {controller:c,requests}=upload();c.fileTarget.files=[{name:'long.mp4',size:500}];c.selected();
+  Object.assign(c.playerTarget,{duration:181,videoWidth:1080,videoHeight:1920});c.metadata();
+  assert.equal(c.errorTarget.hidden,false);assert.match(c.errorTarget.textContent,/3 minutes/);c.submit({preventDefault(){}});assert.equal(requests.length,0);
+});
+
+test('server import refusal stays visible and keeps the selected file and preview',()=>{
+  const {controller:c,requests}=upload();const file={name:'long.mp4',size:500};c.fileTarget.files=[file];c.selected();c.submit({preventDefault(){}});
+  const request=requests[0];request.status=422;request.getResponseHeader=()=> 'application/json';request.responseText=JSON.stringify({message:'Cette vidéo dépasse 3 minutes.'});request.onload();
+  assert.equal(c.errorTarget.hidden,false);assert.match(c.errorTarget.textContent,/3 minutes/);assert.equal(c.fileTarget.disabled,false);assert.equal(c.fileTarget.files[0],file);assert.equal(c.previewTarget.hidden,false);
+});

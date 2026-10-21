@@ -9,6 +9,7 @@ services:
       - .:/app
       - php_vendor:/app/vendor
       - social_test_cache:/app/var/cache
+      - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
     environment:
       APP_ENV: dev
       APP_DEBUG: "0"

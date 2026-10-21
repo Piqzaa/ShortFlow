@@ -69,7 +69,7 @@ final class VideoController extends AbstractController
                 if ($editing) {
                     try {
                         $clips = $editing->getClips();
-                        $clips[] = ['id' => (int) $video->getId(), 'start' => 0.0, 'end' => round($video->getDuration(), 3)];
+                        $clips[] = ['id' => (int) $video->getId(), 'start' => 0.0, 'end' => round($video->getDuration(), 3), 'origin' => bin2hex(random_bytes(8))];
                         $edits->save($editing, $editing->getTitle(), $editing->getFormat(), $clips, false);
                     } catch (VideoLibraryException $error) {
                         $this->addFlash('error', $error->getMessage().' La vidéo importée reste dans ta bibliothèque.');
@@ -85,6 +85,15 @@ final class VideoController extends AbstractController
                 $form->addError(new FormError($error->getMessage()));
                 $status = 422;
             }
+        }
+
+        if ($form->isSubmitted() && $request->isXmlHttpRequest()) {
+            $errors = [];
+            foreach ($form->getErrors(true) as $error) {
+                $errors[] = $error->getMessage();
+            }
+
+            return new JsonResponse(['message' => implode(' ', array_unique($errors)) ?: 'L’import n’a pas abouti. Vérifie le fichier.'], $status, ['Cache-Control' => 'no-store, private']);
         }
 
         return $this->page('library/upload.html.twig', ['form' => $form], $status);

@@ -142,3 +142,39 @@
 .workspace-cover { flex-shrink:0; }
 .workspace-edit { margin-top:auto; align-self:flex-start; min-height:36px; }
 .workspace-card-status { min-height:32px; }
+
+.editor-desk.is-transcribing .editor-name [role=status]::before { content:""; display:inline-block; width:8px; height:8px; border:1px solid currentColor; border-top-color:transparent; border-radius:50%; margin-right:6px; animation:edit-spin 1s linear infinite; }
+.editor-desk [data-edit-lock][inert] { opacity:.65; }
+@keyframes edit-spin {to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.editor-desk.is-transcribing .editor-name [role=status]::before{animation:none}}
+
+/* Shared text/subtitle manipulation in space and time. */
+.editor-desk.edit-enhanced {grid-template-rows:54px minmax(230px,1fr) 320px}
+.editor-text-overlays {position:absolute;inset:0;pointer-events:none}
+.editor-canvas .editor-overlay {position:absolute;bottom:auto;right:auto;width:max-content;max-width:86%;min-width:0;min-height:0;padding:0;border:1px solid transparent;border-radius:3px;background:transparent!important;transform:translate(-50%,-50%);white-space:pre-wrap;overflow-wrap:anywhere;text-align:center;line-height:1.2;font-family:Arial,sans-serif;font-weight:700;letter-spacing:0;text-shadow:1px 1px 2px #000,-1px -1px 2px #000;color:white;pointer-events:auto;touch-action:none;cursor:move;box-shadow:none}
+.editor-canvas .editor-overlay:hover,.editor-canvas .editor-overlay:focus-visible,.editor-canvas .editor-overlay.is-selected {border-color:var(--workspace-accent);outline:1px dashed #fff8;outline-offset:4px}
+.editor-canvas .editor-overlay[hidden] {display:none}
+.editor-layer-block {position:absolute;top:0;height:28px;min-width:3px;border:1px solid #706d42;border-radius:4px;background:#302d1f}
+.editor-layer-block.is-selected {border-color:var(--workspace-accent);box-shadow:0 0 0 1px var(--workspace-accent)}
+.editor-caption-track {height:28px;position:relative;flex-shrink:0;overflow:visible}
+.editor-desk .editor-layer-block button {position:absolute!important;top:0!important;height:100%!important;min-height:0!important;min-width:0;padding:0!important;border:0!important;background:transparent!important;border-radius:0;font-size:9px;color:#f9edba;touch-action:none}
+.editor-desk .editor-layer-block .editor-layer-label {left:0;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 9px!important;cursor:grab}
+.editor-desk .editor-layer-block .editor-layer-edge {width:9px!important;z-index:2;opacity:0;cursor:ew-resize;background:#c1a2ff99!important;color:#12101a}
+.editor-layer-block:hover .editor-layer-edge,.editor-layer-block.is-selected .editor-layer-edge,.editor-layer-block:focus-within .editor-layer-edge {opacity:1!important}
+.editor-layer-edge.edge-start {left:0}.editor-layer-edge.edge-end {right:0}
+[data-edit-target=textTrack] .editor-layer-block {background:#233543;border-color:#3d718f}
+.editor-position-presets {display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.editor-position-presets button {flex:1;min-height:38px;font-size:11px;padding:6px!important}
+.editor-text-row {border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.editor-text-row textarea {min-height:65px}
+.editor-text-row .editor-cue-times {display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.editor-text-row label {font-size:11px}
+.editor-text-row input,.editor-text-row select {min-height:36px;font-size:12px;padding:6px}
+.editor-tabs {flex-wrap:wrap}
+.editor-desk .editor-cut-tools {flex-wrap:wrap}
+@media(max-width:767px){.editor-desk.edit-enhanced{grid-template-rows:none}.editor-desk .editor-tabs{flex-wrap:wrap}.editor-desk .editor-tabs button{flex:1 0 25%;font-size:11px}.editor-desk .editor-cut-tools button{font-size:10px;padding:6px 8px}.editor-desk .editor-layer-block .editor-layer-edge{width:14px!important}.editor-position-presets button{min-height:44px}}
+
+@media(min-width:768px){.editor-desk .editor-canvas{width:min(100%,calc(max(130px,100dvh - 530px)*var(--editor-ratio,.5625)))}}
+.editor-desk .editor-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
+.editor-desk .editor-tabs button{min-width:0;padding:7px 2px;font-size:10px;min-height:40px}
+@media(max-width:767px){.editor-desk .editor-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.editor-desk .editor-tabs button{font-size:12px;min-height:44px}}

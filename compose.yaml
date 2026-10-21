@@ -4,7 +4,7 @@ services:
     image: vydflow-php
     build: ./docker/php
     ports: ["127.0.0.1:8000:8000"]
-    volumes: &app_volumes [".:/app", "php_vendor:/app/vendor", "app_cache:/app/var/cache"]
+    volumes: &app_volumes [".:/app", "php_vendor:/app/vendor", "app_cache:/app/var/cache", "./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro"]
     environment: &app_environment
       DATABASE_URL: postgresql://shortflow:localdev@database:5432/shortflow?serverVersion=16&charset=utf8
       MAILER_DSN: smtp://mailpit:1025

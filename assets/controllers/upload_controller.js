@@ -15,6 +15,7 @@ export default class extends Controller {
     if (!file) return 'Choisis une vidéo avant de continuer.';
     if (file.size > 104857600) return 'Cette vidéo dépasse la limite de 100 Mo.';
     if (!/\.(mp4|webm)$/iu.test(file.name)) return 'Choisis une vidéo MP4 ou WebM.';
+    if(this.durationFile===file&&this.previewDuration>180)return 'Cette vidéo dépasse 3 minutes. Raccourcis-la avant de l’importer (3 minutes maximum).';
     return null;
   }
 
@@ -38,6 +39,9 @@ export default class extends Controller {
     const video = this.playerTarget;
     const file = this.fileTarget.files[0];
     if (!file || !Number.isFinite(video.duration)) return;
+    if(video.currentSrc&&video.currentSrc!==this.previewUrl)return;
+    this.durationFile=file;this.previewDuration=video.duration;
+    if(video.duration>180)this.fail(this.fileIssue(file));
     const seconds = Math.floor(video.duration);
     this.previewInfoTarget.textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} · ${video.videoWidth} × ${video.videoHeight} · Aperçu sur ton appareil`;
     if (video.duration > 0) video.currentTime = Math.min(0.1, video.duration / 2);
@@ -83,7 +87,7 @@ export default class extends Controller {
     this.playerTarget.removeAttribute('src');
     this.playerTarget.load();
     if (this.previewUrl) window.URL.revokeObjectURL(this.previewUrl);
-    this.previewUrl = null;
+    this.previewUrl = null;this.durationFile=null;this.previewDuration=null;
     this.previewTarget.hidden = true;
     this.previewErrorTarget.hidden = true;
   }
@@ -131,6 +135,11 @@ export default class extends Controller {
         } catch { this.fail('Ta vidéo a peut-être été importée. Consulte ta bibliothèque avant de réessayer.'); }
         return;
       }
+      if(request.getResponseHeader('Content-Type')?.includes('application/json')) {
+        try {this.fail(JSON.parse(request.responseText).message||'L’import n’a pas abouti.');}
+        catch {this.fail('L’import n’a pas abouti. Vérifie le fichier puis réessaie.');}
+        return;
+      }
       const panel = new DOMParser().parseFromString(request.responseText, 'text/html').querySelector('[data-upload-panel]');
       if (panel) {
         const replacement = document.importNode(panel, true);
@@ -148,6 +157,7 @@ export default class extends Controller {
   fail(message) {
     this.errorTarget.textContent = message;
     this.errorTarget.hidden = false;
+    this.errorTarget.scrollIntoView?.({block:'nearest',behavior:'auto'});
     this.progressPanelTarget.hidden = true;
     this.buttonTarget.disabled = false;
     this.fileTarget.disabled = false;
