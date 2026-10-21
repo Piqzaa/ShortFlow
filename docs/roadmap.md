@@ -1,8 +1,8 @@
 # Roadmap V1 — vision de lancement validée le 15 octobre 2026
 
-## État courant — 20 octobre 2026
+## État courant — 21 octobre 2026
 
-Le studio IA, l’image vers vidéo et le suivi sont intégrés à la bêta ; catalogue de 54 configurations, essais manuels activés localement et premier essai image réussi confirmé par le propriétaire. Lot de simplification : trois choix Fal, connexion guidée, textes de disponibilité actualisés et recherche privée dans les vidéos. Le catalogue complet reste accessible. Voir [le guide](studio-simple-recherche.md). Montage guidé, séries et abonnement restent à construire ; accès publics des plateformes à valider avant commercialisation. Les états datés ci-dessous conservent l’historique des lots et ne remplacent pas ce point courant.
+Le studio IA, l’image vers vidéo et le suivi sont intégrés à la bêta ; catalogue de 54 configurations, essais manuels activés localement et premier essai image réussi confirmé par le propriétaire. Lot de simplification : trois choix Fal, connexion guidée, textes de disponibilité actualisés et recherche privée dans les vidéos. Le catalogue complet reste accessible. Voir [le guide](studio-simple-recherche.md). Premier montage guidé commun aux imports et vidéos IA livré : 1–8 clips, coupes, ordre, aperçu et export local MP4 1080p. « Tes créations » retiré du formulaire Studio ; historique conservé. Voir [montage-guide.md](montage-guide.md). Éditeur visuel, sous-titres locaux modifiables et recette simple Reel intégrés : voir [montage-sous-titres.md](montage-sous-titres.md). Les séries, recettes plus avancées et abonnement restent à construire ; accès publics des plateformes à valider avant commercialisation. Les états datés ci-dessous conservent l’historique des lots et ne remplacent pas ce point courant.
 
 Lot studio/compte autorisé le 18 octobre, avant TikTok réel : navigation simplifiée, galerie/brouillons, préparation commune sur un écran, compte à onglets avec photo privée et fuseau par défaut. L’espace abonnement reste annoncé à venir, sans traitement de paiement. Voir [studio-compte.md](studio-compte.md).
 
@@ -24,7 +24,7 @@ Le passage à la V1 est autorisé. Comptes terminés ; lot bibliothèque autoris
 
 ## Organisation du produit validée le 19 octobre
 
-Vidéos regroupe les sources et résultats ; Studio accueille la création IA et le futur montage guidé, indépendamment de l’origine de la vidéo. Séries réutilisera le parcours de production avec une fréquence, préparation en avance, limites et validation par défaut. Calendrier montre chaque occurrence ; Publications suit chaque destination ; Connexions rassemble réseaux et clés IA. Première réorganisation Vidéos/Studio implémentée ; montage et séries restent à construire dans leurs lots. Voir [studio-compte.md](studio-compte.md).
+Vidéos regroupe les sources et résultats ; Studio accueille la création IA et le montage guidé, indépendamment de l’origine de la vidéo. Séries réutilisera le parcours de production avec une fréquence, préparation en avance, limites et validation par défaut. Calendrier montre chaque occurrence ; Publications suit chaque destination ; Connexions rassemble réseaux et clés IA. Première réorganisation Vidéos/Studio implémentée ; montage et séries restent à construire dans leurs lots. Voir [studio-compte.md](studio-compte.md).
 
 ## Promesse et parcours de lancement
 
@@ -64,3 +64,7 @@ Montage guidé, sous-titres et séries récurrentes font désormais partie de la
 20/10/2026 — Extension image réalisée localement : toutes les familles du catalogue ayant une variante compatible sont couvertes via Fal/Replicate/LTX, avec début/fin et cadrage. Essai réel image toujours à choisir par le propriétaire ; prochaine fonction produit : montage guidé, puis séries. Références : studio-image-video-complet.md.
 
 20 octobre : essai image vers vidéo confirmé réussi par le propriétaire ; suivi visuel par étapes réelles ajouté, sans pourcentage fictif ni nouvel essai payant autonome. Voir [le guide du suivi](suivi-generation-ia.md).
+
+21 octobre — Mini éditeur local : clips importés/IA, séparation au curseur, ordre des fragments, sous-titres locaux facultatifs, piste musicale privée et export asynchrone. Assemblage automatique sans recadrage imposé. Voir [le guide](montage-sous-titres.md). La suite proposée est un épisode multi-plans manuel, puis recettes de séries et récurrence avec mémoire narrative : [cadrage](series-episodes-proposition.md). Aucun job de série ni publication automatique activé.
+
+21 octobre : montage intégré aux vidéos et aux préparations, éditeur partagé et retour explicite après export. Les séries restent un lot ultérieur ; voir `montage-sous-titres.md`.
