@@ -33,6 +33,26 @@ services:
   mailpit:
     image: axllent/mailpit:v1.27.8
     ports: ["127.0.0.1:8026:8025"]
+  edit-worker:
+    image: vydflow-edit
+    build: ./docker/edit
+    init: true
+    command: ["sh", "/app/docker/php/worker.sh"]
+    restart: unless-stopped
+    stop_grace_period: 5m
+    cpus: 2
+    mem_limit: 2g
+    volumes: *app_volumes
+    environment:
+      <<: *app_environment
+      APP_ENV: dev
+      APP_DEBUG: "0"
+      MESSENGER_QUEUE: video_edits
+    depends_on:
+      php:
+        condition: service_started
+      database:
+        condition: service_healthy
   database:
     image: postgres:16-alpine
     # Local database tools (VS Code); never bind PostgreSQL to all interfaces.

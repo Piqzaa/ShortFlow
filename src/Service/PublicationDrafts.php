@@ -310,6 +310,43 @@ final class PublicationDrafts
         });
     }
 
+    public function applyEdit(User $owner, \App\Entity\VideoEdit $edit): PublicationDraft
+    {
+        return $this->lock->run((int) $owner->getId(), function () use ($owner, $edit): PublicationDraft {
+            return $this->em()->getConnection()->transactional(function () use ($owner, $edit): PublicationDraft {
+                $this->em()->lock($owner, LockMode::PESSIMISTIC_WRITE);
+                $this->em()->refresh($edit, LockMode::PESSIMISTIC_WRITE);
+                $context = $edit->getPublicationContext();
+                $output = $edit->getOutput();
+                if ($edit->getOwner()->getId() !== $owner->getId() || !$context || 'ready' !== $edit->getStatus() || !$output || $output->getOwner()->getId() !== $owner->getId()) {
+                    throw new PublicationException('Le montage doit être exporté avant de revenir à cette préparation.');
+                }
+                if ($context['applied']) {
+                    return $this->drafts->owned($context['draft'], $owner) ?? throw new PublicationException('Cette préparation a été retirée. La vidéo reste dans ta bibliothèque.');
+                }
+                $draft = $this->editable($owner, $context['draft'], $context['revision']);
+                $item = null;
+                foreach ($draft->getItems() as $candidate) {
+                    if ($candidate->getVideoId() === $output->getId()) {
+                        throw new PublicationException('Cette vidéo figure déjà dans la préparation.');
+                    }
+                    if ($candidate->getVideoId() === $context['source']) {
+                        $item = $candidate;
+                    }
+                }
+                if (!$item) {
+                    throw new PublicationException('La sélection a changé. La vidéo exportée reste dans ta bibliothèque.');
+                }
+                $item->replaceSource($output);
+                $draft->edit($draft->getTitle(), $draft->getNetworks(), $draft->getAccounts(), $this->clock->now());
+                $edit->appliedToPublication();
+                $this->em()->flush();
+
+                return $draft;
+            });
+        });
+    }
+
     private function mutate(User $owner, int $id, int $revision, callable $action): void
     {
         $this->lock->run((int) $owner->getId(), function () use ($owner, $id, $revision, $action): void {

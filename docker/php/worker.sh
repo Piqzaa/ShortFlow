@@ -18,5 +18,5 @@ until [ -f vendor/autoload.php ] && php bin/console dbal:run-sql 'SELECT 1 FROM 
     sleep 5
 done
 
-echo '[worker] Publication queue ready.'
-exec php bin/console messenger:consume publications --time-limit=3600 --memory-limit=256M --no-debug --no-interaction
+echo '[worker] Queue ready.'
+exec php bin/console messenger:consume "${MESSENGER_QUEUE:-publications}" --time-limit=3600 --memory-limit=256M --no-debug --no-interaction

@@ -2,6 +2,16 @@ framework:
     messenger:
         failure_transport: publication_failures
         transports:
+            video_edits:
+                dsn: 'doctrine://default'
+                options:
+                    queue_name: video_edits
+                    auto_setup: false
+                    redeliver_timeout: 600
+                    use_notify: false
+                retry_strategy:
+                    max_retries: 3
+                    delay: 30000
             publications:
                 dsn: 'doctrine://default'
                 options:
@@ -19,6 +29,8 @@ framework:
                     auto_setup: false
                     use_notify: false
         routing:
+            App\Message\TranscribeVideoEdit: video_edits
+            App\Message\RenderVideoEdit: video_edits
             App\Message\GenerateAiVideo: publications
             App\Message\DispatchScheduledPublication: publications
             App\Message\PublishYouTube: publications

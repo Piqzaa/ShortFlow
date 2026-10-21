@@ -88,6 +88,12 @@ final class VideoLibrary
                         throw new VideoLibraryException('Sélection indisponible.');
                     }
                     $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
+                    foreach ($this->em->getRepository(\App\Entity\VideoEdit::class)->findBy(['owner' => $owner, 'status' => ['queued', 'rendering', 'transcribing']]) as $edit) {
+                        if (in_array($video->getId(), array_column($edit->getClips(), 'id'), true)) {
+                            $operation = 'transcribing' === $edit->getStatus() ? 'la création des sous-titres' : 'un export de montage';
+                            throw new VideoLibraryException('Une vidéo sélectionnée est utilisée par '.$operation.' en cours. Attends sa fin. Aucune vidéo supprimée.');
+                        }
+                    }
                     $active = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM youtube_publication WHERE source_id = ? AND status IN ('queued', 'uploading', 'processing', 'paused')", [$video->getId()]);
                     $instagramActive = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM instagram_publication WHERE source_id = ? AND status IN ('queued', 'processing', 'publishing', 'paused', 'review')", [$video->getId()]);
                     $tiktokActive = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM tiktok_publication WHERE source_id = ? AND status IN ('queued', 'processing', 'publishing', 'paused', 'review')", [$video->getId()]);

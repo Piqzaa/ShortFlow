@@ -32,6 +32,13 @@ class PublicationDraftItem
         $this->position = $position;
     }
 
+    public function replaceSource(VideoAsset $source): void
+    {
+        $this->source = $source;
+        $this->videoId = (int) $source->getId();
+        $this->title = $source->getTitle();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
