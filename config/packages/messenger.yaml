@@ -29,6 +29,7 @@ framework:
                     auto_setup: false
                     use_notify: false
         routing:
+            App\Message\BuildEditWaveform: video_edits
             App\Message\TranscribeVideoEdit: video_edits
             App\Message\RenderVideoEdit: video_edits
             App\Message\GenerateAiVideo: publications

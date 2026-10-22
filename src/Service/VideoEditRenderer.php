@@ -10,7 +10,7 @@ use Symfony\Component\Process\Process;
 
 final class VideoEditRenderer
 {
-    public function __construct(private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoProbe $probe, private EditCaptions $captions, private EditAudioClips $audioClips, #[Autowire('%kernel.project_dir%/var/storage/edits/%kernel.environment%')] private string $directory)
+    public function __construct(private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoProbe $probe, private EditCaptions $captions, private EditAudioClips $audioClips, #[Autowire('%kernel.project_dir%/var/storage/edits/%kernel.environment%')] private string $directory, #[Autowire('%kernel.project_dir%/public/fonts/editor')] private string $fontsDirectory)
     {
     }
 
@@ -34,7 +34,12 @@ final class VideoEditRenderer
         [$width, $height] = VideoEdit::FORMATS[$project->getFormat()];
         try {
             $list = '';
-            foreach ($project->getClips() as $index => $clip) {
+            foreach (EditTimeline::segments($project->getClips()) as $index => $clip) {
+                if (isset($clip['gap'])) {
+                    $this->run(['ffmpeg', '-v', 'error', '-nostdin', '-y', '-f', 'lavfi', '-i', 'color=c='.str_replace('#', '0x', $project->getSettings()['background'] ?? '#000000').':s='.$width.'x'.$height.':r=30', '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo', '-t', sprintf('%.6F', $clip['gap']), '-c:v', 'libx264', '-threads', '2', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '48000', '-ac', '2', 'clip-'.$index.'.mp4'], $work, $deadline);
+                    $list .= 'file clip-'.$index.".mp4\n";
+                    continue;
+                }
                 $video = $this->videos->owned($clip['id'], $project->getOwner());
                 if (!$video) {
                     throw new VideoLibraryException('Une vidéo source est indisponible.');
@@ -49,8 +54,8 @@ final class VideoEditRenderer
                     array_push($command, '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo');
                 }
                 $fit = $project->getSettings()['fit'];
-                $frame = 'cover' === $fit ? "scale=$width:$height:force_original_aspect_ratio=increase:force_divisible_by=2,crop=$width:$height" : "scale=$width:$height:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=$width:$height:(ow-iw)/2:(oh-ih)/2:color=black";
-                array_push($command, '-map', '0:v:0', '-map', $hasAudio ? '0:a:0' : '1:a:0', '-t', sprintf('%.6F', $clip['end'] - $clip['start']), '-vf', $frame.',setsar=1,fps=30', '-af', 'aresample=48000,apad', '-c:v', 'libx264', '-threads', '2', '-preset', 'veryfast', '-crf', '23', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '48000', '-ac', '2', '-b:a', '128k', '-map_metadata', '-1', '-map_chapters', '-1', '-fs', (string) (VideoLibrary::MAX_BYTES + 1), 'clip-'.$index.'.mp4');
+                $frame = EditClipStyle::filters($clip, $width, $height, $fit, $project->getSettings()['background'] ?? '#000000');
+                array_push($command, '-map', '0:v:0', '-map', $hasAudio ? '0:a:0' : '1:a:0', '-t', sprintf('%.6F', ($clip['end'] - $clip['start']) / $clip['rate']), '-vf', 'setpts=PTS/'.sprintf('%.4F', $clip['rate']).','.$frame.',setsar=1,fps=30', '-af', EditTimeline::tempo($clip['rate']).EditClipStyle::audioFades($clip).',aresample=48000,apad', '-c:v', 'libx264', '-threads', '2', '-preset', 'veryfast', '-crf', '23', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '48000', '-ac', '2', '-b:a', '128k', '-map_metadata', '-1', '-map_chapters', '-1', '-fs', (string) (VideoLibrary::MAX_BYTES + 1), 'clip-'.$index.'.mp4');
                 $this->run($command, $work, $deadline);
                 $list .= 'file clip-'.$index.".mp4\n";
             }
@@ -62,8 +67,8 @@ final class VideoEditRenderer
                 $filters = [];
                 if ($project->getTexts() || ('off' !== $settings['captionStyle'] && $project->getCaptions())) {
                     $overlays = array_merge('off' === $settings['captionStyle'] ? [] : $project->getCaptions(), $project->getTexts());
-                    file_put_contents($work.'/captions.ass', $this->captions->ass($overlays, $width, $height, $settings['captionStyle'], ['x' => $settings['captionX'], 'y' => $settings['captionY'], 'size' => $settings['captionSize']]));
-                    $filters[] = 'subtitles=captions.ass';
+                    file_put_contents($work.'/captions.ass', $this->captions->ass($overlays, $width, $height, $settings['captionStyle'], ['x' => $settings['captionX'], 'y' => $settings['captionY'], 'size' => $settings['captionSize'], 'typography' => $settings['typography'] ?? []]));
+                    $filters[] = "subtitles=captions.ass:fontsdir='".str_replace(['\\', ':', "'"], ['\\\\', '\\:', "\\'"], $this->fontsDirectory)."'";
                 }
                 if ($settings['intro']) {
                     file_put_contents($work.'/title.txt', $this->openingTitle($project->getTitle(), $width));

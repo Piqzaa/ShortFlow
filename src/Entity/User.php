@@ -34,6 +34,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'json', options: ['default' => '[]'])]
     private array $aiFavorites = [];
 
+    /** @var array<string, array{name:string,style:array<string,mixed>}> */
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $editorStyles = [];
+
+    /** @return array<string, array{name:string,style:array<string,mixed>}> */
+    public function getEditorStyles(): array
+    {
+        return $this->editorStyles;
+    }
+
+    /** @param array<string,mixed> $style */
+    public function saveEditorStyle(string $name, array $style): void
+    {
+        $key = 'style-'.substr(hash('sha256', mb_strtolower($name)), 0, 16);
+        if (!isset($this->editorStyles[$key]) && count($this->editorStyles) >= 12) {
+            throw new \App\Service\VideoLibraryException('12 styles maximum. Réutilise le nom d’un style pour le remplacer.');
+        }
+        $this->editorStyles[$key] = ['name' => $name, 'style' => $style];
+    }
+
     public function getDisplayName(): string
     {
         return $this->displayName;

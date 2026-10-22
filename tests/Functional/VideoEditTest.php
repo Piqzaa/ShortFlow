@@ -139,6 +139,122 @@ final class VideoEditTest extends WebTestCase
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
+    public function testFreeTimelineExportsGapsSpeedAndPerClipFilter(): void
+    {
+        $project = $this->project();
+        $clips = [['id' => $this->imported->getId(), 'start' => 0.1, 'end' => 0.9, 'at' => 0.4, 'rate' => 2, 'look' => ['filter' => 'bw']], ['id' => $this->generated->getId(), 'start' => 0.1, 'end' => 0.6, 'at' => 1.3, 'rate' => 1]];
+        $this->edits()->save($project, 'Espaces et vitesse', '1:1', $clips, true, array_replace($project->getSettings(), ['background' => '#204060']), texts: [['id' => 'headline', 'text' => 'Un titre', 'start' => 0.1, 'end' => 0.3, 'x' => 0.5, 'y' => 0.1, 'size' => 5, 'font' => 'anton']]);
+        self::assertEqualsWithDelta(1.8, $project->getDuration(), 0.001);
+        $this->edits()->process($project->getId());
+        self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
+        $output = static::getContainer()->get(PrivateVideoStorage::class)->path($project->getOutput()->getStorageName());
+        foreach ([[0.1, 'gap'], [0.55, 'gray'], [1.05, 'gap'], [1.5, 'blue']] as [$time,$kind]) {
+            $pixel = new Process(['ffmpeg', '-v', 'error', '-ss', (string) $time, '-i', $output, '-vf', 'crop=2:2:540:540,format=rgb24', '-frames:v', '1', '-f', 'rawvideo', '-']);
+            $pixel->mustRun();
+            $rgb = array_values(unpack('C3', $pixel->getOutput()));
+            if ('gap' === $kind) {
+                self::assertEqualsWithDelta(32, $rgb[0], 10);
+                self::assertEqualsWithDelta(64, $rgb[1], 10);
+                self::assertEqualsWithDelta(96, $rgb[2], 10);
+            } elseif ('gray' === $kind) {
+                self::assertLessThan(12, abs($rgb[0] - $rgb[1]));
+                self::assertLessThan(12, abs($rgb[1] - $rgb[2]));
+            } else {
+                self::assertGreaterThan(140, $rgb[2]);
+                self::assertLessThan(50, $rgb[0]);
+            }
+        }
+    }
+
+    public function testPersonalStylesMultipleMusicAndPrivateWaveforms(): void
+    {
+        $project = $this->project();
+        $url = '/studio/montage/'.$project->getId();
+        $crawler = $this->client->request('GET', $url);
+        $token = $crawler->filter('[data-edit-styles-token-value]')->attr('data-edit-styles-token-value');
+        $this->client->request('POST', '/studio/montage/styles/enregistrer', ['_token' => $token, 'name' => 'Mon habillage', 'style' => ['font' => 'serif-bold', 'color' => '#ab1234', 'align' => 'left', 'box' => '1']]);
+        self::assertResponseIsSuccessful();
+        $styles = json_decode($this->client->getResponse()->getContent(), true)['styles'];
+        self::assertCount(1, $styles);
+        self::assertSame('#ab1234', array_values($styles)[0]['style']['color']);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        foreach ([1, 2] as $i) {
+            $file = $this->musicFile();
+            $this->edits()->attachMusic($project, $file, true);
+            @unlink($file->getPathname());
+        }
+        self::assertCount(2, $project->getMusicFiles());
+        self::assertCount(2, $project->getAudioClips());
+        $first = array_key_first($project->getMusicFiles());
+        $stored = $project->getMusicFiles()[$first];
+        $path = static::getContainer()->get(\App\Service\EditMusic::class)->path($stored['name']);
+        $waveforms = static::getContainer()->get(\App\Service\EditWaveforms::class);
+        self::assertSame('pending', $waveforms->read($path)['status']);
+        $waveforms->build($path);
+        $wave = $waveforms->read($path);
+        self::assertSame('ready', $wave['status']);
+        self::assertCount(256, $wave['peaks']);
+        self::assertGreaterThan(0.01, max($wave['peaks']));
+        $this->client->request('GET', $url.'/onde?track='.$first);
+        self::assertResponseIsSuccessful();
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', $url.'/onde?track='.$first);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->owner);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        $this->edits()->attachMusic($project, null, false, $first);
+        self::assertCount(1, $project->getMusicFiles());
+        self::assertCount(1, $project->getAudioClips());
+    }
+
+    public function testStillImageImportAddsPrivateClipAndRejectsFakeImage(): void
+    {
+        $project = $this->project();
+        $url = '/studio/montage/'.$project->getId();
+        $crawler = $this->client->request('GET', $url);
+        $values = $crawler->selectButton('Ajouter l’image')->form()->getPhpValues();
+        $values['seconds'] = '1.2';
+        $path = tempnam(sys_get_temp_dir(), 'still-').'.png';
+        (new Process(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=green:s=64x64', '-frames:v', '1', '-threads', '1', $path]))->mustRun();
+        try {
+            $this->client->request('POST', $url.'/image', $values, ['image' => new UploadedFile($path, 'Carte.png', null, null, true)]);
+            self::assertResponseStatusCodeSame(303);
+            $project = $this->edits()->owned($project->getId(), $this->owner);
+            self::assertCount(3, $project->getClips());
+            self::assertEqualsWithDelta(3.2, $project->getDuration(), 0.1);
+        } finally {
+            @unlink($path);
+            @unlink(substr($path, 0, -4));
+        }
+        $this->client->request('POST', $url.'/image', ['_token' => $values['_token'], 'solid' => '1', 'color' => '#123456', 'seconds' => '1']);
+        self::assertResponseStatusCodeSame(303);
+        $project = $this->edits()->owned($project->getId(), $this->owner);
+        self::assertCount(4, $project->getClips());
+        self::assertSame('Ton texte', $project->getTexts()[0]['text']);
+        $fake = tempnam(sys_get_temp_dir(), 'fake-still-');
+        file_put_contents($fake, 'not an image');
+        try {
+            $this->client->request('POST', $url.'/image', $values, ['image' => new UploadedFile($fake, 'fake.png', null, null, true)]);
+            self::assertResponseStatusCodeSame(303);
+            self::assertCount(4, $this->edits()->owned($project->getId(), $this->owner)->getClips());
+        } finally {
+            @unlink($fake);
+        }
+    }
+
+    public function testThirtyTwoShortFragmentsCanActuallyRender(): void
+    {
+        $project = $this->project();
+        $clips = [];
+        for ($i = 0; $i < 32; ++$i) {
+            $clips[] = ['id' => $this->imported->getId(), 'start' => 0.0, 'end' => 0.1, 'origin' => 'part-'.$i];
+        }
+        $this->edits()->save($project, '32 fragments', '1:1', $clips, true);
+        $this->edits()->process($project->getId());
+        self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
+        self::assertEqualsWithDelta(3.2, $project->getOutput()->getDuration(), 0.2);
+    }
+
     public function testAccessCsrfAndSourceIsolation(): void
     {
         $project = $this->project();
@@ -372,7 +488,7 @@ final class VideoEditTest extends WebTestCase
             [['id' => $this->imported->getId(), 'start' => 0.5, 'end' => 0.5]],
             [['id' => $foreign->getId(), 'start' => 0, 'end' => 1]],
             [['id' => $this->imported->getId(), 'start' => 0, 'end' => 1, 'omit' => '1']],
-            array_fill(0, 9, $this->cuts()[0]),
+            array_fill(0, 33, $this->cuts()[0]),
         ];
         foreach ($invalid as $clips) {
             try {

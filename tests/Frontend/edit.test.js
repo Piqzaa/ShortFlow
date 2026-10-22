@@ -2,7 +2,26 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { remapCaptions } from '../../assets/edit-timing.js';
+import { remapCaptions, layoutClips, timelineDuration, canPlace } from '../../assets/edit-timing.js';
+
+test('free video placement preserves gaps and rejects collisions while allowing group movement', () => {
+  const clips=[{key:'a',id:1,start:0,end:2,at:0},{key:'b',id:2,start:0,end:1,at:3}];
+  assert.equal(timelineDuration(clips),4);assert.equal(canPlace(clips,['a'],.5),true);assert.equal(canPlace(clips,['a'],1.5),false);
+  assert.equal(canPlace(clips,['a','b'],1),true);assert.equal(canPlace(clips,['a'],-.1),false);
+  assert.equal(layoutClips([{id:1,start:0,end:2,rate:2},{id:2,start:0,end:1}])[1].at,1);
+});
+
+test('caption remapping follows a source through a gap and a speed change', () => {
+  const rows=remapCaptions([{start:.5,end:1.5,text:'Paroles'}],[{id:1,start:0,end:2}],[{id:1,start:0,end:2,at:1,rate:2}]);
+  assert.deepEqual(rows,[{start:1.25,end:1.75,text:'Paroles'}]);
+});
+
+test('a video gap advances the project clock and audio before returning to the next clip', () => {
+  let frame;const c=editor({performance:{now:()=>0},requestAnimationFrame:callback=>{frame=callback;return 1;},cancelAnimationFrame(){}});
+  c.stageTarget={pause(){}};c.canvasTarget={classList:{add(){}}};c.playheadTarget={value:0,max:3};c.paint=()=>{};c.currentTarget={};c.hasCursorTarget=false;
+  const heard=[];c.paintText=()=>{};c.syncMusic=time=>heard.push(time);let resumed;c.jump=(time,play)=>{resumed={time,play};};
+  c.showGap(.5,1.5,true);frame(500);assert.equal(c.playheadTarget.value,1);assert.equal(heard[0],1);frame(1100);assert.deepEqual(resumed,{time:1.5,play:true});
+});
 
 function audioRow(values, duration = 10) {
   const fields = Object.fromEntries(Object.entries({text:'Son',...values}).map(([key,value])=>[`[data-audio-${key}]`,{value}]));
@@ -41,8 +60,8 @@ test('audio preview respects fragment timing, volume, trimming and pause', () =>
 });
 
 function editor(extra = {}) {
-  const source = readFileSync(new URL('../../assets/controllers/edit_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { remapCaptions } from '../edit-timing.js';", '').replace('export default class', 'class Editor');
-  const Editor = runInNewContext(`${source}\nEditor;`, {Controller:class {},remapCaptions,AbortController,setTimeout,clearTimeout,...extra});
+  const source = readFileSync(new URL('../../assets/controllers/edit_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { remapCaptions, layoutClips, timelineDuration, canPlace } from '../edit-timing.js';", '').replace('export default class', 'class Editor');
+  const Editor = runInNewContext(`${source}\nEditor;`, {Controller:class {},remapCaptions,layoutClips,timelineDuration,canPlace,AbortController,setTimeout,clearTimeout,...extra});
   const controller = new Editor();
   controller.summaryTarget = {}; controller.noticeTarget = {}; controller.previewTarget = {}; controller.hasPreviewTarget = true;
   controller.formatTarget = {value:'9:16'};
@@ -260,4 +279,10 @@ test('moving all captions resets per-block overrides without changing their timi
 test('selecting a text block preserves an existing cursor inside that block',()=>{
   const c=editor();const row=layerRow({id:'t',start:1,end:3},'text');c.layerRows=()=>[row];c.playheadTarget={value:2};c.element={querySelector:()=>({})};c.panel=()=>{};c.drawCaptionTrack=()=>{};let jumped=false;c.jump=()=>jumped=true;
   c.selectLayer('text','t');assert.equal(jumped,false);assert.equal(c.playheadTarget.value,2);
+});
+
+
+test('short accelerated fragments retain their exact timeline duration',()=>{
+  const c=editor(),row=c.clipTargets[0];row.nodes['[data-edit-start]'].value=0;row.nodes['[data-edit-end]'].value=.1;row.nodes['[data-edit-rate]']={value:4};
+  assert.equal(c.clipLength(row),.025);
 });

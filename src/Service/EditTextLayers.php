@@ -4,7 +4,7 @@ namespace App\Service;
 
 final class EditTextLayers
 {
-    /** @param array<mixed> $rows @return list<array{id:string,start:float,end:float,text:string,x:float,y:float,size:float,color:string}> */
+    /** @param array<mixed> $rows @return list<array<string, mixed>> */
     public function validate(array $rows, float $duration): array
     {
         if (count($rows) > 30) {
@@ -27,10 +27,11 @@ final class EditTextLayers
                 }
                 $values[$key] = (float) $row[$key];
             }
-            if ($values['end'] - $values['start'] < 0.1 || !mb_check_encoding($row['text'], 'UTF-8') || mb_strlen($row['text']) > 160 || !in_array($row['color'] ?? '', ['#ffffff', '#ffff00', '#67e8f9', '#f9a8d4'], true)) {
-                throw new VideoLibraryException('Chaque texte doit durer au moins 0,1 seconde, contenir 160 caractères maximum et utiliser une couleur proposée.');
+            if ($values['end'] - $values['start'] < 0.1 || !mb_check_encoding($row['text'], 'UTF-8') || mb_strlen($row['text']) > 160) {
+                throw new VideoLibraryException('Chaque texte doit durer au moins 0,1 seconde, contenir 160 caractères maximum et utiliser une couleur valide.');
             }
-            $result[] = ['id' => $row['id'], 'text' => trim($row['text']), 'color' => $row['color']] + $values;
+            $style = EditTypography::validate($row);
+            $result[] = $style + ['id' => $row['id'], 'text' => trim($row['text'])] + $values;
         }
 
         return $result;

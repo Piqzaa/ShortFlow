@@ -64,8 +64,8 @@ final class VideoEdits
     public function save(VideoEdit $project, string $title, string $format, array $input, bool $export, ?array $settings = null, ?array $captions = null, ?int $revision = null, bool $captionsCurrent = true, ?array $texts = null, ?array $audioClips = null): void
     {
         $title = trim($title);
-        if ('' === $title || mb_strlen($title) > 120 || !isset(VideoEdit::FORMATS[$format]) || count($input) < 1 || count($input) > 8) {
-            throw new VideoLibraryException('Indique un nom, un format et entre 1 et 8 clips.');
+        if ('' === $title || mb_strlen($title) > 120 || !isset(VideoEdit::FORMATS[$format]) || count($input) < 1 || count($input) > 32) {
+            throw new VideoLibraryException('Indique un nom, un format et entre 1 et 32 fragments.');
         }
         $input = array_values(array_filter($input, static fn ($row): bool => !is_array($row) || empty($row['omit'])));
         if (!$input) {
@@ -81,10 +81,24 @@ final class VideoEdits
             if (null !== $origin && (!is_string($origin) || !preg_match('/^[a-zA-Z0-9_-]{1,64}$/D', $origin))) {
                 throw new VideoLibraryException('Ce fragment est invalide. Recharge le montage.');
             }
-            $clips[] = ['id' => (int) $row['id'], 'start' => (float) $row['start'], 'end' => (float) $row['end']] + (null !== $origin ? ['origin' => $origin] : []);
+            $extra = ['look' => EditClipStyle::validate(is_array($row['look'] ?? null) ? $row['look'] : [])];
+            foreach (['at' => [0, 179.4], 'rate' => [0.25, 4]] as $key => [$minimum, $maximum]) {
+                if (isset($row[$key])) {
+                    if (!is_scalar($row[$key]) || !is_numeric($row[$key]) || !is_finite((float) $row[$key]) || $row[$key] < $minimum || $row[$key] > $maximum) {
+                        throw new VideoLibraryException('Vérifie la position et la vitesse des clips.');
+                    }
+                    $extra[$key] = (float) $row[$key];
+                }
+            }
+            $clips[] = $extra + ['id' => (int) $row['id'], 'start' => (float) $row['start'], 'end' => (float) $row['end']] + (null !== $origin ? ['origin' => $origin] : []);
         }
         $this->validate($project->getOwner(), $clips, $export);
         $settings ??= $project->getSettings();
+        if (!is_string($settings['background'] ?? '#000000') || !preg_match('/^#[a-fA-F0-9]{6}$/D', $settings['background'] ?? '#000000')) {
+            throw new VideoLibraryException('Choisis une couleur de fond valide.');
+        }
+        $settings['background'] ??= '#000000';
+        $settings['typography'] = EditTypography::validate($settings['typography'] ?? ['color' => 'social' === ($settings['captionStyle'] ?? '') ? '#ffff00' : '#ffffff']);
         $settings += ['language' => 'fr', 'captionX' => 0.5, 'captionY' => 0.85, 'captionSize' => 4];
         foreach (['captionX' => [0.05, 0.95], 'captionY' => [0.05, 0.95], 'captionSize' => [2, 10]] as $key => [$min, $max]) {
             if (!is_numeric($settings[$key]) || !is_finite((float) $settings[$key]) || $settings[$key] < $min || $settings[$key] > $max) {
@@ -111,7 +125,7 @@ final class VideoEdits
         if (!isset($settings['fit'], $settings['captionStyle'], $settings['intro']) || !in_array($settings['fit'], ['contain', 'cover'], true) || !in_array($settings['captionStyle'], ['off', 'clean', 'social'], true) || !is_bool($settings['intro'])) {
             throw new VideoLibraryException('Choisis un cadrage et un style valides.');
         }
-        $duration = array_sum(array_map(static fn (array $c): float => $c['end'] - $c['start'], $clips));
+        $duration = EditTimeline::duration($clips);
         $captionRows = null === $captions ? $project->getCaptions() : $captions;
         if (null === $captions || !$captionsCurrent) {
             $detached = array_filter($project->getAudioClips(), static fn (array $row): bool => 'video' === $row['kind']);
@@ -171,11 +185,14 @@ final class VideoEdits
         });
     }
 
-    /** @param list<array{id:int,start:float,end:float,origin?:string}> $clips */
+    /** @param list<array{id:int,start:float,end:float,origin?:string,at?:float,rate?:float}> $clips */
     public function validate(User $owner, array $clips, bool $export = true): void
     {
         $total = 0.0;
-        foreach ($clips as $clip) {
+        foreach (EditTimeline::layout($clips) as $clip) {
+            if (!is_finite($clip['at']) || $clip['at'] < $total - 0.001 || $clip['rate'] < 0.25 || $clip['rate'] > 4) {
+                throw new VideoLibraryException('Les clips vidéo ne doivent pas se chevaucher. Déplace-les sur un espace libre.');
+            }
             $video = $this->videos->owned($clip['id'], $owner);
             if (!$video || !is_file($this->storage->path($video->getStorageName()))) {
                 throw new VideoLibraryException('Un clip source a été retiré ou est indisponible. Retire-le du montage ou choisis une autre vidéo.');
@@ -183,7 +200,7 @@ final class VideoEdits
             if (!is_finite($clip['start']) || !is_finite($clip['end']) || $clip['start'] < 0 || $clip['end'] > $video->getDuration() + 0.001 || $clip['end'] - $clip['start'] < 0.1) {
                 throw new VideoLibraryException('Chaque clip doit durer au moins 0,1 seconde et rester dans les limites de sa source.');
             }
-            $total += $clip['end'] - $clip['start'];
+            $total = $clip['at'] + ($clip['end'] - $clip['start']) / $clip['rate'];
         }
         if ($export && $total > 179.5) {
             throw new VideoLibraryException('Raccourcis ton montage à moins de 3 minutes avant de l’exporter.');
@@ -208,10 +225,12 @@ final class VideoEdits
             }
             $this->em->remove($project);
         });
-        $this->music->discard($project->getMusicName());
+        foreach ($project->getMusicFiles() as $file) {
+            $this->music->discard($file['name']);
+        }
     }
 
-    public function attachMusic(VideoEdit $project, ?UploadedFile $file, bool $rights): void
+    public function attachMusic(VideoEdit $project, ?UploadedFile $file, bool $rights, ?string $removeId = null): void
     {
         if ($file && !$rights) {
             throw new VideoLibraryException('Confirme que tu disposes des droits pour utiliser cette musique sur les réseaux choisis.');
@@ -220,28 +239,47 @@ final class VideoEdits
             throw new VideoLibraryException('Attends la fin du traitement ou modifie une copie.');
         }
         $name = $file ? $this->music->import($file) : null;
-        $old = null;
+        $discard = [];
         try {
-            $this->em->wrapInTransaction(function () use ($project, $file, $name, &$old): void {
+            $duration = $name ? $this->music->duration($name) : 0.0;
+            $this->em->wrapInTransaction(function () use ($project, $file, $name, $duration, $removeId, &$discard): void {
                 $this->em->lock($project->getOwner(), LockMode::PESSIMISTIC_WRITE);
                 $this->em->refresh($project, LockMode::PESSIMISTIC_WRITE);
                 if ($project->isActive() || 'ready' === $project->getStatus()) {
                     throw new VideoLibraryException('Ce montage est déjà en cours de traitement.');
                 }
-                $old = $project->getMusicName();
-                $project->music($name, $file ? mb_substr($file->getClientOriginalName(), 0, 120) : null);
-                $project->configure(array_replace($project->getSettings(), ['musicOffset' => 0]));
-                $audio = array_values(array_filter($project->getAudioClips(), static fn (array $row): bool => 'music' !== $row['kind']));
+                $files = $project->getMusicFiles();
+                $audio = $project->getAudioClips();
                 if ($name) {
-                    $audio[] = ['id' => bin2hex(random_bytes(12)), 'kind' => 'music', 'source' => 0, 'start' => 0.0, 'end' => $project->getDuration(), 'offset' => 0.0, 'volume' => 20.0, 'loop' => true];
+                    if (count($files) >= 8 || count($audio) >= 32) {
+                        throw new VideoLibraryException('8 fichiers musicaux et 32 fragments audio maximum.');
+                    }
+                    $key = 'music-'.bin2hex(random_bytes(8));
+                    $title = mb_substr($file->getClientOriginalName(), 0, 120);
+                    $files[$key] = ['name' => $name, 'title' => $title, 'duration' => $duration];
+                    $audio[] = ['id' => bin2hex(random_bytes(12)), 'kind' => 'music', 'musicId' => $key, 'source' => 0, 'start' => 0.0, 'end' => $project->getDuration(), 'offset' => 0.0, 'volume' => 20.0, 'loop' => true, 'rate' => 1.0];
+                } else {
+                    foreach ($files as $key => $stored) {
+                        if (null === $removeId || $key === $removeId) {
+                            $discard[] = $stored['name'];
+                            unset($files[$key]);
+                        }
+                    }
+                    $audio = array_values(array_filter($audio, static fn (array $row): bool => 'music' !== $row['kind'] || isset($files[$row['musicId'] ?? 'original'])));
                 }
+                $project->setMusicFiles($files);
+                $last = $files ? end($files) : null;
+                $project->music($last['name'] ?? null, $last['title'] ?? null);
+                $project->configure(array_replace($project->getSettings(), ['musicOffset' => 0]));
                 $project->setAudioClips($audio);
             });
         } catch (\Throwable $error) {
             $this->music->discard($name);
             throw $error;
         }
-        $this->music->discard($old);
+        foreach ($discard as $old) {
+            $this->music->discard($old);
+        }
     }
 
     public function process(int $id): void

@@ -17,6 +17,7 @@ final class VideoEditType extends AbstractType
     {
         $builder->add('title', TextType::class, ['label' => 'Nom du montage', 'constraints' => [new Assert\NotBlank(), new Assert\Length(max: 120)], 'attr' => ['maxlength' => 120]])
             ->add('format', ChoiceType::class, ['label' => 'Format de la vidéo finale', 'choices' => ['Vertical · 9:16' => '9:16', 'Paysage · 16:9' => '16:9', 'Carré · 1:1' => '1:1'], 'constraints' => [new Assert\Choice(choices: array_keys(VideoEdit::FORMATS))]])
+            ->add('background', \Symfony\Component\Form\Extension\Core\Type\ColorType::class, ['label' => 'Fond des espaces', 'data' => $options['data']['background'] ?? '#000000'])
             ->add('fit', ChoiceType::class, ['label' => 'Cadrage', 'choices' => ['Image entière · avec bandes' => 'contain', 'Remplir · recadrage centré' => 'cover'], 'data' => $options['data']['fit'] ?? 'contain'])
             ->add('captionStyle', ChoiceType::class, ['label' => 'Style des sous-titres', 'choices' => ['Sans sous-titres' => 'off', 'Sobre · blanc' => 'clean', 'Contrasté · jaune' => 'social'], 'data' => $options['data']['captionStyle'] ?? 'off'])
             ->add('captionX', NumberType::class, ['label' => 'Position horizontale · 0,05 à 0,95', 'html5' => true, 'data' => $options['data']['captionX'] ?? 0.5, 'constraints' => [new Assert\NotNull(), new Assert\Range(min: 0.05, max: 0.95)], 'attr' => ['min' => 0.05, 'max' => 0.95, 'step' => 0.01]])

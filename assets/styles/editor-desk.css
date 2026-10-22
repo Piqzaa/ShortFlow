@@ -190,3 +190,41 @@
  .editor-desk .editor-timeline-panel{display:flex;flex-direction:column}
  .editor-desk .editor-tracks{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:4px}
 }
+
+.editor-desk .editor-timeline{display:block;position:relative;height:64px}
+.editor-desk .editor-timeline-clip{position:absolute;top:0;touch-action:none}
+.editor-timeline-options{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:5px 0}
+.editor-timeline-options button,.editor-timeline-options label{font-size:11px;min-height:30px;padding:4px 8px!important;margin:0}
+.editor-time-scroll{overflow:auto;min-height:0;flex:1}
+.editor-desk .editor-tracks{overflow:visible!important;flex:none}
+.editor-canvas.is-gap video{visibility:hidden}
+.editor-clip-at{margin-top:12px}
+@media(max-width:767px){.editor-timeline-options button{min-height:44px}.editor-time-scroll{max-height:420px}}
+
+@font-face{font-family:'VF Sans';font-weight:400;src:url('/fonts/editor/DejaVuSans.ttf')}@font-face{font-family:'VF Sans';font-weight:700;src:url('/fonts/editor/DejaVuSans-Bold.ttf')}
+@font-face{font-family:'VF Serif';font-weight:400;src:url('/fonts/editor/DejaVuSerif.ttf')}@font-face{font-family:'VF Serif';font-weight:700;src:url('/fonts/editor/DejaVuSerif-Bold.ttf')}
+@font-face{font-family:'VF Mono';font-weight:400;src:url('/fonts/editor/DejaVuSansMono.ttf')}@font-face{font-family:'VF Mono';font-weight:700;src:url('/fonts/editor/DejaVuSansMono-Bold.ttf')}
+.editor-type-toggles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.editor-type-presets{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.editor-text-resize{position:absolute!important;right:-12px;bottom:-12px;min-width:24px!important;min-height:24px!important;padding:2px!important;background:#bda0ff!important;color:#15111e!important;touch-action:none;cursor:nwse-resize}
+.editor-overlay:not(.is-selected) .editor-text-resize{display:none}.editor-canvas .editor-overlay{max-width:95%;box-sizing:border-box}
+@media(max-width:767px){.editor-text-resize{min-width:36px!important;min-height:36px!important}}
+
+.editor-waveform{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.6}
+.editor-audio-lane .editor-layer-label{background:transparent!important;text-shadow:0 1px 2px #000}
+.editor-still-import{font-size:12px;margin:10px 0}.editor-still-import input{max-width:100%;width:100%;min-width:0}
+
+@font-face{font-family:"VF Anton";src:url("/fonts/editor/anton.ttf") format("truetype");font-display:swap;font-weight:400;}
+@font-face{font-family:"VF Bebas";src:url("/fonts/editor/bebasneue.ttf") format("truetype");font-display:swap;font-weight:400;}
+@font-face{font-family:"VF Oswald";src:url("/fonts/editor/oswald.ttf") format("truetype");font-display:swap;font-weight:200 700;}
+
+.editor-canvas>video{touch-action:none}
+
+@media(max-width:767px){
+ .editor-desk .editor-timeline-heading{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:stretch}
+ .editor-desk .editor-cut-tools{display:contents}
+ .editor-desk .editor-timeline-heading button{width:100%;min-width:0;min-height:44px;padding:5px!important;font-size:10px;line-height:1.25;margin:0}
+ .editor-timeline-options{display:grid;grid-template-columns:36px 36px 72px minmax(0,1fr);gap:5px}
+ .editor-timeline-options button{width:100%;min-width:0}
+ .editor-timeline-options label{min-height:44px;display:flex;align-items:center;gap:5px;padding:0!important}
+ .editor-timeline-options button:last-child{grid-column:1/-1}
+}

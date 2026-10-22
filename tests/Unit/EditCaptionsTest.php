@@ -21,6 +21,16 @@ final class EditCaptionsTest extends TestCase
         self::assertStringContainsString('à tous', $ass);
     }
 
+    public function testBundledHeadlineFontsAndCustomColoursAreWrittenToAss(): void
+    {
+        $captions = new EditCaptions();
+        foreach (['anton' => 'Anton', 'bebas' => 'Bebas Neue', 'oswald' => 'Oswald'] as $font => $family) {
+            $ass = $captions->ass([['start' => 0, 'end' => 1, 'text' => 'Bonjour', 'font' => $font, 'color' => '#123456']], 1080, 1920, 'social');
+            self::assertStringContainsString($family, $ass);
+            self::assertStringContainsString('563412', $ass);
+        }
+    }
+
     public function testOverlappingOrOutOfVideoCaptionsAreRejected(): void
     {
         $captions = new EditCaptions();

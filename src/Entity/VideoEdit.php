@@ -17,10 +17,10 @@ class VideoEdit
     private User $owner;
     #[ORM\Column(length: 120)]
     private string $title;
-    /** @var list<array{id:int,start:float,end:float,origin?:string}> */
+    /** @var list<array{id:int,start:float,end:float,origin?:string,at?:float,rate?:float}> */
     #[ORM\Column(type: 'json')]
     private array $clips;
-    /** @var array{fit:string,captionStyle:string,intro:bool,language?:string,sourceVolume?:float|int,musicVolume?:float|int,musicOffset?:float|int,musicLoop?:bool,captionX?:float,captionY?:float,captionSize?:float|int} */
+    /** @var array{fit:string,captionStyle:string,intro:bool,language?:string,sourceVolume?:float|int,musicVolume?:float|int,musicOffset?:float|int,musicLoop?:bool,captionX?:float,captionY?:float,captionSize?:float|int,typography?:array<string,mixed>,background?:string} */
     #[ORM\Column(type: 'json')]
     private array $settings = ['fit' => 'contain', 'captionStyle' => 'off', 'intro' => false, 'language' => 'fr'];
     /** @var list<array{start:float,end:float,text:string,x?:float,y?:float}> */
@@ -106,7 +106,7 @@ class VideoEdit
         }
     }
 
-    /** @param list<array{id:int,start:float,end:float,origin?:string}> $clips */
+    /** @param list<array{id:int,start:float,end:float,origin?:string,at?:float,rate?:float}> $clips */
     public function __construct(User $owner, string $title, array $clips)
     {
         $this->owner = $owner;
@@ -130,7 +130,7 @@ class VideoEdit
         return $this->title;
     }
 
-    /** @return list<array{id:int,start:float,end:float,origin?:string}> */
+    /** @return list<array{id:int,start:float,end:float,origin?:string,at?:float,rate?:float}> */
     public function getClips(): array
     {
         return array_map(static fn (array $clip, int $index): array => $clip + ['origin' => 'legacy-'.$index], $this->clips, array_keys($this->clips));
@@ -161,6 +161,22 @@ class VideoEdit
         return $this->musicName;
     }
 
+    /** @var array<string,array{name:string,title:string,duration:float}>|null */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $musicFiles = null;
+
+    /** @return array<string,array{name:string,title:string,duration:float}> */
+    public function getMusicFiles(): array
+    {
+        return $this->musicFiles ?? ($this->musicName ? ['original' => ['name' => $this->musicName, 'title' => $this->musicTitle ?? 'Musique', 'duration' => 0.0]] : []);
+    }
+
+    /** @param array<string,array{name:string,title:string,duration:float}> $files */
+    public function setMusicFiles(array $files): void
+    {
+        $this->musicFiles = $files;
+    }
+
     public function getMusicTitle(): ?string
     {
         return $this->musicTitle;
@@ -180,7 +196,7 @@ class VideoEdit
 
     public function getDuration(): float
     {
-        return array_sum(array_map(static fn (array $clip): float => $clip['end'] - $clip['start'], $this->clips));
+        return \App\Service\EditTimeline::duration($this->clips);
     }
 
     public function isActive(): bool
@@ -188,10 +204,10 @@ class VideoEdit
         return in_array($this->status, ['queued', 'rendering', 'transcribing'], true);
     }
 
-    /** @return array{fit:string,captionStyle:string,intro:bool,language?:string,sourceVolume?:float|int,musicVolume?:float|int,musicOffset?:float|int,musicLoop?:bool,captionX?:float,captionY?:float,captionSize?:float|int} */
+    /** @return array{fit:string,captionStyle:string,intro:bool,language?:string,sourceVolume?:float|int,musicVolume?:float|int,musicOffset?:float|int,musicLoop?:bool,captionX?:float,captionY?:float,captionSize?:float|int,typography?:array<string,mixed>,background?:string} */
     public function getSettings(): array
     {
-        return $this->settings + ['captionX' => 0.5, 'captionY' => 0.85, 'captionSize' => 4, 'language' => 'fr', 'sourceVolume' => 100, 'musicVolume' => 20, 'musicOffset' => 0, 'musicLoop' => true];
+        return $this->settings + ['background' => '#000000', 'captionX' => 0.5, 'captionY' => 0.85, 'captionSize' => 4, 'language' => 'fr', 'sourceVolume' => 100, 'musicVolume' => 20, 'musicOffset' => 0, 'musicLoop' => true];
     }
 
     /** @return list<array{start:float,end:float,text:string,x?:float,y?:float}> */
@@ -200,7 +216,7 @@ class VideoEdit
         return $this->captions;
     }
 
-    /** @param array{fit:string,captionStyle:string,intro:bool,language?:string,sourceVolume?:float|int,musicVolume?:float|int,musicOffset?:float|int,musicLoop?:bool,captionX?:float,captionY?:float,captionSize?:float|int} $settings */
+    /** @param array{fit:string,captionStyle:string,intro:bool,language?:string,sourceVolume?:float|int,musicVolume?:float|int,musicOffset?:float|int,musicLoop?:bool,captionX?:float,captionY?:float,captionSize?:float|int,typography?:array<string,mixed>,background?:string} $settings */
     public function configure(array $settings): void
     {
         $this->settings = $settings;
@@ -212,7 +228,7 @@ class VideoEdit
         $this->captions = $captions;
     }
 
-    /** @param list<array{id:int,start:float,end:float,origin?:string}> $clips */
+    /** @param list<array{id:int,start:float,end:float,origin?:string,at?:float,rate?:float}> $clips */
     public function revise(string $title, string $format, array $clips): void
     {
         $this->title = $title;

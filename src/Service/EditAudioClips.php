@@ -20,20 +20,21 @@ final class EditAudioClips
         }
         $result = [];
         $ids = [];
-        $musicDuration = null;
+        $musicDurations = [];
         foreach ($rows as $row) {
             if (!is_array($row) || !is_string($row['id'] ?? null) || !preg_match('/^[a-zA-Z0-9_-]{1,64}$/D', $row['id']) || isset($ids[$row['id']]) || !in_array($row['kind'] ?? '', ['music', 'video'], true)) {
                 throw new VideoLibraryException('Vérifie les fragments audio du montage.');
             }
             $ids[$row['id']] = true;
             $values = [];
-            foreach (['start' => $duration, 'end' => $duration + 0.001, 'offset' => 600, 'volume' => 100] as $key => $maximum) {
+            $row += ['rate' => 1, 'fadeIn' => 0, 'fadeOut' => 0];
+            foreach (['start' => $duration, 'end' => $duration + 0.001, 'offset' => 600, 'volume' => 100, 'rate' => 4, 'fadeIn' => 5, 'fadeOut' => 5] as $key => $maximum) {
                 if (!is_scalar($row[$key] ?? null) || !is_numeric($row[$key]) || !is_finite((float) $row[$key]) || $row[$key] < 0 || $row[$key] > $maximum) {
                     throw new VideoLibraryException('Vérifie les durées et le volume des fragments audio.');
                 }
                 $values[$key] = (float) $row[$key];
             }
-            if ($values['end'] - $values['start'] < 0.1 || !in_array($row['loop'] ?? null, [true, false, '0', '1', 0, 1], true)) {
+            if ($values['rate'] < 0.25 || $values['end'] - $values['start'] < 0.1 || !in_array($row['loop'] ?? null, [true, false, '0', '1', 0, 1], true)) {
                 throw new VideoLibraryException('Chaque fragment audio doit durer au moins 0,1 seconde.');
             }
             $source = 0;
@@ -42,19 +43,21 @@ final class EditAudioClips
                     throw new VideoLibraryException('Une source audio a été retirée ou est indisponible.');
                 }
                 $source = (int) $video->getId();
-                if ((bool) $row['loop'] || $values['offset'] + $values['end'] - $values['start'] > $video->getDuration() + 0.05) {
+                if ((bool) $row['loop'] || $values['offset'] + ($values['end'] - $values['start']) * $values['rate'] > $video->getDuration() + 0.05) {
                     throw new VideoLibraryException('Le fragment sonore dépasse la vidéo source.');
                 }
             } else {
-                if (!$project->getMusicName()) {
+                $musicId = $row['musicId'] ?? (isset($project->getMusicFiles()['original']) ? 'original' : array_key_last($project->getMusicFiles()));
+                if (!is_string($musicId) || !isset($project->getMusicFiles()[$musicId])) {
                     throw new VideoLibraryException('La musique est indisponible.');
                 }
-                $musicDuration ??= $this->music->duration($project->getMusicName());
-                if ($values['offset'] >= $musicDuration) {
+                $stored = $project->getMusicFiles()[$musicId];
+                $musicDurations[$musicId] ??= $this->music->duration($stored['name']);
+                if ($values['offset'] >= $musicDurations[$musicId]) {
                     throw new VideoLibraryException('Le début du fragment dépasse la piste musicale.');
                 }
             }
-            $result[] = ['id' => $row['id'], 'kind' => $row['kind'], 'source' => $source, 'loop' => (bool) $row['loop']] + $values;
+            $result[] = ['id' => $row['id'], 'kind' => $row['kind'], 'source' => $source, 'musicId' => 'music' === $row['kind'] ? $musicId : '', 'loop' => (bool) $row['loop']] + $values;
         }
 
         return $result;
@@ -73,7 +76,7 @@ final class EditAudioClips
                 continue;
             }
             if ('music' === $row['kind']) {
-                $path = $this->music->path($project->getMusicName());
+                $path = $this->music->path($project->getMusicFiles()[$row['musicId']]['name']);
             } else {
                 $sourceVideo = $this->videos->owned($row['source'], $project->getOwner());
                 if (!$sourceVideo) {
@@ -92,7 +95,14 @@ final class EditAudioClips
                 array_push($command, '-stream_loop', '-1');
             }
             array_push($command, '-ss', sprintf('%.6F', $row['offset']), '-threads', '2', '-protocol_whitelist', 'file', '-i', $path);
-            $filters[] = '['.$index.':a]atrim=duration='.sprintf('%.6F', $row['end'] - $row['start']).',asetpts=PTS-STARTPTS,aresample=48000,volume='.sprintf('%.4F', $row['volume'] / 100).',adelay='.((int) round($row['start'] * 1000)).':all=1[segment'.$index.']';
+            $fades = '';
+            foreach (['fadeIn' => 'in', 'fadeOut' => 'out'] as $key => $direction) {
+                $length = min($row[$key] ?? 0, ($row['end'] - $row['start']) / 2);
+                if ($length > 0) {
+                    $fades .= ',afade=t='.$direction.':st='.sprintf('%.6F', 'in' === $direction ? 0 : $row['end'] - $row['start'] - $length).':d='.sprintf('%.6F', $length);
+                }
+            }
+            $filters[] = '['.$index.':a]'.EditTimeline::tempo($row['rate']).',atrim=duration='.sprintf('%.6F', $row['end'] - $row['start']).',asetpts=PTS-STARTPTS'.$fades.',aresample=48000,volume='.sprintf('%.4F', $row['volume'] / 100).',adelay='.((int) round($row['start'] * 1000)).':all=1[segment'.$index.']';
             $inputs .= '[segment'.$index.']';
         }
         if ($video) {

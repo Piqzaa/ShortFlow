@@ -30,7 +30,14 @@ final class EditAudio
         $audio = $work.'/audio.wav';
         try {
             $list = '';
-            foreach ($project->getClips() as $i => $clip) {
+            foreach (EditTimeline::segments($project->getClips()) as $i => $clip) {
+                if (isset($clip['gap'])) {
+                    $silence = new Process(['ffmpeg', '-v', 'error', '-nostdin', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=16000:cl=mono', '-t', sprintf('%.6F', $clip['gap']), '-c:a', 'pcm_s16le', 'clip-'.$i.'.wav'], $work);
+                    $silence->setTimeout(30);
+                    $silence->mustRun();
+                    $list .= 'file clip-'.$i.".wav\n";
+                    continue;
+                }
                 $source = $this->videos->owned($clip['id'], $project->getOwner()) ?? throw new VideoLibraryException('Une source est indisponible.');
                 $path = $this->storage->path($source->getStorageName());
                 $probe = new Process(['ffprobe', '-v', 'error', '-protocol_whitelist', 'file', '-select_streams', 'a:0', '-show_entries', 'stream=index', '-of', 'csv=p=0', $path]);
@@ -42,7 +49,7 @@ final class EditAudio
                 } else {
                     array_push($command, '-f', 'lavfi', '-i', 'anullsrc=r=16000:cl=mono');
                 }
-                array_push($command, '-t', sprintf('%.6F', $clip['end'] - $clip['start']), '-vn', '-ac', '1', '-ar', '16000', '-af', 'apad', '-c:a', 'pcm_s16le', 'clip-'.$i.'.wav');
+                array_push($command, '-t', sprintf('%.6F', ($clip['end'] - $clip['start']) / $clip['rate']), '-vn', '-ac', '1', '-ar', '16000', '-af', EditTimeline::tempo($clip['rate']).EditClipStyle::audioFades($clip).',apad', '-c:a', 'pcm_s16le', 'clip-'.$i.'.wav');
                 $process = new Process($command, $work);
                 $process->setTimeout(30);
                 $process->disableOutput();

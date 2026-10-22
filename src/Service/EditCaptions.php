@@ -54,23 +54,50 @@ final class EditCaptions
         return $result;
     }
 
-    /** @param list<array<string, mixed>> $rows @param array<string, float|int> $position */
+    /** @param list<array<string, mixed>> $rows @param array<string, mixed> $position */
     public function ass(array $rows, int $width, int $height, string $style, array $position = []): string
     {
         $color = 'social' === $style ? '&H0000FFFF' : '&H00FFFFFF';
         $size = (int) round($height * ($position['size'] ?? 4) / 100);
         $margin = (int) round($height * 0.12);
         $result = "[Script Info]\nScriptType: v4.00+\nPlayResX: $width\nPlayResY: $height\nWrapStyle: 0\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,DejaVu Sans,$size,$color,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,3,1,2,70,70,$margin,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n";
+        preg_match('/Style: Default,[^\n]+/', $result, $match);
+        $boxStyle = explode(',', $match[0]);
+        $boxStyle[0] = 'Style: Box';
+        $boxStyle[15] = '3';
+        $result = str_replace("\n\n[Events]", "\n".implode(',', $boxStyle)."\n\n[Events]", $result);
+        $base = EditTypography::validate($position['typography'] ?? ['color' => 'social' === $style ? '#ffff00' : '#ffffff']);
         foreach ($rows as $row) {
-            $text = str_replace(['\\', '{', '}', "\r", "\n"], ['／', '（', '）', '', ' '], $row['text']);
+            $appearance = EditTypography::validate(array_intersect_key($row, EditTypography::DEFAULTS) + $base);
+            $text = str_replace(['\\', '{', '}', "\r", "\n"], ['／', '（', '）', '', '\N'], $row['text']);
             $text = preg_replace('/[\x00-\x1f\x7f]/u', '', $text) ?? '';
             $x = (int) round($width * ($row['x'] ?? $position['x'] ?? 0.5));
             $y = (int) round($height * ($row['y'] ?? $position['y'] ?? 0.85));
             $fontSize = (int) round($height * ($row['size'] ?? $position['size'] ?? 4) / 100);
-            $hex = ltrim($row['color'] ?? ('social' === $style ? '#ffff00' : '#ffffff'), '#');
+            $hex = ltrim($appearance['color'], '#');
             $ink = strtoupper(substr($hex, 4, 2).substr($hex, 2, 2).substr($hex, 0, 2));
-            $placement = '{\\an5\\pos('.$x.','.$y.')\\fs'.$fontSize.'\\c&H'.$ink.'&}';
-            $result .= 'Dialogue: 0,'.$this->clock($row['start'], false).','.$this->clock($row['end'], false).',Default,,0,0,0,,'.$placement.$text."\n";
+            $align = ['left' => 4, 'center' => 5, 'right' => 6][$appearance['align']];
+            $textWidth = $width * $appearance['width'] / 100;
+            if (4 === $align) {
+                $x -= (int) round($textWidth / 2);
+            }
+            if (6 === $align) {
+                $x += (int) round($textWidth / 2);
+            }
+            $font = EditTypography::FONTS[$appearance['font']];
+            $bold = $appearance['bold'] || str_ends_with($appearance['font'], '-bold') ? -1 : 0;
+            $italic = $appearance['italic'] ? -1 : 0;
+            $outline = sprintf('%.2F', ($appearance['box'] ? 6 : $appearance['outline']) * $height / 1080);
+            $shadow = sprintf('%.2F', $appearance['shadow'] * $height / 1080);
+            $alpha = sprintf('%02X', (int) round(255 * (1 - $appearance['opacity'] / 100)));
+            $placement = '{\\an'.$align.'\\pos('.$x.','.$y.')\\fn'.$font.'\\b'.$bold.'\\i'.$italic.'\\fs'.$fontSize.'\\c&H'.$ink.'&\\alpha&H'.$alpha.'&\\bord'.$outline.'\\shad'.$shadow;
+            if ($appearance['box']) {
+                $bg = substr($appearance['background'], 1);
+                $placement .= '\\3c&H'.strtoupper(substr($bg, 4, 2).substr($bg, 2, 2).substr($bg, 0, 2)).'&\\3a&H60&';
+            }
+            $placement .= '}';
+            $marginH = max(0, (int) round(($width - $textWidth) / 2));
+            $result .= 'Dialogue: 0,'.$this->clock($row['start'], false).','.$this->clock($row['end'], false).','.($appearance['box'] ? 'Box' : 'Default').',,'.$marginH.','.$marginH.',0,,'.$placement.$text."\n";
         }
 
         return $result;

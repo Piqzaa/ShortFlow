@@ -51,6 +51,30 @@ final class VideoEditController extends AbstractController
         return $this->render('edit/index.html.twig', ['results' => $results, 'query' => $query, 'selected' => $request->query->all('videos'), 'projects' => $this->em->getRepository(VideoEdit::class)->findBy(['owner' => $user], ['updatedAt' => 'DESC'], 50), 'labels' => VideoEdit::LABELS], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
+    #[Route('/styles/enregistrer', name: 'app_edit_style', methods: ['POST'])]
+    public function saveStyle(Request $request, #[CurrentUser] User $user): Response
+    {
+        if (!$this->isCsrfTokenValid('edit_style', $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        try {
+            $name = trim($request->request->getString('name'));
+            if ('' === $name || mb_strlen($name) > 30) {
+                throw new VideoLibraryException('Nomme le style en 30 caractères maximum.');
+            }
+            $style = \App\Service\EditTypography::validate($request->request->all('style'));
+            $this->em->wrapInTransaction(function () use ($user, $name, $style): void {
+                $this->em->lock($user, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+                $this->em->refresh($user);
+                $user->saveEditorStyle($name, $style);
+            });
+
+            return $this->json(['styles' => $user->getEditorStyles()], 200, ['Cache-Control' => 'private, no-store']);
+        } catch (VideoLibraryException $error) {
+            return $this->json(['message' => $error->getMessage()], 422);
+        }
+    }
+
     #[Route('/video/{id}', name: 'app_edit_video', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function startVideo(int $id, Request $request, #[CurrentUser] User $user): Response
     {
@@ -103,7 +127,8 @@ final class VideoEditController extends AbstractController
                 if ($export && !$request->request->getBoolean('confirm')) {
                     throw new VideoLibraryException('Confirme l’export de cette nouvelle vidéo.');
                 }
-                $settings = array_intersect_key($data, array_flip(['fit', 'captionStyle', 'intro', 'language', 'sourceVolume', 'musicVolume', 'musicOffset', 'musicLoop', 'captionX', 'captionY', 'captionSize']));
+                $settings = array_intersect_key($data, array_flip(['background', 'fit', 'captionStyle', 'intro', 'language', 'sourceVolume', 'musicVolume', 'musicOffset', 'musicLoop', 'captionX', 'captionY', 'captionSize']));
+                $settings['typography'] = $request->request->has('caption_appearance') ? $request->request->all('caption_appearance') : ($project->getSettings()['typography'] ?? []);
                 if ('auto' === $intent && !$withCaptions) {
                     $settings['captionStyle'] = 'off';
                 }
@@ -121,7 +146,7 @@ final class VideoEditController extends AbstractController
                 $form->addError(new FormError($error->getMessage()));
                 // Preserve submitted cuts/order only for sources already belonging to this project.
                 $submitted = $request->request->all('clips');
-                if (count($submitted) >= 1 && count($submitted) <= 8) {
+                if (count($submitted) >= 1 && count($submitted) <= 32) {
                     $known = array_column($clips, null, 'id');
                     $retained = [];
                     foreach ($submitted as $row) {
@@ -155,7 +180,43 @@ final class VideoEditController extends AbstractController
         $query = mb_substr(trim($request->query->getString('q')), 0, 120);
         $results = $this->videos->search($user, $query, $request->query->getInt('page', 1));
 
-        return $this->render('edit/show.html.twig', ['project' => $project, 'clips' => $clips, 'sources' => $sources, 'form' => $form, 'labels' => VideoEdit::LABELS, 'query' => $query, 'results' => $results, 'captionsEnabled' => $this->transcriptions->enabled(), 'musicDuration' => $project->getMusicName() ? $this->music->duration($project->getMusicName()) : 0], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('edit/show.html.twig', ['project' => $project, 'clips' => $clips, 'sources' => $sources, 'form' => $form, 'labels' => VideoEdit::LABELS, 'query' => $query, 'results' => $results, 'captionsEnabled' => $this->transcriptions->enabled(), 'focusClip' => $request->query->getInt('clip'), 'editorStyles' => $user->getEditorStyles(), 'musicDuration' => $project->getMusicName() ? $this->music->duration($project->getMusicName()) : 0], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+    }
+
+    #[Route('/{id}/image', name: 'app_edit_image', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function image(int $id, Request $request, #[CurrentUser] User $user, \App\Service\EditStillImages $images): Response
+    {
+        $project = $this->edits->owned($id, $user) ?? throw $this->createNotFoundException();
+        if (!$this->isCsrfTokenValid('edit_image_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        try {
+            if ($project->isActive() || 'ready' === $project->getStatus() || count($project->getClips()) >= 32) {
+                throw new VideoLibraryException('Attends le traitement ou libère un fragment avant d’ajouter une image.');
+            }
+            $solid = $request->request->getBoolean('solid');
+            if ($solid && count($project->getTexts()) >= 30) {
+                throw new VideoLibraryException('Retire un texte avant d’ajouter un carton.');
+            }
+            $file = $request->files->get('image');
+            if (!$solid && !$file instanceof UploadedFile) {
+                throw new VideoLibraryException('Choisis une image.');
+            }
+            $seconds = (float) $request->request->get('seconds', 4);
+            $source = $solid ? $images->solid($user, $request->request->getString('color'), $seconds) : $images->import($user, $file, $seconds);
+            $clips = $project->getClips();
+            $clips[] = ['id' => (int) $source->getId(), 'start' => 0.0, 'end' => $source->getDuration(), 'at' => $project->getDuration(), 'origin' => bin2hex(random_bytes(8))];
+            $texts = $project->getTexts();
+            if ($solid) {
+                $texts[] = ['id' => bin2hex(random_bytes(8)), 'text' => 'Ton texte', 'start' => $project->getDuration(), 'end' => $project->getDuration() + $source->getDuration(), 'x' => 0.5, 'y' => 0.5, 'size' => 6, 'color' => '#ffffff'];
+            }
+            $this->edits->save($project, $project->getTitle(), $project->getFormat(), $clips, false, texts: $texts);
+            $this->addFlash('success', $solid ? 'Carton ajouté. Personnalise son texte et sa durée.' : 'Image ajoutée au montage. Tu peux régler sa durée, son cadrage et ses effets.');
+        } catch (VideoLibraryException $error) {
+            $this->addFlash('error', (isset($source) ? 'L’image reste disponible dans tes vidéos. ' : '').$error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_edit_show', ['id' => $id, 'clip' => isset($source) ? $source->getId() : null], 303);
     }
 
     #[Route('/{id}/ajouter', name: 'app_edit_add', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -168,7 +229,7 @@ final class VideoEditController extends AbstractController
         try {
             $source = $this->videos->owned($request->request->getInt('video'), $user) ?? throw new VideoLibraryException('Cette vidéo est indisponible.');
             $clips = $project->getClips();
-            $clips[] = ['id' => (int) $source->getId(), 'start' => 0.0, 'end' => round($source->getDuration(), 3), 'origin' => bin2hex(random_bytes(8))];
+            $clips[] = ['id' => (int) $source->getId(), 'start' => 0.0, 'end' => round($source->getDuration(), 3), 'origin' => bin2hex(random_bytes(8)), 'at' => $project->getDuration()];
             $this->edits->save($project, $project->getTitle(), $project->getFormat(), $clips, false);
             $this->addFlash('success', 'Clip ajouté au montage.');
         } catch (VideoLibraryException $error) {
@@ -194,7 +255,13 @@ final class VideoEditController extends AbstractController
             $copy->textLayers($project->getTexts());
             $copy->setAudioClips($project->getAudioClips());
             if ($project->getMusicName()) {
-                $copy->music($this->music->duplicate($project->getMusicName()), $project->getMusicTitle());
+                $files = $project->getMusicFiles();
+                foreach ($files as &$file) {
+                    $file['name'] = $this->music->duplicate($file['name']);
+                }unset($file);
+                $copy->setMusicFiles($files);
+                $last = end($files);
+                $copy->music($last['name'], $last['title']);
             }
             $this->em->flush();
 
@@ -218,7 +285,7 @@ final class VideoEditController extends AbstractController
             if (!$request->request->getBoolean('remove') && !$file instanceof UploadedFile) {
                 throw new VideoLibraryException('Choisis une piste audio à importer.');
             }
-            $this->edits->attachMusic($project, $request->request->getBoolean('remove') ? null : $file, $request->request->getBoolean('rights'));
+            $this->edits->attachMusic($project, $request->request->getBoolean('remove') ? null : $file, $request->request->getBoolean('rights'), $request->request->getString('musicId') ?: null);
             $this->addFlash('success', $project->getMusicName() ? 'Piste ajoutée. Ajuste son volume dans le panneau Audio.' : 'Piste musicale retirée.');
         } catch (VideoLibraryException $error) {
             $this->addFlash('error', $error->getMessage());
@@ -227,11 +294,33 @@ final class VideoEditController extends AbstractController
         return $this->redirectToRoute('app_edit_show', ['id' => $id], 303);
     }
 
-    #[Route('/{id}/musique/lecture', name: 'app_edit_music_stream', requirements: ['id' => '\d+'], methods: ['GET', 'HEAD'])]
-    public function musicStream(int $id, #[CurrentUser] User $user): BinaryFileResponse
+    #[Route('/{id}/onde', name: 'app_edit_waveform', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function waveform(int $id, Request $request, #[CurrentUser] User $user, \App\Service\EditWaveforms $waveforms, \App\Service\PrivateVideoStorage $storage): Response
     {
         $project = $this->edits->owned($id, $user) ?? throw $this->createNotFoundException();
-        $name = $project->getMusicName() ?? throw $this->createNotFoundException();
+        if ($request->query->getInt('video')) {
+            $video = $this->videos->owned($request->query->getInt('video'), $user) ?? throw $this->createNotFoundException();
+            $path = $storage->path($video->getStorageName());
+        } else {
+            $track = $project->getMusicFiles()[$request->query->getString('track')] ?? throw $this->createNotFoundException();
+            $path = $this->music->path($track['name']);
+        }
+        try {
+            $state = $waveforms->read($path);
+
+            return $this->json($state, 'pending' === $state['status'] ? 202 : 200, ['Cache-Control' => 'private, no-store']);
+        } catch (VideoLibraryException $error) {
+            return $this->json(['status' => 'unavailable'], 422, ['Cache-Control' => 'private, no-store']);
+        }
+    }
+
+    #[Route('/{id}/musique/lecture', name: 'app_edit_music_stream', requirements: ['id' => '\d+'], methods: ['GET', 'HEAD'])]
+    public function musicStream(int $id, Request $request, #[CurrentUser] User $user): BinaryFileResponse
+    {
+        $project = $this->edits->owned($id, $user) ?? throw $this->createNotFoundException();
+        $track = $request->query->getString('track');
+        $name = '' === $track ? $project->getMusicName() : ($project->getMusicFiles()[$track]['name'] ?? null);
+        $name ?? throw $this->createNotFoundException();
         $path = $this->music->path($name);
         if (!is_file($path)) {
             throw $this->createNotFoundException();

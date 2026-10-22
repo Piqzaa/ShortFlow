@@ -166,3 +166,6 @@ La modification passe de Stimulus au formulaire Symfony, puis au service métier
 Importer une musique, déplacer son début, séparer au curseur puis régler différemment les deux volumes. Détacher le son, déplacer un passage de paroles, annuler/rétablir et rouvrir après sauvegarde. Exporter et écouter le résultat. Après modification des paroles, régénérer les sous-titres : leurs anciens textes sont conservés jusqu’au résultat, mais ne se recalculent pas automatiquement pendant un déplacement audio.
 
 Ce lot conserve un seul fichier musical importé par projet, utilisable en plusieurs fragments, avec plusieurs sons de vidéos. Pas de forme d’onde, fondu, effet sonore, catalogue musical intégré ou enregistrement de voix dans cette livraison. La musique non répétée devient silencieuse après la fin du fichier. Les fichiers sources restent dans la bibliothèque et peuvent être retirés par leur propriétaire ; un son dont la source a disparu bloque la validation avec un message explicite.
+
+
+Suite du 22 octobre : [timeline libre, typographie, effets et médias](montage-timeline-libre.md). Les limites du lot précédent ci-dessus sont historiques.
