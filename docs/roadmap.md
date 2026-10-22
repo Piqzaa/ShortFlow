@@ -4,6 +4,8 @@
 
 **Premier lot Séries livré localement** : configuration privée enregistrée, trois épisodes initiaux, prompts modifiables, images communes selon le modèle et accès BYOK existants. Préparation individuelle liée au moteur IA actuel, coût confirmé séparément, états réels par génération. Aucun lancement automatique. Voir [series-mvp.md](series-mvp.md).
 
+Lot enregistré dans le commit local `8531512`. Rapport de suite, périmètre du prochain lot et critères avant commercialisation : [prochaines-etapes-series.md](prochaines-etapes-series.md).
+
 Prochaines étapes par valeur utilisateur et complexité :
 
 | Priorité | Lot | Valeur utilisateur | Complexité |
