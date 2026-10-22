@@ -1,6 +1,8 @@
 # Roadmap V1 — vision de lancement validée le 15 octobre 2026
 
-## État courant — 21 octobre 2026
+## État courant — 22 octobre 2026
+
+Recentrage validé : fiabilité des publications, puis séries enregistrées avec épisodes préparés à l'avance, génération d'un lot fini, validation manuelle et programmation par épisode. La récurrence entièrement automatique et la mémoire narrative viendront ensuite. Le lot de fiabilisation ajoute les contrôles vidéo communs, la visibilité YouTube effective, des reprises par destination et une file IA/statistiques séparée. Voir [fiabilite-publication.md](fiabilite-publication.md). Gratuit et Creator à 9,99 €/mois restent des hypothèses, sans troisième offre ; quotas par offre et facturation dans leur lot, aucune modification des limites de stockage actuelles.
 
 Le studio IA, l’image vers vidéo et le suivi sont intégrés à la bêta ; catalogue de 54 configurations, essais manuels activés localement et premier essai image réussi confirmé par le propriétaire. Lot de simplification : trois choix Fal, connexion guidée, textes de disponibilité actualisés et recherche privée dans les vidéos. Le catalogue complet reste accessible. Voir [le guide](studio-simple-recherche.md). Premier montage guidé commun aux imports et vidéos IA livré : 1–8 clips, coupes, ordre, aperçu et export local MP4 1080p. « Tes créations » retiré du formulaire Studio ; historique conservé. Voir [montage-guide.md](montage-guide.md). Éditeur visuel, sous-titres locaux modifiables et recette simple Reel intégrés : voir [montage-sous-titres.md](montage-sous-titres.md). Les séries, recettes plus avancées et abonnement restent à construire ; accès publics des plateformes à valider avant commercialisation. Les états datés ci-dessous conservent l’historique des lots et ne remplacent pas ce point courant.
 

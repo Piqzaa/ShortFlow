@@ -1,5 +1,7 @@
 # VydFlow — bêta, studio IA et publication
 
+Fiabilité du 22 octobre : contrôles vidéo communs avant envoi, visibilité YouTube confirmée séparée de la demande, reprise du suivi et nouvelle préparation limitée à une destination en échec. Les générations IA/statistiques sont isolées dans la file `background` et le service `background-worker`. Après mise à jour : appliquer les migrations, vider le cache dev puis relancer `worker`, `background-worker` et `edit-worker` avec `docker compose up -d --no-deps --force-recreate worker background-worker edit-worker`. Faire cette mise à jour hors traitement actif ; ne pas vider les files. Guide, limites et pédagogie : [docs/fiabilite-publication.md](docs/fiabilite-publication.md).
+
 Sécurité PHP : base Docker fixée à PHP 8.4.27 pour corriger CVE-2026-109618 et CVE-2026-109619. Après récupération du changement, reconstruire les deux images et recréer les quatre services PHP ; un redémarrage seul conserve l'ancienne image. Procédure et explications : [docs/securite-php-2026-10.md](docs/securite-php-2026-10.md).
 
 Navigation locale : `APP_DEBUG=0` dans `.env.local` évite les coûteuses vérifications de fichiers Windows/Docker pour utiliser le studio ; remettre `1` pour déboguer. Après modification des routes/services/configuration sans debug : `docker compose exec php php bin/console cache:clear --env=dev --no-debug`. Les templates restent actualisés en dev. Mesures et aperçu local avant import : [docs/performance-import.md](docs/performance-import.md).
@@ -39,10 +41,11 @@ Créer .env.local avant le premier démarrage sur un nouveau clone : APP_SECRET 
 Git transfère le code et les migrations, pas la base, les vidéos importées ni `.env.local`. Après un pull :
 
 ```sh
-docker compose up -d
+docker compose stop worker background-worker edit-worker
+docker compose up -d database mailpit php
 docker compose exec php composer db:sync
 docker compose --profile tools run --rm --no-deps node
-docker compose restart worker
+docker compose up -d --no-deps --force-recreate worker background-worker edit-worker
 ```
 
 Si `composer.lock` a changé, réinstaller d'abord les dépendances comme indiqué ci-dessous. Si le Dockerfile a changé, reconstruire l'image PHP. Si les assets ont changé, relancer le build frontend.
@@ -84,7 +87,7 @@ La base PostgreSQL et les vidéos privées ne sont pas dans ces deux volumes : l
 
 Mailpit VydFlow utilise désormais http://localhost:8026 pour cohabiter avec un autre projet qui occupe déjà le port 8025 ; SMTP interne reste mailpit:1025. Le serveur VydFlow reste sur localhost:8000. Les ports restent exclusivement liés à loopback.
 
-Le service `worker` démarre avec `docker compose up -d` et traite automatiquement les publications confirmées ; aucun terminal de consommation séparé n’est nécessaire. Il attend les dépendances Composer et la table Messenger avant de consommer, puis Docker le relance après une sortie. Après un changement de code PHP ou de secrets dans .env.local, exécuter `docker compose restart worker` pour que ce processus permanent les recharge. État : `docker compose ps` ; diagnostic : `docker compose logs --tail 30 worker`. Le worker utilise exclusivement la base dev ; les tests gardent leur base séparée.
+Les services `worker` et `background-worker` démarrent avec `docker compose up -d` : le premier traite les publications confirmées, le second les générations IA et statistiques ; `edit-worker` garde les montages. Aucun terminal de consommation séparé n’est nécessaire. Ils attendent les dépendances Composer et la table Messenger avant de consommer, puis Docker les relance après une sortie. Après un changement PHP ou de secrets dans `.env.local`, exécuter `docker compose restart worker background-worker edit-worker`. État : `docker compose ps` ; diagnostic : `docker compose logs --tail 30 worker background-worker`. Ces consommateurs utilisent exclusivement la base dev ; les tests gardent leur base séparée.
 
 Ouvrir http://localhost:8000. Les interfaces HTTP de l’application et de Mailpit sont exposées uniquement sur loopback. PostgreSQL et SMTP restent sur le réseau Compose. Identifiants Compose strictement locaux. Arrêter sans supprimer les données : docker compose stop. Ne pas exécuter down -v si les données sont à conserver.
 
@@ -147,7 +150,7 @@ Un controller coordonne une requête ; un service porte un comportement réutili
 ## Limites avant production
 Le serveur PHP intégré et le debug sont locaux. Ne pas publier cette configuration. La confidentialité doit être finalisée (exploitant, contact, conservation) avant collecte publique. Aucun email de liste d’attente ni double opt-in de celle-ci ; les emails de compte restent dans Mailpit local. Le limiteur local est destiné à une instance et ne remplace pas une protection réseau de production. La landing inclut quatre montages de démonstration originaux, six visuels et six écrans narratifs : voir docs/landing-experience.md. Les licences des polices libres sont fournies dans node_modules/@fontsource ; aucun média de tiers utilisé.
 
-Publication YouTube disponible avec worker Docker automatique : docs/youtube.md. Lot courant autorisé : connexion Instagram directe, reconnexion et déconnexion, avec configuration privée et HTTP simulé en tests ; guide pédagogique dans docs/instagram.md. Le premier essai Instagram réel attend l’accès développeur Meta et ses identifiants. Le parcours Reels (préparation, worker, suivi et badges) est implémenté avec API simulée : docs/instagram-publication.md. Son essai réel attend Meta et une adresse HTTPS adaptée. TikTok possède également son parcours local avec API simulée : voir docs/tiktok.md. Les accès développeur, HTTPS vérifié et essais réels Instagram/TikTok restent à préparer. Calendrier et IA restent à construire. La roadmap de référence est docs/roadmap.md ; l’ancien prompt V1 est archivé. Les générations seront payées directement au fournisseur, aucun wallet VydFlow aujourd’hui.
+Publication YouTube, Instagram Reels et TikTok implémentée avec traitement asynchrone et tests HTTP simulés : [YouTube](docs/youtube.md), [Instagram](docs/instagram-publication.md), [TikTok](docs/tiktok.md). Des essais réels ont réussi sur les comptes du propriétaire ; TikTok reste en Sandbox. Ces essais ne valident pas l'accès commercial pour tous les utilisateurs. Calendrier, IA BYOK et montage sont intégrés ; séries et abonnement restent à construire. La roadmap de référence est [docs/roadmap.md](docs/roadmap.md) ; l'ancien prompt V1 est archivé. Les générations sont payées directement au fournisseur, sans wallet VydFlow. Les accès et essais supplémentaires restent séparément autorisés.
 
 Documents légaux locaux : /informations-legales. Coordonnées publiques centralisées dans config/packages/twig.yaml. Base de travail personnalisée micro-entreprise B2C/B2B, non finalisée avant lancement ; audit et points restants dans docs/legal-audit.md.
 
