@@ -52,7 +52,19 @@ final class EditTimeline
             if ($clip['at'] - $cursor > 0.0005) {
                 $result[] = ['gap' => $clip['at'] - $cursor, 'at' => $cursor];
             }
-            $result[] = $clip;
+            $last = array_key_last($result);
+            $previous = null === $last ? null : $result[$last];
+            $look = EditClipStyle::validate($clip['look'] ?? []);
+            $previousLook = $previous && isset($previous['id']) ? EditClipStyle::validate($previous['look'] ?? []) : [];
+            $innerFadesOff = $previousLook && 0.0 === $previousLook['fadeOut'] && 0.0 === $look['fadeIn'];
+            $sameLook = $previousLook && [] === array_diff_assoc(array_diff_key($previousLook, ['fadeIn' => true, 'fadeOut' => true]), $look);
+            if ($previous && isset($previous['id']) && $previous['id'] === $clip['id'] && abs($cursor - $clip['at']) < 0.00001 && abs($previous['end'] - $clip['start']) < 0.00001 && $previous['rate'] === $clip['rate'] && $innerFadesOff && $sameLook) {
+                // A cut alone must not introduce an encoder boundary or audio priming.
+                $result[$last]['end'] = $clip['end'];
+                $result[$last]['look'] = array_replace($previousLook, ['fadeOut' => $look['fadeOut']]);
+            } else {
+                $result[] = $clip;
+            }
             $cursor = $clip['at'] + ($clip['end'] - $clip['start']) / $clip['rate'];
         }
 

@@ -25,6 +25,21 @@ final class EditTimelineTest extends TestCase
         self::assertEquals(1.75, $captions[0]['end']);
     }
 
+    public function testAdjacentCutsCoalesceOnlyWhenTheirPlaybackIsIdentical(): void
+    {
+        $clips = [['id' => 1, 'start' => 0, 'end' => 0.4, 'at' => 0], ['id' => 1, 'start' => 0.4, 'end' => 1, 'at' => 0.4]];
+        $segments = EditTimeline::segments($clips);
+        self::assertCount(1, $segments);
+        self::assertEquals(1, $segments[0]['end']);
+        $clips[1]['look'] = ['filter' => 'bw'];
+        self::assertCount(2, EditTimeline::segments($clips));
+        $clips[1]['look'] = ['fadeIn' => 0.2];
+        self::assertCount(2, EditTimeline::segments($clips));
+        $clips[1]['look'] = [];
+        $clips[1]['at'] = 0.5;
+        self::assertCount(3, EditTimeline::segments($clips));
+    }
+
     public function testTypographyAcceptsCustomColorButRejectsUntrustedFontInstructions(): void
     {
         $style = EditTypography::validate(['font' => 'serif', 'color' => '#12AB34', 'box' => '1', 'align' => 'left']);

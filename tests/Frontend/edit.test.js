@@ -177,8 +177,8 @@ test('trim slider cannot move the start beyond the selected end', () => {
 test('split fragments sharing one source remain independently selectable and reorderable', () => {
   const c=editor();const [first,second]=c.clipTargets;
   first.dataset={id:'42',key:'part-a'};second.dataset={id:'42',key:'part-b'};second.nextSibling=null;
-  let selected;c.selectRow=row=>{selected=row;};c.showClipPanel=()=>{};
-  c.choose({currentTarget:{dataset:{clipId:'part-b'}}});assert.equal(selected,second);
+  let jumped=false;c.selectRow=()=>{jumped=true;};c.paint=()=>{};c.showClipPanel=()=>{};
+  c.choose({currentTarget:{dataset:{clipId:'part-b'}}});assert.equal(c.editingRow(),second);assert.equal(jumped,false);
   c.draggedId='part-a';c.listTarget={insertBefore(row,before){c.clipTargets.splice(c.clipTargets.indexOf(row),1);if(before===null)c.clipTargets.push(row);else c.clipTargets.splice(c.clipTargets.indexOf(before),0,row);}};
   c.drop({preventDefault(){},target:{closest:()=>({dataset:{clipId:'part-b'}})}});
   assert.equal(c.clipTargets[0],second);assert.equal(c.bounds(first).start,1);
@@ -285,4 +285,22 @@ test('selecting a text block preserves an existing cursor inside that block',()=
 test('short accelerated fragments retain their exact timeline duration',()=>{
   const c=editor(),row=c.clipTargets[0];row.nodes['[data-edit-start]'].value=0;row.nodes['[data-edit-end]'].value=.1;row.nodes['[data-edit-rate]']={value:4};
   assert.equal(c.clipLength(row),.025);
+});
+
+
+test('playback crosses an untouched cut in the same source without seeking or pausing',()=>{
+ const c=editor(),[first,second]=c.clipTargets;
+ first.dataset={id:'1',key:'a'};second.dataset={id:'1',key:'b'};
+ first.nodes['[data-edit-start]'].value=0;first.nodes['[data-edit-end]'].value=1;second.nodes['[data-edit-start]'].value=1;second.nodes['[data-edit-end]'].value=2;
+ first.nodes['[data-edit-at]']={value:0};second.nodes['[data-edit-at]']={value:1};
+ c.selectedRow=first;c.selectedClipKey='a';c.playing=true;c.paint=()=>{};c.playheadTarget={max:2};let sought=false;c.jump=()=>{sought=true;};c.stageEnd();
+ assert.equal(c.selectedRow,second);assert.equal(c.selectedClipKey,'a');assert.equal(sought,false);assert.equal(c.playing,true);
+});
+
+test('the split control names its target and stays disabled outside that target',()=>{
+ const c=editor(),row=layerRow({id:'title',text:'Mon titre',start:1,end:2},'text');
+ c.hasSplitButtonTarget=true;c.hasSelectionLabelTarget=true;c.splitButtonTarget={};c.selectionLabelTarget={};c.selectedLayer={kind:'text',key:'title'};c.layerRow=()=>row;
+ c.clipTargets=[];c.timelineTarget={querySelectorAll:()=>[]};c.element={querySelectorAll:()=>[],querySelector:()=>null};c.playheadTarget={value:1.5};
+ c.updateSelectionUI();assert.equal(c.splitButtonTarget.textContent,'✂ Couper le texte');assert.equal(c.splitButtonTarget.disabled,false);assert.equal(c.selectionLabelTarget.textContent,'Texte · Mon titre');
+ c.playheadTarget.value=2.5;c.updateSelectionUI();assert.equal(c.splitButtonTarget.disabled,true);
 });

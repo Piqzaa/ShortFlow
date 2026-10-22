@@ -55,7 +55,7 @@ final class VideoEditRenderer
                 }
                 $fit = $project->getSettings()['fit'];
                 $frame = EditClipStyle::filters($clip, $width, $height, $fit, $project->getSettings()['background'] ?? '#000000');
-                array_push($command, '-map', '0:v:0', '-map', $hasAudio ? '0:a:0' : '1:a:0', '-t', sprintf('%.6F', ($clip['end'] - $clip['start']) / $clip['rate']), '-vf', 'setpts=PTS/'.sprintf('%.4F', $clip['rate']).','.$frame.',setsar=1,fps=30', '-af', EditTimeline::tempo($clip['rate']).EditClipStyle::audioFades($clip).',aresample=48000,apad', '-c:v', 'libx264', '-threads', '2', '-preset', 'veryfast', '-crf', '23', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '48000', '-ac', '2', '-b:a', '128k', '-map_metadata', '-1', '-map_chapters', '-1', '-fs', (string) (VideoLibrary::MAX_BYTES + 1), 'clip-'.$index.'.mp4');
+                array_push($command, '-map', '0:v:0', '-map', $hasAudio ? '0:a:0' : '1:a:0', '-t', sprintf('%.6F', ($clip['end'] - $clip['start']) / $clip['rate']), '-vf', 'setpts=(PTS-STARTPTS)/'.sprintf('%.4F', $clip['rate']).','.$frame.',setsar=1,fps=30', '-af', EditTimeline::tempo($clip['rate']).EditClipStyle::audioFades($clip).',aresample=48000,apad', '-c:v', 'libx264', '-threads', '2', '-preset', 'veryfast', '-crf', '23', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '48000', '-ac', '2', '-b:a', '128k', '-map_metadata', '-1', '-map_chapters', '-1', '-fs', (string) (VideoLibrary::MAX_BYTES + 1), 'clip-'.$index.'.mp4');
                 $this->run($command, $work, $deadline);
                 $list .= 'file clip-'.$index.".mp4\n";
             }

@@ -139,6 +139,34 @@ final class VideoEditTest extends WebTestCase
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
+    public function testSplittingAnUnchangedMovingShotPreservesEveryDecodedFrameAndAudio(): void
+    {
+        $base = tempnam(sys_get_temp_dir(), 'continuous-');
+        $file = $base.'.mp4';
+        (new Process(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=s=96x64:r=30:d=1', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000:duration=1', '-c:v', 'libx264', '-threads', '1', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-shortest', $file]))->mustRun();
+        try {
+            $source = static::getContainer()->get(VideoLibrary::class)->import($this->owner, new UploadedFile($file, 'motion.mp4', null, null, true), 'Plan en mouvement');
+            $decoded = [];
+            foreach ([false, true] as $split) {
+                $project = $this->edits()->create($this->owner, [$source->getId()]);
+                $clips = $split ? [['id' => $source->getId(), 'start' => 0, 'end' => 0.4, 'at' => 0], ['id' => $source->getId(), 'start' => 0.4, 'end' => 1, 'at' => 0.4]] : [['id' => $source->getId(), 'start' => 0, 'end' => 1, 'at' => 0]];
+                $this->edits()->save($project, 'Continuité', '1:1', $clips, true);
+                $this->edits()->process($project->getId());
+                self::assertSame('ready', $project->getStatus(), (string) $project->getIssue());
+                $path = static::getContainer()->get(PrivateVideoStorage::class)->path($project->getOutput()->getStorageName());
+                $frames = new Process(['ffmpeg', '-v', 'error', '-i', $path, '-map', '0:v:0', '-f', 'framemd5', '-']);
+                $frames->mustRun();
+                $audio = new Process(['ffmpeg', '-v', 'error', '-i', $path, '-map', '0:a:0', '-f', 's16le', '-']);
+                $audio->mustRun();
+                $decoded[] = [$frames->getOutput(), hash('sha256', $audio->getOutput())];
+            }
+            self::assertSame($decoded[0], $decoded[1], 'Une simple coupe doit préserver toutes les images et les échantillons audio.');
+        } finally {
+            @unlink($file);
+            @unlink($base);
+        }
+    }
+
     public function testFreeTimelineExportsGapsSpeedAndPerClipFilter(): void
     {
         $project = $this->project();

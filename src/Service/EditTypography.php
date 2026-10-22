@@ -4,8 +4,8 @@ namespace App\Service;
 
 final class EditTypography
 {
-    public const FONTS = ['anton' => 'Anton', 'bebas' => 'Bebas Neue', 'oswald' => 'Oswald', 'sans' => 'DejaVu Sans', 'sans-bold' => 'DejaVu Sans', 'serif' => 'DejaVu Serif', 'serif-bold' => 'DejaVu Serif', 'mono' => 'DejaVu Sans Mono', 'mono-bold' => 'DejaVu Sans Mono'];
-    public const DEFAULTS = ['font' => 'sans-bold', 'bold' => false, 'italic' => false, 'align' => 'center', 'outline' => 2, 'shadow' => 1, 'box' => false, 'background' => '#000000', 'opacity' => 100, 'width' => 80, 'color' => '#ffffff'];
+    public const FONTS = ['inter' => 'Inter', 'montserrat' => 'Montserrat', 'poppins' => 'Poppins', 'roboto' => 'Roboto', 'lato' => 'Lato', 'opensans' => 'Open Sans', 'anton' => 'Anton', 'bebas' => 'Bebas Neue', 'oswald' => 'Oswald', 'sans' => 'DejaVu Sans', 'sans-bold' => 'DejaVu Sans', 'serif' => 'DejaVu Serif', 'serif-bold' => 'DejaVu Serif', 'mono' => 'DejaVu Sans Mono', 'mono-bold' => 'DejaVu Sans Mono'];
+    public const DEFAULTS = ['font' => 'sans-bold', 'bold' => false, 'italic' => false, 'align' => 'center', 'outline' => 0, 'shadow' => 0, 'box' => false, 'background' => '#000000', 'opacity' => 100, 'width' => 80, 'color' => '#ffffff'];
 
     /** @param array<string, mixed> $input @return array<string, mixed> */
     public static function validate(array $input): array
