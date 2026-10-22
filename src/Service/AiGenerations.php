@@ -116,7 +116,7 @@ final class AiGenerations
         if (!$job || !$this->enabled) {
             return;
         }
-        $this->lock->run((int) $job->getOwner()->getId(), function () use ($id): void {
+        $this->lock->runGeneration((int) $job->getOwner()->getId(), function () use ($id): void {
             $job = $this->em->find(AiGeneration::class, $id);
             if (!$job) {
                 return;

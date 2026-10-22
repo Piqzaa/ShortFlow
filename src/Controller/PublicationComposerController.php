@@ -10,6 +10,7 @@ use App\Repository\VideoAssetRepository;
 use App\Service\MultiNetworkPublishing;
 use App\Service\PublicationDrafts;
 use App\Service\PublicationException;
+use App\Service\PublicationRetry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,11 +22,24 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class PublicationComposerController extends AbstractController
 {
     #[Route('/studio/composer', name: 'app_composer_start', methods: ['GET'])]
-    public function start(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, PublicationDraftRepository $drafts): Response
+    public function start(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, PublicationDraftRepository $drafts, PublicationRetry $retry, MultiNetworkPublishing $publishing): Response
     {
         $stored = null;
+        $retryNetwork = $request->query->getString('retryNetwork');
+        $retryContent = [];
         $ids = [];
-        if ($request->query->has('draft')) {
+        if ($retryNetwork) {
+            try {
+                $preparation = $retry->preparation($user, $retryNetwork, $request->query->getInt('retryJob'));
+            } catch (PublicationException $error) {
+                $this->addFlash('error', $error->getMessage());
+
+                return $this->redirectToRoute('app_publications', status: 303);
+            }
+            $ids = [(int) $preparation['video']->getId()];
+            $retryContent = $preparation['content'];
+            $this->addFlash('success', 'Nouvelle préparation pour '.MultiNetworkPublishing::LABELS[$retryNetwork].' uniquement. Vérifie la vidéo et les réglages avant de confirmer un nouvel envoi.');
+        } elseif ($request->query->has('draft')) {
             $stored = $drafts->owned($request->query->getInt('draft'), $user) ?? throw $this->createNotFoundException();
             if ('draft' !== $stored->getStatus()) {
                 return $this->redirectToRoute('app_draft', ['id' => $stored->getId()], 303);
@@ -64,6 +78,12 @@ final class PublicationComposerController extends AbstractController
         }
         $key = bin2hex(random_bytes(24));
         $state = ['owner' => $user->getId(), 'ids' => $ids, 'networks' => $stored?->getNetworks() ?? [], 'accounts' => $stored?->getAccounts() ?? [], 'content' => $stored?->content() ?? [], 'title' => $stored?->getTitle() ?? '', 'revision' => bin2hex(random_bytes(16)), 'expires' => time() + 3600, 'persistentId' => $stored?->getId(), 'persistentRevision' => $stored?->getRevision(), 'mode' => ($stored?->getScheduledAt() || $date) ? 'scheduled' : 'immediate', 'local' => $stored?->getLocalTime() ?? ($date ? $date.'T12:00' : null), 'timezone' => $stored?->getTimezone() ?? $zone];
+        if ($retryNetwork) {
+            $state['content'] = $retryContent;
+            $state['networks'] = [$retryNetwork];
+            // Recheck the current destination instead of copying the old account identity.
+            $state['accounts'] = [$retryNetwork => $publishing->destinations($user)[$retryNetwork]['account']];
+        }
         $states = $request->getSession()->get('composer_workspaces', []);
         foreach ($states as $oldKey => $old) {
             if (($old['expires'] ?? 0) < time()) {

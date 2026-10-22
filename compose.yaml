@@ -30,6 +30,24 @@ services:
         condition: service_started
       database:
         condition: service_healthy
+  background-worker:
+    image: vydflow-php
+    pull_policy: never
+    init: true
+    command: ["sh", "/app/docker/php/worker.sh"]
+    restart: unless-stopped
+    stop_grace_period: 5m
+    volumes: *app_volumes
+    environment:
+      <<: *app_environment
+      APP_ENV: dev
+      APP_DEBUG: "0"
+      MESSENGER_QUEUE: background
+    depends_on:
+      php:
+        condition: service_started
+      database:
+        condition: service_healthy
   mailpit:
     image: axllent/mailpit:v1.27.8
     ports: ["127.0.0.1:8026:8025"]

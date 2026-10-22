@@ -14,7 +14,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class InstagramPublishing
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private InstagramApi $api, private InstagramMediaLink $links)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private InstagramApi $api, private InstagramMediaLink $links, private PublicationVideoCheck $videoCheck)
     {
     }
 
@@ -32,18 +32,7 @@ final class InstagramPublishing
 
     public function validateVideo(VideoAsset $video): void
     {
-        if ('video/mp4' !== $video->getMimeType() || 'h264' !== $video->getCodec()) {
-            $format = match ($video->getMimeType()) {
-                'video/webm' => 'WebM',
-                'video/mp4' => 'MP4',
-                default => 'format non pris en charge',
-            };
-            $codec = 'h264' === $video->getCodec() ? 'H.264' : strtoupper($video->getCodec());
-            throw new PublicationException('Format incompatible avec Instagram : '.$format.' / '.$codec.'. Exporte cette vidéo en MP4 / H.264, puis importe la copie dans la bibliothèque. La vidéo d’origine peut être conservée.');
-        }
-        if ($video->getDuration() < 3 || $video->getWidth() > 1920) {
-            throw new PublicationException('Pour Instagram, choisis un MP4 H.264 de 3 secondes minimum et de 1920 pixels de largeur maximum.');
-        }
+        $this->videoCheck->validate($video, 'instagram');
     }
 
     /** @param list<int> $ids @param array<int|string, array<string, mixed>> $rows */
@@ -84,7 +73,7 @@ final class InstagramPublishing
         $this->lock->run((int) $job->getOwner()->getId(), function () use ($job): void {
             $this->em->wrapInTransaction(function () use ($job): void {
                 $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
-                if ('paused' !== $job->getStatus()) {
+                if ('paused' !== $job->getStatus() && !('review' === $job->getStatus() && $job->getContainerId() && $job->isPublishAttempted())) {
                     return;
                 }
                 if (!$this->ready($job->getOwner()) || $this->connection($job->getOwner())?->getInstagramId() !== $job->getInstagramId()) {

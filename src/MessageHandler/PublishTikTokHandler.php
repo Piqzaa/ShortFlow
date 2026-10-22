@@ -4,6 +4,7 @@ namespace App\MessageHandler;
 
 use App\Entity\TikTokPublication;
 use App\Message\PublishTikTok;
+use App\Service\PublicationException;
 use App\Service\PublicationLock;
 use App\Service\TikTokApi;
 use App\Service\TikTokMediaLink;
@@ -62,7 +63,14 @@ final class PublishTikTokHandler
                         $job->change('failed', 'La préparation a expiré avant l’envoi.');
                     } elseif ($this->limiter->create('tiktok-'.$job->getOwner()->getId())->consume()->isAccepted()) {
                         $creator = $this->api->creator($connection);
-                        $this->publishing->validateVideo($job->getSource(), $creator['max_video_post_duration_sec']);
+                        try {
+                            $this->publishing->validateVideo($job->getSource(), $creator['max_video_post_duration_sec']);
+                        } catch (PublicationException $error) {
+                            $job->change('failed', $error->getMessage());
+                            $this->em->flush();
+
+                            return;
+                        }
                         $options = $job->getOptions();
                         if (!in_array($options['privacy_level'], $creator['privacy_level_options'], true)) {
                             throw new \RuntimeException();

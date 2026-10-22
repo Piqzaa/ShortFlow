@@ -15,7 +15,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class TikTokPublishing
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private TikTokApi $api, private TikTokMediaLink $links)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private TikTokApi $api, private TikTokMediaLink $links, private PublicationVideoCheck $videoCheck)
     {
     }
 
@@ -47,9 +47,7 @@ final class TikTokPublishing
 
     public function validateVideo(VideoAsset $video, int $maxDuration = 600): void
     {
-        if ('video/mp4' !== $video->getMimeType() || 'h264' !== $video->getCodec() || $video->getDuration() < 3 || $video->getDuration() > $maxDuration || min($video->getWidth(), $video->getHeight()) < 360 || max($video->getWidth(), $video->getHeight()) > 4096 || $video->getByteSize() > 4 * 1024 * 1024 * 1024) {
-            throw new PublicationException('Pour TikTok : MP4 H.264, 3 à '.$maxDuration.' secondes, dimensions de 360 à 4096 pixels.');
-        }
+        $this->videoCheck->validate($video, 'tiktok', $maxDuration);
     }
 
     /** @param array<string, mixed> $row @param array<string, mixed> $creator @return array<string, mixed> */
@@ -120,7 +118,7 @@ final class TikTokPublishing
         $this->lock->run((int) $job->getOwner()->getId(), function () use ($job): void {
             $this->em->wrapInTransaction(function () use ($job): void {
                 $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
-                if ('paused' !== $job->getStatus()) {
+                if ('paused' !== $job->getStatus() && !('review' === $job->getStatus() && $job->getPublishId())) {
                     return;
                 }
                 if (!$this->ready($job->getOwner()) || $this->connection($job->getOwner())?->getOpenId() !== $job->getOpenId()) {

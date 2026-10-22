@@ -72,9 +72,19 @@ final class PublicationController extends AbstractController
         }
         $connection = $publishing->connection($user);
         $ready = $api->isReady() && null !== $connection;
+        $issues = [];
+        foreach ($selected as $video) {
+            try {
+                $publishing->validateVideo($video);
+            } catch (PublicationException $error) {
+                $issues[] = $video->getTitle().' : '.$error->getMessage();
+            }
+        }
         $form = $this->createForm(YouTubePublishType::class, $data, ['videos' => $selected, 'draft_key' => $draft['key']])->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            if (!$ready) {
+            if ($issues) {
+                $form->addError(new FormError(implode(' ', $issues)));
+            } elseif (!$ready) {
                 $form->addError(new FormError('Connecte ta chaîne YouTube avant de publier.'));
             } elseif ($draft['channel'] !== $connection->getChannelId()) {
                 $form->addError(new FormError('La chaîne a changé. Recharge la préparation avant de confirmer.'));
@@ -93,7 +103,7 @@ final class PublicationController extends AbstractController
             }
         }
 
-        return $this->page('publication/prepare.html.twig', ['form' => $form, 'videos' => $selected, 'connection' => $connection, 'ready' => $ready], $form->isSubmitted() ? 422 : 200);
+        return $this->page('publication/prepare.html.twig', ['form' => $form, 'videos' => $selected, 'connection' => $connection, 'ready' => $ready, 'issues' => $issues], $form->isSubmitted() ? 422 : 200);
     }
 
     #[Route('/{id}/reprendre', name: 'app_publication_resume', requirements: ['id' => '\d+'], methods: ['POST'])]

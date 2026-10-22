@@ -5,6 +5,7 @@ namespace App\MessageHandler;
 use App\Entity\YouTubePublication;
 use App\Message\PublishYouTube;
 use App\Service\PrivateVideoStorage;
+use App\Service\PublicationException;
 use App\Service\PublicationLock;
 use App\Service\TokenVault;
 use App\Service\YouTubeApi;
@@ -56,15 +57,15 @@ final class PublishYouTubeHandler
 
             return;
         }
-        $access = $this->api->access($connection);
         if ($job->getRemoteId()) {
+            $access = $this->api->access($connection);
             $item = $this->api->processing($access, $job->getRemoteId());
             $processing = $item['processingDetails']['processingStatus'] ?? null;
             $upload = $item['status']['uploadStatus'] ?? null;
-            if ('succeeded' === $processing || 'processed' === $upload) {
-                $job->change('published');
-            } elseif (in_array($processing, ['failed', 'terminated'], true) || in_array($upload, ['failed', 'rejected', 'deleted'], true)) {
+            if (in_array($processing, ['failed', 'terminated'], true) || in_array($upload, ['failed', 'rejected', 'deleted'], true)) {
                 $job->change('failed', 'YouTube n’a pas accepté cette vidéo. Consulte YouTube Studio avant de préparer un nouvel envoi.');
+            } elseif ('succeeded' === $processing || 'processed' === $upload) {
+                $job->complete($item['status']['privacyStatus'] ?? null);
             } elseif ($job->getUpdatedAt() < new \DateTimeImmutable('-24 hours')) {
                 $job->change('paused', 'Le traitement prend plus de temps que prévu. Vérifie YouTube Studio puis reprends le suivi.');
             }
@@ -84,12 +85,20 @@ final class PublishYouTubeHandler
             return;
         }
         if (!$job->getUploadSession()) {
-            $session = $this->api->start($job, $access);
+            try {
+                $this->publishing->validateVideo($video);
+            } catch (PublicationException $error) {
+                $job->change('failed', $error->getMessage());
+
+                return;
+            }
+            $session = $this->api->start($job, $this->api->access($connection));
             $job->session($this->vault->encrypt($session));
             // Persist the resumable session BEFORE any video bytes leave the server.
             $this->em->flush();
         }
         $session = $this->vault->decrypt((string) $job->getUploadSession());
+        $access = $this->api->access($connection);
         $result = $this->api->probe($session, $access, $video->getByteSize());
         if (!$result['expired'] && !$result['id'] && $result['offset'] < $video->getByteSize()) {
             $result = $this->api->chunk($session, $access, $path, $result['offset'], $video->getByteSize(), $video->getMimeType());

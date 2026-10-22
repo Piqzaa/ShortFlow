@@ -2,6 +2,16 @@ framework:
     messenger:
         failure_transport: publication_failures
         transports:
+            background:
+                dsn: 'doctrine://default'
+                options:
+                    queue_name: background
+                    auto_setup: false
+                    redeliver_timeout: 300
+                    use_notify: false
+                retry_strategy:
+                    max_retries: 5
+                    delay: 30000
             video_edits:
                 dsn: 'doctrine://default'
                 options:
@@ -32,9 +42,9 @@ framework:
             App\Message\BuildEditWaveform: video_edits
             App\Message\TranscribeVideoEdit: video_edits
             App\Message\RenderVideoEdit: video_edits
-            App\Message\GenerateAiVideo: publications
+            App\Message\GenerateAiVideo: background
             App\Message\DispatchScheduledPublication: publications
             App\Message\PublishYouTube: publications
             App\Message\PublishInstagram: publications
             App\Message\PublishTikTok: publications
-            App\Message\RefreshPublicationStatistics: publications
+            App\Message\RefreshPublicationStatistics: background

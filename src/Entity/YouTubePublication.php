@@ -28,6 +28,8 @@ class YouTubePublication
     private string $description;
     #[ORM\Column(length: 10)]
     private string $privacy;
+    #[ORM\Column(length: 10, nullable: true)]
+    private ?string $effectivePrivacy = null;
     #[ORM\Column]
     private bool $madeForKids;
     #[ORM\Column]
@@ -102,6 +104,18 @@ class YouTubePublication
     public function getPrivacy(): string
     {
         return $this->privacy;
+    }
+
+    public function getEffectivePrivacy(): ?string
+    {
+        return $this->effectivePrivacy;
+    }
+
+    public function complete(?string $privacy): void
+    {
+        $this->effectivePrivacy = in_array($privacy, ['private', 'unlisted', 'public'], true) ? $privacy : null;
+        $notice = null === $this->effectivePrivacy ? 'Traitement confirmé par YouTube. La visibilité effective reste à vérifier dans YouTube Studio.' : ($this->privacy !== $this->effectivePrivacy ? 'YouTube confirme une visibilité différente de celle demandée. Vérifie YouTube Studio avant de modifier la visibilité ; aucun nouvel envoi nécessaire.' : null);
+        $this->change('published', $notice);
     }
 
     public function isMadeForKids(): bool

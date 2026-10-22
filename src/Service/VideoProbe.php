@@ -7,10 +7,10 @@ use Symfony\Component\Process\Process;
 
 final class VideoProbe
 {
-    /** @return array{mime: string, extension: string, duration: float, width: int, height: int, codec: string} */
+    /** @return array{mime: string, extension: string, duration: float, width: int, height: int, codec: string, technical: array<string, mixed>} */
     public function inspect(UploadedFile $file): array
     {
-        $process = new Process(['ffprobe', '-v', 'error', '-max_alloc', '33554432', '-protocol_whitelist', 'file', '-format_whitelist', 'mov,matroska,webm', '-enable_drefs', '0', '-probesize', '5000000', '-analyzeduration', '5000000', '-show_entries', 'format=format_name,duration:stream=codec_type,codec_name,width,height,pix_fmt:stream_disposition=attached_pic', '-of', 'json', '-i', $file->getPathname()]);
+        $process = new Process(['ffprobe', '-v', 'error', '-max_alloc', '33554432', '-protocol_whitelist', 'file', '-format_whitelist', 'mov,matroska,webm', '-enable_drefs', '0', '-probesize', '5000000', '-analyzeduration', '5000000', '-show_entries', 'format=format_name,duration:stream=codec_type,codec_name,width,height,pix_fmt,avg_frame_rate,bit_rate,sample_rate,channels,sample_aspect_ratio,field_order:stream_tags=rotate:stream_side_data=rotation:stream_disposition=attached_pic', '-of', 'json', '-i', $file->getPathname()]);
         $process->setTimeout(10);
         try {
             $process->mustRun();
@@ -44,6 +44,35 @@ final class VideoProbe
             throw new VideoLibraryException('Limites de la bêta : 3 minutes maximum, dimensions de 2 à 3 840 pixels par côté.');
         }
 
-        return ['mime' => $mp4 ? 'video/mp4' : 'video/webm', 'extension' => $mp4 ? 'mp4' : 'webm', 'duration' => $duration, 'width' => $width, 'height' => $height, 'codec' => $codec];
+        $rotation = (float) ($video['tags']['rotate'] ?? 0);
+        foreach ($video['side_data_list'] ?? [] as $sideData) {
+            if (isset($sideData['rotation'])) {
+                $rotation = (float) $sideData['rotation'];
+                break;
+            }
+        }
+        $technical = [
+            'fps' => $this->fraction($video['avg_frame_rate'] ?? '', '/'),
+            'videoBitrate' => isset($video['bit_rate']) && is_numeric($video['bit_rate']) ? (int) $video['bit_rate'] : null,
+            'rotation' => $rotation,
+            'pixelRatio' => $this->fraction($video['sample_aspect_ratio'] ?? '', ':'),
+            'interlaced' => in_array($video['field_order'] ?? '', ['tt', 'bb', 'tb', 'bt'], true),
+            'audioCodec' => $audio[0]['codec_name'] ?? null,
+            'audioSampleRate' => isset($audio[0]['sample_rate']) ? (int) $audio[0]['sample_rate'] : null,
+            'audioChannels' => $audio[0]['channels'] ?? null,
+        ];
+
+        return ['mime' => $mp4 ? 'video/mp4' : 'video/webm', 'extension' => $mp4 ? 'mp4' : 'webm', 'duration' => $duration, 'width' => $width, 'height' => $height, 'codec' => $codec, 'technical' => $technical];
+    }
+
+    private function fraction(string $value, string $separator): ?float
+    {
+        $parts = explode($separator, $value);
+        if (2 !== count($parts) || !is_numeric($parts[0]) || !is_numeric($parts[1]) || (float) $parts[1] <= 0) {
+            return null;
+        }
+        $result = (float) $parts[0] / (float) $parts[1];
+
+        return is_finite($result) && $result > 0 ? $result : null;
     }
 }

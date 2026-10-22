@@ -332,6 +332,35 @@ final class TikTokTest extends WebTestCase
         self::assertSelectorNotExists('.publication-item');
     }
 
+    public function testNewPreparationAfterConfirmedFailureRequiresPrivacyToBeChosenAgain(): void
+    {
+        $job = $this->job();
+        $job->change('failed', 'Refus confirmé par TikTok.');
+        $this->em()->flush();
+        $preparation = static::getContainer()->get(\App\Service\PublicationRetry::class)->preparation($this->owner, 'tiktok', $job->getId());
+        self::assertSame($job->getSource()->getId(), $preparation['video']->getId());
+        $row = $preparation['content']['tiktok']['videos'][$job->getSource()->getId()];
+        self::assertNull($row['privacy']);
+        self::assertSame($job->getOptions()['title'], $row['caption']);
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testReviewWithoutRemoteIdentifierCannotOfferOrTriggerResume(): void
+    {
+        $job = $this->job();
+        $job->attempt();
+        $job->change('review', 'Réponse perdue.');
+        $this->em()->flush();
+        $this->client->loginUser($this->owner);
+        $this->client->request('GET', '/studio/publications?network=tiktok');
+        self::assertSelectorNotExists('form[action$="/reprendre"]');
+        self::assertSelectorNotExists('a[href*="retryNetwork"]');
+        static::getContainer()->get(TikTokPublishing::class)->resume($job);
+        static::getContainer()->get(PublishTikTokHandler::class)(new PublishTikTok((int) $job->getId()));
+        self::assertSame('review', $job->getStatus());
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
     public function testLostInitResponseAndCrashNeverRepeatInit(): void
     {
         $job = $this->job();

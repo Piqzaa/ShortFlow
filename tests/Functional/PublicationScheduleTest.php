@@ -98,6 +98,7 @@ final class PublicationScheduleTest extends WebTestCase
     private function video(): VideoAsset
     {
         $video = new VideoAsset($this->em()->find(User::class, $this->owner->getId()), 'Source <privée>', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 4, 720, 1280, 'h264');
+        $video->recordTechnicalMetadata(['fps' => 30, 'videoBitrate' => 3000000]);
         $this->em()->persist($video);
         $this->em()->flush();
 
@@ -414,6 +415,61 @@ final class PublicationScheduleTest extends WebTestCase
             self::assertStringContainsString('déjà engagé', $error->getMessage());
         }
         self::assertSame('dispatched', $this->reload($id)->getStatus());
+    }
+
+    public function testQueueMigrationRecognizesNativeMessagesAndPreservesDueTimesAndClaims(): void
+    {
+        require_once dirname(__DIR__, 2).'/migrations/Version20261022030000.php';
+        $serializer = new \Symfony\Component\Messenger\Transport\Serialization\PhpSerializer();
+        $ids = [];
+        foreach (['ai' => new \App\Message\GenerateAiVideo(123), 'stats' => new \App\Message\RefreshPublicationStatistics(123, 'synthetic'), 'upload' => new \App\Message\PublishYouTube(123), 'claimed' => new \App\Message\GenerateAiVideo(456)] as $name => $message) {
+            $encoded = $serializer->encode(new \Symfony\Component\Messenger\Envelope($message));
+            $this->db()->insert('messenger_messages', ['body' => $encoded['body'], 'headers' => json_encode($encoded['headers'] ?? []), 'queue_name' => 'publications', 'created_at' => '2026-10-22 12:00:00', 'available_at' => '2026-10-23 12:00:00', 'delivered_at' => 'claimed' === $name ? '2026-10-22 12:01:00' : null]);
+            $ids[$name] = (int) $this->db()->fetchOne('SELECT MAX(id) FROM messenger_messages');
+        }
+        $before = $this->db()->fetchAllAssociative('SELECT id, body, headers, available_at, delivered_at FROM messenger_messages ORDER BY id');
+        $migration = new \DoctrineMigrations\Version20261022030000($this->db(), new \Psr\Log\NullLogger());
+        $migration->up(new \Doctrine\DBAL\Schema\Schema());
+        foreach ($migration->getSql() as $query) {
+            // The additive columns are already migrated on shortflow_test; exercise the real data transition.
+            if (str_starts_with($query->getStatement(), 'UPDATE messenger_messages')) {
+                $this->db()->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
+            }
+        }
+        self::assertSame($before, $this->db()->fetchAllAssociative('SELECT id, body, headers, available_at, delivered_at FROM messenger_messages ORDER BY id'));
+        foreach ($ids as $name => $id) {
+            self::assertSame(in_array($name, ['ai', 'stats'], true) ? 'background' : 'publications', $this->db()->fetchOne('SELECT queue_name FROM messenger_messages WHERE id = ?', [$id]));
+        }
+    }
+
+    public function testBackgroundWorkAndItsOwnerLockDoNotHoldScheduledDeparture(): void
+    {
+        $this->connect();
+        $draft = $this->draft(['youtube']);
+        $revision = $this->arm($draft);
+        $bus = static::getContainer()->get(\Symfony\Component\Messenger\MessageBusInterface::class);
+        $bus->dispatch(new \App\Message\GenerateAiVideo(9876));
+        $bus->dispatch(new \App\Message\RefreshPublicationStatistics(9876, 'synthetic'));
+        self::assertSame(2, (int) $this->db()->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'background'"));
+        self::assertSame(1, (int) $this->db()->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'publications'"));
+        $otherDb = DriverManager::getConnection($this->db()->getParams());
+        self::assertSame('shortflow_test', $otherDb->fetchOne('SELECT current_database()'));
+        self::assertTrue($otherDb->fetchOne('SELECT pg_try_advisory_lock(85404, ?)', [$this->owner->getId()]));
+        try {
+            $this->clock->sleep(3600);
+            $this->service()->dispatchDue($draft->getId(), $revision);
+            $this->assertJobs(1);
+            self::assertSame('dispatched', $draft->getStatus());
+            try {
+                static::getContainer()->get(\App\Service\PublicationLock::class)->runGeneration((int) $this->owner->getId(), static fn (): bool => true);
+                self::fail('Concurrent generations must still share their own lock.');
+            } catch (PublicationException) {
+                self::assertTrue(true);
+            }
+        } finally {
+            $otherDb->executeQuery('SELECT pg_advisory_unlock(85404, ?)', [$this->owner->getId()]);
+            $otherDb->close();
+        }
     }
 
     public function testCalendarDerivesPartialAndPublishedStatesFromRealJobRows(): void

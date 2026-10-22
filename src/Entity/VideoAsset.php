@@ -29,6 +29,9 @@ class VideoAsset
     private int $height;
     #[ORM\Column(length: 20)]
     private string $codec;
+    /** @var array<string, mixed>|null */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $technicalMetadata = null;
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -99,6 +102,18 @@ class VideoAsset
     public function getCodec(): string
     {
         return $this->codec;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getTechnicalMetadata(): ?array
+    {
+        return $this->technicalMetadata;
+    }
+
+    /** @param array<string, mixed> $metadata */
+    public function recordTechnicalMetadata(array $metadata): void
+    {
+        $this->technicalMetadata = $metadata;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

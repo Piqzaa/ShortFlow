@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Entity\VideoAsset;
 use App\Entity\YouTubeConnection;
 use App\Entity\YouTubePublication;
 use App\Message\PublishYouTube;
@@ -13,13 +14,18 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class YouTubePublishing
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private YouTubeApi $api)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private YouTubeApi $api, private PublicationVideoCheck $videoCheck)
     {
     }
 
     public function connection(User $owner): ?YouTubeConnection
     {
         return $this->em->getRepository(YouTubeConnection::class)->findOneBy(['owner' => $owner]);
+    }
+
+    public function validateVideo(VideoAsset $video): void
+    {
+        $this->videoCheck->validate($video, 'youtube');
     }
 
     /** @param list<int> $ids @param array<string|int, array<string, mixed>> $rows */
@@ -44,6 +50,7 @@ final class YouTubePublishing
                 foreach ($ids as $id) {
                     $source = $this->videos->owned($id, $owner) ?? throw new PublicationException('Une vidéo sélectionnée est indisponible.');
                     $this->em->refresh($source, LockMode::PESSIMISTIC_WRITE);
+                    $this->validateVideo($source);
                     $row = $rows[$id];
                     $job = new YouTubePublication($owner, $source, $connection, $key, $row['title'], $row['description'] ?? '', $row['privacy'], 'yes' === $row['audience'], (bool) $row['synthetic']);
                     $this->em->persist($job);
@@ -59,7 +66,7 @@ final class YouTubePublishing
         $this->lock->run((int) $job->getOwner()->getId(), function () use ($job): void {
             $this->em->wrapInTransaction(function () use ($job): void {
                 $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
-                if ('paused' !== $job->getStatus()) {
+                if ('paused' !== $job->getStatus() && !('review' === $job->getStatus() && $job->getRemoteId())) {
                     return;
                 }
                 $connection = $this->connection($job->getOwner());

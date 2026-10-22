@@ -81,7 +81,9 @@ final class MultiNetworkPublishing
             $selected[] = $video;
             foreach ($networks as $network) {
                 try {
-                    if ('instagram' === $network) {
+                    if ('youtube' === $network) {
+                        $this->youtube->validateVideo($video);
+                    } elseif ('instagram' === $network) {
                         $this->instagram->validateVideo($video);
                     } elseif ('tiktok' === $network) {
                         $this->tiktok->validateVideo($video, $creator['max_video_post_duration_sec'] ?? 600);

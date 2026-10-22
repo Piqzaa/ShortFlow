@@ -40,6 +40,7 @@ final class PublicationComposerTest extends WebTestCase
         }
         $this->em()->flush();
         $this->video = new VideoAsset($this->owner, 'Source privée', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 4, 720, 1280, 'h264');
+        $this->video->recordTechnicalMetadata(['fps' => 30, 'videoBitrate' => 3000000]);
         $this->em()->persist($this->video);
         $this->em()->flush();
         static::getContainer()->get('cache.rate_limiter')->clear();
@@ -96,11 +97,57 @@ final class PublicationComposerTest extends WebTestCase
         return $this->client->followRedirect();
     }
 
-    private function noSend(): void
+    public function testPreparingFailedInstagramAgainKeepsOnlyItsDestinationAndNeverSends(): void
+    {
+        $vault = new TokenVault($_ENV['INSTAGRAM_TOKEN_KEY']);
+        $connection = new InstagramConnection($this->owner, '17841400000000001', 'retry_test', 'MEDIA_CREATOR', $vault->encrypt('synthetic-access'), 86400);
+        $job = new \App\Entity\InstagramPublication($this->owner, $this->video, $connection, bin2hex(random_bytes(32)), 'Légende à conserver', true, true);
+        $job->change('failed', 'Reel refusé.');
+        $youtubeConnection = new \App\Entity\YouTubeConnection($this->owner, 'UC'.str_repeat('a', 22), 'Chaîne déjà publiée', $vault->encrypt('synthetic-access'), $vault->encrypt('synthetic-refresh'), 86400);
+        $published = new \App\Entity\YouTubePublication($this->owner, $this->video, $youtubeConnection, bin2hex(random_bytes(32)), 'Déjà disponible', '', 'private', false, false);
+        $published->uploaded('abcdefghijk');
+        $published->complete('private');
+        $this->em()->persist($youtubeConnection);
+        $this->em()->persist($published);
+        $this->em()->persist($connection);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $crawler = $this->client->request('GET', '/studio/publications');
+        $this->client->click($crawler->selectLink('Corriger et préparer à nouveau →')->link());
+        self::assertResponseStatusCodeSame(303);
+        $crawler = $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(1, '.composer-network-choices input[name="publication_composer[networks][]"]:checked');
+        self::assertSelectorExists('input[name="publication_composer[networks][]"][value="instagram"]:checked');
+        self::assertSelectorNotExists('fieldset.composer-network-fields input[name*="[youtube]"]');
+        self::assertSame('Légende à conserver', $crawler->filter('textarea[name*="[instagram]"]')->text());
+        self::assertSelectorExists('input[name$="[synthetic]"]:checked');
+        self::assertSame(1, $this->em()->getRepository(\App\Entity\InstagramPublication::class)->count([]));
+        $this->noSend(1, 1);
+        foreach (['published', 'review', 'paused'] as $status) {
+            $job = $this->em()->find(\App\Entity\InstagramPublication::class, $job->getId());
+            $job->change($status);
+            $this->em()->flush();
+            $this->client->request('GET', '/studio/composer', ['retryNetwork' => 'instagram', 'retryJob' => $job->getId()]);
+            self::assertResponseRedirects('/studio/publications', 303);
+            $this->noSend(1, 1);
+        }
+        $job = $this->em()->find(\App\Entity\InstagramPublication::class, $job->getId());
+        $job->change('failed');
+        $this->em()->flush();
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/composer', ['retryNetwork' => 'instagram', 'retryJob' => $job->getId()]);
+        self::assertResponseRedirects('/studio/publications', 303);
+        $this->noSend(1, 1);
+    }
+
+    private function noSend(int $existingInstagram = 0, int $existingYouTube = 0): void
     {
         self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
         foreach (['youtube', 'instagram', 'tiktok'] as $network) {
-            self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM '.$network.'_publication'));
+            self::assertSame(match ($network) {
+                'instagram' => $existingInstagram, 'youtube' => $existingYouTube, default => 0,
+            }, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM '.$network.'_publication'));
         }
     }
 
@@ -129,6 +176,7 @@ final class PublicationComposerTest extends WebTestCase
         }
         self::assertSame([$this->video->getId()], $this->stored()->videoIds());
         $output = new VideoAsset($project->getOwner(), 'Version montée', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 4, 720, 1280, 'h264');
+        $output->recordTechnicalMetadata(['fps' => 30, 'videoBitrate' => 3000000]);
         $this->em()->persist($output);
         $project->complete($output);
         $this->em()->flush();

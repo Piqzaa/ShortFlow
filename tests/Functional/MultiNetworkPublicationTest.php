@@ -81,6 +81,7 @@ final class MultiNetworkPublicationTest extends WebTestCase
     {
         $managedOwner = $this->em()->find(User::class, ($owner ?? $this->owner)->getId());
         $video = new VideoAsset($managedOwner, 'Clip <test>', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 4, 720, 1280, 'h264');
+        $video->recordTechnicalMetadata(['fps' => 30, 'videoBitrate' => 3000000]);
         $this->em()->persist($video);
         $this->em()->flush();
 
@@ -137,6 +138,26 @@ final class MultiNetworkPublicationTest extends WebTestCase
             self::assertSame($perNetwork, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM '.$network.'_publication'));
         }
         self::assertSame($messages, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testIncompatibleCadenceBlocksTheWholeBatchBeforeAnyJob(): void
+    {
+        $this->connectAll();
+        $video = $this->video();
+        $video->recordTechnicalMetadata(['fps' => 12, 'videoBitrate' => 3000000]);
+        $this->em()->flush();
+        $publishing = static::getContainer()->get(MultiNetworkPublishing::class);
+        $accounts = array_map(static fn (array $destination): mixed => $destination['account'], $publishing->destinations($this->owner));
+        $context = $publishing->context($this->owner, [$video->getId()], ['youtube', 'instagram'], $accounts);
+        self::assertFalse($context['ready']);
+        self::assertArrayNotHasKey('youtube', $context['issues']);
+        self::assertStringContainsString('23 à 60', $context['issues']['instagram'][0]);
+        try {
+            $publishing->enqueue($this->owner, [$video->getId()], ['youtube', 'instagram'], [], bin2hex(random_bytes(32)), $accounts);
+            self::fail('An incompatible destination must block the entire batch.');
+        } catch (PublicationException) {
+            $this->assertJobs(0, 0);
+        }
     }
 
     public function testOneConfirmationQueuesSixDestinationsAndReplayDoesNotDuplicate(): void

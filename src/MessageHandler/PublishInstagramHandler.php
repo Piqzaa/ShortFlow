@@ -7,6 +7,7 @@ use App\Message\PublishInstagram;
 use App\Service\InstagramApi;
 use App\Service\InstagramMediaLink;
 use App\Service\InstagramPublishing;
+use App\Service\PublicationException;
 use App\Service\PublicationLock;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -51,6 +52,14 @@ final class PublishInstagramHandler
                 if (!$job->getContainerId()) {
                     if ($job->getCreatedAt()->getTimestamp() + 86400 <= time()) {
                         $job->change('failed', 'L’envoi a expiré avant son démarrage. Prépare une nouvelle publication.');
+                        $this->em->flush();
+
+                        return;
+                    }
+                    try {
+                        $this->publishing->validateVideo($job->getSource());
+                    } catch (PublicationException $error) {
+                        $job->change('failed', $error->getMessage());
                         $this->em->flush();
 
                         return;

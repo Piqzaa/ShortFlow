@@ -388,6 +388,56 @@ final class YouTubePublicationTest extends WebTestCase
         self::assertSame(6, $calls);
     }
 
+    public function testEffectiveVisibilityAndRejectionComeFromYouTube(): void
+    {
+        $job = $this->job($this->video($this->alice));
+        $job->uploaded('abcdefghijk');
+        $this->em()->flush();
+        $http = new MockHttpClient(new MockResponse('{"items":[{"status":{"uploadStatus":"processed","privacyStatus":"public"},"processingDetails":{"processingStatus":"succeeded"}}]}'));
+        static::getContainer()->set('youtube.http', $http);
+        $handler = static::getContainer()->get(PublishYouTubeHandler::class);
+        $handler(new PublishYouTube((int) $job->getId()));
+        self::assertSame('published', $job->getStatus());
+        self::assertSame('public', $job->getEffectivePrivacy());
+        self::assertStringContainsString('différente', $job->getNotice());
+        $this->client->loginUser($this->alice);
+        $this->client->request('GET', '/studio/publications');
+        self::assertSelectorTextContains('.publication-state', 'Publique');
+        self::assertSelectorTextContains('.publication-item', 'Visibilité demandée : Privée');
+        self::assertSelectorTextContains('.publication-item', 'Visibilité confirmée par YouTube : Publique');
+        $job->resume();
+        $this->em()->flush();
+        $http->setResponseFactory(new MockResponse('{"items":[{"status":{"uploadStatus":"rejected"},"processingDetails":{"processingStatus":"succeeded"}}]}'));
+        $handler(new PublishYouTube((int) $job->getId()));
+        self::assertSame('failed', $job->getStatus());
+    }
+
+    public function testHorizontalVideoIsBlockedBeforeUploadOrTokenRefresh(): void
+    {
+        $video = $this->video($this->alice);
+        $video->recordTechnicalMetadata(['rotation' => 90]);
+        $job = $this->job($video);
+        static::getContainer()->set('youtube.http', new MockHttpClient(static function (): never { self::fail('No remote call for an incompatible video.'); }));
+        static::getContainer()->get(PublishYouTubeHandler::class)(new PublishYouTube((int) $job->getId()));
+        self::assertSame('failed', $job->getStatus());
+        self::assertNull($job->getUploadSession());
+        self::assertStringContainsString('horizontale', $job->getNotice());
+    }
+
+    public function testUnknownVisibilityIsNeverPresentedAsPublic(): void
+    {
+        $job = $this->job($this->video($this->alice));
+        $job->uploaded('abcdefghijk');
+        $this->em()->flush();
+        static::getContainer()->set('youtube.http', new MockHttpClient(new MockResponse('{"items":[{"status":{"uploadStatus":"processed"}}]}')));
+        static::getContainer()->get(PublishYouTubeHandler::class)(new PublishYouTube((int) $job->getId()));
+        self::assertSame('published', $job->getStatus());
+        self::assertNull($job->getEffectivePrivacy());
+        $this->client->loginUser($this->alice);
+        $this->client->request('GET', '/studio/publications');
+        self::assertSelectorTextContains('.publication-state', 'visibilité à vérifier');
+    }
+
     public function testWrongOAuthStateNeverCallsGoogleAndDisconnectPausesJobs(): void
     {
         $video = $this->video($this->alice);

@@ -33,6 +33,7 @@ final class VideoLibrary
         }
         $title = mb_substr('' === $title ? 'Ma vidéo' : $title, 0, 120);
         $video = new VideoAsset($owner, $title, $name, $info['mime'], (int) $file->getSize(), $info['duration'], $info['width'], $info['height'], $info['codec']);
+        $video->recordTechnicalMetadata($info['technical']);
         try {
             $this->em->wrapInTransaction(function () use ($owner, $file, $name, $video): void {
                 $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);

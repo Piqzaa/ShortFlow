@@ -204,6 +204,31 @@ final class InstagramPublicationTest extends WebTestCase
         self::assertSelectorNotExists('.publication-item');
     }
 
+    public function testManualReviewCanResumeOnlyTheExistingContainerWithoutAnotherPost(): void
+    {
+        $job = $this->job();
+        $job->container('111');
+        $job->attempt();
+        $job->change('review', 'Réponse incertaine.');
+        $this->em()->flush();
+        $calls = 0;
+        static::getContainer()->set('instagram.http', new MockHttpClient(function (string $method) use (&$calls): MockResponse {
+            self::assertSame('GET', $method);
+            ++$calls;
+
+            return new MockResponse('{"status_code":"PUBLISHED"}');
+        }));
+        $this->client->loginUser($this->owner);
+        $crawler = $this->client->request('GET', '/studio/publications');
+        self::assertSelectorNotExists('a[href*="retryNetwork"]');
+        $form = $crawler->selectButton('Reprendre le suivi ↻')->form();
+        $this->client->submit($form);
+        self::assertResponseRedirects('/studio/publications', 303);
+        static::getContainer()->get(PublishInstagramHandler::class)(new PublishInstagram((int) $job->getId()));
+        self::assertSame('published', $this->em()->find(InstagramPublication::class, $job->getId())->getStatus());
+        self::assertSame(1, $calls);
+    }
+
     public function testLostPublishResponseIsRecoveredWithoutRepeatingPost(): void
     {
         $job = $this->job();
