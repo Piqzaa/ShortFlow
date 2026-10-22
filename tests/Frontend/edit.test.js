@@ -152,7 +152,7 @@ for(const fixture of JSON.parse(readFileSync(new URL('../Fixtures/caption-timing
 }
 
 test('caption preview uses the correct timed block and hides the opening after 2.5 seconds', () => {
-  const c=editor(); c.captionStyleTarget={value:'clean'}; c.captionTextTarget={};c.hookTarget={};c.introTarget={checked:true};
+  const c=editor(); c.captionStyleTarget={value:'clean'}; c.captionTextTarget={classList:{toggle(){}}};c.hookTarget={};c.introTarget={checked:true};
   c.formTarget={querySelector:()=>({value:'Un titre'})};
   c.captionRowsTarget={querySelectorAll:()=>[{querySelector:selector=>({'[data-caption-start]':{value:0},'[data-caption-end]':{value:2},'[data-caption-text]':{value:'<b>Texte privé</b>'}}[selector])}]};
   c.paintText(1);assert.equal(c.captionTextTarget.textContent,'<b>Texte privé</b>');assert.equal(c.captionTextTarget.hidden,false);assert.equal(c.hookTarget.hidden,false);
@@ -303,4 +303,31 @@ test('the split control names its target and stays disabled outside that target'
  c.clipTargets=[];c.timelineTarget={querySelectorAll:()=>[]};c.element={querySelectorAll:()=>[],querySelector:()=>null};c.playheadTarget={value:1.5};
  c.updateSelectionUI();assert.equal(c.splitButtonTarget.textContent,'✂ Couper le texte');assert.equal(c.splitButtonTarget.disabled,false);assert.equal(c.selectionLabelTarget.textContent,'Texte · Mon titre');
  c.playheadTarget.value=2.5;c.updateSelectionUI();assert.equal(c.splitButtonTarget.disabled,true);
+});
+
+
+test('choosing a text in the timeline does not activate its transform frame',()=>{
+ const c=editor(),row=layerRow({id:'t',text:'Titre',start:0,end:2},'text');c.transformLayer={kind:'text',key:'old'};c.layerRows=()=>[row];c.playheadTarget={value:1};c.element={querySelectorAll:()=>[],querySelector:()=>({})};c.panel=()=>{};c.drawCaptionTrack=()=>{};
+ c.selectLayer('text','t');assert.equal(c.transformLayer,null);assert.equal(c.selectedLayer.key,'t');
+});
+
+
+test('saved personal styles preserve booleans and normalize legacy bold font names',()=>{
+ const c=editor(),fields={'[data-type-preset]':{value:'mine'},'[data-type-font]':{},'[data-type-bold]':{},'[data-type-box]':{}},container={querySelector:key=>fields[key]};
+ c.stylesValue={mine:{style:{font:'sans-bold',bold:false,box:true}}};c.typographyChange=()=>{};
+ c.applyTypePreset({currentTarget:{closest:()=>container}});
+ assert.equal(fields['[data-type-font]'].value,'sans');assert.equal(fields['[data-type-bold]'].value,'1');assert.equal(fields['[data-type-box]'].value,'1');
+});
+
+test('Original restores colour corrections and a new filter uses full intensity',()=>{
+ const c=editor(),fields=Object.fromEntries(['filter','intensity','brightness','contrast','saturation'].map(key=>[`[data-look-${key}]`,{value:0}])),row={querySelector:key=>fields[key]};
+ c.lookChange=()=>{};c.updateSelectionUI=()=>{};c.applyFilter({currentTarget:{closest:()=>row,dataset:{filterPreset:'none'}}});
+ for(const key of ['brightness','contrast','saturation'])assert.equal(fields[`[data-look-${key}]`].value,1);
+ assert.equal(fields['[data-look-intensity]'].value,100);
+});
+
+test('subtitle visibility toggles independently from its appearance',()=>{
+ const c=editor();c.captionStyleTarget={value:'social'};c.paint=()=>{};c.scheduleSave=()=>{};
+ c.toggleCaptions({currentTarget:{checked:false}});assert.equal(c.captionStyleTarget.value,'off');
+ c.toggleCaptions({currentTarget:{checked:true}});assert.equal(c.captionStyleTarget.value,'clean');
 });

@@ -240,6 +240,13 @@ final class VideoEditTest extends WebTestCase
         $project = $this->project();
         $url = '/studio/montage/'.$project->getId();
         $crawler = $this->client->request('GET', $url);
+        self::assertSelectorNotExists('[data-type-preset] option[value=hook]');
+        self::assertSelectorNotExists('[data-type-preset] option[value=clean]');
+        self::assertSelectorNotExists('[data-type-preset] option[value=boxed]');
+        foreach (['x', 'y', 'intensity'] as $key) {
+            self::assertSelectorExists('input[type=hidden][data-look-'.$key.']');
+            self::assertSelectorNotExists('input[type=range][data-look-'.$key.']');
+        }
         $values = $crawler->selectButton('Ajouter l’image')->form()->getPhpValues();
         $values['seconds'] = '1.2';
         $path = tempnam(sys_get_temp_dir(), 'still-').'.png';

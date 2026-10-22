@@ -41,3 +41,16 @@ Sélectionner un clip puis déplacer seulement le curseur ; vérifier le nom et 
 ## Suite raisonnable
 
 Après retour sur cette version : miniature du vrai clip dans les cartes d’effets, aperçu exporté temporaire pour les gros montages, puis raccourcis et aide contextuelle. Les transitions croisées, animations complexes et polices personnelles ne sont pas nécessaires pour résoudre les problèmes actuels. L’aperçu de deux sources différentes peut encore subir le chargement du navigateur ; cette correction garantit spécifiquement le raccord d’une simple coupe dans une même source.
+
+
+## Simplification complémentaire après essai du propriétaire
+
+Le propriétaire demande le retrait du cadrage horizontal/vertical, de l’intensité et des styles intégrés Sobre/Accroche/Encadré dans les textes et sous-titres. Ces commandes sortent du parcours. Le déplacement du cadrage par glisser l’image est retiré aussi. Les coordonnées/intensités déjà enregistrées restent transmises en champs cachés pour conserver les anciens rendus ; choisir une nouvelle carte de filtre applique désormais son intensité complète. Original remet aussi luminosité, contraste et saturation à leur valeur neutre.
+
+Le sélecteur de styles intégrés disparaît. Les styles personnels enregistrés restent utilisables dans un groupe Mes styles, visible uniquement si le compte en possède. Correction d’une perte des booléens lors de leur application : true/false doivent devenir les valeurs 1/0 des contrôles HTML. Les anciennes polices *-bold deviennent une famille et l’option Gras activée : la liste ne duplique plus les familles, et Gras peut réellement être désactivé. Même présentation pour textes et sous-titres.
+
+Un interrupteur Afficher les sous-titres remplace les catégories de couleur redondantes ; leur apparence est réglée directement par police, couleur, fond et contour. Le contrôle natif historique reste accessible sans JavaScript. Correction aussi de la position numérique des fragments (maximum 32 et non 8) et du message après retrait d’une musique quand une autre reste présente.
+
+Fichiers : _clip et _typography définissent les champs réellement proposés, show organise l’affichage, Stimulus applique les styles et la visibilité, VideoEditController annonce correctement le résultat du retrait musical. La validation Symfony des anciennes recettes reste en place. L’état local des poignées est séparé de la recette ; il ne devient jamais un effet exporté. Les vérifications automatisées et captures sont consignées dans verification.md.
+
+Limites restantes connues : chargement possible entre deux fichiers vidéo distincts dans l’aperçu HTML, pas de transitions croisées ou de montage vidéo superposé. Elles sont distinctes des commandes retirées et ne sont pas présentées comme disponibles dans l’interface.

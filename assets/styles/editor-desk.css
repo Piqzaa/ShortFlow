@@ -152,7 +152,7 @@
 .editor-desk.edit-enhanced {grid-template-rows:54px minmax(230px,1fr) 320px}
 .editor-text-overlays {position:absolute;inset:0;pointer-events:none}
 .editor-canvas .editor-overlay {position:absolute;bottom:auto;right:auto;width:max-content;max-width:86%;min-width:0;min-height:0;padding:0;border:1px solid transparent;border-radius:3px;background:transparent!important;transform:translate(-50%,-50%);white-space:pre-wrap;overflow-wrap:anywhere;text-align:center;line-height:1.2;font-family:Arial,sans-serif;font-weight:700;letter-spacing:0;text-shadow:1px 1px 2px #000,-1px -1px 2px #000;color:white;pointer-events:auto;touch-action:none;cursor:move;box-shadow:none}
-.editor-canvas .editor-overlay:hover,.editor-canvas .editor-overlay:focus-visible,.editor-canvas .editor-overlay.is-selected {border-color:var(--workspace-accent);outline:1px dashed #fff8;outline-offset:4px}
+.editor-canvas .editor-overlay:focus-visible,.editor-canvas .editor-overlay.is-transform-selected {border-color:var(--workspace-accent);outline:1px dashed #fff8;outline-offset:4px}
 .editor-canvas .editor-overlay[hidden] {display:none}
 .editor-layer-block {position:absolute;top:0;height:28px;min-width:3px;border:1px solid #706d42;border-radius:4px;background:#302d1f}
 .editor-layer-block.is-selected {border-color:var(--workspace-accent);box-shadow:0 0 0 1px var(--workspace-accent)}
@@ -206,7 +206,7 @@
 @font-face{font-family:'VF Mono';font-weight:400;src:url('/fonts/editor/DejaVuSansMono.ttf')}@font-face{font-family:'VF Mono';font-weight:700;src:url('/fonts/editor/DejaVuSansMono-Bold.ttf')}
 .editor-type-toggles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.editor-type-presets{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .editor-text-resize{position:absolute!important;right:-12px;bottom:-12px;min-width:24px!important;min-height:24px!important;padding:2px!important;background:#bda0ff!important;color:#15111e!important;touch-action:none;cursor:nwse-resize}
-.editor-overlay:not(.is-selected) .editor-text-resize{display:none}.editor-canvas .editor-overlay{max-width:95%;box-sizing:border-box}
+.editor-overlay:not(.is-transform-selected) .editor-text-resize{display:none}.editor-canvas .editor-overlay{max-width:95%;box-sizing:border-box}
 @media(max-width:767px){.editor-text-resize{min-width:36px!important;min-height:36px!important}}
 
 .editor-waveform{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.6}
@@ -271,3 +271,31 @@
 @font-face{font-family:"VF Poppins";src:url("/fonts/editor/poppins-bold-italic.ttf") format("truetype");font-display:swap;font-weight:700;font-style:italic;}
 @font-face{font-family:"VF Lato";src:url("/fonts/editor/lato-italic.ttf") format("truetype");font-display:swap;font-weight:400;font-style:italic;}
 @font-face{font-family:"VF Lato";src:url("/fonts/editor/lato-bold-italic.ttf") format("truetype");font-display:swap;font-weight:700;font-style:italic;}
+/* Show all tracks; scrolling horizontally is reserved for timeline zoom. */
+.editor-desk .editor-time-scroll{flex:0 0 auto;max-height:none;overflow-x:auto;overflow-y:hidden}
+@media(min-width:768px){
+ .editor-desk.edit-enhanced{grid-template-rows:54px minmax(210px,1fr) auto}
+ .editor-desk .editor-timeline-panel{min-height:0}
+ .editor-desk .editor-timeline-hint{display:none}
+ .editor-desk .editor-timeline-heading{justify-content:flex-start;gap:6px;flex-wrap:wrap}
+ .editor-desk .editor-timeline-heading button{min-height:32px;padding:4px 9px;font-size:10px;margin:0}
+ .editor-desk .editor-timeline-options{margin:3px 0;gap:5px}
+ .editor-desk .editor-timeline-options button{min-height:28px}
+ .editor-desk .editor-screen{display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;container-type:size}
+ .editor-desk .editor-canvas{height:auto;width:min(100%,calc(max(40px,100cqh - 54px)*var(--editor-ratio,.5625)));max-height:none;aspect-ratio:var(--editor-ratio,.5625)}
+}
+
+.editor-canvas.is-previewing .editor-overlay{border-color:transparent!important;outline:none!important}
+.editor-canvas.is-previewing .editor-text-resize{display:none!important}
+
+@media(min-width:1100px){
+ .editor-timeline-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:5px}
+ .editor-desk .editor-timeline-toolbar .editor-timeline-heading{margin:0;flex-wrap:nowrap}
+ .editor-desk .editor-timeline-toolbar .editor-timeline-options{margin:0;flex-wrap:nowrap}
+ .editor-history-label{display:none}
+ .editor-desk [data-edit-target=undoButton],.editor-desk [data-edit-target=redoButton]{min-width:32px;min-height:32px}
+}
+
+.editor-desk input[type=color]{padding:4px!important;min-height:38px;cursor:pointer}
+
+.edit-enhanced .editor-caption-legacy{display:none}

@@ -286,7 +286,7 @@ final class VideoEditController extends AbstractController
                 throw new VideoLibraryException('Choisis une piste audio à importer.');
             }
             $this->edits->attachMusic($project, $request->request->getBoolean('remove') ? null : $file, $request->request->getBoolean('rights'), $request->request->getString('musicId') ?: null);
-            $this->addFlash('success', $project->getMusicName() ? 'Piste ajoutée. Ajuste son volume dans le panneau Audio.' : 'Piste musicale retirée.');
+            $this->addFlash('success', $request->request->getBoolean('remove') ? 'Piste musicale retirée.' : 'Piste ajoutée. Ajuste son volume dans le panneau Audio.');
         } catch (VideoLibraryException $error) {
             $this->addFlash('error', $error->getMessage());
         }

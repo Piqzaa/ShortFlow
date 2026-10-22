@@ -28,7 +28,7 @@ export default class extends Controller {
     document.addEventListener('visibilitychange',this.visibility);
     this.onResize=()=>{if(this.hasStageTarget)this.paint();};window.addEventListener('resize',this.onResize);
   }
-  disconnect() { this.disconnected=true;clearTimeout(this.saveTimer);clearTimeout(this.captionTimer);this.captionAbort?.abort();document.removeEventListener('visibilitychange',this.visibility);window.removeEventListener('resize',this.onResize); this.stop();this.endTrim?.();this.endPan?.();this.endClipMove?.();this.endLayerDrag?.();this.endOverlayDrag?.();this.history=[];this.future=[];this.timelineNodes?.clear();this.releaseAudio?.();this.waveformRequests?.forEach(task=>{task.abort.abort();clearTimeout(task.timer);}); }
+  disconnect() { this.disconnected=true;clearTimeout(this.saveTimer);clearTimeout(this.captionTimer);this.captionAbort?.abort();document.removeEventListener('visibilitychange',this.visibility);window.removeEventListener('resize',this.onResize); this.stop();this.endTrim?.();this.endClipMove?.();this.endLayerDrag?.();this.endOverlayDrag?.();this.history=[];this.future=[];this.timelineNodes?.clear();this.releaseAudio?.();this.waveformRequests?.forEach(task=>{task.abort.abort();clearTimeout(task.timer);}); }
   active() { return this.clipTargets.filter(row => !row.querySelector('[data-edit-omit]').checked); }
   bounds(row) { return { start: Number(row.querySelector('[data-edit-start]').value), end: Number(row.querySelector('[data-edit-end]').value) }; }
   refresh() {
@@ -114,6 +114,7 @@ export default class extends Controller {
     }
   }
   preview() {
+    this.clearTransform();
     if (this.playing) { this.stop(); return; }
     const rows = this.active();
     if (!rows.length || rows.some(row => { const { start, end } = this.bounds(row); return !row.querySelector('video') || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start || end > Number(row.querySelector('[data-edit-end]').max); })) {
@@ -276,7 +277,7 @@ export default class extends Controller {
     if(this.hasFormTarget){const bg=this.formTarget.querySelector('[name="video_edit[background]"]');if(bg)this.canvasTarget.style.backgroundColor=bg.value;}
     if(this.selectedRow)this.applyClipAppearance(this.selectedRow);
     if(this.hasSourceVolumeTarget&&!this.selectedRow)this.stageTarget.volume=0;
-    this.captionTextTarget.dataset.style=this.captionStyleTarget.value;
+    this.captionTextTarget.dataset.style=this.captionStyleTarget.value;const visible=this.element.querySelector('[data-caption-visible]');if(visible)visible.checked=this.captionStyleTarget.value!=='off';
     this.paintText(Number(this.playheadTarget.value));
     this.syncMusic(Number(this.playheadTarget.value));
     this.drawCaptionTrack();this.updateSelectionUI();
@@ -397,6 +398,7 @@ export default class extends Controller {
     if(canPlace(this.recipe(),keys,delta)){this.selectedLayer=null;this.clipSelection=new Set(keys);selected.forEach(clip=>clip.querySelector('[data-edit-at]').value=this.offset(clip)+delta);this.selectedRow=row;this.selectedClipKey=row.dataset.key;this.change(null,true);this.jump(this.offset(row),false);this.showClipPanel();}
   }
   shortcut(event) {
+    if(event.key==='Escape'){this.clearTransform();if(event.target.closest('.editor-overlay'))event.target.blur();return;}
     if(event.target.closest('input,textarea,select,[contenteditable=true]')||this.transcribing)return;
     if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();event.shiftKey?this.redo():this.undo();}
     else if(event.key.toLowerCase()==='s'){event.preventDefault();if(!this.hasSplitButtonTarget||!this.splitButtonTarget.disabled)this.split();}
@@ -423,11 +425,7 @@ export default class extends Controller {
     const at=(video.currentTime-this.bounds(row).start)/this.rate(row),length=this.clipLength(row),fadeIn=Math.min(look.fadeIn,length/2),fadeOut=Math.min(look.fadeOut,length/2);
     const fade=Math.max(0,Math.min(1,fadeIn?at/fadeIn:1,fadeOut?(length-at)/fadeOut:1));video.style.opacity=String(fade);if(this.hasSourceVolumeTarget)video.volume=Math.max(0,Math.min(1,Number(this.sourceVolumeTarget.value)/100))*fade;
   }
-  panVideo(event) {
-    if(event.target!==this.stageTarget||!this.selectedRow||this.transcribing)return;event.preventDefault();this.stop();this.remember();const row=this.selectedRow,look=this.readLook(row),x=event.clientX,y=event.clientY;
-    const move=next=>{row.querySelector('[data-look-x]').value=Math.max(0,Math.min(1,look.x-(next.clientX-x)/this.canvasTarget.clientWidth));row.querySelector('[data-look-y]').value=Math.max(0,Math.min(1,look.y-(next.clientY-y)/this.canvasTarget.clientHeight));this.paint();this.scheduleSave();};
-    const end=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);this.endPan=null;};this.endPan=end;window.addEventListener('pointermove',move);window.addEventListener('pointerup',end,{once:true});
-  }
+
   readCaptions() {
     return [...this.captionRowsTarget.querySelectorAll('[data-caption-row]')].map(row=>({start:Number(row.querySelector('[data-caption-start]').value),end:Number(row.querySelector('[data-caption-end]').value),text:row.querySelector('[data-caption-text]').value,...(row.querySelector('[data-caption-x]')?.value?{x:Number(row.querySelector('[data-caption-x]').value)}:{}),...(row.querySelector('[data-caption-y]')?.value?{y:Number(row.querySelector('[data-caption-y]').value)}:{})}));
   }
@@ -554,19 +552,21 @@ export default class extends Controller {
     if(this.hasTextRowsTarget)this.updateElementChoices();
   }
   paintText(position) {
+    if(this.hasCanvasTarget)this.canvasTarget.classList.toggle('is-previewing',this.playing);
     const rows=this.captionRowsTarget.querySelectorAll('[data-caption-row]'); let text='';
     if (this.captionStyleTarget.value !== 'off') for(const row of rows) {
       const start=Number(row.querySelector('[data-caption-start]').value), end=Number(row.querySelector('[data-caption-end]').value);
       if(position>=start && position<end) {text=row.querySelector('[data-caption-text]').value;this.currentCaption=row;break;}
     }
     if(!text)this.currentCaption=null;
-    this.captionTextTarget.textContent=text; this.captionTextTarget.hidden=!text;
+    this.captionTextTarget.textContent=text; this.captionTextTarget.hidden=!text;this.captionTextTarget.classList.toggle('is-transform-selected',this.transformLayer?.kind==='caption'&&!this.playing);
     if(this.hasCaptionXTarget&&this.hasCanvasTarget){this.positionOverlay(this.captionTextTarget,Number(this.currentCaption?.querySelector('[data-caption-x]')?.value||this.captionXTarget.value),Number(this.currentCaption?.querySelector('[data-caption-y]')?.value||this.captionYTarget.value),Number(this.captionSizeTarget.value));}
     const type=this.element?.querySelector('[data-type-kind=caption]');if(type)this.styleOverlay(this.captionTextTarget,this.readTypography(type));
     if(this.hasTextOverlaysTarget)this.paintTextLayers(position);
     this.hookTarget.textContent=this.formTarget.querySelector('[name="video_edit[title]"]').value.slice(0,60);
     this.hookTarget.hidden=!this.introTarget.checked || position>=2.5;
   }
+  toggleCaptions(event) {this.remember();this.captionStyleTarget.value=event.currentTarget.checked?'clean':'off';this.paint();this.scheduleSave();}
   captionChange() {
     if (this.captionStyleTarget.value === 'off') this.captionStyleTarget.value='clean';
     this.noticeTarget.textContent='Sous-titres modifiés : pense à enregistrer.'; this.paint();
@@ -582,7 +582,7 @@ export default class extends Controller {
   layerRow(kind,key) {return kind==='caption'?this.layerRows(kind)[Number(key)]:this.layerRows(kind).find(row=>this.layerValue(row,kind,'id').value===key);}
   layerValue(row,kind,field) {return row.querySelector(`[data-${kind}-${field}]`);}
   selectLayer(kind,key) {
-    this.stop();this.clipSelection?.clear();this.selectedClipKey=null;this.selectedLayer={kind,key};const row=this.layerRow(kind,key);if(!row)return;
+    this.clearTransform();this.stop();this.clipSelection?.clear();this.selectedClipKey=null;this.selectedLayer={kind,key};const row=this.layerRow(kind,key);if(!row)return;
     const start=Number(this.layerValue(row,kind,'start').value),end=Number(this.layerValue(row,kind,'end').value),now=Number(this.playheadTarget.value);
     if(now<start||now>=end)this.jump(start,false);
     this.panel({currentTarget:this.element.querySelector(`[data-panel="${kind==='audio'?'audio':kind==='text'?'text':'captions'}"]`)});if(this.hasCaptionTextTarget)this.paintText(Number(this.playheadTarget.value));this.drawCaptionTrack();this.updateSelectionUI();
@@ -612,7 +612,7 @@ export default class extends Controller {
       const text=this.readText(row);ids.add(text.id);let button=[...this.textOverlaysTarget.children].find(node=>node.dataset.textId===text.id);
       if(!button){button=document.createElement('div');button.setAttribute('role','button');button.tabIndex=0;button.className='editor-overlay editor-free-text';button.dataset.textId=text.id;const content=document.createElement('span');content.className='editor-text-content';const handle=document.createElement('button');handle.type='button';handle.className='editor-text-resize';handle.dataset.resizeText='1';handle.setAttribute('aria-label','Redimensionner le texte');handle.setAttribute('data-action','keydown->edit#resizeTextKey');handle.textContent='↘';button.append(content,handle);button.setAttribute('data-action','pointerdown->edit#beginOverlayDrag keydown->edit#overlayKey dblclick->edit#focusText');this.textOverlaysTarget.append(button);}
       button.querySelector('.editor-text-content').textContent=text.text;this.styleOverlay(button,text);button.setAttribute('aria-label',`Déplacer le texte : ${text.text}`);button.style.color=text.color;button.hidden=position<text.start||position>=text.end;
-      this.positionOverlay(button,text.x,text.y,text.size);button.classList.toggle('is-selected',this.selectedLayer?.kind==='text'&&this.selectedLayer.key===text.id);
+      this.positionOverlay(button,text.x,text.y,text.size);button.classList.toggle('is-selected',this.selectedLayer?.kind==='text'&&this.selectedLayer.key===text.id);button.classList.toggle('is-transform-selected',this.transformLayer?.kind==='text'&&this.transformLayer.key===text.id&&!this.playing);
     });
     [...this.textOverlaysTarget.children].forEach(node=>{if(!ids.has(node.dataset.textId))node.remove();});
   }
@@ -648,7 +648,7 @@ export default class extends Controller {
     const ripple=this.element.querySelector('[data-action="edit#rippleRemove"]');if(ripple)ripple.hidden=!!layer;
     this.element.querySelector('.editor-panel-title')?.replaceChildren(document.createTextNode(this.element.classList.contains('is-effects')?'Effets et cadrage':'Clip sélectionné'));
   }
-  applyFilter(event) {const row=event.currentTarget.closest('[data-edit-target=clip]');this.remember();row.querySelector('[data-look-filter]').value=event.currentTarget.dataset.filterPreset;this.lookChange(event);this.updateSelectionUI();}
+  applyFilter(event) {const row=event.currentTarget.closest('[data-edit-target=clip]');this.remember();row.querySelector('[data-look-filter]').value=event.currentTarget.dataset.filterPreset;row.querySelector('[data-look-intensity]').value=100;if(event.currentTarget.dataset.filterPreset==='none')for(const name of ['brightness','contrast','saturation'])row.querySelector(`[data-look-${name}]`).value=1;this.lookChange(event);this.updateSelectionUI();}
   syncColourFields(container) {if(!container)return;container.querySelectorAll('[data-color-hex]').forEach(field=>{const colour=container.querySelector(`[data-type-${field.dataset.colorHex}]`);field.value=colour.value.toUpperCase();});const toggle=container.querySelector('[data-outline-toggle]');if(toggle)toggle.checked=Number(container.querySelector('[data-type-outline]').value)>0;}
   colourHex(event) {const field=event.currentTarget,container=field.closest('[data-type-controls]'),value=field.value.startsWith('#')?field.value:`#${field.value}`;if(!/^#[a-f0-9]{6}$/i.test(value))return;container.querySelector(`[data-type-${field.dataset.colorHex}]`).value=value;this.typographyChange({currentTarget:container});}
   toggleOutline(event) {const container=event.currentTarget.closest('[data-type-controls]'),field=container.querySelector('[data-type-outline]');this.remember();if(event.currentTarget.checked)field.value=field.dataset.lastOutline||2;else{field.dataset.lastOutline=field.value;field.value=0;}this.typographyChange({currentTarget:container});}
@@ -663,7 +663,7 @@ export default class extends Controller {
   }
   typographyChange(event) {const container=event.currentTarget.closest('[data-type-controls]');this.syncColourFields(container);if(container?.dataset.typeKind==='caption')this.captionChange();else this.textChange();this.scheduleSave();}
   beginTextResize(event,layer) {
-    const row=this.layerRow('text',layer.key);if(!row)return;event.preventDefault();this.remember();this.selectLayer('text',layer.key);
+    const row=this.layerRow('text',layer.key);if(!row)return;event.preventDefault();this.remember();this.selectLayer('text',layer.key);this.transformLayer=layer;this.paintText(Number(this.playheadTarget.value));
     const width=row.querySelector('[data-type-width]'),size=row.querySelector('[data-text-size]'),before=Number(width.value),font=Number(size.value),x=event.clientX,y=event.clientY,rect=this.canvasTarget.getBoundingClientRect();
     const move=next=>{width.value=Math.round(Math.max(10,Math.min(95,before+(next.clientX-x)*200/rect.width)));size.value=Math.round(Math.max(2,Math.min(10,font+(next.clientY-y)*50/rect.height))*10)/10;this.textChange();};
     const end=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);this.endOverlayDrag=null;};this.endOverlayDrag=end;window.addEventListener('pointermove',move);window.addEventListener('pointerup',end,{once:true});
@@ -674,20 +674,21 @@ export default class extends Controller {
   }
   applyTypePreset(event) {
     const container=event.currentTarget.closest('[data-type-controls]'),key=container.querySelector('[data-type-preset]').value;
-    const presets={clean:{font:'sans-bold',color:'#ffffff',outline:0,shadow:0,box:0,width:80,opacity:100},hook:{font:'sans-bold',color:'#ffe26b',outline:3,box:0,width:85,opacity:100},boxed:{font:'sans',color:'#ffffff',outline:0,box:1,background:'#17121f',width:75,opacity:100}};
-    const style=this.stylesValue?.[key]?.style||presets[key];if(!style)return;this.remember();for(const [name,value] of Object.entries(style)){const field=container.querySelector(`[data-type-${name}]`);if(field)field.value=String(value);}this.typographyChange({currentTarget:container});
+    const stored=this.stylesValue?.[key]?.style,style=stored?{...stored,font:stored.font.replace(/-bold$/,''),bold:stored.bold||stored.font.endsWith('-bold')}:null;if(!style)return;this.remember();for(const [name,value] of Object.entries(style)){const field=container.querySelector(`[data-type-${name}]`);if(field)field.value=String(typeof value==='boolean'?Number(value):value);}this.typographyChange({currentTarget:container});
   }
   async saveTypePreset(event) {
     const name=window.prompt('Nom de ce style (30 caractères maximum)','Mon style');if(!name?.trim())return;
     const style=this.readTypography(event.currentTarget.closest('[data-type-controls]')),data=new URLSearchParams({_token:this.stylesTokenValue,name:name.trim()});for(const [key,value] of Object.entries(style))data.set(`style[${key}]`,String(value));
     try{const response=await fetch(this.stylesUrlValue,{method:'POST',body:data,headers:{Accept:'application/json'},credentials:'same-origin'});const state=await response.json();if(!response.ok)throw new Error(state.message||'Style non enregistré.');this.stylesValue=state.styles;this.refreshTypePresets();this.noticeTarget.textContent='Style enregistré dans ton compte.';}catch(error){this.noticeTarget.textContent=error.message;}
   }
-  refreshTypePresets() {this.element.querySelectorAll('[data-type-preset]').forEach(select=>{select.querySelectorAll('[data-saved-style]').forEach(option=>option.remove());for(const [key,preset] of Object.entries(this.stylesValue||{})){const option=document.createElement('option');option.value=key;option.textContent=preset.name;option.dataset.savedStyle='1';select.append(option);}});}
+  refreshTypePresets() {this.element.querySelectorAll('[data-type-preset]').forEach(select=>{select.querySelectorAll('[data-saved-style]').forEach(option=>option.remove());for(const [key,preset] of Object.entries(this.stylesValue||{})){const option=document.createElement('option');option.value=key;option.textContent=preset.name;option.dataset.savedStyle='1';select.append(option);}const picker=select.closest('[data-saved-style-picker]');if(picker)picker.hidden=!Object.keys(this.stylesValue||{}).length;});}
+  clearTransform() {this.transformLayer=null;if(typeof document!=='undefined'&&document.activeElement?.closest('.editor-overlay'))document.activeElement.blur();this.element?.querySelectorAll?.('.is-transform-selected').forEach(node=>node.classList.remove('is-transform-selected'));}
+  dismissTransform(event) {if(!event.target.closest('.editor-overlay'))this.clearTransform();}
   focusText(event) {const row=this.layerRow('text',event.currentTarget.dataset.textId);row?.querySelector('textarea').focus();}
   overlayContext(node) {return node.dataset.textId?{kind:'text',key:node.dataset.textId}:{kind:'caption',key:String(this.layerRows('caption').indexOf(this.currentCaption))};}
   beginOverlayDrag(event) {
     if(this.transcribing)return;event.preventDefault();event.stopPropagation();this.endOverlayDrag?.();const node=event.currentTarget,layer=this.overlayContext(node);
-    if(layer.key==='-1')return;if(event.target.closest('[data-resize-text]'))return this.beginTextResize(event,layer);this.remember();this.selectLayer(layer.kind,layer.key);node.focus();
+    if(layer.key==='-1')return;if(event.target.closest('[data-resize-text]'))return this.beginTextResize(event,layer);this.remember();this.selectLayer(layer.kind,layer.key);this.transformLayer=layer;this.paintText(Number(this.playheadTarget.value));node.focus();
     const rect=this.canvasTarget.getBoundingClientRect(),box=node.getBoundingClientRect();const minX=Math.min(.45,Math.max(.05,box.width/rect.width/2)),minY=Math.min(.45,Math.max(.05,box.height/rect.height/2));
     const move=next=>this.placeLayer(layer,Math.max(minX,Math.min(1-minX,(next.clientX-rect.left)/rect.width)),Math.max(minY,Math.min(1-minY,(next.clientY-rect.top)/rect.height)));
     const end=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);this.endOverlayDrag=null;};
@@ -703,7 +704,7 @@ export default class extends Controller {
   }
   overlayKey(event) {
     const vector={ArrowLeft:[-.01,0],ArrowRight:[.01,0],ArrowUp:[0,-.01],ArrowDown:[0,.01]}[event.key];if(!vector||this.transcribing)return;
-    event.preventDefault();this.remember();const layer=this.overlayContext(event.currentTarget);this.selectLayer(layer.kind,layer.key);const row=this.layerRow(layer.kind,layer.key);if(!row)return;
+    event.preventDefault();this.remember();const layer=this.overlayContext(event.currentTarget);this.selectLayer(layer.kind,layer.key);this.transformLayer=layer;const row=this.layerRow(layer.kind,layer.key);if(!row)return;
     const x=Number(this.layerValue(row,layer.kind,'x').value||this.captionXTarget.value),y=Number(this.layerValue(row,layer.kind,'y').value||this.captionYTarget.value),scale=event.shiftKey?5:1;
     this.placeLayer(layer,Math.max(.05,Math.min(.95,x+vector[0]*scale)),Math.max(.05,Math.min(.95,y+vector[1]*scale)));
   }
