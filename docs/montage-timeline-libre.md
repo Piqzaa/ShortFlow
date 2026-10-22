@@ -39,3 +39,6 @@ Stimulus modifie une recette, pas les fichiers sources. Le formulaire Symfony co
 ## Limites conservées
 
 32 fragments vidéo maximum, durée totale 179,5 s et export 100 Mo maximum ; huit sources distinctes à la création, ajout ultérieur possible dans ces limites. Une piste vidéo principale, sans superposition d’images animées ; fondus simples vers le fond, sans transition croisée. Pas d’images clés, de téléchargement de polices personnelles, de transitions complexes ou d’éditeur audio professionnel. L’aperçu HTML peut marquer un chargement entre sources ; le MP4 est la référence finale. Les limites de ressources et la file d’export existantes restent appliquées.
+
+
+Suite : [simplification UX et continuité des coupes](audit-editeur-ux-2026-10-22.md), portant le choix à douze familles et rendant le contour facultatif par défaut sur les nouveaux textes.
