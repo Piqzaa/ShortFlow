@@ -1,5 +1,7 @@
 # VydFlow — bêta, studio IA et publication
 
+Sécurité PHP : base Docker fixée à PHP 8.4.27 pour corriger CVE-2026-109618 et CVE-2026-109619. Après récupération du changement, reconstruire les deux images et recréer les quatre services PHP ; un redémarrage seul conserve l'ancienne image. Procédure et explications : [docs/securite-php-2026-10.md](docs/securite-php-2026-10.md).
+
 Navigation locale : `APP_DEBUG=0` dans `.env.local` évite les coûteuses vérifications de fichiers Windows/Docker pour utiliser le studio ; remettre `1` pour déboguer. Après modification des routes/services/configuration sans debug : `docker compose exec php php bin/console cache:clear --env=dev --no-debug`. Les templates restent actualisés en dev. Mesures et aperçu local avant import : [docs/performance-import.md](docs/performance-import.md).
 
 Studio IA guidé : modèle et résolution séparés, aide aux connexions, suivi automatique, reprise d'idées et historique complet. Parcours, contrôles de stockage et repères Symfony : [docs/studio-ia-guide.md](docs/studio-ia-guide.md).
