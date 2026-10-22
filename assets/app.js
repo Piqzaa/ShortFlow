@@ -63,3 +63,6 @@ import EditPickerController from './controllers/edit_picker_controller.js';
 app.register('edit', EditController);
 app.register('edit-watch', EditWatchController);
 app.register('edit-picker', EditPickerController);
+import './styles/series.css';
+import SeriesSettingsController from './controllers/series_settings_controller.js';
+app.register('series-settings', SeriesSettingsController);

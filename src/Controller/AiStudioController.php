@@ -230,9 +230,10 @@ final class AiStudioController extends AbstractController
     }
 
     #[Route('/studio/ia/generations/{id}', name: 'app_ai_generation', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function generation(int $id, Request $request, #[CurrentUser] User $user, AiGenerations $generations, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth): Response
+    public function generation(int $id, Request $request, #[CurrentUser] User $user, AiGenerations $generations, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, \App\Service\AiSeriesStudio $seriesStudio): Response
     {
         $job = $generations->owned($id, $user) ?? throw $this->createNotFoundException();
+        $episode = $seriesStudio->episodeFor($job);
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('ai_generation_'.$id, $request->request->getString('_token'))) {
                 throw $this->createAccessDeniedException();
@@ -241,7 +242,7 @@ final class AiStudioController extends AbstractController
                 if ('retry' === $request->request->getString('intent')) {
                     $generations->retry($user, $id, '1' === $request->request->getString('confirm'));
                 } elseif ('1' === $request->request->getString('confirm')) {
-                    $generations->confirm($user, $id);
+                    $generations->confirm($user, $id, $episode ? $request->request->getString('idea_revision') : null);
                 } else {
                     throw new \RuntimeException('Confirme le coût fournisseur avant de lancer.');
                 }
@@ -254,7 +255,7 @@ final class AiStudioController extends AbstractController
 
         $model = $catalog->model($job->getModel());
 
-        return $this->render('ai/generation.html.twig', ['job' => $job, 'model' => $model, 'providerName' => $catalog->provider($model['provider']), 'enabled' => $generations->enabled(), 'hasKey' => $keys->hasAccess($user, $model['provider'], $job->getAccessMode()), 'mcpAccount' => 'mcp' === $job->getAccessMode() ? $falOAuth->accountId($user) : null], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/generation.html.twig', ['job' => $job, 'episode' => $episode, 'model' => $model, 'providerName' => $catalog->provider($model['provider']), 'enabled' => $generations->enabled(), 'hasKey' => $keys->hasAccess($user, $model['provider'], $job->getAccessMode()), 'mcpAccount' => 'mcp' === $job->getAccessMode() ? $falOAuth->accountId($user) : null], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/creation/historique', name: 'app_ai_history', methods: ['GET'])]

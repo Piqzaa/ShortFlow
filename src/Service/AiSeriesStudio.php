@@ -1,0 +1,166 @@
+<?php
+
+namespace App\Service;
+
+use App\Entity\AiEpisode;
+use App\Entity\AiGeneration;
+use App\Entity\AiSeries;
+use App\Entity\User;
+use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+
+final class AiSeriesStudio
+{
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiReferenceStorage $references)
+    {
+    }
+
+    public function owned(int $id, User $owner): ?AiSeries
+    {
+        return $this->em->getRepository(AiSeries::class)->findOneBy(['id' => $id, 'owner' => $owner]);
+    }
+
+    /** @return list<AiEpisode> */
+    public function episodes(AiSeries $series): array
+    {
+        return $this->em->createQueryBuilder()->select('e', 'g')->from(AiEpisode::class, 'e')->leftJoin('e.generation', 'g')->where('e.series = :series')->setParameter('series', $series)->orderBy('e.number', 'ASC')->getQuery()->getResult();
+    }
+
+    public function episodeFor(AiGeneration $job): ?AiEpisode
+    {
+        return $this->em->getRepository(AiEpisode::class)->findOneBy(['generation' => $job]);
+    }
+
+    /** @param array<string,mixed> $data */
+    public function configure(User $owner, array $data, ?AiSeries $series = null): AiSeries
+    {
+        return $this->em->getConnection()->transactional(function () use ($owner, $data, $series): AiSeries {
+            $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            if ($series) {
+                if ($series->getOwner()->getId() !== $owner->getId()) {
+                    throw new \RuntimeException('Série indisponible.');
+                }
+                $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
+                $this->assertRevision($series->getRevision(), (int) $data['revision']);
+            }
+            $model = $this->catalog->model($data['model']);
+            $this->catalog->validate($data['model'], $data['seconds'], $data['ratio']);
+            $previous = $series?->getRecipe();
+            $image = $previous['reference'] ?? null;
+            $endImage = $previous['endReference'] ?? null;
+            if ($model['image'] ?? false) {
+                if (!$image && !$data['image'] instanceof UploadedFile) {
+                    throw new \RuntimeException('Ajoute une image de départ pour ce modèle.');
+                }
+                if (($model['requiresEnd'] ?? false) && !$endImage && !$data['endImage'] instanceof UploadedFile) {
+                    throw new \RuntimeException('Ce modèle demande aussi une image de fin.');
+                }
+                if (!isset($model['endImageField']) && $data['endImage'] instanceof UploadedFile) {
+                    throw new \RuntimeException('Ce modèle n’accepte pas d’image de fin.');
+                }
+                if ($data['image'] instanceof UploadedFile) {
+                    $image = $this->references->store($owner, $data['image']);
+                }
+                if ($data['endImage'] instanceof UploadedFile) {
+                    $endImage = $this->references->store($owner, $data['endImage']);
+                }
+                $this->references->path($owner, $image);
+                $endImage = isset($model['endImageField']) ? $endImage : null;
+                if ($endImage) {
+                    $this->references->path($owner, $endImage);
+                }
+            } else {
+                if ($data['image'] instanceof UploadedFile || $data['endImage'] instanceof UploadedFile) {
+                    throw new \RuntimeException('Choisis un modèle image vers vidéo pour utiliser ces images.');
+                }
+                $image = $endImage = null;
+            }
+            if ('mcp' === $data['accessMode'] && 'fal' !== $model['provider']) {
+                throw new \RuntimeException('Choisis un accès API pour ce fournisseur.');
+            }
+            $recipe = ['model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit']];
+            if ($series) {
+                $series->configure(trim($data['name']), trim($data['theme']), trim($data['style'] ?? ''), trim($data['characters'] ?? ''), $recipe);
+            } else {
+                $series = new AiSeries($owner, trim($data['name']), trim($data['theme']), trim($data['style'] ?? ''), trim($data['characters'] ?? ''), $recipe);
+                $this->em->persist($series);
+                for ($number = 1; $number <= 3; ++$number) {
+                    $this->em->persist(new AiEpisode($series, $number));
+                }
+            }
+
+            $this->em->flush();
+
+            return $series;
+        });
+    }
+
+    /** @param array<string,mixed> $data */
+    public function saveEpisode(User $owner, AiEpisode $episode, array $data, bool $prepare): ?AiGeneration
+    {
+        return $this->em->getConnection()->transactional(function () use ($owner, $episode, $data, $prepare): ?AiGeneration {
+            $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            $series = $episode->getSeries();
+            if ($series->getOwner()->getId() !== $owner->getId()) {
+                throw new \RuntimeException('Épisode indisponible.');
+            }
+            $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
+            // A repeated preparation always returns the same generation, including after a double click.
+            $existing = $episode->getGeneration();
+            if ($existing) {
+                $this->em->refresh($existing, LockMode::PESSIMISTIC_WRITE);
+                if ($prepare && $episode->getRevision() !== (int) $data['revision'] && $episode->getTitle() === trim($data['title']) && $episode->getPrompt() === trim($data['prompt'])) {
+                    return $existing;
+                }
+            }
+            $this->assertRevision($episode->getRevision(), (int) $data['revision']);
+            $this->assertRevision($series->getRevision(), (int) $data['seriesRevision']);
+            $recipe = $series->getRecipe();
+            if ($prepare || $existing) {
+                $this->catalog->validate($recipe['model'], $recipe['seconds'], $recipe['ratio']);
+                $this->catalog->validatePrompt($existing?->getModel() ?? $recipe['model'], $data['prompt']);
+                foreach ([$recipe['reference'], $recipe['endReference']] as $image) {
+                    if ($image) {
+                        $this->references->path($owner, $image);
+                    }
+                }
+            }
+            $episode->edit(trim($data['title']), trim($data['prompt']));
+            if (!$prepare) {
+                $this->em->flush();
+
+                return null;
+            }
+            if ($existing) {
+                $this->em->flush();
+
+                return $existing;
+            }
+            $job = new AiGeneration($owner, $episode->getTitle(), $episode->getPrompt(), $recipe['model'], $recipe['seconds'], $recipe['ratio'], $this->catalog->estimate($recipe['model'], $recipe['seconds']));
+            if ($recipe['reference']) {
+                $job->attachReference($recipe['reference']);
+                $job->frameImages($recipe['imageFit']);
+                if ($recipe['endReference']) {
+                    $job->attachEndReference($recipe['endReference']);
+                }
+            }
+            if ('mcp' === $recipe['accessMode']) {
+                $job->useMcp();
+            }
+            $this->em->persist($job);
+            $episode->prepare($job);
+            $this->em->flush();
+
+            return $job;
+        });
+    }
+
+    private function assertRevision(int $current, int $submitted): void
+    {
+        if ($current !== $submitted) {
+            throw new \RuntimeException('Cette page a changé dans un autre onglet. Recharge-la avant d’enregistrer ; ton texte saisi reste affiché.');
+        }
+    }
+}

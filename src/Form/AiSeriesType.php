@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Form;
+
+use App\Service\AiCatalog;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Validator\Constraints as Assert;
+
+final class AiSeriesType extends AbstractType
+{
+    public function buildForm(FormBuilderInterface $builder, array $options): void
+    {
+        $models = [];
+        foreach (AiCatalog::MODELS as $id => $model) {
+            $resolution = str_contains(strtolower($model['name']), strtolower($model['quality'])) ? '' : ' · '.('4k' === $model['quality'] ? '4K' : $model['quality']);
+            $models[AiCatalog::PROVIDERS[$model['provider']]][$model['name'].$resolution] = $id;
+        }
+        $catalog = new AiCatalog();
+        $builder
+            ->add('name', TextType::class, ['label' => 'Nom de la série', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 120)], 'attr' => ['maxlength' => 120]])
+            ->add('theme', TextareaType::class, ['label' => 'Thème et intention', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 700)], 'attr' => ['rows' => 3, 'maxlength' => 700]])
+            ->add('style', TextareaType::class, ['label' => 'Style visuel', 'required' => false, 'constraints' => [new Assert\Length(max: 300)], 'attr' => ['rows' => 2, 'maxlength' => 300]])
+            ->add('characters', TextareaType::class, ['label' => 'Personnages de référence', 'required' => false, 'help' => 'Décris leurs traits distinctifs. La continuité dépend du modèle IA.', 'constraints' => [new Assert\Length(max: 300)], 'attr' => ['rows' => 2, 'maxlength' => 300]])
+            ->add('model', ChoiceType::class, ['label' => 'Modèle et fournisseur', 'choices' => $models, 'attr' => ['data-series-settings-target' => 'model', 'data-action' => 'series-settings#change']])
+            ->add('seconds', ChoiceType::class, ['label' => 'Durée par épisode', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', $catalog->durations()), $catalog->durations()), 'attr' => ['data-series-settings-target' => 'seconds']])
+            ->add('ratio', ChoiceType::class, ['label' => 'Format', 'choices' => ['Vertical · 9:16' => '9:16', 'Paysage · 16:9' => '16:9', 'Carré · 1:1' => '1:1', 'Format de l’image' => 'auto'], 'attr' => ['data-series-settings-target' => 'ratio']])
+            ->add('accessMode', ChoiceType::class, ['label' => 'Accès BYOK existant', 'choices' => ['Ma clé API' => 'api', 'Mon compte Fal connecté par navigateur' => 'mcp'], 'help' => 'La série utilise ta connexion dans VydFlow. Aucune clé à recopier.'])
+            ->add('imageFit', ChoiceType::class, ['label' => 'Cadrage des images', 'choices' => ['Recadrage centré' => 'crop', 'Image entière avec bandes' => 'contain']])
+            ->add('revision', HiddenType::class, ['constraints' => [new Assert\Regex('/^\d+$/D')]]);
+        foreach (['image' => 'Image de départ commune', 'endImage' => 'Image de fin commune (facultative selon le modèle)'] as $field => $label) {
+            $builder->add($field, FileType::class, ['label' => $label, 'required' => false, 'constraints' => [new Assert\File(maxSize: '10M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'])], 'attr' => ['accept' => 'image/jpeg,image/png,image/webp']]);
+        }
+        $builder->addEventListener(FormEvents::POST_SUBMIT, static function (FormEvent $event) use ($catalog): void {
+            $data = $event->getData();
+            if (!isset(AiCatalog::MODELS[$data['model'] ?? ''])) {
+                return;
+            }
+            try {
+                $catalog->validate($data['model'], $data['seconds'] ?? 0, $data['ratio'] ?? '');
+                if ('mcp' === ($data['accessMode'] ?? '') && 'fal' !== $catalog->model($data['model'])['provider']) {
+                    throw new \InvalidArgumentException('La connexion navigateur est réservée à Fal. Choisis la clé API pour ce fournisseur.');
+                }
+            } catch (\InvalidArgumentException $error) {
+                $event->getForm()->addError(new FormError($error->getMessage()));
+            }
+        });
+    }
+}

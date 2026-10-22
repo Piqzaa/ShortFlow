@@ -173,6 +173,21 @@ class AiGeneration
         return $this->prompt;
     }
 
+    public function revisePrepared(string $title, string $prompt): void
+    {
+        if ('prepared' !== $this->status) {
+            throw new \RuntimeException('Cette génération est déjà confirmée. Son prompt ne peut plus être modifié.');
+        }
+        $this->title = $title;
+        $this->prompt = $prompt;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function getReviewRevision(): string
+    {
+        return hash('sha256', serialize([$this->title, $this->prompt, $this->model, $this->seconds, $this->ratio, $this->estimatedCents, $this->priceChecked, $this->referenceImage, $this->endReferenceImage, $this->imageFit, $this->accessMode]));
+    }
+
     public function getModel(): string
     {
         return $this->model;

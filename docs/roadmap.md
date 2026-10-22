@@ -2,9 +2,21 @@
 
 ## État courant — 22 octobre 2026
 
+**Premier lot Séries livré localement** : configuration privée enregistrée, trois épisodes initiaux, prompts modifiables, images communes selon le modèle et accès BYOK existants. Préparation individuelle liée au moteur IA actuel, coût confirmé séparément, états réels par génération. Aucun lancement automatique. Voir [series-mvp.md](series-mvp.md).
+
+Prochaines étapes par valeur utilisateur et complexité :
+
+| Priorité | Lot | Valeur utilisateur | Complexité |
+| --- | --- | --- | --- |
+| 1 | Génération d’un lot fini, estimation totale, confirmation et suivi des épisodes | Préparer plusieurs vidéos avec moins de manipulations | Moyenne |
+| 2 | Validation éditoriale et programmation par épisode en réutilisant le calendrier et les publications | Aller jusqu’à la publication régulière depuis la série | Moyenne à élevée |
+| 3 | Limites de bibliothèque configurables selon l’offre, puis facturation une fois les offres validées | Maîtriser le stockage et commercialiser deux offres simples | Moyenne |
+
+Les outils de montage existants restent utilisables sur chaque résultat. Récurrence automatique et mémoire narrative sont reportées après validation de ce parcours manuel. Ces étapes constituent une recommandation ; leur développement se fait lot par lot.
+
 Recentrage validé : fiabilité des publications, puis séries enregistrées avec épisodes préparés à l'avance, génération d'un lot fini, validation manuelle et programmation par épisode. La récurrence entièrement automatique et la mémoire narrative viendront ensuite. Le lot de fiabilisation ajoute les contrôles vidéo communs, la visibilité YouTube effective, des reprises par destination et une file IA/statistiques séparée. Voir [fiabilite-publication.md](fiabilite-publication.md). Gratuit et Creator à 9,99 €/mois restent des hypothèses, sans troisième offre ; quotas par offre et facturation dans leur lot, aucune modification des limites de stockage actuelles.
 
-Le studio IA, l’image vers vidéo et le suivi sont intégrés à la bêta ; catalogue de 54 configurations, essais manuels activés localement et premier essai image réussi confirmé par le propriétaire. Lot de simplification : trois choix Fal, connexion guidée, textes de disponibilité actualisés et recherche privée dans les vidéos. Le catalogue complet reste accessible. Voir [le guide](studio-simple-recherche.md). Premier montage guidé commun aux imports et vidéos IA livré : 1–8 clips, coupes, ordre, aperçu et export local MP4 1080p. « Tes créations » retiré du formulaire Studio ; historique conservé. Voir [montage-guide.md](montage-guide.md). Éditeur visuel, sous-titres locaux modifiables et recette simple Reel intégrés : voir [montage-sous-titres.md](montage-sous-titres.md). Les séries, recettes plus avancées et abonnement restent à construire ; accès publics des plateformes à valider avant commercialisation. Les états datés ci-dessous conservent l’historique des lots et ne remplacent pas ce point courant.
+Le studio IA, l’image vers vidéo et le suivi sont intégrés à la bêta ; catalogue de 54 configurations, essais manuels activés localement et premier essai image réussi confirmé par le propriétaire. Lot de simplification : trois choix Fal, connexion guidée, textes de disponibilité actualisés et recherche privée dans les vidéos. Le catalogue complet reste accessible. Voir [le guide](studio-simple-recherche.md). Premier montage guidé commun aux imports et vidéos IA livré : 1–8 clips, coupes, ordre, aperçu et export local MP4 1080p. « Tes créations » retiré du formulaire Studio ; historique conservé. Voir [montage-guide.md](montage-guide.md). Éditeur visuel, sous-titres locaux modifiables et recette simple Reel intégrés : voir [montage-sous-titres.md](montage-sous-titres.md). Le lancement groupé et la programmation depuis les séries, les recettes plus avancées et l’abonnement restent à construire ; accès publics des plateformes à valider avant commercialisation. Les états datés ci-dessous conservent l’historique des lots et ne remplacent pas ce point courant.
 
 Lot studio/compte autorisé le 18 octobre, avant TikTok réel : navigation simplifiée, galerie/brouillons, préparation commune sur un écran, compte à onglets avec photo privée et fuseau par défaut. L’espace abonnement reste annoncé à venir, sans traitement de paiement. Voir [studio-compte.md](studio-compte.md).
 

@@ -1,5 +1,7 @@
 # VydFlow — instructions de travail
 
+Mise à jour du 22 octobre 2026 : premier lot Séries autorisé par le propriétaire après fiabilisation des publications. Configuration privée enregistrée, trois épisodes initiaux avec prompts manuels modifiables, références communes et préparation individuelle réutilisant le studio IA/BYOK. Confirmation du coût conservée avant toute génération. Voir docs/series-mvp.md. Génération par lots, programmation depuis les séries, récurrence automatique, quotas Gratuit/Creator et paiement restent des lots suivants ; aucun essai payant ou social réel supplémentaire implicitement autorisé.
+
 VydFlow est un futur micro-SaaS français pour les créateurs de vidéos courtes. Positionnement : « Crée, prépare et publie tes vidéos courtes depuis un seul studio. » Internationalisation anglaise ultérieure.
 
 ## Périmètre actuel

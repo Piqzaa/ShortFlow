@@ -30,7 +30,7 @@ final class AiGenerations
         return $this->em->getRepository(AiGeneration::class)->findOneBy(['id' => $id, 'owner' => $owner]);
     }
 
-    public function confirm(User $owner, int $id): void
+    public function confirm(User $owner, int $id, ?string $expectedRevision = null): void
     {
         if (!$this->enabled) {
             throw new \RuntimeException('Les essais de génération payants ne sont pas encore activés. Ton idée est conservée.');
@@ -40,12 +40,15 @@ final class AiGenerations
         if ('prepared' === $prepared->getStatus() && !$this->keys->hasAccess($owner, $provider, $prepared->getAccessMode())) {
             throw new \RuntimeException('mcp' === $prepared->getAccessMode() ? 'Connecte ton compte Fal par navigateur avant de confirmer.' : 'Ajoute ta clé '.$this->catalog->provider($provider).' avant de confirmer.');
         }
-        $this->em->wrapInTransaction(function () use ($owner, $id): void {
+        $this->em->wrapInTransaction(function () use ($owner, $id, $expectedRevision): void {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
             $job = $this->owned($id, $owner) ?? throw new \RuntimeException('Génération indisponible.');
             $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
             if ('prepared' !== $job->getStatus()) {
                 return;
+            }
+            if (null !== $expectedRevision && $expectedRevision !== $job->getReviewRevision()) {
+                throw new \RuntimeException('Le prompt a changé depuis cet aperçu. Vérifie le récapitulatif actualisé avant de confirmer son coût.');
             }
             $provider = $this->catalog->model($job->getModel())['provider'];
             if (!$this->keys->hasAccess($owner, $provider, $job->getAccessMode())) {

@@ -1,0 +1,19 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}{{ series.name }} — Mes séries{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ path('app_series') }}">← Mes séries</a>
+<div class="workspace-heading"><div><span class="eyebrow">STUDIO DE SÉRIES</span><h1>{{ series.name }}</h1><p>{{ series.theme }}</p></div><a class="account-secondary" href="{{ path('app_series_edit',{id:series.id}) }}">Configurer la série ↗</a></div>
+<div class="series-overview"><span><small>MODÈLE COMMUN</small><strong>{{ model.name }} · {{ provider }}</strong></span><span><small>ÉPISODES</small><strong>{{ episodes|length }} à préparer à ton rythme</strong></span><span><small>GÉNÉRATION</small><strong>BYOK · {{ series.recipe.seconds }} s · {{ series.recipe.ratio }}</strong></span></div>
+<p class="library-note series-intro">Complète chaque prompt, enregistre-le puis vérifie son estimation. La génération demande ensuite une confirmation séparée. Aucune publication automatique.</p>
+<section class="series-episodes" aria-labelledby="episodes-title"><div class="series-episodes-heading"><h2 id="episodes-title">Les épisodes</h2><a class="account-secondary" href="{{ path('app_series_show',{id:series.id}) }}">Actualiser les états ↻</a></div>{% for episode in episodes %}
+<article class="series-episode" id="episode-{{ episode.id }}"><header><span class="series-number">{{ '%02d'|format(episode.number) }}</span><h3>{{ episode.title }}</h3><span class="series-status{{ episode.generation and episode.generation.status == 'available' ? ' is-ready' : '' }}">{{ episode.statusLabel }}</span></header>
+{% if episode.generation and episode.generation.status != 'prepared' %}
+<p class="series-prompt">{{ episode.prompt }}</p><div class="series-actions"><a class="button" href="{{ path('app_ai_generation',{id:episode.generation.id}) }}">Ouvrir le suivi →</a><span class="library-note">{{ (episode.generation.estimatedCents / 100)|number_format(2,',',' ') }} $ US estimés</span></div>
+{% else %}
+{% if episode.generation %}<p class="library-note">Estimation conservée : {{ models[episode.generation.model].name }} · {{ episode.generation.seconds }} s · {{ episode.generation.ratio }}. Ses réglages restent fixés pour cet épisode.</p>{% endif %}
+{% set episodeForm = episodeForms[episode.id] %}
+{{ form_start(episodeForm,{attr:{class:'account-form','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}{{ form_errors(episodeForm) }}{{ form_row(episodeForm.title) }}{{ form_row(episodeForm.prompt) }}<div class="series-actions"><button class="account-secondary" type="submit" name="intent" value="save">Enregistrer le prompt</button><button class="button" type="submit" name="intent" value="prepare">Vérifier l’estimation →</button></div>{{ form_end(episodeForm) }}
+{% endif %}
+</article>{% endfor %}</section>
+<p class="library-note">Le suivi affiche l’état réel de chaque génération. Le lancement groupé et la programmation depuis la série seront ajoutés dans les prochains lots.</p>
+{% endblock %}
