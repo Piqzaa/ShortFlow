@@ -732,7 +732,8 @@ final class AiStudioTest extends WebTestCase
         self::assertSelectorExists('.studio-sidebar nav a[href="/studio/creation"][aria-current="page"]');
         self::assertSelectorExists('.studio-bottom-nav a[href="/studio/creation"][aria-current="page"]');
         self::assertSelectorNotExists('.studio-sidebar nav a[href="/studio"][aria-current="page"]');
-        self::assertSelectorExists('.creation-tool-soon[aria-disabled="true"]');
+        self::assertSelectorExists('#ai-idea-form');
+        self::assertSelectorNotExists('.creation-tool-soon[aria-disabled="true"]');
         self::assertSelectorNotExists('input[name="ai_idea[title]"][required]');
         $this->client->request('GET', '/studio');
         self::assertSelectorTextSame('h1', 'Tes vidéos.');

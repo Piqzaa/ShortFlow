@@ -64,7 +64,7 @@ final class EditWaveforms
         }
         $temporary = $cache.'.'.bin2hex(random_bytes(4));
         file_put_contents($temporary, json_encode($result), LOCK_EX);
-        chmod($temporary,0640);
-        rename($temporary,$cache);
+        chmod($temporary, 0640);
+        rename($temporary, $cache);
     }
 }

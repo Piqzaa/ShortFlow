@@ -95,7 +95,7 @@ final class AiImageInputsTest extends TestCase
                     }
                     if (isset($rule['type'])) {
                         self::assertSame(match ($rule['type']) {
-                            'integer' => 'int', 'boolean' => 'bool', default => $rule['type']
+                            'integer' => 'int', 'boolean' => 'bool', default => $rule['type'],
                         }, get_debug_type($value));
                     }
                 }

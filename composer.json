@@ -74,11 +74,12 @@
             "@auto-scripts"
         ],
         "check": [
+            "@putenv APP_ENV=test",
             "Composer\\Config::disableProcessTimeout",
             "@php bin/console lint:yaml config",
             "@php bin/console lint:twig templates",
             "@php bin/console lint:container",
-            "@php vendor/bin/phpstan analyse --no-progress",
+            "@php vendor/bin/phpstan analyse --no-progress --memory-limit=256M",
             "@php vendor/bin/php-cs-fixer fix --dry-run --diff",
             "@php bin/console cache:clear --env=test",
             "@php vendor/bin/phpunit"
