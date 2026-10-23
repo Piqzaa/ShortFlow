@@ -7,12 +7,14 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final class AiSeriesType extends AbstractType
@@ -25,13 +27,17 @@ final class AiSeriesType extends AbstractType
             $models[AiCatalog::PROVIDERS[$model['provider']]][$model['name'].$resolution] = $id;
         }
         $catalog = new AiCatalog();
+        if ($options['creating']) {
+            $builder->add('episodeCount', IntegerType::class, ['label' => 'Combien d’épisodes veux-tu préparer ?', 'help' => 'De 0 à 12 pour commencer. Tu pourras en ajouter ensuite.', 'constraints' => [new Assert\NotNull(), new Assert\Range(min: 0, max: 12)], 'attr' => ['min' => 0, 'max' => 12]]);
+        }
         $builder
             ->add('name', TextType::class, ['label' => 'Nom de la série', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 120)], 'attr' => ['maxlength' => 120]])
             ->add('theme', TextareaType::class, ['label' => 'Thème et intention', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 700)], 'attr' => ['rows' => 3, 'maxlength' => 700]])
             ->add('style', TextareaType::class, ['label' => 'Style visuel', 'required' => false, 'constraints' => [new Assert\Length(max: 300)], 'attr' => ['rows' => 2, 'maxlength' => 300]])
             ->add('characters', TextareaType::class, ['label' => 'Personnages de référence', 'required' => false, 'help' => 'Décris leurs traits distinctifs. La continuité dépend du modèle IA.', 'constraints' => [new Assert\Length(max: 300)], 'attr' => ['rows' => 2, 'maxlength' => 300]])
             ->add('model', ChoiceType::class, ['label' => 'Modèle et fournisseur', 'choices' => $models, 'attr' => ['data-series-settings-target' => 'model', 'data-action' => 'series-settings#change']])
-            ->add('seconds', ChoiceType::class, ['label' => 'Durée par épisode', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', $catalog->durations()), $catalog->durations()), 'attr' => ['data-series-settings-target' => 'seconds']])
+            ->add('totalSeconds', IntegerType::class, ['label' => 'Durée finale des prochains épisodes (secondes)', 'constraints' => [new Assert\NotBlank(), new Assert\Range(min: 1, max: 60)], 'attr' => ['min' => 1, 'max' => 60]])
+            ->add('seconds', ChoiceType::class, ['label' => 'Durée d’un clip par défaut', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', $catalog->durations()), $catalog->durations()), 'attr' => ['data-series-settings-target' => 'seconds']])
             ->add('ratio', ChoiceType::class, ['label' => 'Format', 'choices' => ['Vertical · 9:16' => '9:16', 'Paysage · 16:9' => '16:9', 'Carré · 1:1' => '1:1', 'Format de l’image' => 'auto'], 'attr' => ['data-series-settings-target' => 'ratio']])
             ->add('accessMode', ChoiceType::class, ['label' => 'Accès BYOK existant', 'choices' => ['Ma clé API' => 'api', 'Mon compte Fal connecté par navigateur' => 'mcp'], 'help' => 'La série utilise ta connexion dans VydFlow. Aucune clé à recopier.'])
             ->add('imageFit', ChoiceType::class, ['label' => 'Cadrage des images', 'choices' => ['Recadrage centré' => 'crop', 'Image entière avec bandes' => 'contain']])
@@ -53,5 +59,11 @@ final class AiSeriesType extends AbstractType
                 $event->getForm()->addError(new FormError($error->getMessage()));
             }
         });
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefault('creating', false);
+        $resolver->setAllowedTypes('creating', 'bool');
     }
 }

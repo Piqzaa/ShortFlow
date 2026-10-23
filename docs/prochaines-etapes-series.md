@@ -2,6 +2,8 @@
 
 État au 22 octobre 2026, après le commit local `8531512`.
 
+Actualisation du 23 octobre : le propriétaire a recentré le lot suivant sur **un épisode composé de plusieurs plans**. Ce parcours est maintenant livré localement : voir [episodes-multiplans.md](episodes-multiplans.md). Le présent rapport conserve l’ordre proposé avant ce recentrage ; la génération de plusieurs épisodes en un lot reste ultérieure.
+
 ## Ce qui est livré
 
 Le premier lot Séries est enregistré dans Git : configuration privée d’un univers, trois épisodes initiaux, prompts modifiables, modèles et accès BYOK existants, images communes et préparation individuelle d’une génération. Le suivi réutilise les statuts IA réels. Une confirmation du coût devenue obsolète après modification du prompt est refusée.

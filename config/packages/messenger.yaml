@@ -2,6 +2,15 @@ framework:
     messenger:
         failure_transport: publication_failures
         transports:
+            story_writing:
+                dsn: 'doctrine://default'
+                options:
+                    queue_name: story_writing
+                    auto_setup: false
+                    redeliver_timeout: 600
+                    use_notify: false
+                retry_strategy:
+                    max_retries: 0
             background:
                 dsn: 'doctrine://default'
                 options:
@@ -39,6 +48,8 @@ framework:
                     auto_setup: false
                     use_notify: false
         routing:
+            App\Message\WriteStoryProposal: story_writing
+            App\Message\AdvanceAiEpisode: background
             App\Message\BuildEditWaveform: video_edits
             App\Message\TranscribeVideoEdit: video_edits
             App\Message\RenderVideoEdit: video_edits

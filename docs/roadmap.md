@@ -1,6 +1,12 @@
 # Roadmap V1 — vision de lancement validée le 15 octobre 2026
 
-## État courant — 22 octobre 2026
+## État courant — 24 octobre 2026
+
+**Corrections studio/séries livrées localement** : rédaction en file dédiée, étapes visibles et reprise après navigation ; clips uniques sans choix d’enchaînement, prolongement sélectionnable avec correction guidée ; nombre initial d’épisodes configurable et ajout d’épisodes, sans faux scénarios copiés. Le moteur récurrent complet reste à construire. [Guide et chaîne cible](corrections-studio-series-recurrence.md).
+
+**Préparation commune studio/séries simplifiée** : idée, durée finale, modèle, références et plans sur un écran ; options de raccord guidées. Rédaction locale sur demande intégrée en pilote supervisé : aperçu français, prompts vidéo, application volontaire ; qualité à évaluer avant autonomie. [Guide du pilote](scenario-local-supervise.md). [Résultats et pédagogie](preparation-unifiee-essai-local.md).
+
+**Vidéos à plans livrées localement dans le studio et les séries** : durée totale choisie jusqu’à 60 secondes, 1 à 8 scènes manuelles réordonnables, conversion des épisodes à confirmer et son conservé par défaut, coût total confirmé, génération dans l’ordre avec raccords image compatibles, assemblage automatique, validation de la version finale et lien vers la préparation/programmation existante. Pause, arrêt et nouvelle génération ciblée avec consentement. Guide : [episodes-multiplans.md](episodes-multiplans.md). Ce lot ne lance pas encore plusieurs épisodes ensemble et ne relie pas leurs publications à un suivi par réseau dans la série.
 
 **Premier lot Séries livré localement** : configuration privée enregistrée, trois épisodes initiaux, prompts modifiables, images communes selon le modèle et accès BYOK existants. Préparation individuelle liée au moteur IA actuel, coût confirmé séparément, états réels par génération. Aucun lancement automatique. Voir [series-mvp.md](series-mvp.md).
 
@@ -10,11 +16,12 @@ Prochaines étapes par valeur utilisateur et complexité :
 
 | Priorité | Lot | Valeur utilisateur | Complexité |
 | --- | --- | --- | --- |
-| 1 | Génération d’un lot fini, estimation totale, confirmation et suivi des épisodes | Préparer plusieurs vidéos avec moins de manipulations | Moyenne |
-| 2 | Validation éditoriale et programmation par épisode en réutilisant le calendrier et les publications | Aller jusqu’à la publication régulière depuis la série | Moyenne à élevée |
-| 3 | Limites de bibliothèque configurables selon l’offre, puis facturation une fois les offres validées | Maîtriser le stockage et commercialiser deux offres simples | Moyenne |
+| 1 | Relier chaque épisode validé à sa programmation et au suivi des destinations existants | Terminer le parcours série → publication sans ressaisie | Moyenne |
+| 2 | Orchestration récurrente supervisée : créneaux uniques, histoire et plans, génération et assemblage en avance | Préparer chaque semaine la suite depuis le thème et les personnages | Élevée |
+| 3 | Mode entièrement automatique explicite, consentement BYOK durable, limites et pause | Publier à la fréquence choisie avec des dépenses encadrées | Élevée |
+| 4 | Limites de bibliothèque par offre et facturation après validation des offres | Commercialiser deux offres simples | Moyenne |
 
-Les outils de montage existants restent utilisables sur chaque résultat. Récurrence automatique et mémoire narrative sont reportées après validation de ce parcours manuel. Ces étapes constituent une recommandation ; leur développement se fait lot par lot.
+Les outils de montage existants restent utilisables sur chaque résultat. Le lancement groupé d’un lot fini peut réutiliser l’orchestration du deuxième lot. La priorité exprimée est désormais la série récurrente ; sa mémoire narrative durable et la qualité du rédacteur doivent être validées avant le mode autonome. Ces étapes constituent une recommandation ; leur développement se fait lot par lot. Voir la chaîne cible et les critères dans le guide des corrections du 24 octobre.
 
 Recentrage validé : fiabilité des publications, puis séries enregistrées avec épisodes préparés à l'avance, génération d'un lot fini, validation manuelle et programmation par épisode. La récurrence entièrement automatique et la mémoire narrative viendront ensuite. Le lot de fiabilisation ajoute les contrôles vidéo communs, la visibilité YouTube effective, des reprises par destination et une file IA/statistiques séparée. Voir [fiabilite-publication.md](fiabilite-publication.md). Gratuit et Creator à 9,99 €/mois restent des hypothèses, sans troisième offre ; quotas par offre et facturation dans leur lot, aucune modification des limites de stockage actuelles.
 

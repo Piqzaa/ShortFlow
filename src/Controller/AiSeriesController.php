@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\AiSeries;
 use App\Entity\User;
+use App\Form\AiEpisodeBatchType;
 use App\Form\AiEpisodeType;
 use App\Form\AiSeriesType;
 use App\Service\AiCatalog;
@@ -39,9 +40,13 @@ final class AiSeriesController extends AbstractController
     {
         $series = null === $id ? null : ($studio->owned($id, $user) ?? throw $this->createNotFoundException());
         $data = $series ? ['name' => $series->getName(), 'theme' => $series->getTheme(), 'style' => $series->getStyle(), 'characters' => $series->getCharacters(), 'revision' => (string) $series->getRevision()] + $series->getRecipe() : ['model' => 'kling-25', 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'imageFit' => 'crop', 'revision' => '0'];
+        $data['totalSeconds'] ??= $series ? ($series->getRecipe()['totalSeconds'] ?? 30) : 30;
         // Stored image names never come from a hidden field or the submitted form.
         unset($data['reference'], $data['endReference']);
-        $form = $this->createForm(AiSeriesType::class, $data);
+        if (!$series) {
+            $data['episodeCount'] = 1;
+        }
+        $form = $this->createForm(AiSeriesType::class, $data, ['creating' => null === $series]);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             try {
@@ -49,7 +54,7 @@ final class AiSeriesController extends AbstractController
                     throw new \RuntimeException('Trop de demandes rapprochées. Réessaie dans quelques minutes.');
                 }
                 $saved = $studio->configure($user, $form->getData(), $series);
-                $this->addFlash('success', $series ? 'Configuration enregistrée. Les prompts et préparations des épisodes sont conservés.' : 'Ta série et ses trois premiers épisodes sont enregistrés. Complète leurs prompts à ton rythme.');
+                $this->addFlash('success', $series ? 'Configuration enregistrée. Les préparations existantes sont conservées.' : 'Ta série est enregistrée. Prépare tes épisodes à ton rythme.');
 
                 return $this->redirectToRoute('app_series_show', ['id' => $saved->getId()], 303);
             } catch (\RuntimeException|\InvalidArgumentException $error) {
@@ -65,6 +70,28 @@ final class AiSeriesController extends AbstractController
         return $this->render('series/configure.html.twig', ['series' => $series, 'seriesForm' => $form, 'models' => AiCatalog::MODELS, 'access' => $access], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
+    #[Route('/studio/series/{id}/episodes', name: 'app_series_add_episodes', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function addEpisodes(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    {
+        $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
+        $form = $this->createForm(AiEpisodeBatchType::class, null, ['csrf_token_id' => 'series_add_'.$id])->handleRequest($request);
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            throw $this->createAccessDeniedException('Vérifie le nombre d’épisodes et recharge la page.');
+        }
+        try {
+            if (!$limiter->create('series-add-'.$user->getId())->consume()->isAccepted()) {
+                throw new \RuntimeException('Trop d’ajouts rapprochés. Réessaie dans quelques minutes.');
+            }
+            $data = $form->getData();
+            $studio->addEpisodes($user, $series, $data['count'], (int) $data['revision']);
+            $this->addFlash('success', 'Les épisodes à préparer ont été ajoutés.');
+        } catch (\RuntimeException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_series_show', ['id' => $id], 303);
+    }
+
     #[Route('/studio/series/{id}', name: 'app_series_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms): Response
     {
@@ -73,7 +100,7 @@ final class AiSeriesController extends AbstractController
         $episodeForms = [];
         $invalid = false;
         foreach ($episodes as $episode) {
-            if ($episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus()) {
+            if ($episode->getFlowState() || ($episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus())) {
                 continue;
             }
             $form = $forms->createNamed('episode_'.$episode->getId(), AiEpisodeType::class, ['title' => $episode->getTitle(), 'prompt' => $episode->getPrompt(), 'revision' => (string) $episode->getRevision(), 'seriesRevision' => (string) $series->getRevision()], ['csrf_token_id' => 'episode_'.$episode->getId()]);
@@ -108,6 +135,6 @@ final class AiSeriesController extends AbstractController
         }
         $model = AiCatalog::MODELS[$series->getRecipe()['model']];
 
-        return $this->render('series/show.html.twig', ['series' => $series, 'episodes' => $episodes, 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/show.html.twig', ['series' => $series, 'episodes' => $episodes, 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 }

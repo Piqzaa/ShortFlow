@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\AiEpisode;
 use App\Entity\User;
 use App\Entity\VideoEdit;
 use App\Message\RenderVideoEdit;
@@ -14,7 +15,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class VideoEdits
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoLibrary $library, private VideoEditRenderer $renderer, private MessageBusInterface $bus, private ManagerRegistry $registry, private EditCaptions $captionTools, private EditMusic $music, private CaptionTiming $timing, private EditTextLayers $textLayers, private EditAudioClips $audioClips)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private PrivateVideoStorage $storage, private VideoLibrary $library, private VideoEditRenderer $renderer, private MessageBusInterface $bus, private ManagerRegistry $registry, private EditCaptions $captionTools, private EditMusic $music, private CaptionTiming $timing, private EditTextLayers $textLayers, private EditAudioClips $audioClips, private EpisodeReservations $episodeReservations)
     {
     }
 
@@ -207,12 +208,63 @@ final class VideoEdits
         }
     }
 
-    private function capacity(User $owner): void
+    private function capacity(User $owner, ?VideoEdit $edit = null): void
     {
         $usage = $this->videos->usage($owner);
-        if ($usage['count'] >= VideoLibrary::MAX_VIDEOS || $usage['bytes'] + VideoLibrary::MAX_BYTES > VideoLibrary::MAX_STORAGE) {
+        $episode = $edit ? $this->em->getRepository(AiEpisode::class)->findOneBy(['assembly' => $edit]) : null;
+        $reserved = $this->episodeReservations->slots($owner, $episode, null, true);
+        if ($usage['count'] + $reserved >= VideoLibrary::MAX_VIDEOS || $usage['bytes'] + ($reserved + 1) * VideoLibrary::MAX_BYTES > VideoLibrary::MAX_STORAGE) {
             throw new VideoLibraryException('Libère une place et 100 Mo dans ta bibliothèque avant l’export.');
         }
+    }
+
+    /** @param list<int> $ids
+     * @param list<int> $durations
+     */
+    public function assembleEpisode(AiEpisode $episode, array $ids, array $durations = []): void
+    {
+        $this->em->getConnection()->transactional(function () use ($episode, $ids, $durations): void {
+            $owner = $episode->getOwner();
+            $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
+            $project = $episode->getAssembly();
+            if (!$project) {
+                if (!$ids || count($ids) > 8 || count(array_unique($ids)) !== count($ids)) {
+                    throw new VideoLibraryException('Les plans à assembler sont indisponibles.');
+                }
+                if ($this->em->getRepository(VideoEdit::class)->count(['owner' => $owner]) >= 50) {
+                    throw new VideoLibraryException('La limite de 50 projets de montage est atteinte.');
+                }
+                $clips = [];
+                foreach ($ids as $index => $id) {
+                    $video = $this->videos->owned($id, $owner) ?? throw new VideoLibraryException('Un plan est indisponible.');
+                    $clips[] = ['id' => $id, 'start' => 0.0, 'end' => min(round($video->getDuration(), 3), $durations[$index] ?? $video->getDuration())];
+                }
+                $this->validate($owner, $clips);
+                $project = new VideoEdit($owner, $episode->getTitle(), $clips);
+                $format = $episode->getFlowRecipe()['ratio'];
+                if ('auto' === $format) {
+                    $first = $this->videos->owned($ids[0], $owner);
+                    $format = $first->getWidth() === $first->getHeight() ? '1:1' : ($first->getWidth() > $first->getHeight() ? '16:9' : '9:16');
+                }
+                $project->revise($episode->getTitle(), $format, $clips);
+                $project->configure(array_replace($project->getSettings(), ['sourceVolume' => $episode->isMutePlans() ? 0 : 100]));
+                $this->em->persist($project);
+                $episode->assembleWith($project);
+                $this->em->flush();
+            }
+            if (in_array($project->getStatus(), ['ready', 'queued', 'rendering'], true)) {
+                return;
+            }
+            if ($this->em->getRepository(VideoEdit::class)->count(['owner' => $owner, 'status' => ['queued', 'rendering', 'transcribing']]) > 0) {
+                throw new VideoLibraryException('Un autre montage est en cours. Réessaie après sa fin.');
+            }
+            $this->capacity($owner, $project);
+            $project->progress('queued');
+            $episode->flow('assembling');
+            $this->em->flush();
+            $this->bus->dispatch(new RenderVideoEdit((int) $project->getId()));
+        });
     }
 
     public function remove(VideoEdit $project): void
@@ -304,12 +356,12 @@ final class VideoEdits
                 $this->em->lock($project->getOwner(), LockMode::PESSIMISTIC_WRITE);
                 $this->em->refresh($project, LockMode::PESSIMISTIC_WRITE);
                 $this->validate($project->getOwner(), $project->getClips());
-                $this->capacity($project->getOwner());
+                $this->capacity($project->getOwner(), $project);
                 $project->progress('rendering');
             });
             $path = $this->renderer->render($project);
             $this->em->wrapInTransaction(function () use ($project, $path, &$video): void {
-                $video = $this->library->import($project->getOwner(), new UploadedFile($path, 'montage.mp4', null, null, true), $project->getTitle());
+                $video = $this->library->import($project->getOwner(), new UploadedFile($path, 'montage.mp4', null, null, true), $project->getTitle(), $this->em->getRepository(AiEpisode::class)->findOneBy(['assembly' => $project]));
                 $project->complete($video);
             });
         } catch (\Throwable $error) {

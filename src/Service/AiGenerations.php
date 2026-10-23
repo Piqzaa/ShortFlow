@@ -16,7 +16,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiGenerations
 {
-    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry, private VideoAssetRepository $videos, private AiReferenceStorage $references)
+    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry, private VideoAssetRepository $videos, private AiReferenceStorage $references, private EpisodeReservations $episodeReservations)
     {
     }
 
@@ -40,7 +40,7 @@ final class AiGenerations
         if ('prepared' === $prepared->getStatus() && !$this->keys->hasAccess($owner, $provider, $prepared->getAccessMode())) {
             throw new \RuntimeException('mcp' === $prepared->getAccessMode() ? 'Connecte ton compte Fal par navigateur avant de confirmer.' : 'Ajoute ta clé '.$this->catalog->provider($provider).' avant de confirmer.');
         }
-        $this->em->wrapInTransaction(function () use ($owner, $id, $expectedRevision): void {
+        $this->em->getConnection()->transactional(function () use ($owner, $id, $expectedRevision): void {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
             $job = $this->owned($id, $owner) ?? throw new \RuntimeException('Génération indisponible.');
             $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
@@ -80,7 +80,7 @@ final class AiGenerations
         if (!$this->enabled) {
             throw new \RuntimeException('La génération est désactivée pour le moment.');
         }
-        $this->em->wrapInTransaction(function () use ($owner, $id, $confirmed): void {
+        $this->em->getConnection()->transactional(function () use ($owner, $id, $confirmed): void {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
             $job = $this->owned($id, $owner) ?? throw new \RuntimeException('Génération indisponible.');
             $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
@@ -158,9 +158,26 @@ final class AiGenerations
 
                     return;
                 }
-                // Commit this state before the billable POST. A redelivery must never submit again.
-                $job->progress('submitting');
-                $this->em->flush();
+                // The pause and the billable transition share the owner's lock.
+                // Persist before the POST: a redelivery must never submit again.
+                $canSubmit = $this->em->getConnection()->transactional(function () use ($job): bool {
+                    $this->em->lock($job->getOwner(), LockMode::PESSIMISTIC_WRITE);
+                    $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
+                    $shot = $this->em->getRepository(\App\Entity\AiShot::class)->findOneBy(['generation' => $job]);
+                    if ($shot) {
+                        $this->em->refresh($shot->getEpisode());
+                    }
+                    if ('queued' !== $job->getStatus() || ($shot && 'running' !== $shot->getEpisode()->getFlowState())) {
+                        return false;
+                    }
+                    $job->progress('submitting');
+                    $this->em->flush();
+
+                    return true;
+                });
+                if (!$canSubmit) {
+                    return;
+                }
                 try {
                     $remote = $this->api->submit($job, $key);
                     $job->progress('processing', remote: $remote);
@@ -195,7 +212,7 @@ final class AiGenerations
                 $path = $this->api->download($job, $result['url']);
                 // The job result and imported asset commit together, including on message redelivery.
                 $this->em->wrapInTransaction(function () use ($job, $path, &$video): void {
-                    $video = $this->library->import($job->getOwner(), new UploadedFile($path, 'generation.mp4', null, null, true), $job->getTitle());
+                    $video = $this->library->import($job->getOwner(), new UploadedFile($path, 'generation.mp4', null, null, true), $job->getTitle(), null, $job);
                     $job->complete($video);
                 });
             } catch (\Throwable) {
@@ -245,7 +262,7 @@ final class AiGenerations
     {
         $usage = $this->videos->usage($job->getOwner());
         $active = $this->em->getRepository(AiGeneration::class)->count(['owner' => $job->getOwner(), 'status' => ['queued', 'submitting', 'processing']]);
-        $slots = $active + (in_array($job->getStatus(), ['queued', 'submitting', 'processing'], true) ? 0 : 1);
+        $slots = $active + $this->episodeReservations->slots($job->getOwner(), null, $job) + (in_array($job->getStatus(), ['queued', 'submitting', 'processing'], true) ? 0 : 1);
         if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > VideoLibrary::MAX_STORAGE) {
             throw new \RuntimeException('Place insuffisante dans ta bibliothèque. Prévois une place et 100 Mo libres par génération en attente ou en cours, puis confirme à nouveau. Aucune nouvelle génération n’a été envoyée.');
         }

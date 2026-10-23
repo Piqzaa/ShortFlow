@@ -34,6 +34,15 @@ final class AiStudioTest extends WebTestCase
     /** @var list<string> */ private array $files = [];
     private const KEY = 'synthetic-fal-key-never-real-1234567890';
 
+    /** @param array<string,mixed> $values */
+    private function legacyForm(\Symfony\Component\DomCrawler\Crawler $crawler, array $values = []): \Symfony\Component\DomCrawler\Form
+    {
+        $form = $crawler->selectButton('Voir le récapitulatif →')->form($values);
+        $form['intent'] = 'prepare';
+
+        return $form;
+    }
+
     protected function setUp(): void
     {
         $_ENV['AI_GENERATION_ENABLED'] = '1';
@@ -163,12 +172,12 @@ final class AiStudioTest extends WebTestCase
         $this->client->request('GET', '/studio/creation/images/'.$name);
         self::assertResponseStatusCodeSame(404);
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[reference]' => $name, 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Animate the trees', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => 'auto']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[reference]' => $name, 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Animate the trees', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => 'auto']));
         self::assertResponseStatusCodeSame(422);
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
         $this->client->loginUser($this->owner);
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[reference]' => $name, 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Animate the trees', 'ai_idea[seconds]' => 10, 'ai_idea[ratio]' => 'auto']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[reference]' => $name, 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Animate the trees', 'ai_idea[seconds]' => 10, 'ai_idea[ratio]' => 'auto']));
         self::assertResponseStatusCodeSame(303);
         $this->client->followRedirect();
         self::assertSelectorExists('img[alt="Image de départ de cette génération"]');
@@ -241,16 +250,16 @@ final class AiStudioTest extends WebTestCase
         $this->client->request('POST', '/studio/creation/images', ['ai_reference' => ['_token' => $token]], ['ai_reference' => ['image' => new UploadedFile($file, 'fake.jpg', 'image/jpeg', null, true)]], ['HTTP_ACCEPT' => 'application/json']);
         self::assertResponseStatusCodeSame(422);
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'A camera move', 'ai_idea[ratio]' => 'auto']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'A camera move', 'ai_idea[ratio]' => 'auto']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.creation-form', 'Importe une image');
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[reference]' => '../../secret.jpg', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'A camera move', 'ai_idea[ratio]' => 'auto']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[reference]' => '../../secret.jpg', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'A camera move', 'ai_idea[ratio]' => 'auto']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorNotExists('img.creation-reference-preview[src]');
 
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[model]' => 'kling-25', 'ai_idea[prompt]' => 'A camera move']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[model]' => 'kling-25', 'ai_idea[prompt]' => 'A camera move']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.creation-form', 'compatible avec ton point de départ');
         self::assertSame(0, $this->submissions);
@@ -265,7 +274,7 @@ final class AiStudioTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame([1920, 1080], array_slice(getimagesizefromstring($this->client->getResponse()->getContent()), 0, 2));
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[useEnd]' => '1', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => $last, 'ai_idea[imageFit]' => 'contain', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Transition gently', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => '16:9']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[useEnd]' => '1', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => $last, 'ai_idea[imageFit]' => 'contain', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Transition gently', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => '16:9']));
         self::assertResponseStatusCodeSame(303);
         $this->client->followRedirect();
         self::assertSelectorExists('img[alt="Image de fin de cette génération"]');
@@ -278,7 +287,7 @@ final class AiStudioTest extends WebTestCase
         self::assertSelectorExists('input[name="ai_idea[endReference]"][value="'.$last.'"]');
         self::assertSelectorExists('input[name="ai_idea[useEnd]"][checked]');
         $crawler = $this->client->getCrawler();
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[model]' => 'wan-25-image-720p']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[model]' => 'wan-25-image-720p']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.creation-form', 'n’accepte pas d’image de fin');
         self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
@@ -294,11 +303,11 @@ final class AiStudioTest extends WebTestCase
     {
         $first = $this->imageUpload();
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[useEnd]' => '1', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => '', 'ai_idea[model]' => 'vidu-q1-frames', 'ai_idea[prompt]' => 'Transition gently', 'ai_idea[seconds]' => 4, 'ai_idea[ratio]' => 'auto']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[useEnd]' => '1', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => '', 'ai_idea[model]' => 'vidu-q1-frames', 'ai_idea[prompt]' => 'Transition gently', 'ai_idea[seconds]' => 4, 'ai_idea[ratio]' => 'auto']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.creation-form', 'Importe ton image de fin');
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => '../../secret.jpg', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Transition gently']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[reference]' => $first, 'ai_idea[endReference]' => '../../secret.jpg', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Transition gently']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorNotExists('img[alt="Image de fin"][src]');
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
@@ -511,7 +520,7 @@ final class AiStudioTest extends WebTestCase
         $crawler = $this->client->followRedirect();
         self::assertSelectorExists('input[name="ai_idea[title]"][value="Mon idée"]');
         self::assertSelectorTextContains('textarea', 'Un paysage <privé>');
-        $form = $crawler->selectButton('Voir le récapitulatif →')->form();
+        $form = $this->legacyForm($crawler);
         $data = $form->getPhpValues();
         $data['ai_idea']['model'] = 'arbitrary-endpoint';
         $this->client->request('POST', '/studio/ia', $data);
@@ -728,7 +737,7 @@ final class AiStudioTest extends WebTestCase
     {
         $this->client->request('GET', '/studio/creation');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextSame('h1', 'Studio.');
+        self::assertSelectorTextSame('h1', 'Créer une vidéo.');
         self::assertSelectorExists('.studio-sidebar nav a[href="/studio/creation"][aria-current="page"]');
         self::assertSelectorExists('.studio-bottom-nav a[href="/studio/creation"][aria-current="page"]');
         self::assertSelectorNotExists('.studio-sidebar nav a[href="/studio"][aria-current="page"]');
@@ -741,7 +750,7 @@ final class AiStudioTest extends WebTestCase
         self::assertSelectorNotExists('.studio-sidebar nav a[href="/studio/creation"][aria-current="page"]');
         $this->client->request('GET', '/studio/ia');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextSame('h1', 'Studio.');
+        self::assertSelectorTextSame('h1', 'Créer une vidéo.');
         $this->client->request('GET', '/studio/connexions/ia');
         self::assertSelectorExists('.studio-sidebar nav a[href="/studio/connexions"][aria-current="page"]');
         self::assertSelectorNotExists('.studio-sidebar nav a[href="/studio/creation"][aria-current="page"]');
@@ -750,7 +759,7 @@ final class AiStudioTest extends WebTestCase
     public function testIdeaCanBePreparedWithoutNamingItAndStillRequiresCostConfirmation(): void
     {
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => "Une scène\n  au soleil <privée>", 'ai_idea[model]' => 'kling-25', 'ai_idea[seconds]' => 10]));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[prompt]' => "Une scène\n  au soleil <privée>", 'ai_idea[model]' => 'kling-25', 'ai_idea[seconds]' => 10]));
         self::assertResponseStatusCodeSame(303);
         $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
         self::assertSame('Une scène au soleil <privée>', $job->getTitle());
@@ -765,7 +774,7 @@ final class AiStudioTest extends WebTestCase
     public function testWhitespaceIdeaCannotCreateAnEmptyPreparation(): void
     {
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => " \n ", 'ai_idea[model]' => 'kling-25']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[prompt]' => " \n ", 'ai_idea[model]' => 'kling-25']));
         self::assertResponseStatusCodeSame(422);
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
         self::assertSame(0, $this->submissions);
@@ -825,7 +834,7 @@ final class AiStudioTest extends WebTestCase
         $this->client->submit($crawler->selectButton('Enregistrer ma clé Replicate')->form(['apiKey' => 'synthetic-replicate-only-key-123456']));
         $crawler = $this->client->followRedirect();
         self::assertSelectorExists('option[value="wan-25-replicate"][selected]');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form());
+        $this->client->submit($this->legacyForm($crawler));
         $this->client->followRedirect();
         self::assertSelectorTextContains('.studio-heading', 'Wan 2.5 · Replicate · 720p · 10 secondes');
         self::assertSelectorTextContains('.ai-review', '1,00 $ US');
@@ -847,7 +856,7 @@ final class AiStudioTest extends WebTestCase
     {
         foreach ([['kling-25', 15, '9:16'], ['wan-25-replicate', 5, '1:1'], ['kling-3', 3, '9:16']] as [$model, $seconds, $ratio]) {
             $crawler = $this->client->request('GET', '/studio/creation');
-            $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => 'Un plan contrôlé', 'ai_idea[model]' => $model, 'ai_idea[seconds]' => $seconds, 'ai_idea[ratio]' => $ratio]));
+            $this->client->submit($this->legacyForm($crawler, ['ai_idea[prompt]' => 'Un plan contrôlé', 'ai_idea[model]' => $model, 'ai_idea[seconds]' => $seconds, 'ai_idea[ratio]' => $ratio]));
             self::assertResponseStatusCodeSame('kling-3' === $model ? 303 : 422);
         }
         $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
@@ -1019,13 +1028,13 @@ final class AiStudioTest extends WebTestCase
     public function testThirtySecondIdeaAndMultibytePromptLimitsAreValidatedBeforeAnySpend(): void
     {
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => 'Une histoire de trente secondes', 'ai_idea[model]' => 'seedance-25', 'ai_idea[seconds]' => 30, 'ai_idea[ratio]' => '9:16']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[prompt]' => 'Une histoire de trente secondes', 'ai_idea[model]' => 'seedance-25', 'ai_idea[seconds]' => 30, 'ai_idea[ratio]' => '9:16']));
         self::assertResponseStatusCodeSame(303);
         $crawler = $this->client->followRedirect();
         self::assertSelectorTextContains('.studio-heading', '30 secondes');
         self::assertSelectorTextContains('.ai-review', '14,19 $ US');
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => str_repeat('🌲', 600), 'ai_idea[model]' => 'pixverse-6', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => '9:16']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[prompt]' => str_repeat('🌲', 600), 'ai_idea[model]' => 'pixverse-6', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => '9:16']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.creation-form', '2048 octets');
         self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
@@ -1068,11 +1077,11 @@ final class AiStudioTest extends WebTestCase
     public function testMcpCannotBeForgedForAnotherProviderAndFourKBlocksLongDurations(): void
     {
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => 'A forest', 'ai_idea[model]' => 'ltx-25-fast-4k', 'ai_idea[seconds]' => 6, 'ai_idea[ratio]' => '9:16', 'ai_idea[accessMode]' => 'mcp']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[prompt]' => 'A forest', 'ai_idea[model]' => 'ltx-25-fast-4k', 'ai_idea[seconds]' => 6, 'ai_idea[ratio]' => '9:16', 'ai_idea[accessMode]' => 'mcp']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.creation-form', 'Ce fournisseur utilise une clé API');
         $crawler = $this->client->request('GET', '/studio/creation');
-        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => 'A forest', 'ai_idea[model]' => 'ltx-25-fast-4k', 'ai_idea[seconds]' => 20, 'ai_idea[ratio]' => '9:16', 'ai_idea[accessMode]' => 'api']));
+        $this->client->submit($this->legacyForm($crawler, ['ai_idea[prompt]' => 'A forest', 'ai_idea[model]' => 'ltx-25-fast-4k', 'ai_idea[seconds]' => 20, 'ai_idea[ratio]' => '9:16', 'ai_idea[accessMode]' => 'api']));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.creation-form', 'Cette durée n’est pas disponible');
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));

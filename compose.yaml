@@ -30,6 +30,24 @@ services:
         condition: service_started
       database:
         condition: service_healthy
+  story-worker:
+    image: vydflow-php
+    pull_policy: never
+    init: true
+    command: ["sh", "/app/docker/php/worker.sh"]
+    restart: unless-stopped
+    stop_grace_period: 3m
+    volumes: *app_volumes
+    environment:
+      <<: *app_environment
+      APP_ENV: dev
+      APP_DEBUG: "0"
+      MESSENGER_QUEUE: story_writing
+    depends_on:
+      php:
+        condition: service_started
+      database:
+        condition: service_healthy
   background-worker:
     image: vydflow-php
     pull_policy: never

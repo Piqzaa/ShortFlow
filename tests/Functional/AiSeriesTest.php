@@ -67,7 +67,7 @@ final class AiSeriesTest extends WebTestCase
     private function createSeries(array $overrides = []): AiSeries
     {
         $crawler = $this->client->request('GET', '/studio/series/nouvelle');
-        $this->client->submit($crawler->selectButton('Créer la série et ses 3 épisodes →')->form($overrides + ['ai_series[name]' => 'Les aventures de Milo <script>', 'ai_series[theme]' => 'Un chat explore la lune.', 'ai_series[style]' => 'Cinéma doux', 'ai_series[characters]' => 'Milo, chat roux en combinaison.']));
+        $this->client->submit($crawler->selectButton('Créer ma série →')->form($overrides + ['ai_series[episodeCount]' => 3, 'ai_series[name]' => 'Les aventures de Milo <script>', 'ai_series[theme]' => 'Un chat explore la lune.', 'ai_series[style]' => 'Cinéma doux', 'ai_series[characters]' => 'Milo, chat roux en combinaison.']));
         self::assertResponseStatusCodeSame(303);
 
         return $this->em()->getRepository(AiSeries::class)->findOneBy(['owner' => $this->owner], ['id' => 'DESC']);
@@ -92,7 +92,7 @@ final class AiSeriesTest extends WebTestCase
         $episodes = $this->episodes($series);
         self::assertCount(3, $episodes);
         self::assertSame([1, 2, 3], array_map(static fn (AiEpisode $e): int => $e->getNumber(), $episodes));
-        self::assertStringContainsString('Milo, chat roux', $episodes[0]->getPrompt());
+        self::assertSame('', $episodes[0]->getPrompt());
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
         $this->open($series);
@@ -106,56 +106,80 @@ final class AiSeriesTest extends WebTestCase
         self::assertSelectorTextContains('.series-item', 'Les aventures de Milo');
     }
 
+    public function testChosenEpisodeCountAndAddingEpisodesArePrivateAndIdempotent(): void
+    {
+        $series = $this->createSeries(['ai_series[episodeCount]' => 0]);
+        self::assertCount(0, $this->episodes($series));
+        $crawler = $this->open($series);
+        self::assertSelectorTextContains('.series-episodes', 'Ajoute un épisode');
+        $form = $crawler->selectButton('Ajouter les épisodes →')->form(['ai_episode_batch[count]' => 2]);
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame([1, 2], array_map(static fn (AiEpisode $e): int => $e->getNumber(), $this->episodes($series)));
+        foreach ($this->episodes($series) as $episode) {
+            self::assertSame('', $episode->getPrompt());
+        }
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        self::assertCount(2, $this->episodes($series));
+        $crawler = $this->open($series);
+        $values = $crawler->selectButton('Ajouter les épisodes →')->form()->getPhpValues();
+        $bad = $values;
+        $bad['ai_episode_batch']['_token'] = 'bad';
+        $this->client->request('POST', '/studio/series/'.$series->getId().'/episodes', $bad);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->loginUser($this->other);
+        $this->client->request('POST', '/studio/series/'.$series->getId().'/episodes', $values);
+        self::assertResponseStatusCodeSame(404);
+        self::assertCount(2, $this->episodes($series));
+    }
+
+    /** Legacy preparation remains callable by existing tabs, but is no longer a second visible journey. */
+    private function legacyPrepare(AiSeries $series, int $number = 0, ?string $prompt = null, bool $prepare = true): ?AiGeneration
+    {
+        $episode = $this->episodes($series)[$number];
+        $owner = $this->em()->find(User::class, $this->owner->getId());
+
+        return static::getContainer()->get(\App\Service\AiSeriesStudio::class)->saveEpisode($owner, $episode, ['title' => $episode->getTitle(), 'prompt' => $prompt ?? ($episode->getPrompt() ?: $series->initialPrompt()), 'revision' => $episode->getRevision(), 'seriesRevision' => $this->em()->find(AiSeries::class, $series->getId())->getRevision()], $prepare);
+    }
+
     public function testSavePrepareReviseAndRepeatedPreparationReuseTheSameGeneration(): void
     {
         $series = $this->createSeries();
-        $episode = $this->episodes($series)[0];
-        $root = 'episode_'.$episode->getId();
-        $crawler = $this->open($series);
-        $this->client->submit($crawler->filter('#episode-'.$episode->getId())->selectButton('Enregistrer le prompt')->form([$root.'[title]' => 'Premier pas', $root.'[prompt]' => 'Milo steps onto the moon.']));
-        self::assertResponseStatusCodeSame(303);
+        $this->legacyPrepare($series, prompt: 'Milo steps onto the moon.', prepare: false);
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
-        $crawler = $this->open($series);
-        $form = $crawler->filter('#episode-'.$episode->getId())->selectButton('Vérifier l’estimation →')->form();
-        $this->client->submit($form);
-        self::assertResponseStatusCodeSame(303);
-        self::assertMatchesRegularExpression('~^/studio/ia/generations/\d+$~', $this->client->getResponse()->headers->get('Location'));
-        $episode = $this->em()->find(AiEpisode::class, $episode->getId());
-        $job = $episode->getGeneration();
-        self::assertNotNull($job);
+        $job = $this->legacyPrepare($series);
         self::assertSame('prepared', $job->getStatus());
         self::assertSame(35, $job->getEstimatedCents());
-        $this->client->submit($form);
-        self::assertResponseRedirects('/studio/ia/generations/'.$job->getId(), 303);
-        self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
-        $this->client->followRedirect();
-        self::assertSelectorExists('a[href="/studio/series/'.$series->getId().'#episode-'.$episode->getId().'"]');
-        $crawler = $this->open($series);
-        $this->client->submit($crawler->filter('#episode-'.$episode->getId())->selectButton('Enregistrer le prompt')->form([$root.'[prompt]' => 'Milo waves at Earth.']));
-        self::assertResponseStatusCodeSame(303);
+        $episode = $this->episodes($series)[0];
+        $this->open($series);
+        self::assertSelectorNotExists('#episode-'.$episode->getId().' form');
+        self::assertSelectorExists('a[href="/studio/series/episodes/'.$episode->getId().'"]');
+        $this->legacyPrepare($series, prompt: 'Milo waves at Earth.', prepare: false);
         $job = $this->em()->find(AiGeneration::class, $job->getId());
         self::assertSame('Milo waves at Earth.', $job->getPrompt());
+        self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame($job->getId(), $this->legacyPrepare($series)->getId());
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
     public function testOwnershipCsrfAndUnknownEpisodesCannotBeBypassed(): void
     {
         $series = $this->createSeries();
-        $crawler = $this->open($series);
         $episode = $this->episodes($series)[0];
-        $root = 'episode_'.$episode->getId();
-        $form = $crawler->filter('#episode-'.$episode->getId())->selectButton('Vérifier l’estimation →')->form();
-        $values = $form->getPhpValues();
-        $values[$root]['_token'] = 'invalid';
-        $this->client->request('POST', '/studio/series/'.$series->getId(), $values);
+        $url = '/studio/series/episodes/'.$episode->getId();
+        $crawler = $this->client->request('GET', $url);
+        $values = $crawler->selectButton('Voir le récapitulatif →')->form()->getPhpValues();
+        $values['ai_idea']['_token'] = 'invalid';
+        $this->client->request('POST', $url, $values);
         self::assertResponseStatusCodeSame(422);
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
         $this->client->loginUser($this->other);
-        foreach (['/studio/series/'.$series->getId(), '/studio/series/'.$series->getId().'/configuration'] as $url) {
-            $this->client->request('GET', $url);
+        foreach ([$url, '/studio/series/'.$series->getId(), '/studio/series/'.$series->getId().'/configuration'] as $path) {
+            $this->client->request('GET', $path);
             self::assertResponseStatusCodeSame(404);
         }
-        $this->client->request('POST', '/studio/series/'.$series->getId(), $form->getPhpValues());
+        $this->client->request('POST', $url, $values);
         self::assertResponseStatusCodeSame(404);
         $this->client->request('GET', '/studio/series');
         self::assertSelectorNotExists('.series-item');
@@ -169,7 +193,7 @@ final class AiSeriesTest extends WebTestCase
             foreach ($settings as $key => $value) {
                 $values['ai_series['.$key.']'] = $value;
             }
-            $this->client->submit($crawler->selectButton('Créer la série et ses 3 épisodes →')->form($values));
+            $this->client->submit($crawler->selectButton('Créer ma série →')->form($values));
             self::assertResponseStatusCodeSame(422);
             self::assertSame(0, $this->em()->getRepository(AiSeries::class)->count([]));
             self::assertSame(0, $this->em()->getRepository(AiEpisode::class)->count([]));
@@ -180,46 +204,42 @@ final class AiSeriesTest extends WebTestCase
     {
         $series = $this->createSeries();
         $episode = $this->episodes($series)[0];
-        $crawler = $this->open($series);
-        $stale = $crawler->filter('#episode-'.$episode->getId())->selectButton('Enregistrer le prompt')->form();
-        $this->client->submit($crawler->filter('#episode-'.$episode->getId())->selectButton('Vérifier l’estimation →')->form());
-        $episode = $this->em()->find(AiEpisode::class, $episode->getId());
-        $job = $episode->getGeneration();
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $stale = $crawler->selectButton('Voir le récapitulatif →')->form();
+        $job = $this->legacyPrepare($series);
         $crawler = $this->client->request('GET', '/studio/series/'.$series->getId().'/configuration');
-        $this->client->submit($crawler->selectButton('Enregistrer la configuration')->form(['ai_series[theme]' => 'Un voyage sur Mars', 'ai_series[seconds]' => 10]));
+        $this->client->submit($crawler->selectButton('Enregistrer la configuration')->form(['ai_series[theme]' => 'Un voyage sur Mars', 'ai_series[seconds]' => 10, 'ai_series[totalSeconds]' => 45]));
         self::assertResponseStatusCodeSame(303);
         $series = $this->em()->find(AiSeries::class, $series->getId());
         self::assertSame(5, $job->getSeconds());
         self::assertSame(10, $series->getRecipe()['seconds']);
-        self::assertStringContainsString('la lune', $episode->getPrompt());
+        self::assertSame(45, $series->getRecipe()['totalSeconds']);
+        $stale['ai_idea[shots][0][prompt]'] = 'Scene first';
+        $stale['ai_idea[shots][1][prompt]'] = 'Scene second';
+        $stale['ai_idea[shots][2][prompt]'] = 'Scene third';
         $this->client->submit($stale);
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('#episode-'.$episode->getId().' form', 'autre onglet');
+        self::assertSelectorTextContains('.creation-form', 'changé');
         $next = $this->episodes($series)[1];
-        $crawler = $this->open($series);
-        $this->client->submit($crawler->filter('#episode-'.$next->getId())->selectButton('Vérifier l’estimation →')->form());
-        $next = $this->em()->find(AiEpisode::class, $next->getId());
-        self::assertSame(10, $next->getGeneration()->getSeconds());
-        self::assertSame(70, $next->getGeneration()->getEstimatedCents());
+        $this->client->request('GET', '/studio/series/episodes/'.$next->getId());
+        self::assertSelectorExists('input[name="ai_idea[target]"][value="45"]');
+        $nextJob = $this->legacyPrepare($series, 1);
+        self::assertSame(10, $nextJob->getSeconds());
+        self::assertSame(70, $nextJob->getEstimatedCents());
     }
 
     public function testListReflectsRealStatusAndConfirmedPromptCannotBeChanged(): void
     {
         $series = $this->createSeries();
+        $job = $this->legacyPrepare($series);
         $episode = $this->episodes($series)[0];
-        $crawler = $this->open($series);
-        $this->client->submit($crawler->filter('#episode-'.$episode->getId())->selectButton('Vérifier l’estimation →')->form());
-        $crawler = $this->open($series);
-        $stale = $crawler->filter('#episode-'.$episode->getId())->selectButton('Enregistrer le prompt')->form(['episode_'.$episode->getId().'[prompt]' => 'Changed while submitting']);
-        $episode = $this->em()->find(AiEpisode::class, $episode->getId());
-        $episode->getGeneration()->progress('processing');
+        $job->progress('processing');
         $this->em()->flush();
-        $this->client->submit($stale);
-        self::assertResponseStatusCodeSame(403);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertResponseStatusCodeSame(404);
         $this->open($series);
         self::assertSelectorTextContains('#episode-'.$episode->getId().' .series-status', 'Génération en cours');
         self::assertSelectorNotExists('#episode-'.$episode->getId().' textarea');
-        self::assertStringNotContainsString('Changed while submitting', $episode->getPrompt());
     }
 
     public function testImageRecipeReusesPrivateStorageAndCopiesReferencesToPreparation(): void
@@ -231,13 +251,13 @@ final class AiSeriesTest extends WebTestCase
         $image = $series->getRecipe()['reference'];
         self::assertNotNull($image);
         $this->files[] = static::getContainer()->get(AiReferenceStorage::class)->path($this->owner, $image);
-        $crawler = $this->open($series);
+        $job = $this->legacyPrepare($series);
+        self::assertSame($image, $job->getReferenceImage());
+        self::assertSame('mcp', $job->getAccessMode());
         $episode = $this->episodes($series)[0];
-        $this->client->submit($crawler->filter('#episode-'.$episode->getId())->selectButton('Vérifier l’estimation →')->form());
-        self::assertResponseStatusCodeSame(303);
-        $episode = $this->em()->find(AiEpisode::class, $episode->getId());
-        self::assertSame($image, $episode->getGeneration()->getReferenceImage());
-        self::assertSame('mcp', $episode->getGeneration()->getAccessMode());
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertSelectorExists('input[name="ai_idea[reference]"][value="'.$image.'"]');
+        self::assertSelectorExists('select[name="ai_idea[model]"]');
         $this->client->loginUser($this->other);
         $this->client->request('GET', '/studio/creation/images/'.$image);
         self::assertResponseStatusCodeSame(404);
@@ -248,14 +268,11 @@ final class AiSeriesTest extends WebTestCase
         $series = $this->createSeries();
         static::getContainer()->get(AiKeys::class)->save($this->em()->find(User::class, $this->owner->getId()), 'synthetic-series-key-never-real-1234567890');
         $this->em()->flush();
-        $episode = $this->episodes($series)[0];
-        $crawler = $this->open($series);
-        $this->client->submit($crawler->filter('#episode-'.$episode->getId())->selectButton('Vérifier l’estimation →')->form());
-        $jobUrl = $this->client->getResponse()->headers->get('Location');
-        $crawler = $this->client->followRedirect();
+        $job = $this->legacyPrepare($series);
+        $jobUrl = '/studio/ia/generations/'.$job->getId();
+        $crawler = $this->client->request('GET', $jobUrl);
         $confirmation = $crawler->selectButton('Confirmer et générer →')->form(['confirm' => '1']);
-        $crawler = $this->open($series);
-        $this->client->submit($crawler->filter('#episode-'.$episode->getId())->selectButton('Enregistrer le prompt')->form(['episode_'.$episode->getId().'[prompt]' => 'A new scene with Milo.']));
+        $this->legacyPrepare($series, prompt: 'A new scene with Milo.', prepare: false);
         $this->client->submit($confirmation);
         self::assertResponseRedirects($jobUrl, 303);
         $this->client->followRedirect();
@@ -267,10 +284,10 @@ final class AiSeriesTest extends WebTestCase
     {
         $series = $this->createSeries(['ai_series[model]' => 'pixverse-6']);
         $episode = $this->episodes($series)[0];
-        $crawler = $this->open($series);
-        $this->client->submit($crawler->filter('#episode-'.$episode->getId())->selectButton('Vérifier l’estimation →')->form(['episode_'.$episode->getId().'[prompt]' => str_repeat('🌙', 600)]));
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[prompt]' => str_repeat('🌙', 600)]));
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('#episode-'.$episode->getId().' form', 'octets');
+        self::assertSelectorTextContains('.creation-form', 'octets');
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
     }
 }

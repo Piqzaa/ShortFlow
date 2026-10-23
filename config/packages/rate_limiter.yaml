@@ -1,5 +1,9 @@
 framework:
     rate_limiter:
+        story_proposal:
+            policy: fixed_window
+            limit: 4
+            interval: '15 minutes'
         publication_draft:
             policy: sliding_window
             limit: 30

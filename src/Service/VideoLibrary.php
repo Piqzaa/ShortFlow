@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use App\Entity\AiEpisode;
+use App\Entity\AiGeneration;
 use App\Entity\User;
 use App\Entity\VideoAsset;
 use App\Repository\VideoAssetRepository;
@@ -15,11 +17,11 @@ final class VideoLibrary
     public const MAX_STORAGE = 1073741824;
     public const MAX_VIDEOS = 100;
 
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private VideoProbe $probe, private PrivateVideoStorage $storage)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private VideoProbe $probe, private PrivateVideoStorage $storage, private EpisodeReservations $episodeReservations)
     {
     }
 
-    public function import(User $owner, UploadedFile $file, ?string $title): VideoAsset
+    public function import(User $owner, UploadedFile $file, ?string $title, ?AiEpisode $completingEpisode = null, ?AiGeneration $completingGeneration = null): VideoAsset
     {
         if (!$file->isValid() || $file->getSize() < 1 || $file->getSize() > self::MAX_BYTES) {
             throw new VideoLibraryException('Choisis une vidéo valide de 100 Mo maximum.');
@@ -35,10 +37,17 @@ final class VideoLibrary
         $video = new VideoAsset($owner, $title, $name, $info['mime'], (int) $file->getSize(), $info['duration'], $info['width'], $info['height'], $info['codec']);
         $video->recordTechnicalMetadata($info['technical']);
         try {
-            $this->em->wrapInTransaction(function () use ($owner, $file, $name, $video): void {
+            $this->em->wrapInTransaction(function () use ($owner, $file, $name, $video, $completingEpisode, $completingGeneration): void {
                 $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
                 $usage = $this->videos->usage($owner);
-                if ($usage['count'] >= self::MAX_VIDEOS || $usage['bytes'] + $video->getByteSize() > self::MAX_STORAGE) {
+                if ($completingEpisode && $completingEpisode->getOwner()->getId() !== $owner->getId()) {
+                    throw new VideoLibraryException('Résultat indisponible.');
+                }
+                if ($completingGeneration && $completingGeneration->getOwner()->getId() !== $owner->getId()) {
+                    throw new VideoLibraryException('Génération indisponible.');
+                }
+                $reserved = $this->episodeReservations->slots($owner, $completingEpisode, $completingGeneration, true);
+                if ($usage['count'] + $reserved >= self::MAX_VIDEOS || $usage['bytes'] + $reserved * self::MAX_BYTES + $video->getByteSize() > self::MAX_STORAGE) {
                     throw new VideoLibraryException('Ta bibliothèque a atteint sa limite : 100 vidéos ou 1 Go. Supprime une vidéo pour libérer de la place.');
                 }
                 $this->storage->store($file, $name);
@@ -89,6 +98,10 @@ final class VideoLibrary
                         throw new VideoLibraryException('Sélection indisponible.');
                     }
                     $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
+                    $episodeUse = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM ai_shot s JOIN ai_episode e ON e.id = s.episode_id JOIN ai_generation g ON g.id = s.generation_id WHERE g.video_id = ? AND e.flow_state IN ('running', 'assembling', 'paused')", [$video->getId()]);
+                    if ($episodeUse) {
+                        throw new VideoLibraryException('Ce clip est utilisé par un épisode en cours ou suspendu. Termine cet épisode avant de le retirer. Aucune vidéo supprimée.');
+                    }
                     foreach ($this->em->getRepository(\App\Entity\VideoEdit::class)->findBy(['owner' => $owner, 'status' => ['queued', 'rendering', 'transcribing']]) as $edit) {
                         if (in_array($video->getId(), array_column($edit->getClips(), 'id'), true)) {
                             $operation = 'transcribing' === $edit->getStatus() ? 'la création des sous-titres' : 'un export de montage';

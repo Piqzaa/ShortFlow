@@ -6,7 +6,9 @@ use App\Service\AiCatalog;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -32,6 +34,11 @@ final class AiIdeaType extends AbstractType
             $disconnected = isset($options['connected_providers'][$model['provider']]) && !$options['connected_providers'][$model['provider']];
             $choices[(in_array($id, $favoriteVariants, true) ? '★ ' : '').$model['name'].$resolution.' · '.AiCatalog::PROVIDERS[$model['provider']].($disconnected ? ' · à connecter' : '')] = $id;
         }
+        $builder->add('target', IntegerType::class, ['label' => 'Durée finale souhaitée (secondes)', 'required' => false, 'constraints' => [new Assert\Range(min: 1, max: 60)], 'attr' => ['min' => 1, 'max' => 60]])
+            ->add('continuity', ChoiceType::class, ['label' => 'Comment enchaîner les clips ?', 'required' => true, 'placeholder' => false, 'empty_data' => 'independent', 'choices' => ['Plusieurs scènes' => 'independent', 'Prolonger l’action' => 'linked']])
+            ->add('mute', CheckboxType::class, ['label' => 'Couper le son des plans au montage', 'required' => false])
+            ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])
+            ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations()], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
         $builder
             ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire une vidéo' => 'text', 'Animer une image' => 'image'], 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
             ->add('reference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
@@ -39,7 +46,7 @@ final class AiIdeaType extends AbstractType
             ->add('useEnd', CheckboxType::class, ['label' => 'Ajouter une image de fin', 'required' => false])
             ->add('imageFit', ChoiceType::class, ['label' => 'Ajustement des images', 'choices' => ['Recadrage centré' => 'crop', 'Image entière (bandes)' => 'contain'], 'placeholder' => false, 'required' => false, 'empty_data' => 'crop'])
             ->add('title', TextType::class, ['label' => 'Nom de ta création', 'required' => false, 'help' => 'Facultatif : un nom sera proposé à partir de ton idée.', 'constraints' => [new Assert\Length(max: 120, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['maxlength' => 120]])
-            ->add('prompt', TextareaType::class, ['label' => 'Ton idée', 'help' => 'Décris le sujet, le mouvement et l’ambiance. Un prompt en anglais est conseillé pour ces modèles.', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 1500, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['rows' => 6, 'maxlength' => 1500, 'placeholder' => 'Une caméra suit un cycliste au lever du soleil…']])
+            ->add('prompt', TextareaType::class, ['label' => 'Ton idée', 'help' => 'Quelques mots suffisent pour proposer un scénario. Tu peux aussi écrire tes scènes toi-même.', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 1500, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['rows' => 4, 'maxlength' => 1500, 'placeholder' => 'Milo, mon chat blanc joueur, découvre un aspirateur robot…']])
             ->add('model', ChoiceType::class, ['label' => 'Modèle, résolution et fournisseur', 'placeholder' => 'Choisir un modèle', 'choices' => $choices, 'choice_attr' => static fn (string $id): array => isset($options['connected_providers'][AiCatalog::MODELS[$id]['provider']]) && !$options['connected_providers'][AiCatalog::MODELS[$id]['provider']] ? ['class' => 'catalog-option-disconnected'] : [], 'constraints' => [new Assert\NotBlank(groups: ['Default', 'connection'])]])
             ->add('accessMode', ChoiceType::class, ['label' => 'Connexion à utiliser', 'choices' => ['Ma clé API' => 'api', 'Mon compte Fal connecté par navigateur' => 'mcp'], 'help' => 'Un seul accès suffit. Pour Fal, la connexion navigateur évite de copier une clé ; vérifie le compte et ses crédits chez Fal.', 'constraints' => [new Assert\NotBlank()]])
             ->add('seconds', ChoiceType::class, ['label' => 'Durée du plan', 'placeholder' => 'Choisir une durée', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', (new AiCatalog())->durations()), (new AiCatalog())->durations()), 'constraints' => [new Assert\NotBlank()]])
@@ -82,7 +89,7 @@ final class AiIdeaType extends AbstractType
             } catch (\InvalidArgumentException $error) {
                 $form->get('prompt')->addError(new FormError($error->getMessage()));
             }
-            if (!in_array($data['seconds'] ?? null, $model['seconds'], true)) {
+            if (!$form->getConfig()->getOption('composed') && !in_array($data['seconds'] ?? null, $model['seconds'], true)) {
                 $form->get('seconds')->addError(new FormError('Cette durée n’est pas disponible pour ce modèle.'));
             }
             if (!in_array($data['ratio'] ?? null, $model['ratios'], true)) {
@@ -93,6 +100,8 @@ final class AiIdeaType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
+        $resolver->setDefault('composed', false);
+        $resolver->setAllowedTypes('composed', 'bool');
         $resolver->setDefault('connected_providers', []);
         $resolver->setAllowedTypes('connected_providers', 'array');
         $resolver->setDefault('favorite_models', []);

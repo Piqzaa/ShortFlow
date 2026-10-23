@@ -1,5 +1,7 @@
 # Séries IA — premier lot local du 22 octobre 2026
 
+Suite livrée le 23 octobre : [épisodes de 30 à 60 secondes composés de plusieurs plans](episodes-multiplans.md), avec confirmation totale, raccords compatibles et assemblage automatique. Ce document conserve le fonctionnement du premier lot individuel.
+
 ## Objectif et périmètre livré
 
 Une série conserve son nom, son thème, son style, ses personnages décrits et ses réglages vidéo. Sa création prépare **trois épisodes** en base, chacun avec un titre et un prompt modifiables. Le contexte commun est copié dans leurs prompts ; aucune IA de rédaction n’est appelée. Le créateur complète lui-même la scène et l’action de chaque épisode.

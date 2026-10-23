@@ -6,8 +6,9 @@
 {% set publicationsActive = route == 'app_publications' or route == 'app_publication_statistics' %}
 {% set accountActive = route == 'app_profile' %}
 {% set connectionsActive = route in ['app_connections','app_ai_keys'] %}
-{% set creationActive = not connectionsActive and (route == 'app_studio' or route starts with 'app_ai_') %}
-{% set seriesActive = route starts with 'app_series' %}
+{% set standalonePlan = route == 'app_series_episode' and episode|default(null) and episode.standalone %}
+{% set creationActive = not connectionsActive and (standalonePlan or route == 'app_studio' or route starts with 'app_ai_') %}
+{% set seriesActive = not standalonePlan and route starts with 'app_series' %}
 {% set videosActive = not calendarActive and not publicationsActive and not accountActive and not connectionsActive and not creationActive and not seriesActive %}
 {% set sectionName = seriesActive ? 'Séries' : (calendarActive ? 'Calendrier' : (publicationsActive ? 'Publications' : (connectionsActive ? 'Connexions' : (accountActive ? 'Mon compte' : (creationActive ? 'Studio' : 'Vidéos'))))) %}
 {% set navigation = [['app_dashboard','Vidéos','▦',videosActive],['app_studio','Studio','✦',creationActive],['app_series','Séries','↻',seriesActive],['app_calendar','Calendrier','▤',calendarActive],['app_publications','Publications','↗',publicationsActive],['app_connections','Connexions','↔',connectionsActive]] %}

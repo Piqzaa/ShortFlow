@@ -35,6 +35,11 @@ final class AiSeriesStudio
     /** @param array<string,mixed> $data */
     public function configure(User $owner, array $data, ?AiSeries $series = null): AiSeries
     {
+        $count = $data['episodeCount'] ?? 1;
+        if (!is_int($count) || $count < 0 || $count > 12) {
+            throw new \InvalidArgumentException('Choisis de 0 à 12 épisodes à préparer.');
+        }
+
         return $this->em->getConnection()->transactional(function () use ($owner, $data, $series): AiSeries {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
             if ($series) {
@@ -79,13 +84,13 @@ final class AiSeriesStudio
             if ('mcp' === $data['accessMode'] && 'fal' !== $model['provider']) {
                 throw new \RuntimeException('Choisis un accès API pour ce fournisseur.');
             }
-            $recipe = ['model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit']];
+            $recipe = ['totalSeconds' => $data['totalSeconds'] ?? 30, 'model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit']];
             if ($series) {
                 $series->configure(trim($data['name']), trim($data['theme']), trim($data['style'] ?? ''), trim($data['characters'] ?? ''), $recipe);
             } else {
                 $series = new AiSeries($owner, trim($data['name']), trim($data['theme']), trim($data['style'] ?? ''), trim($data['characters'] ?? ''), $recipe);
                 $this->em->persist($series);
-                for ($number = 1; $number <= 3; ++$number) {
+                for ($number = 1; $number <= ($data['episodeCount'] ?? 1); ++$number) {
                     $this->em->persist(new AiEpisode($series, $number));
                 }
             }
@@ -93,6 +98,27 @@ final class AiSeriesStudio
             $this->em->flush();
 
             return $series;
+        });
+    }
+
+    public function addEpisodes(User $owner, AiSeries $series, int $count, int $revision): void
+    {
+        if ($count < 1 || $count > 12) {
+            throw new \RuntimeException('Ajoute de 1 à 12 épisodes à la fois.');
+        }
+        $this->em->getConnection()->transactional(function () use ($owner, $series, $count, $revision): void {
+            $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            if ($series->getOwner()->getId() !== $owner->getId()) {
+                throw new \RuntimeException('Série indisponible.');
+            }
+            $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
+            $this->assertRevision($series->getRevision(), $revision);
+            $last = (int) $this->em->createQueryBuilder()->select('MAX(e.number)')->from(AiEpisode::class, 'e')->where('e.series = :series')->setParameter('series', $series)->getQuery()->getSingleScalarResult();
+            for ($i = 1; $i <= $count; ++$i) {
+                $this->em->persist(new AiEpisode($series, $last + $i));
+            }
+            $series->episodesAdded();
+            $this->em->flush();
         });
     }
 
@@ -107,6 +133,9 @@ final class AiSeriesStudio
             }
             $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
             $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
+            if ($episode->getFlowState()) {
+                throw new \RuntimeException('Cet épisode se prépare depuis sa liste de plans.');
+            }
             // A repeated preparation always returns the same generation, including after a double click.
             $existing = $episode->getGeneration();
             if ($existing) {

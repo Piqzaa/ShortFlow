@@ -25,7 +25,7 @@ class AiSeries
     #[ORM\Column(type: 'text')]
     private string $characters;
 
-    /** @var array{model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string} */
+    /** @var array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string} */
     #[ORM\Column(type: 'json')]
     private array $recipe;
 
@@ -35,7 +35,7 @@ class AiSeries
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
-    /** @param array{model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string} $recipe */
+    /** @param array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string} $recipe */
     public function __construct(User $owner, string $name, string $theme, string $style, string $characters, array $recipe)
     {
         $this->owner = $owner;
@@ -87,13 +87,13 @@ class AiSeries
         return $this->createdAt;
     }
 
-    /** @return array{model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string} */
+    /** @return array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string} */
     public function getRecipe(): array
     {
         return $this->recipe;
     }
 
-    /** @param array{model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string} $recipe */
+    /** @param array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string} $recipe */
     public function configure(string $name, string $theme, string $style, string $characters, array $recipe): void
     {
         $this->name = $name;
@@ -107,5 +107,10 @@ class AiSeries
     public function initialPrompt(): string
     {
         return implode("\n\n", array_filter([$this->theme, '' !== $this->style ? 'Style : '.$this->style : '', '' !== $this->characters ? 'Personnages : '.$this->characters : '']));
+    }
+
+    public function episodesAdded(): void
+    {
+        ++$this->revision;
     }
 }

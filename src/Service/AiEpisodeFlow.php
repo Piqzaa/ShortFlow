@@ -1,0 +1,511 @@
+<?php
+
+namespace App\Service;
+
+use App\Entity\AiEpisode;
+use App\Entity\AiGeneration;
+use App\Entity\AiShot;
+use App\Entity\User;
+use App\Entity\VideoEdit;
+use App\Message\AdvanceAiEpisode;
+use App\Message\GenerateAiVideo;
+use App\Repository\VideoAssetRepository;
+use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\DelayStamp;
+
+final class AiEpisodeFlow
+{
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus)
+    {
+    }
+
+    public function owned(int $id, User $owner): ?AiEpisode
+    {
+        return $this->em->createQueryBuilder()->select('e', 's')->from(AiEpisode::class, 'e')->leftJoin('e.series', 's')->where('e.id = :id AND (s.owner = :owner OR e.owner = :owner)')->setParameter('id', $id)->setParameter('owner', $owner)->getQuery()->getOneOrNullResult();
+    }
+
+    /** @return list<AiShot> */
+    public function shots(AiEpisode $episode): array
+    {
+        return $this->em->createQueryBuilder()->select('s', 'g', 'v')->from(AiShot::class, 's')->leftJoin('s.generation', 'g')->leftJoin('g.video', 'v')->where('s.episode = :episode')->setParameter('episode', $episode)->orderBy('s.position', 'ASC')->getQuery()->getResult();
+    }
+
+    /** @param array<string,mixed> $data */
+    public function prepare(User $owner, array $data, ?AiEpisode $episode = null): AiEpisode
+    {
+        $model = $this->catalog->model($data['model']);
+        $rows = array_values($data['shots'] ?? []);
+        if (!$rows || count($rows) > 8) {
+            throw new \RuntimeException('Prépare de 1 à 8 plans dans le même écran.');
+        }
+        $total = array_sum(array_column($rows, 'seconds'));
+        if ($total < 1 || $total > 60 || $total !== $data['target']) {
+            throw new \RuntimeException('Le total des plans doit correspondre à la durée finale choisie, jusqu’à 60 secondes. Ajuste les plans ou utilise « Répartir la durée ».');
+        }
+        foreach ($rows as $row) {
+            $this->catalog->validate($data['model'], $row['seconds'], $data['ratio']);
+        }
+        $image = $model['image'] ?? false;
+        $reference = $image ? ($data['reference'] ?: null) : null;
+        $end = $image && ($data['useEnd'] ?? false) ? ($data['endReference'] ?: null) : null;
+        if ($image && !$reference) {
+            throw new \RuntimeException('Ajoute une référence ici pour utiliser ce modèle image.');
+        }
+        foreach ([$reference, $end] as $name) {
+            if ($name) {
+                $this->references->path($owner, $name);
+            }
+        }
+        $continuity = 1 === count($rows) ? 'independent' : ($data['continuity'] ?: 'independent');
+        if ('linked' === $continuity && (!$image || ($model['requiresEnd'] ?? false))) {
+            throw new \RuntimeException('Pour les raccords, choisis ici un modèle image compatible et ajoute sa référence. Tes scènes restent conservées.');
+        }
+        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $reference, 'endReference' => $end, 'imageFit' => $data['imageFit']];
+        $title = trim($data['title'] ?? '') ?: mb_substr(trim($data['prompt']), 0, 80);
+
+        return $this->em->getConnection()->transactional(function () use ($owner, $data, $episode, $recipe, $title, $continuity, $rows): AiEpisode {
+            $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            if ($episode) {
+                if ($episode->getOwner()->getId() !== $owner->getId()) {
+                    throw new \RuntimeException('Vidéo indisponible.');
+                }
+                $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
+                $this->revision($episode, (int) $data['revision']);
+                if ($episode->getGeneration()) {
+                    $this->em->refresh($episode->getGeneration(), LockMode::PESSIMISTIC_WRITE);
+                }
+            } else {
+                $episode = new AiEpisode($owner, 1, $title, trim($data['prompt']), $recipe);
+                $this->em->persist($episode);
+            }
+            $episode->configurePreparation($recipe, $data['prompt'], $continuity, (bool) $data['mute']);
+            $this->em->flush();
+            $this->save($episode, $episode->getRevision(), $title, $rows);
+
+            return $episode;
+        });
+    }
+
+    /** @return list<array{value:string,label:string,seconds:int}> */
+    public function suggestions(string $model, int $target): array
+    {
+        if ($target < 1 || $target > 60) {
+            throw new \RuntimeException('Choisis une durée entre 1 et 60 secondes.');
+        }
+        $durations = $this->catalog->model($model)['seconds'];
+        rsort($durations);
+        $states = [0 => [0 => [[]]]];
+        $paths = [];
+        for ($count = 1; $count <= 8; ++$count) {
+            $next = [];
+            foreach ($states[$count - 1] as $total => $variants) {
+                foreach ($variants as $parts) {
+                    foreach ($durations as $seconds) {
+                        if ($total + $seconds > 60) {
+                            continue;
+                        }
+                        $candidate = [...$parts, $seconds];
+                        rsort($candidate);
+                        $next[$total + $seconds][implode(',', $candidate)] = $candidate;
+                    }
+                }
+            }
+            foreach ($next as $total => $variants) {
+                usort($variants, static fn (array $a, array $b): int => [max($a) - min($a), $a] <=> [max($b) - min($b), $b]);
+                $states[$count][$total] = array_slice($variants, 0, 12);
+                $paths[$total] = [...($paths[$total] ?? []), ...$states[$count][$total]];
+            }
+            $states[$count] ??= [];
+        }
+        $totals = isset($paths[$target]) ? [$target] : array_keys($paths);
+        usort($totals, static fn (int $a, int $b): int => [abs($a - $target), $a] <=> [abs($b - $target), $b]);
+        $result = [];
+        foreach (array_slice($totals, 0, 2) as $total) {
+            usort($paths[$total], static fn (array $a, array $b): int => [count($a), max($a) - min($a), $a] <=> [count($b), max($b) - min($b), $b]);
+            foreach (array_slice($paths[$total], 0, 12) as $parts) {
+                $result[] = ['value' => implode(',', $parts), 'label' => implode(' + ', $parts).' s · '.$total.' s au total', 'seconds' => $total];
+            }
+        }
+
+        return $result;
+    }
+
+    /** @return list<int> */
+    public function durations(string $model, int $target): array
+    {
+        foreach ($this->suggestions($model, $target) as $suggestion) {
+            if ($suggestion['seconds'] === $target) {
+                return array_map('intval', explode(',', $suggestion['value']));
+            }
+        }
+        throw new \RuntimeException('Le total exact est impossible avec ce modèle. Choisis une des durées proches proposées.');
+    }
+
+    public function initialize(AiEpisode $episode, int $revision, int $target, string $continuity, bool $mute, string $layout = ''): void
+    {
+        $this->locked($episode, function () use ($episode, $revision, $target, $continuity, $mute, $layout): void {
+            $this->revision($episode, $revision);
+            $recipe = $episode->getPreparationRecipe();
+            $model = $this->catalog->model($recipe['model']);
+            if (!in_array($continuity, ['independent', 'linked'], true) || ('linked' === $continuity && (!($model['image'] ?? false) || !$recipe['reference'] || ($model['requiresEnd'] ?? false)))) {
+                throw new \RuntimeException('Les raccords automatiques demandent un modèle image vers vidéo et une image de départ dans la préparation.');
+            }
+            $durations = '' === $layout ? $this->durations($recipe['model'], $target) : [];
+            if ('' !== $layout) {
+                $choices = $this->suggestions($recipe['model'], $target);
+                if (!in_array($layout, array_column($choices, 'value'), true)) {
+                    throw new \RuntimeException('Ce découpage n’est plus disponible. Vérifie les propositions.');
+                }
+                $durations = array_map('intval', explode(',', $layout));
+            }
+            if ($episode->getGeneration()) {
+                $this->em->refresh($episode->getGeneration(), LockMode::PESSIMISTIC_WRITE);
+            }
+            $episode->beginStory($continuity, $mute);
+            foreach ($durations as $index => $seconds) {
+                $this->em->persist(new AiShot($episode, $index + 1, $seconds));
+            }
+        });
+    }
+
+    /** @param list<array{prompt:string,seconds:int}> $rows */
+    public function save(AiEpisode $episode, int $revision, string $title, array $rows): void
+    {
+        $this->locked($episode, function () use ($episode, $revision, $title, $rows): void {
+            $this->revision($episode, $revision);
+            if ('draft' !== $episode->getFlowState()) {
+                throw new \RuntimeException('Les plans sont déjà confirmés.');
+            }
+            $shots = $this->shots($episode);
+            if (count($rows) < 1 || count($rows) > 8) {
+                throw new \RuntimeException('Prépare entre 1 et 8 plans.');
+            }
+            $total = 0;
+            foreach ($rows as $row) {
+                $this->catalog->estimate($episode->getFlowRecipe()['model'], $row['seconds']);
+                $total += $row['seconds'];
+            }
+            if ($total < 1 || $total > 60) {
+                throw new \RuntimeException('La durée prévue doit rester entre 1 et 60 secondes.');
+            }
+            foreach ($rows as $index => $row) {
+                $shot = $shots[$index] ?? new AiShot($episode, $index + 1, $row['seconds']);
+                $shot->revise($row['prompt'], $row['seconds']);
+                $this->em->persist($shot);
+            }
+            foreach (array_slice($shots, count($rows)) as $removed) {
+                $this->em->remove($removed);
+            }
+            $episode->edit($title, $episode->getPrompt());
+        });
+    }
+
+    /** @return array{hash:string,cents:int,seconds:int,count:int,redo:int} */
+    public function quote(AiEpisode $episode, int $redo = 0): array
+    {
+        $recipe = $episode->getFlowRecipe() ?? throw new \RuntimeException('Prépare les plans avant de continuer.');
+        $shots = $this->shots($episode);
+        $data = [];
+        $cents = $seconds = 0;
+        foreach ($shots as $shot) {
+            if ($redo && $shot->getId() !== $redo) {
+                continue;
+            }
+            if ('' === trim($shot->getPrompt()) || mb_strlen($shot->getPrompt()) > 1500) {
+                throw new \RuntimeException('Complète le prompt de chaque plan avant de vérifier l’estimation.');
+            }
+            $this->catalog->validate($recipe['model'], $shot->getSeconds(), $recipe['ratio']);
+            $this->catalog->validatePrompt($recipe['model'], $this->prompt($episode, $shot));
+            $price = $this->catalog->estimate($recipe['model'], $shot->getSeconds());
+            $data[] = [$shot->getId(), $shot->getPrompt(), $shot->getSeconds(), $price, $shot->getGeneration()?->getId()];
+            $cents += $price;
+            $seconds += $shot->getSeconds();
+        }
+        if (!$data || (!$redo && (count($shots) > 8 || $seconds < 1 || $seconds > 60))) {
+            throw new \RuntimeException('Prépare entre 1 et 8 plans pour une durée totale de 1 à 60 secondes.');
+        }
+        if ($redo) {
+            $shot = $this->em->find(AiShot::class, $redo);
+            $unsafe = array_filter($shots, static fn (AiShot $s): bool => $s->getGeneration() && 'available' !== $s->getGeneration()->getStatus());
+            if (!in_array($episode->getFlowState(), ['ready', 'paused'], true) || $unsafe || $episode->getAssembly()?->isActive() || !$shot || 'available' !== $shot->getGeneration()?->getStatus() || !$shot->getGeneration()->getVideo()) {
+                throw new \RuntimeException('Attends un épisode terminé pour refaire uniquement ce plan.');
+            }
+        }
+
+        return ['hash' => hash('sha256', serialize([$episode->getId(), $episode->getRevision(), $recipe, $episode->getContinuity(), $episode->isMutePlans(), $data, $this->tariff($episode)])), 'cents' => $cents, 'seconds' => $seconds, 'count' => count($data), 'redo' => $redo];
+    }
+
+    public function confirm(AiEpisode $episode, string $hash, int $redo = 0): void
+    {
+        $this->locked($episode, function () use ($episode, $hash, $redo): void {
+            if ($hash && $hash === $episode->getConsentHash()) {
+                return;
+            }
+            if (!$redo && in_array($episode->getFlowState(), ['running', 'assembling', 'ready'], true)) {
+                return;
+            }
+            if (!$redo && 'draft' !== $episode->getFlowState()) {
+                throw new \RuntimeException('Reprends l’épisode depuis son suivi.');
+            }
+            $quote = $this->quote($episode, $redo);
+            if (!hash_equals($quote['hash'], $hash)) {
+                throw new \RuntimeException('Les plans ou leur tarif ont changé. Vérifie une nouvelle estimation avant de confirmer.');
+            }
+            $this->access($episode);
+            if ($redo && 'paused' === $episode->getFlowState() && $episode->getFlowTariff() !== $this->tariff($episode)) {
+                throw new \RuntimeException('Le tarif des plans restants a changé. Aucun lancement supplémentaire sans nouvelle estimation complète.');
+            }
+            $this->capacity($episode, $quote['count'] + ($redo && 'paused' === $episode->getFlowState() ? 0 : 1));
+            $account = null;
+            $recipe = $episode->getFlowRecipe();
+            if ('mcp' === $recipe['accessMode']) {
+                $account = json_decode($this->keys->plain($episode->getOwner(), $this->catalog->model($recipe['model'])['provider'], 'mcp'), true, 32, JSON_THROW_ON_ERROR)['account_id'];
+            }
+            $tariff = $this->tariff($episode);
+            if ($redo) {
+                $shot = $this->em->find(AiShot::class, $redo);
+                $anchor = 'linked' === $episode->getContinuity() && isset($this->catalog->model($recipe['model'])['endImageField']) ? $this->frames->lastFrame($shot->getGeneration()->getVideo()) : null;
+                $shot->replace($anchor);
+                $episode->repair();
+            }
+            $episode->consent($tariff, $account, $hash);
+            $this->em->flush();
+            $this->later($episode, 0);
+        });
+    }
+
+    public function pause(AiEpisode $episode): void
+    {
+        $this->locked($episode, function () use ($episode): void {
+            if (in_array($episode->getFlowState(), ['running', 'assembling'], true)) {
+                $episode->flow('paused', 'Les plans suivants sont suspendus. Une demande déjà transmise ou un assemblage en cours peut se terminer.');
+            }
+        });
+    }
+
+    public function resume(AiEpisode $episode): void
+    {
+        $this->locked($episode, function () use ($episode): void {
+            if ('paused' !== $episode->getFlowState()) {
+                return;
+            }
+            $this->access($episode);
+            if ($this->tariff($episode) !== $episode->getFlowTariff()) {
+                throw new \RuntimeException('Le tarif a changé. Aucun nouveau plan ne sera lancé avec l’ancien consentement.');
+            }
+            foreach ($this->shots($episode) as $shot) {
+                $job = $shot->getGeneration();
+                if ($job && 'queued' === $job->getStatus()) {
+                    $this->bus->dispatch(new GenerateAiVideo((int) $job->getId()));
+                }
+                if ($job && in_array($job->getStatus(), ['review', 'waiting_key'], true)) {
+                    if ('review' === $job->getStatus() && !$job->getRemote()) {
+                        throw new \RuntimeException('Une demande fournisseur est incertaine sans identifiant de récupération. Vérifie son historique ; aucun renvoi payant automatique.');
+                    }
+                    $this->generations->retry($job->getOwner(), (int) $job->getId(), true);
+                }
+            }
+            if ($episode->getAssembly() && 'failed' === $episode->getAssembly()->getStatus()) {
+                $this->edits->assembleEpisode($episode, []);
+            }
+            $episode->flow('running');
+            $this->em->flush();
+            $this->later($episode, 0);
+        });
+    }
+
+    public function stop(AiEpisode $episode): void
+    {
+        $this->locked($episode, function () use ($episode): void {
+            if (in_array($episode->getFlowState(), ['running', 'paused', 'assembling'], true)) {
+                $episode->flow('stopped', 'Les étapes restantes sont arrêtées et leurs réservations libérées. Les résultats restent dans la bibliothèque. Une demande déjà transmise peut encore se terminer et être facturée.');
+            }
+        });
+    }
+
+    public function advance(int $id): void
+    {
+        $episode = $this->em->find(AiEpisode::class, $id);
+        if (!$episode) {
+            return;
+        }
+        $this->locked($episode, function () use ($episode): void {
+            if (!in_array($episode->getFlowState(), ['running', 'assembling'], true)) {
+                return;
+            }
+            try {
+                $recipe = $episode->getFlowRecipe();
+                $shots = $this->shots($episode);
+                $previous = null;
+                foreach ($shots as $index => $shot) {
+                    $this->em->refresh($shot, LockMode::PESSIMISTIC_WRITE);
+                    $job = $shot->getGeneration();
+                    if ($job) {
+                        $this->em->refresh($job);
+                    }
+                    if ($job && 'available' === $job->getStatus()) {
+                        if (!$job->getVideo()) {
+                            throw new \RuntimeException('Un clip a été retiré de la bibliothèque. Aucun plan suivant n’a été demandé.');
+                        }
+                        if ($job->getVideo()->getDuration() < $shot->getSeconds() - 0.25) {
+                            throw new \RuntimeException('Le plan '.$shot->getPosition().' est plus court que prévu. Vérifie son résultat ; tu peux refaire ce plan terminé avec une nouvelle confirmation de coût.');
+                        }
+                        $previous = $job->getVideo();
+                        continue;
+                    }
+                    if ($job && in_array($job->getStatus(), ['review', 'waiting_key'], true)) {
+                        throw new \RuntimeException($job->getIssue() ?? 'Vérifie la génération de ce plan avant de continuer.');
+                    }
+                    if (!$job || 'prepared' === $job->getStatus()) {
+                        $this->access($episode);
+                        if ($this->tariff($episode) !== $episode->getFlowTariff()) {
+                            throw new \RuntimeException('Le tarif a changé depuis la confirmation. Les plans suivants restent suspendus.');
+                        }
+                        $owner = $episode->getOwner();
+                        if ($this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]) >= 3) {
+                            $this->later($episode);
+
+                            return;
+                        }
+                        $this->capacity($episode);
+                        if ('mcp' === $recipe['accessMode']) {
+                            $account = json_decode($this->keys->plain($owner, $this->catalog->model($recipe['model'])['provider'], 'mcp'), true, 32, JSON_THROW_ON_ERROR)['account_id'];
+                            if ($account !== $episode->getFlowAccount()) {
+                                throw new \RuntimeException('Le compte Fal a changé. Rétablis le compte confirmé avant de poursuivre.');
+                            }
+                        }
+                        if (!$job) {
+                            $reference = 'linked' === $episode->getContinuity() && $previous ? $this->frames->lastFrame($previous) : $recipe['reference'];
+                            $job = new AiGeneration($owner, mb_substr($episode->getTitle(), 0, 100).' · plan '.$shot->getPosition(), $this->prompt($episode, $shot), $recipe['model'], $shot->getSeconds(), $recipe['ratio'], $this->catalog->estimate($recipe['model'], $shot->getSeconds()));
+                            if ($reference) {
+                                $job->attachReference($reference);
+                                $job->frameImages($recipe['imageFit']);
+                            }
+                            $end = $shot->getEndAnchor() ?? ($index === count($shots) - 1 || ($this->catalog->model($recipe['model'])['requiresEnd'] ?? false) ? $recipe['endReference'] : null);
+                            if ($end) {
+                                $job->attachEndReference($end);
+                            }
+                            if ('mcp' === $recipe['accessMode']) {
+                                $job->useMcp();
+                            }
+                            $this->em->persist($job);
+                            $shot->bind($job);
+                            $this->em->flush();
+                        }
+                        $this->generations->confirm($job->getOwner(), (int) $job->getId(), $job->getReviewRevision());
+                    }
+                    $this->later($episode);
+
+                    return;
+                }
+                $assembly = $episode->getAssembly();
+                if ($assembly && 'failed' === $assembly->getStatus()) {
+                    throw new \RuntimeException($assembly->getIssue() ?? 'L’assemblage a échoué. Tu peux le relancer sans régénérer les plans.');
+                }
+                if (!$assembly) {
+                    if ($this->em->getRepository(VideoEdit::class)->count(['owner' => $episode->getOwner(), 'status' => ['queued', 'rendering', 'transcribing']]) > 0) {
+                        $this->later($episode);
+
+                        return;
+                    }
+                    $this->edits->assembleEpisode($episode, array_map(static fn (AiShot $s): int => (int) $s->getGeneration()->getVideo()->getId(), $shots), array_map(static fn (AiShot $s): int => $s->getSeconds(), $shots));
+                    $this->later($episode);
+
+                    return;
+                }
+                $this->em->refresh($assembly);
+                if ('ready' === $assembly->getStatus()) {
+                    if (!$assembly->getOutput()) {
+                        throw new \RuntimeException('La vidéo assemblée a été retirée de la bibliothèque.');
+                    }
+                    $episode->flow('ready');
+
+                    return;
+                }
+                $this->later($episode);
+            } catch (\RuntimeException|\InvalidArgumentException $error) {
+                if (!$this->em->isOpen()) {
+                    throw $error;
+                }
+                $episode->flow('paused', $error->getMessage());
+            }
+        });
+    }
+
+    private function access(AiEpisode $episode): void
+    {
+        if (!$this->generations->enabled()) {
+            throw new \RuntimeException('La génération payante est désactivée. Tes plans restent enregistrés.');
+        }
+        $recipe = $episode->getFlowRecipe();
+        $model = $this->catalog->model($recipe['model']);
+        if (!$this->keys->hasAccess($episode->getOwner(), $model['provider'], $recipe['accessMode'])) {
+            throw new \RuntimeException('Connecte l’accès BYOK choisi avant de continuer.');
+        }
+        if (new \DateTimeImmutable($model['checked'] ?? AiCatalog::CHECKED) < new \DateTimeImmutable('-14 days')) {
+            throw new \RuntimeException('Les tarifs de ce modèle doivent être revérifiés avant de lancer.');
+        }
+        foreach ([$recipe['reference'], $recipe['endReference']] as $reference) {
+            if ($reference) {
+                $this->references->path($episode->getOwner(), $reference);
+            }
+        }
+    }
+
+    private function prompt(AiEpisode $episode, AiShot $shot): string
+    {
+        return $episode->getPrompt()."\n\n".$shot->getPrompt();
+    }
+
+    public function revisionHash(AiEpisode $episode): string
+    {
+        $revision = [$episode->getRevision(), $episode->getAssembly()?->getRevision()];
+        foreach ($this->shots($episode) as $shot) {
+            $revision[] = [$shot->getGeneration()?->getStatus(), $shot->getGeneration()?->getUpdatedAt()->format('U.u'), $shot->getGeneration()?->getProviderStage()];
+        }
+
+        return hash('sha256', serialize($revision));
+    }
+
+    private function tariff(AiEpisode $episode): string
+    {
+        $model = $episode->getFlowRecipe()['model'];
+
+        return hash('sha256', serialize([$this->catalog->model($model)['checked'] ?? AiCatalog::CHECKED, array_map(fn (AiShot $s): int => $this->catalog->estimate($model, $s->getSeconds()), $this->shots($episode))]));
+    }
+
+    private function capacity(AiEpisode $episode, int $additional = 0): void
+    {
+        $owner = $episode->getOwner();
+        $usage = $this->videos->usage($owner);
+        $active = $this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]);
+        $slots = $active + $this->reservations->slots($owner) + $additional;
+        if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > VideoLibrary::MAX_STORAGE) {
+            throw new \RuntimeException('Place insuffisante : prévois 100 Mo et une place par plan restant, plus la vidéo assemblée.');
+        }
+    }
+
+    private function revision(AiEpisode $episode, int $revision): void
+    {
+        if ($episode->getRevision() !== $revision) {
+            throw new \RuntimeException('Cet épisode a changé dans un autre onglet. Recharge avant de continuer ; ta saisie reste affichée.');
+        }
+    }
+
+    private function locked(AiEpisode $episode, callable $action): void
+    {
+        $this->em->getConnection()->transactional(function () use ($episode, $action): void {
+            $this->em->lock($episode->getOwner(), LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
+            $action();
+            $this->em->flush();
+        });
+    }
+
+    private function later(AiEpisode $episode, int $delay = 20000): void
+    {
+        $this->bus->dispatch(new AdvanceAiEpisode((int) $episode->getId()), $delay ? [new DelayStamp($delay)] : []);
+    }
+}

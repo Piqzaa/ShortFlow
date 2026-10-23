@@ -2,12 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\AiEpisode;
 use App\Entity\AiGeneration;
 use App\Entity\User;
 use App\Form\AiIdeaType;
 use App\Form\AiReferenceType;
 use App\Repository\AiGenerationRepository;
 use App\Service\AiCatalog;
+use App\Service\AiEpisodeFlow;
 use App\Service\AiGenerations;
 use App\Service\AiKeys;
 use App\Service\AiReferenceStorage;
@@ -28,13 +30,31 @@ final class AiStudioController extends AbstractController
 {
     #[Route('/studio/creation', name: 'app_studio', methods: ['GET', 'POST'])]
     #[Route('/studio/ia', name: 'app_ai_studio', methods: ['GET', 'POST'])]
-    public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, AiReferenceStorage $references, EntityManagerInterface $em, FormFactoryInterface $forms, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, AiReferenceStorage $references, EntityManagerInterface $em, FormFactoryInterface $forms, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, AiEpisodeFlow $flow, ?int $preparingEpisode = null): Response
     {
         if (!$request->getSession()->has('ai_idea_revision')) {
             $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
         }
         $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16']);
         $idea += ['accessMode' => null !== $keys->connection($user, 'fal') ? 'api' : 'mcp', 'source' => 'text', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop'];
+        $episode = null;
+        if ($preparingEpisode) {
+            $episode = $flow->owned($preparingEpisode, $user) ?? throw $this->createNotFoundException();
+            $recipe = $episode->getPreparationRecipe();
+            $shots = $flow->shots($episode);
+            $idea = ['title' => $episode->getTitle(), 'prompt' => $episode->getPrompt(), 'target' => $shots ? array_sum(array_map(static fn ($s): int => $s->getSeconds(), $shots)) : ($recipe['totalSeconds'] ?? 30), 'shots' => array_map(static fn ($s): array => ['prompt' => $s->getPrompt(), 'seconds' => $s->getSeconds()], $shots), 'source' => (AiCatalog::MODELS[$recipe['model']]['image'] ?? false) ? 'image' : 'text', 'useEnd' => (bool) $recipe['endReference'], 'continuity' => $episode->getContinuity(), 'mute' => $episode->isMutePlans(), 'revision' => (string) $episode->getRevision()] + $recipe;
+        }
+        $idea += ['target' => $idea['seconds'] ?? 30, 'shots' => [], 'continuity' => 'independent', 'mute' => false, 'revision' => '0'];
+        if ($episode && !$episode->isStandalone() && '' === trim($idea['prompt'])) {
+            $idea['prompt'] = $episode->getSeries()->initialPrompt();
+        }
+        if (!$idea['shots'] && isset(AiCatalog::MODELS[$idea['model'] ?? ''])) {
+            try {
+                $idea['shots'] = array_map(static fn (int $s): array => ['prompt' => '', 'seconds' => $s], $flow->durations($idea['model'], $idea['target']));
+            } catch (\RuntimeException) {
+                // An incompatible total remains visible until explicitly adjusted.
+            }
+        }
         $connected = [];
         foreach (AiCatalog::PROVIDERS as $id => $name) {
             $connected[$id] = null !== $keys->connection($user, $id) || ('fal' === $id && null !== $falOAuth->connection($user));
@@ -42,7 +62,7 @@ final class AiStudioController extends AbstractController
         $connected['fal-api'] = null !== $keys->connection($user, 'fal');
         $connected['fal-mcp'] = null !== $falOAuth->connection($user);
         $connecting = $request->isMethod('POST') && 'connect' === $request->request->getString('intent');
-        $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites()])->handleRequest($request);
+        $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => in_array($request->request->getString('intent'), ['compose', 'replan'], true) || $request->request->has('plan_action'), 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea'])->handleRequest($request);
         $referenceUrl = $endReferenceUrl = null;
         foreach (['reference', 'endReference'] as $field) {
             $reference = $form->get($field)->getData();
@@ -75,10 +95,90 @@ final class AiStudioController extends AbstractController
                 }
 
                 return $this->redirectToRoute('app_ai_keys', ['next' => 'idea', 'provider' => $catalog->model($data['model'])['provider']], 303);
+            } elseif (in_array($request->request->getString('intent'), ['compose', 'replan'], true) || $request->request->has('plan_action')) {
+                try {
+                    if ($request->request->has('plan_action')) {
+                        $rows = array_values($data['shots']);
+                        [$action, $index] = array_pad(explode(':', $request->request->getString('plan_action'), 2), 2, '0');
+                        $index = ctype_digit($index) ? (int) $index : -1;
+                        if ('add' === $action && count($rows) < 8) {
+                            $rows[] = ['prompt' => '', 'seconds' => min($catalog->model($data['model'])['seconds'])];
+                        } elseif ('remove' === $action && count($rows) > 1 && isset($rows[$index])) {
+                            array_splice($rows, $index, 1);
+                        } elseif (in_array($action, ['up', 'down'], true)) {
+                            $next = $index + ('up' === $action ? -1 : 1);
+                            if (isset($rows[$index], $rows[$next])) {
+                                [$rows[$index], $rows[$next]] = [$rows[$next], $rows[$index]];
+                            }
+                        }
+                        $data['shots'] = $rows;
+                        $data['target'] = array_sum(array_column($rows, 'seconds'));
+                        $saved = $flow->prepare($user, $data, $episode);
+
+                        return $this->redirectToRoute('app_series_episode', ['id' => $saved->getId()], 303);
+                    }
+                    if ('replan' === $request->request->getString('intent')) {
+                        $durations = $flow->durations($data['model'], (int) $data['target']);
+                        $old = array_values($data['shots']);
+                        $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds], $durations, array_keys($durations));
+                        if (count($old) > count($durations)) {
+                            $last = count($durations) - 1;
+                            $data['shots'][$last]['prompt'] .= "\n".implode("\n", array_column(array_slice($old, count($durations)), 'prompt'));
+                        }
+                        $form = $this->createForm(AiIdeaType::class, $data, ['connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => true, 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea']);
+                    } else {
+                        if (!$episode) {
+                            $last = $request->getSession()->get('ai_composed_preparation', []);
+                            $hash = hash('sha256', serialize($data));
+                            if (($last['hash'] ?? '') === $hash) {
+                                $existing = $flow->owned((int) $last['id'], $user);
+                                if ($existing && in_array($existing->getFlowState(), ['draft', 'running', 'assembling'], true)) {
+                                    return $this->redirectToRoute('app_series_episode', ['id' => $existing->getId(), 'review' => 'draft' === $existing->getFlowState() ? 1 : 0], 303);
+                                }
+                            }
+                        }
+                        $saved = $flow->prepare($user, $data, $episode);
+                        if (!$episode) {
+                            $request->getSession()->set('ai_composed_preparation', ['hash' => $hash, 'id' => $saved->getId()]);
+                        }
+
+                        return $this->redirectToRoute('app_series_episode', ['id' => $saved->getId(), 'review' => 1], 303);
+                    }
+                } catch (\RuntimeException|\InvalidArgumentException $failure) {
+                    $form->addError(new FormError($failure->getMessage()));
+                }
+            } elseif ($episode) {
+                $form->addError(new FormError('Utilise le récapitulatif de cette préparation pour continuer.'));
             } else {
                 $title = trim($data['title'] ?? '');
                 if ('' === $title) {
                     $title = mb_substr(preg_replace('/\s+/u', ' ', trim($data['prompt'])), 0, 80);
+                }
+                if ('plans' === $request->request->getString('intent')) {
+                    $recipe = ['model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($catalog->model($data['model'])['image'] ?? false) ? $data['reference'] : null, 'endReference' => ($data['useEnd'] ?? false) ? $data['endReference'] : null, 'imageFit' => $data['imageFit'] ?? 'crop'];
+                    $fingerprint = hash('sha256', serialize([$title, trim($data['prompt']), $recipe]));
+                    $previous = $request->getSession()->get('ai_plan_preparation', []);
+                    $project = null;
+                    if (($previous['hash'] ?? '') === $fingerprint) {
+                        $project = $em->getRepository(AiEpisode::class)->findOneBy(['id' => $previous['id'], 'owner' => $user]);
+                        if ($project && in_array($project->getFlowState(), ['ready', 'stopped'], true)) {
+                            $project = null;
+                        }
+                    }
+                    if (!$project) {
+                        $project = $em->getConnection()->transactional(function () use ($em, $user, $title, $data, $recipe): AiEpisode {
+                            $em->lock($user, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+
+                            $project = new AiEpisode($user, 1, $title, trim($data['prompt']), $recipe);
+                            $em->persist($project);
+                            $em->flush();
+
+                            return $project;
+                        });
+                        $request->getSession()->set('ai_plan_preparation', ['hash' => $fingerprint, 'id' => $project->getId()]);
+                    }
+
+                    return $this->redirectToRoute('app_series_episode', ['id' => $project->getId()], 303);
                 }
                 $job = new AiGeneration($user, $title, trim($data['prompt']), $data['model'], $data['seconds'], $data['ratio'], $catalog->estimate($data['model'], $data['seconds']));
                 if ($catalog->model($data['model'])['image'] ?? false) {
@@ -99,7 +199,7 @@ final class AiStudioController extends AbstractController
         }
         $jobs = $em->getRepository(AiGeneration::class)->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 1);
 
-        return $this->render('ai/studio.html.twig', ['ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/studio.html.twig', ['episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $em->getRepository(AiEpisode::class)->findBy(['owner' => $user], ['id' => 'DESC'], 12), 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/creation/idee', name: 'app_ai_save_idea', methods: ['POST'])]
@@ -230,10 +330,25 @@ final class AiStudioController extends AbstractController
     }
 
     #[Route('/studio/ia/generations/{id}', name: 'app_ai_generation', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function generation(int $id, Request $request, #[CurrentUser] User $user, AiGenerations $generations, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, \App\Service\AiSeriesStudio $seriesStudio): Response
+    public function generation(int $id, Request $request, #[CurrentUser] User $user, AiGenerations $generations, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, \App\Service\AiSeriesStudio $seriesStudio, EntityManagerInterface $em): Response
     {
         $job = $generations->owned($id, $user) ?? throw $this->createNotFoundException();
+        $shot = $em->getRepository(\App\Entity\AiShot::class)->findOneBy(['generation' => $job]);
+        if ($shot) {
+            if ($request->isMethod('POST')) {
+                throw $this->createAccessDeniedException('Ce plan est piloté depuis son épisode.');
+            }
+
+            return $this->redirectToRoute('app_series_episode', ['id' => $shot->getEpisode()->getId(), '_fragment' => 'shot-'.$shot->getPosition()], 303);
+        }
         $episode = $seriesStudio->episodeFor($job);
+        if ($episode?->getFlowState()) {
+            if ($request->isMethod('POST')) {
+                throw $this->createAccessDeniedException('Cette ancienne préparation a été remplacée.');
+            }
+
+            return $this->redirectToRoute('app_series_episode', ['id' => $episode->getId()], 303);
+        }
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('ai_generation_'.$id, $request->request->getString('_token'))) {
                 throw $this->createAccessDeniedException();
@@ -259,7 +374,7 @@ final class AiStudioController extends AbstractController
     }
 
     #[Route('/studio/creation/historique', name: 'app_ai_history', methods: ['GET'])]
-    public function history(Request $request, #[CurrentUser] User $user, AiGenerationRepository $jobs): Response
+    public function history(Request $request, #[CurrentUser] User $user, AiGenerationRepository $jobs, EntityManagerInterface $em): Response
     {
         $query = mb_substr(trim($request->query->getString('q')), 0, 120);
         $status = $request->query->getString('status');
@@ -267,7 +382,13 @@ final class AiStudioController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        return $this->render('ai/history.html.twig', ['history' => $jobs->history($user, $query, $status, $request->query->getInt('page', 1)), 'query' => $query, 'status' => $status, 'labels' => AiGeneration::LABELS, 'models' => AiCatalog::MODELS, 'providers' => AiCatalog::PROVIDERS], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        $projectQuery = $em->createQueryBuilder()->select('p')->from(AiEpisode::class, 'p')->where('p.owner = :owner')->setParameter('owner', $user);
+        $projectTotal = (int) (clone $projectQuery)->select('COUNT(p.id)')->getQuery()->getSingleScalarResult();
+        $projectPages = max(1, (int) ceil($projectTotal / 12));
+        $projectPage = min(max(1, $request->query->getInt('plans', 1)), $projectPages);
+        $projects = $projectQuery->orderBy('p.id', 'DESC')->setFirstResult(($projectPage - 1) * 12)->setMaxResults(12)->getQuery()->getResult();
+
+        return $this->render('ai/history.html.twig', ['projects' => $projects, 'projectPage' => $projectPage, 'projectPages' => $projectPages, 'history' => $jobs->history($user, $query, $status, $request->query->getInt('page', 1)), 'query' => $query, 'status' => $status, 'labels' => AiGeneration::LABELS, 'models' => AiCatalog::MODELS, 'providers' => AiCatalog::PROVIDERS], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/ia/generations/{id}/etat', name: 'app_ai_status', requirements: ['id' => '\d+'], methods: ['GET'])]

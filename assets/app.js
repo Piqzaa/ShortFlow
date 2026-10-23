@@ -66,3 +66,15 @@ app.register('edit-picker', EditPickerController);
 import './styles/series.css';
 import SeriesSettingsController from './controllers/series_settings_controller.js';
 app.register('series-settings', SeriesSettingsController);
+import './styles/episode.css';
+import EpisodeWatchController from './controllers/episode_watch_controller.js';
+app.register('episode-watch', EpisodeWatchController);
+
+import ShotEditorController from './controllers/shot_editor_controller.js';
+app.register('shot-editor', ShotEditorController);
+
+import PreparationController from './controllers/preparation_controller.js';
+app.register('preparation', PreparationController);
+
+import StoryWriterController from './controllers/story_writer_controller.js';
+app.register('story-writer', StoryWriterController);

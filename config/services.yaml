@@ -53,6 +53,10 @@ services:
         class: Symfony\Contracts\HttpClient\HttpClientInterface
         factory: ['Symfony\Component\HttpClient\HttpClient', 'create']
 
+    story.http:
+        class: Symfony\Contracts\HttpClient\HttpClientInterface
+        factory: ['Symfony\Component\HttpClient\HttpClient', 'create']
+
     ai.vault:
         class: App\Service\TokenVault
         arguments:
