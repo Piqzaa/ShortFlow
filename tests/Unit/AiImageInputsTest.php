@@ -99,7 +99,14 @@ final class AiImageInputsTest extends TestCase
                         }, get_debug_type($value));
                     }
                 }
-                if ('image_urls' === ($model['imageField'] ?? '')) {
+                if ($model['subjectReference'] ?? false) {
+                    self::assertCount(1, $body['reference_image_urls']);
+                    $first = $body['reference_image_urls'][0];
+                    $last = null;
+                    self::assertSame($this->storage->dataUri($this->owner, self::FIRST), $first);
+                    self::assertArrayNotHasKey('image_url', $body);
+                    self::assertArrayNotHasKey('end_image_url', $body);
+                } elseif ('image_urls' === ($model['imageField'] ?? '')) {
                     self::assertCount(2, $body['image_urls']);
                     self::assertSame([['duration' => $seconds, 'prompt' => 'A slow camera move']], $body['transitions']);
                     $first = $body['image_urls'][0];

@@ -50,16 +50,14 @@ final class AiEpisodeFlow
         $image = $model['image'] ?? false;
         $reference = $image ? ($data['reference'] ?: null) : null;
         $end = $image && ($data['useEnd'] ?? false) ? ($data['endReference'] ?: null) : null;
-        if ($image && !$reference) {
-            throw new \RuntimeException('Ajoute une référence ici pour utiliser ce modèle image.');
-        }
+        $this->catalog->validateReferences($data['model'], $reference, $end);
         foreach ([$reference, $end] as $name) {
             if ($name) {
                 $this->references->path($owner, $name);
             }
         }
         $continuity = 1 === count($rows) ? 'independent' : ($data['continuity'] ?: 'independent');
-        if ('linked' === $continuity && (!$image || ($model['requiresEnd'] ?? false))) {
+        if ('linked' === $continuity && (!$image || ($model['subjectReference'] ?? false) || ($model['requiresEnd'] ?? false))) {
             throw new \RuntimeException('Pour les raccords, choisis ici un modèle image compatible et ajoute sa référence. Tes scènes restent conservées.');
         }
         $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $reference, 'endReference' => $end, 'imageFit' => $data['imageFit']];
@@ -149,7 +147,7 @@ final class AiEpisodeFlow
             $this->revision($episode, $revision);
             $recipe = $episode->getPreparationRecipe();
             $model = $this->catalog->model($recipe['model']);
-            if (!in_array($continuity, ['independent', 'linked'], true) || ('linked' === $continuity && (!($model['image'] ?? false) || !$recipe['reference'] || ($model['requiresEnd'] ?? false)))) {
+            if (!in_array($continuity, ['independent', 'linked'], true) || ('linked' === $continuity && (!($model['image'] ?? false) || ($model['subjectReference'] ?? false) || !$recipe['reference'] || ($model['requiresEnd'] ?? false)))) {
                 throw new \RuntimeException('Les raccords automatiques demandent un modèle image vers vidéo et une image de départ dans la préparation.');
             }
             $durations = '' === $layout ? $this->durations($recipe['model'], $target) : [];
@@ -445,6 +443,7 @@ final class AiEpisodeFlow
         }
         $recipe = $episode->getFlowRecipe();
         $model = $this->catalog->model($recipe['model']);
+        $this->catalog->validateReferences($recipe['model'], $recipe['reference'], $recipe['endReference']);
         if (!$this->keys->hasAccess($episode->getOwner(), $model['provider'], $recipe['accessMode'])) {
             throw new \RuntimeException('Connecte l’accès BYOK choisi avant de continuer.');
         }

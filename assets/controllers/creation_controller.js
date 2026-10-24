@@ -66,7 +66,8 @@ export default class extends Controller {
 
   frameChanged(event) {
     if (!this.hasStartPreviewTarget) return;
-    const ratio = this.ratioTarget.value;
+    const subject = this.modelsValue[this.modelTarget.value]?.subjectReference;
+    const ratio = subject ? 'auto' : this.ratioTarget.value;
     const start = this.startPreviewTarget;
     const nativeRatio = start.naturalWidth && start.naturalHeight ? `${start.naturalWidth} / ${start.naturalHeight}` : '9 / 16';
     const aspect = ratio && ratio !== 'auto' ? ratio.replace(':', ' / ') : nativeRatio;
@@ -79,7 +80,7 @@ export default class extends Controller {
       frame.style.maxWidth = `calc(var(--reference-height, 300px) * ${a / b})`;
       preview.style.objectFit = fit;
     }
-    if (this.hasFramingNoticeTarget) this.framingNoticeTarget.textContent = ratio === 'auto'
+    if (this.hasFramingNoticeTarget) this.framingNoticeTarget.textContent = subject ? 'Référence de personnage : image entière envoyée pour guider son apparence. Le modèle choisit ses plans ; cette image ne fixe ni le début ni la fin.' : ratio === 'auto'
       ? 'Format d’origine conservé. L’image de fin est ajustée au même cadre.'
       : `${ratio || 'Choisis un format'} · ${fit === 'contain' ? 'image entière, bandes noires si nécessaire' : 'recadrage centré'}. Cet aperçu sera repris au récapitulatif.`;
     if (event?.type === 'change') this.referenceTarget.dispatchEvent(new Event('change', {bubbles:true}));
@@ -94,6 +95,11 @@ export default class extends Controller {
       return;
     }
     if (this.hasEndPanelTarget) this.endPanelTarget.hidden = this.sourceMode() !== 'image' || !this.useEndTarget.checked;
+    if (this.hasReferencePanelTarget) {
+      const label = this.referencePanelTarget.querySelector('label');
+      if (label) label.textContent = model?.subjectReference ? 'Image du personnage' : 'Image de début';
+      if (this.hasUseEndTarget) this.useEndTarget.disabled = Boolean(model?.subjectReference);
+    }
     this.restrict(this.durationTarget, model?.seconds);
     this.restrict(this.ratioTarget, model?.ratios);
     if (model?.image && !this.ratioTarget.value) this.ratioTarget.value = model.ratios[0];

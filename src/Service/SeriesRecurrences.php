@@ -29,6 +29,7 @@ final class SeriesRecurrences
     {
         $recipe = $series->getRecipe();
         $model = $this->catalog->model($recipe['model']);
+        $this->catalog->validateReferences($recipe['model'], $recipe['reference'], $recipe['endReference']);
         $durations = $this->flow->durations($recipe['model'], $recipe['totalSeconds'] ?? 30);
         foreach ($durations as $duration) {
             $this->catalog->validate($recipe['model'], $duration, $recipe['ratio']);
@@ -72,7 +73,7 @@ final class SeriesRecurrences
                 throw new \InvalidArgumentException('Vérifie le nombre d’épisodes, les réseaux et l’ambiance.');
             }
             $model = $this->catalog->model($preview['recipe']['model']);
-            if ('linked' === $data['continuity'] && count($preview['durations']) > 1 && (!($model['image'] ?? false) || ($model['requiresEnd'] ?? false) || !$preview['recipe']['reference'])) {
+            if ('linked' === $data['continuity'] && count($preview['durations']) > 1 && (!($model['image'] ?? false) || ($model['subjectReference'] ?? false) || ($model['requiresEnd'] ?? false) || !$preview['recipe']['reference'])) {
                 throw new \RuntimeException('Pour prolonger l’action, configure un modèle image compatible et sa référence dans la série.');
             }
             $next = $this->time->next($data['weekday'], $data['hour'], $data['timezone'], $this->clock->now()->modify('+2 hours'));

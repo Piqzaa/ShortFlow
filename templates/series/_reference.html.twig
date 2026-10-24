@@ -1,0 +1,9 @@
+{% set stored = series ? (slot == 'start' ? series.recipe.reference : series.recipe.endReference) : null %}
+{% set removed = slot == 'start' ? seriesForm.removeImage : seriesForm.removeEndImage %}
+<div data-controller="series-reference" data-series-reference-slot="{{ slot }}" data-series-reference-original-value="{{ stored ? path('app_ai_reference_image',{name:stored}) : '' }}">
+{{ form_row(slot == 'start' ? seriesForm.image : seriesForm.endImage,{attr:{'data-series-reference-target':'file','data-action':'change->series-reference#select'}}) }}
+<div class="series-reference-frame" data-series-reference-target="frame"{% if not stored or removed.vars.checked %} hidden{% endif %}><img alt="{{ slot == 'start' ? 'Aperçu de l’image principale' : 'Aperçu de l’image de fin' }}" data-series-reference-target="preview" data-action="load->series-reference#render"{% if stored and not removed.vars.checked %} src="{{ path('app_ai_reference_image',{name:stored}) }}"{% endif %}></div>
+<p class="library-note" role="status" data-series-reference-target="status">Les fichiers sélectionnés sont enregistrés uniquement à la sauvegarde de la configuration.</p>
+<button type="button" class="account-secondary" data-series-reference-target="clear" data-action="series-reference#remove"{% if not stored %} hidden{% endif %}>Retirer l’image{{ slot == 'end' ? ' de fin' : '' }}</button>
+<div class="series-reference-remove" data-series-reference-target="removeRow">{{ form_row(removed,{attr:{'data-series-reference-target':'remove'}}) }}</div>
+</div>

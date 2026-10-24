@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Service\AiCatalog;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -35,7 +36,7 @@ final class AiSeriesType extends AbstractType
             ->add('theme', TextareaType::class, ['label' => 'Thème et intention', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 700)], 'attr' => ['rows' => 3, 'maxlength' => 700]])
             ->add('style', TextareaType::class, ['label' => 'Style visuel', 'required' => false, 'constraints' => [new Assert\Length(max: 300)], 'attr' => ['rows' => 2, 'maxlength' => 300]])
             ->add('characters', TextareaType::class, ['label' => 'Description textuelle des personnages', 'required' => false, 'help' => 'Ce texte guide les prompts. Il ne remplace pas une image et ne garantit pas une apparence identique entre les clips.', 'constraints' => [new Assert\Length(max: 300)], 'attr' => ['rows' => 2, 'maxlength' => 300]])
-            ->add('source', ChoiceType::class, ['mapped' => false, 'label' => 'Point de départ des vidéos', 'choices' => ['Décrire avec du texte' => 'text', 'Animer une image de référence' => 'image'], 'data' => (AiCatalog::MODELS[$builder->getData()['model'] ?? '']['image'] ?? false) ? 'image' : 'text', 'help' => 'Le choix du modèle ci-dessous détermine les références réellement envoyées.', 'attr' => ['data-series-settings-target' => 'source', 'data-action' => 'change->series-settings#changeSource']])
+            ->add('source', ChoiceType::class, ['mapped' => false, 'label' => 'Point de départ des vidéos', 'choices' => ['Décrire avec du texte' => 'text', 'Animer une image de début' => 'image', 'Garder un personnage de référence' => 'subject'], 'data' => (AiCatalog::MODELS[$builder->getData()['model'] ?? '']['subjectReference'] ?? false) ? 'subject' : ((AiCatalog::MODELS[$builder->getData()['model'] ?? '']['image'] ?? false) ? 'image' : 'text'), 'help' => 'Le choix du modèle ci-dessous détermine les références réellement envoyées.', 'attr' => ['data-series-settings-target' => 'source', 'data-action' => 'change->series-settings#changeSource']])
             ->add('model', ChoiceType::class, ['label' => 'Modèle et fournisseur', 'placeholder' => 'Choisir un modèle compatible', 'choices' => $models, 'attr' => ['data-series-settings-target' => 'model', 'data-action' => 'series-settings#change']])
             ->add('totalSeconds', IntegerType::class, ['label' => 'Durée finale des prochains épisodes (secondes)', 'constraints' => [new Assert\NotBlank(), new Assert\Range(min: 1, max: 60)], 'attr' => ['min' => 1, 'max' => 60]])
             ->add('seconds', ChoiceType::class, ['label' => 'Durée d’un clip par défaut', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', $catalog->durations()), $catalog->durations()), 'attr' => ['data-series-settings-target' => 'seconds']])
@@ -46,6 +47,8 @@ final class AiSeriesType extends AbstractType
         foreach (['image' => 'Image de départ commune', 'endImage' => 'Image de fin commune (facultative selon le modèle)'] as $field => $label) {
             $builder->add($field, FileType::class, ['label' => $label, 'required' => false, 'constraints' => [new Assert\File(maxSize: '10M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'])], 'attr' => ['accept' => 'image/jpeg,image/png,image/webp']]);
         }
+        $builder->add('removeImage', CheckboxType::class, ['label' => 'Retirer l’image enregistrée à la sauvegarde', 'required' => false]);
+        $builder->add('removeEndImage', CheckboxType::class, ['label' => 'Retirer l’image de fin enregistrée à la sauvegarde', 'required' => false]);
         $builder->addEventListener(FormEvents::POST_SUBMIT, static function (FormEvent $event) use ($catalog): void {
             $data = $event->getData();
             if (!isset(AiCatalog::MODELS[$data['model'] ?? ''])) {

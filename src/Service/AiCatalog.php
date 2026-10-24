@@ -8,6 +8,7 @@ final class AiCatalog
     public const PROVIDERS = ['fal' => 'Fal', 'replicate' => 'Replicate', 'ltx' => 'LTX'];
     // IDs are durable execution choices: never rebind one to another provider/schema.
     public const MODELS = [
+        'vidu-q1-subject' => ['name' => 'Vidu Q1 · Référence de personnage', 'maker' => 'Vidu', 'provider' => 'fal', 'description' => 'Guide l’apparence du personnage sans imposer une image de début ou de fin. Scènes indépendantes, identité non garantie.', 'endpoint' => 'fal-ai/vidu/q1/reference-to-video', 'rateMicros' => 80000, 'audio' => false, 'seconds' => [5], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'subjectReference' => true, 'durationType' => 'none', 'checked' => '2026-10-24', 'input' => ['bgm' => false, 'movement_amplitude' => 'auto']],
         'kling-25' => ['name' => 'Kling 2.5 Turbo Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Mouvements et plans cinématiques.', 'endpoint' => 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video', 'rateMicros' => 70000, 'audio' => false, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
         'wan-25' => ['name' => 'Wan 2.5', 'maker' => 'Alibaba', 'provider' => 'fal', 'description' => 'Scènes créatives avec audio généré.', 'endpoint' => 'fal-ai/wan-25-preview/text-to-video', 'rateMicros' => 100000, 'audio' => true, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p'],
         'kling-3' => ['name' => 'Kling 3.0 Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Plans jusqu’à 15 secondes avec audio natif. Voix chinoises ou anglaises.', 'endpoint' => 'fal-ai/kling-video/v3/pro/text-to-video', 'rateMicros' => 168000, 'audio' => true, 'seconds' => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
@@ -64,7 +65,7 @@ final class AiCatalog
         'veo-image-replicate-1080p' => ['name' => 'Veo 3.1 Fast · Image · 1080p', 'maker' => 'Google', 'provider' => 'replicate', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'google/veo-3.1-fast', 'rateMicros' => 150000, 'audio' => true, 'seconds' => [4, 6, 8], 'ratios' => ['9:16', '16:9'], 'quality' => '1080p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20', 'imageField' => 'image', 'endImageField' => 'last_frame', 'input' => ['resolution' => '1080p', 'generate_audio' => true]],
     ];
 
-    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,checked?:string,imageField?:string,endImageField?:string,requiresEnd?:bool,omitSafety?:bool,fixedMicros?:int} */
+    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,subjectReference?:bool,checked?:string,imageField?:string,endImageField?:string,requiresEnd?:bool,omitSafety?:bool,fixedMicros?:int} */
     public function model(string $id): array
     {
         return self::MODELS[$id] ?? throw new \InvalidArgumentException('Choisis un modèle disponible.');
@@ -98,9 +99,26 @@ final class AiCatalog
         }
     }
 
+    public function validateReferences(string $id, ?string $reference, ?string $endReference): void
+    {
+        $model = $this->model($id);
+        if (($model['image'] ?? false) && !$reference) {
+            throw new \RuntimeException('Ajoute une image dans la configuration avant de préparer ou générer cette vidéo.');
+        }
+        if (($model['requiresEnd'] ?? false) && !$endReference) {
+            throw new \RuntimeException('Ajoute l’image de fin requise dans la configuration avant de continuer.');
+        }
+        if ($endReference && !isset($model['endImageField'])) {
+            throw new \RuntimeException('Ce modèle ne prend pas d’image de fin.');
+        }
+    }
+
     public function validatePrompt(string $id, string $prompt): void
     {
         $model = $this->model($id);
+        if (($model['subjectReference'] ?? false) && mb_strlen($prompt) > 1500) {
+            throw new \InvalidArgumentException('Le texte dépasse la limite de 1 500 caractères de ce modèle.');
+        }
         if (isset($model['promptBytes']) && strlen($prompt) > $model['promptBytes']) {
             throw new \InvalidArgumentException('Le texte dépasse la limite de '.$model['promptBytes'].' octets de ce modèle. Raccourcis-le : les accents et emojis occupent plusieurs octets.');
         }

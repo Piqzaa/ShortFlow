@@ -40,7 +40,7 @@ final class AiIdeaType extends AbstractType
             ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])
             ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations()], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
         $builder
-            ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire une vidéo' => 'text', 'Animer une image' => 'image'], 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
+            ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire une vidéo' => 'text', 'Utiliser une image' => 'image'], 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
             ->add('reference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
             ->add('endReference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
             ->add('useEnd', CheckboxType::class, ['label' => 'Ajouter une image de fin', 'required' => false])

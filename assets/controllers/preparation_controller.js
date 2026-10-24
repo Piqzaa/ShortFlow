@@ -22,7 +22,7 @@ export default class extends Controller {
   refresh() {
     const model = this.model;
     const reference = this.element.querySelector('[data-creation-target="reference"]').value;
-    const possible = Boolean(model?.image && reference && !model.requiresEnd);
+    const possible = Boolean(model?.image && reference && !model.subjectReference && !model.requiresEnd);
     const single = !this.editor || this.editor.rows().length <= 1;
     this.continuityPanelTarget.hidden = single;
     this.singleTarget.hidden = !single;

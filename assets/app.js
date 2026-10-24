@@ -81,3 +81,6 @@ app.register('story-writer', StoryWriterController);
 
 import RecurrenceBudgetController from './controllers/recurrence_budget_controller.js';
 app.register('recurrence-budget', RecurrenceBudgetController);
+
+import SeriesReferenceController from './controllers/series_reference_controller.js';
+app.register('series-reference', SeriesReferenceController);

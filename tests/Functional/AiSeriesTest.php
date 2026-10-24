@@ -174,6 +174,48 @@ final class AiSeriesTest extends WebTestCase
         self::assertSelectorTextContains('label[for="ai_series_characters"]', 'Description textuelle');
     }
 
+    public function testSubjectReferenceIsDistinctAndRemovingImagesKeepsPreparedSnapshots(): void
+    {
+        $file = tempnam(sys_get_temp_dir(), 'series-subject-');
+        copy(dirname(__DIR__).'/Fixtures/reference.jpg', $file);
+        $this->files[] = $file;
+        $series = $this->createSeries(['ai_series[model]' => 'vidu-q1-subject', 'ai_series[image]' => new UploadedFile($file, 'character.jpg', 'image/jpeg', null, true)]);
+        $image = $series->getRecipe()['reference'];
+        $this->files[] = static::getContainer()->get(AiReferenceStorage::class)->path($this->owner, $image);
+        $job = $this->legacyPrepare($series);
+        self::assertSame($image, $job->getReferenceImage());
+        self::assertNull($job->getEndReferenceImage());
+        self::assertSame('vidu-q1-subject', $job->getModel());
+        try {
+            static::getContainer()->get(\App\Service\AiEpisodeFlow::class)->prepare($this->em()->find(User::class, $this->owner->getId()), ['model' => 'vidu-q1-subject', 'source' => 'image', 'target' => 10, 'shots' => [['prompt' => 'The character waves.', 'seconds' => 5], ['prompt' => 'The character smiles.', 'seconds' => 5]], 'ratio' => '9:16', 'reference' => $image, 'continuity' => 'linked']);
+            self::fail('Une référence de personnage ne doit pas être remplacée par la dernière image du plan précédent.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('raccords', $error->getMessage());
+        }
+        $url = '/studio/series/'.$series->getId().'/configuration';
+        $crawler = $this->client->request('GET', $url);
+        self::assertSelectorExists('select[name="ai_series[source]"] option[value="subject"][selected]');
+        self::assertSelectorExists('[data-series-reference-original-value] img');
+        $this->client->submit($crawler->selectButton('Enregistrer la configuration')->form(['ai_series[removeImage]' => '1']));
+        self::assertResponseStatusCodeSame(303);
+        $cleared = $this->em()->find(AiSeries::class, $series->getId());
+        self::assertNull($cleared->getRecipe()['reference']);
+        try {
+            $this->legacyPrepare($cleared, 1);
+            self::fail('Une image retirée doit bloquer une nouvelle préparation image.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('Ajoute une image', $error->getMessage());
+        }
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->selectButton('Enregistrer la configuration')->form(['ai_series[removeImage]' => '1', 'ai_series[removeEndImage]' => '1', 'ai_series[model]' => 'kling-25']));
+        self::assertResponseStatusCodeSame(303);
+        $series = $this->em()->find(AiSeries::class, $series->getId());
+        self::assertNull($series->getRecipe()['reference']);
+        $job = $this->em()->find(AiGeneration::class, $job->getId());
+        self::assertSame($image, $job->getReferenceImage());
+        self::assertFileExists(static::getContainer()->get(AiReferenceStorage::class)->path($this->owner, $image));
+    }
+
     public function testCreatesThreeDurablePrivateEpisodesWithoutGenerationOrMessages(): void
     {
         $this->client->request('GET', '/studio/series');

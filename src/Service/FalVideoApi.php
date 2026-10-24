@@ -45,6 +45,15 @@ final class FalVideoApi
             unset($payload['enable_safety_checker']);
         }
         if ($model['image'] ?? false) {
+            if ($model['subjectReference'] ?? false) {
+                if (null !== $job->getEndReferenceImage()) {
+                    throw new \RuntimeException('Une référence de personnage ne prend pas d’image de fin.');
+                }
+                // Keep the whole subject; this is an identity guide, not a first frame.
+                $payload['reference_image_urls'] = [$this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '')];
+
+                return $payload;
+            }
             $first = $this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '', $job->getRatio(), $job->getImageFit());
             $endName = $job->getEndReferenceImage();
             if (($model['requiresEnd'] ?? false) && null === $endName) {

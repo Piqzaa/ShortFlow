@@ -54,11 +54,17 @@ final class AiSeriesStudio
             $previous = $series?->getRecipe();
             $image = $previous['reference'] ?? null;
             $endImage = $previous['endReference'] ?? null;
+            if ($data['removeImage'] ?? false) {
+                $image = null;
+            }
+            if ($data['removeEndImage'] ?? false) {
+                $endImage = null;
+            }
             if ($model['image'] ?? false) {
-                if (!$image && !$data['image'] instanceof UploadedFile) {
+                if (!$image && !$data['image'] instanceof UploadedFile && !($series && ($data['removeImage'] ?? false))) {
                     throw new \RuntimeException('Ajoute une image de départ pour ce modèle.');
                 }
-                if (($model['requiresEnd'] ?? false) && !$endImage && !$data['endImage'] instanceof UploadedFile) {
+                if (($model['requiresEnd'] ?? false) && !$endImage && !$data['endImage'] instanceof UploadedFile && !($series && ($data['removeEndImage'] ?? false))) {
                     throw new \RuntimeException('Ce modèle demande aussi une image de fin.');
                 }
                 if (!isset($model['endImageField']) && $data['endImage'] instanceof UploadedFile) {
@@ -70,7 +76,9 @@ final class AiSeriesStudio
                 if ($data['endImage'] instanceof UploadedFile) {
                     $endImage = $this->references->store($owner, $data['endImage']);
                 }
-                $this->references->path($owner, $image);
+                if ($image) {
+                    $this->references->path($owner, $image);
+                }
                 $endImage = isset($model['endImageField']) ? $endImage : null;
                 if ($endImage) {
                     $this->references->path($owner, $endImage);
@@ -148,6 +156,9 @@ final class AiSeriesStudio
             $this->assertRevision($series->getRevision(), (int) $data['seriesRevision']);
             $recipe = $series->getRecipe();
             if ($prepare || $existing) {
+                if (!$existing) {
+                    $this->catalog->validateReferences($recipe['model'], $recipe['reference'], $recipe['endReference']);
+                }
                 $this->catalog->validate($recipe['model'], $recipe['seconds'], $recipe['ratio']);
                 $this->catalog->validatePrompt($existing?->getModel() ?? $recipe['model'], $data['prompt']);
                 foreach ([$recipe['reference'], $recipe['endReference']] as $image) {

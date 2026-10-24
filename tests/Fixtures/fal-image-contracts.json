@@ -1813,5 +1813,40 @@
       "image_url"
     ],
     "title": "Seedance2I2VInput"
+  },
+  "fal-ai/vidu/q1/reference-to-video": {
+    "required": [
+      "prompt",
+      "reference_image_urls"
+    ],
+    "properties": {
+      "prompt": {
+        "type": "string"
+      },
+      "reference_image_urls": {
+        "type": "array"
+      },
+      "aspect_ratio": {
+        "enum": [
+          "16:9",
+          "9:16",
+          "1:1"
+        ]
+      },
+      "enable_safety_checker": {
+        "type": "boolean"
+      },
+      "bgm": {
+        "type": "boolean"
+      },
+      "movement_amplitude": {
+        "enum": [
+          "auto",
+          "small",
+          "medium",
+          "large"
+        ]
+      }
+    }
   }
 }
