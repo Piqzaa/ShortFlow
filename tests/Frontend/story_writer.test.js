@@ -24,6 +24,39 @@ test('a text engine error leaves the current scenes untouched and permits retry'
   assert.equal(writer.proposal, null);
 });
 
+test('a preparation error before the request is visible and allows retry without calling a provider', async () => {
+  let calls = 0;
+  const writer = setup(async () => { calls++; });
+  writer.payload = () => { throw new Error('Recharge la préparation avant de réessayer.'); };
+  await writer.propose();
+  assert.equal(calls, 0);
+  assert.equal(writer.statusTarget.textContent, 'Recharge la préparation avant de réessayer.');
+  assert.equal(writer.generateTarget.disabled, false);
+  assert.equal(writer.pending, false);
+});
+
+test('a fingerprint error clears the loading indicator without sending an incomplete request', async () => {
+  let calls = 0;
+  const writer = setup(async () => { calls++; });
+  writer.hasLoadingTarget = true;
+  writer.loadingTarget = { hidden: true };
+  writer.fingerprint = () => { throw new Error('La préparation doit être rechargée.'); };
+  await writer.propose();
+  assert.equal(calls, 0);
+  assert.equal(writer.statusTarget.textContent, 'La préparation doit être rechargée.');
+  assert.equal(writer.loadingTarget.hidden, true);
+  assert.equal(writer.generateTarget.disabled, false);
+});
+
+test('an unreadable form shows a recovery message instead of exposing a JavaScript exception', async () => {
+  const writer = setup(async () => { assert.fail('No request expected'); });
+  writer.payload = () => { throw new TypeError('Cannot read properties of null'); };
+  await writer.propose();
+  assert.match(writer.statusTarget.textContent, /Recharge la page/);
+  assert.doesNotMatch(writer.statusTarget.textContent, /Cannot read/);
+  assert.equal(writer.generateTarget.disabled, false);
+});
+
 test('quality warnings stay visible as plain text and disappear on the next clean proposal', () => {
   const element = () => ({ children: [], append(...items) { this.children.push(...items); }, replaceChildren() { this.children = []; } });
   const writer = setup(async () => {}, { createElement: element });

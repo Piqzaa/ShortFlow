@@ -58,19 +58,19 @@ export default class extends Controller {
 
   async propose() {
     if (this.pending) return;
-    const payload = this.payload();
-    if (!payload.idea.trim() || !payload.model || !payload.target) {
-      this.statusTarget.textContent = 'Ajoute une idée, une durée et un modèle vidéo pour proposer des scènes compatibles.';
-      return;
-    }
     this.active = true;
-    this.startedAt = Date.now();
-    this.busy(true);
-    this.statusTarget.textContent = 'Demande enregistrée…';
-    this.previewTarget.hidden = true;
-    this.proposal = null;
-    this.requestFingerprint = this.fingerprint();
     try {
+      const payload = this.payload();
+      if (!payload.idea.trim() || !payload.model || !payload.target) {
+        this.statusTarget.textContent = 'Ajoute une idée, une durée et un modèle vidéo pour proposer des scènes compatibles.';
+        return;
+      }
+      this.startedAt = Date.now();
+      this.busy(true);
+      this.statusTarget.textContent = 'Demande enregistrée…';
+      this.previewTarget.hidden = true;
+      this.proposal = null;
+      this.requestFingerprint = this.fingerprint();
       const job = await this.request(this.urlValue, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' }, body: new URLSearchParams({ ...payload, fingerprint: this.requestFingerprint, _token: this.tokenValue }) });
       if (!this.active) return;
       // Keep previews returned by an already-open older page compatible.
@@ -103,7 +103,7 @@ export default class extends Controller {
 
   failed(error) {
     this.busy(false);
-    this.statusTarget.textContent = error.name === 'AbortError' ? 'La connexion a pris trop de temps. La rédaction peut continuer en arrière-plan ; retrouve son état ou reviens sur cette page.' : error.message;
+    this.statusTarget.textContent = error.name === 'AbortError' ? 'La connexion a pris trop de temps. La rédaction peut continuer en arrière-plan ; retrouve son état ou reviens sur cette page.' : error.name === 'TypeError' ? 'La préparation n’a pas pu être lue ou transmise. Recharge la page puis réessaie ; vérifie aussi ta connexion.' : error.message;
     if (this.hasRetryTarget) this.retryTarget.hidden = false;
   }
 
