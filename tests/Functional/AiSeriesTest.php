@@ -104,6 +104,7 @@ final class AiSeriesTest extends WebTestCase
         self::assertStringContainsString('&lt;script&gt;', $this->client->getResponse()->getContent());
         $this->client->request('GET', '/studio/series');
         self::assertSelectorTextContains('.series-item', 'Les aventures de Milo');
+        self::assertSelectorTextContains('.series-item small', '30 s finales');
     }
 
     public function testChosenEpisodeCountAndAddingEpisodesArePrivateAndIdempotent(): void
