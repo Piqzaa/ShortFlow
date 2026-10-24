@@ -30,6 +30,7 @@ final class FalOAuthTest extends WebTestCase
     private int $exchanges = 0;
     private bool $revoked = false;
     private bool $registrationRejected = false;
+    private string $expectedModel = 'kling-25';
     /** @var list<string> */ private array $files = [];
 
     protected function setUp(): void
@@ -132,8 +133,12 @@ final class FalOAuthTest extends WebTestCase
     private function submitted(array $arguments): array
     {
         ++$this->submissions;
-        self::assertSame('fal-ai/kling-video/v2.5-turbo/pro/text-to-video', $arguments['endpoint_id']);
-        self::assertSame('5', $arguments['input']['duration']);
+        self::assertSame(\App\Service\AiCatalog::MODELS[$this->expectedModel]['endpoint'], $arguments['endpoint_id']);
+        self::assertSame('pika-22' === $this->expectedModel ? 5 : '5', $arguments['input']['duration']);
+        self::assertSame('9:16', $arguments['input']['aspect_ratio']);
+        if ('pika-22' === $this->expectedModel) {
+            self::assertSame('720p', $arguments['input']['resolution']);
+        }
         self::assertFalse($arguments['store_payload']);
 
         return ['request_id' => 'mcp-job', 'status_url' => 'https://queue.fal.run/fal-ai/kling-video/requests/mcp-job/status?account_receipt=private-receipt', 'response_url' => 'https://queue.fal.run/fal-ai/kling-video/requests/mcp-job?account_receipt=private-receipt'];
@@ -218,6 +223,21 @@ final class FalOAuthTest extends WebTestCase
         self::assertSame('review', $job->getStatus());
         self::assertStringContainsString('compte MCP actif', $job->getIssue());
         self::assertSame(0, $this->submissions);
+    }
+
+    public function testPikaVerticalSettingsReachTheMcpSubmitCallWithoutFallingBackToLandscapeDefaults(): void
+    {
+        $this->expectedModel = 'pika-22';
+        $this->connect();
+        $job = new AiGeneration($this->owner, 'Vertical test', 'One short action.', 'pika-22', 5, '9:16', 20);
+        $job->useMcp();
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $generations = static::getContainer()->get(AiGenerations::class);
+        $generations->confirm($this->owner, $job->getId());
+        $generations->process($job->getId());
+        self::assertSame('processing', $job->getStatus());
+        self::assertSame(1, $this->submissions);
     }
 
     public function testRevokedRefreshStopsQueuedWorkWithoutLosingTheEntityManager(): void

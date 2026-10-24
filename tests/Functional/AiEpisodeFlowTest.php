@@ -216,6 +216,34 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame(0, $this->submissions);
     }
 
+    public function testWrongProviderFramingKeepsTheClipAndStopsBeforeTheNextBillableShotOrAssembly(): void
+    {
+        $episode = $this->planned();
+        $this->flow()->confirm($episode, $this->flow()->quote($episode)['hash']);
+        $this->flow()->advance($episode->getId());
+        $shots = $this->flow()->shots($episode);
+        $job = $shots[0]->getGeneration();
+        self::assertNotNull($job);
+        self::assertStringStartsWith('SHOT TO GENERATE', $job->getPrompt());
+        self::assertLessThan(strpos($job->getPrompt(), 'SHARED CONTEXT'), strpos($job->getPrompt(), $shots[0]->getPrompt()));
+        $wide = new VideoAsset($this->owner, 'Unexpected landscape clip', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 100, 10, 1280, 720, 'h264');
+        $this->em()->persist($wide);
+        $job->complete($wide);
+        $this->em()->flush();
+        $this->flow()->advance($episode->getId());
+        self::assertSame('paused', $episode->getFlowState());
+        self::assertStringContainsString('9:16', $episode->getFlowIssue());
+        self::assertStringContainsString('1280 × 720', $episode->getFlowIssue());
+        self::assertSame($wide, $job->getVideo());
+        self::assertNull($shots[1]->getGeneration());
+        self::assertNull($episode->getAssembly());
+        self::assertSame(0, $this->submissions);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.episode-progress', 'en pause');
+        self::assertSelectorTextContains('#shot-1 [role="alert"]', 'Format reçu : 1280 × 720');
+    }
+
     public function testSequentialChainUsesPreviousEndFrameAndNeverSubmitsInParallel(): void
     {
         $episode = $this->planned(true);

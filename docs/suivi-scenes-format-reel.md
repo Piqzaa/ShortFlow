@@ -1,0 +1,46 @@
+# Suivi des scènes et diagnostic du premier essai réel — 24 octobre 2026
+
+## Objectif et résultat
+
+Rendre le lancement et l'avancement des épisodes visibles dans le parcours commun Studio/Séries, proposer des couvertures privées pour retrouver ses créations, puis diagnostiquer l'essai Pika signalé par le propriétaire. Aucun nouveau test vidéo payant ni envoi social n'est lancé dans ce lot.
+
+L'essai déjà confirmé par le propriétaire comprend deux clips Pika 2.2 de cinq secondes, en 720p, accès Fal MCP, demandés en 9:16. Les deux fichiers récupérés font **1280 × 720, durée 5,042 secondes chacun**. Le fichier assemblé fait **1080 × 1920, durée 10,022 secondes**. Un conteneur vertical ne constitue donc pas une génération nativement verticale ; le montage préserve ici l'image paysage avec des bandes.
+
+Le générateur de paramètres actuel produit `aspect_ratio: 9:16`, `resolution: 720p`, `duration: 5` entier. Le test MCP supplémentaire vérifie ces champs dans `tools/call/submit_job`. La [documentation officielle Pika](https://fal.ai/models/fal-ai/pika/v2.2/text-to-video/api) déclare bien 9:16 parmi les formats acceptés et 16:9 comme défaut. Elle annonce aussi la fin de cet endpoint au 29 octobre 2026 : ce choix économique ancien ne doit pas être présenté comme une base durable pour de nouvelles séries.
+
+L'historique Fal des requêtes existantes a été consulté en lecture seule : la requête est trouvée, mais son entrée n'est pas conservée (`store_payload: false`). La reconstruction depuis les paramètres enregistrés n'est pas une preuve du payload reçu par Fal. Le décalage entre le contrat/documentation et les fichiers livrés est confirmé ; son origine précise côté modèle, relais ou traitement fournisseur n'est pas démontrée. Aucun nouvel appel payant n'est utilisé pour départager ces possibilités.
+
+Des images extraites localement des deux clips montrent un changement marqué du personnage : rendu plus stylisé et habillé au premier plan, autre silhouette/rendu au deuxième. Les clips sont générés séparément à partir de texte, sans référence commune ni image de raccord. Les prompts incluent plusieurs actions pour cinq secondes, et le contexte français complet de l'histoire précédait chaque action particulière anglaise. Cette combinaison ne garantit ni une identité identique ni une action terminée avant la coupe. La durée mesurée correspond à la durée demandée ; l'assemblage ne supprime pas plusieurs secondes d'une scène plus longue. Ces constats ne constituent pas une évaluation comparative générale de tous les modèles.
+
+## Changements et composants
+
+- `templates/series/_progress.html.twig`, `assets/styles/episode.css` : panneau visible sous le titre après confirmation, animation respectant reduced motion, nombre réel de clips conformes prêts, état par scène et assemblage séparé. Les étapes « file fournisseur », « création » et « récupération » viennent des états persistés. Un clip reçu au mauvais format est marqué à vérifier, pas compté comme prêt. Aucun pourcentage temporel inventé.
+- `assets/controllers/episode_watch_controller.js` : lecture privée des états toutes les trois secondes, requête bornée à huit secondes, suspension en arrière-plan, nettoyage au départ et retour à l'actualisation manuelle après trois échecs. Un changement de révision recharge l'état conservé ; ce suivi ne soumet aucune génération.
+- `src/Service/EpisodeCovers.php` : sélection groupée, limitée aux créations affichées, d'une version validée, d'un assemblage ou d'un dernier clip disponible. Création et vidéo doivent appartenir au propriétaire. Les contrôleurs fournissent seulement leurs identifiants aux templates.
+- `templates/ai/_cover.html.twig`, cartes Studio/Séries et styles : réutilisation du contrôleur de vignettes existant. Extraction côté navigateur, deux médias à la fois, aucune lecture automatique, libération de la source après capture ; repli décoratif quand le décodage échoue. Le Studio expose quatre créations récentes avant la préparation, avec lien vers l'historique.
+- `VideoAsset::matchesRatio()` : comparaison des dimensions réelles au format demandé, avec tolérance de 3 % pour les arrondis d'encodage. `auto` conserve le format libre.
+- `AiEpisodeFlow::advance()` : un clip incompatible reste dans la bibliothèque, mais l'épisode se met en pause avant la scène suivante et avant l'assemblage. Aucun recadrage, suppression ou nouvel essai payant automatique.
+- `templates/ai/_framing_warning.html.twig` : avertissement également sur les résultats déjà disponibles, y compris les deux anciens clips de cet essai. Les vidéos existantes restent intactes.
+- `AiEpisodeFlow::prompt()` distingue désormais la scène prioritaire du contexte général ; ce dernier ne doit plus commander de rejouer toute l'histoire.
+- `LocalStoryWriter` : consignes renforcées pour les clips courts : une action principale, résultat visible avant la dernière seconde, fin du dernier plan résolue. Préparation et aide d'enchaînement explicitent les coupes et les limites d'identité sans référence visuelle. Ces consignes ne garantissent pas à elles seules une bonne vidéo.
+
+## Flux Symfony et test manuel
+
+Confirmation CSRF du coût → état Doctrine `running` → message Messenger → envoi fournisseur unique → récupération privée et analyse des dimensions → contrôle de format avant de passer au plan suivant → assemblage existant → validation humaine. Le navigateur lit la révision locale et affiche les états ; il ne détermine ni le débit fournisseur ni le consentement. La couverture passe par le flux vidéo privé déjà protégé par propriété.
+
+Après rechargement de l'épisode, suivre les étapes dans le panneau, tester la pause puis la reprise confirmée sur des réponses simulées et vérifier le repli manuel en cas de réseau indisponible. Avec un résultat paysage pour une demande portrait, vérifier la pause, la conservation du fichier et l'absence de nouvelle soumission. Dans Studio et Séries, vérifier les cartes avec et sans vidéo, leur lien, le clavier et l'absence de lecture automatique. Ne pas dépenser de nouveaux crédits pour cette vérification.
+
+Pour une future scène réellement continue, préparer une identité visuelle et une référence commune, puis choisir explicitement un parcours compatible ; la dernière image du clip précédent peut servir de raccord lorsque le modèle le permet. Cela améliore le guidage sans garantir la fidélité. Une simple coupe entre deux générations texte indépendantes ne peut pas résoudre une action inachevée ou un personnage différent. Un recadrage local des clips déjà reçus peut enlever les bandes, mais retire une grande partie des côtés et ne répare pas la continuité ; il n'est pas appliqué implicitement.
+
+## Vérification et incident local
+
+- `shortflow_test`, migrations à jour : suite finale ciblée **78 tests / 1277 assertions réussis**, PHP 8.4.27. Couvre le parcours, l'isolation des couvertures, les dimensions, la pause avant la prochaine demande payante, les paramètres Pika dans MCP, le rédacteur et les contrats Fal.
+- **110 tests frontend**, `npm run check` et `npm run build` réussis. Avertissements Vite existants sur ressources publiques et taille du chunk Three.js.
+- **86 Twig**, conteneur et PHPStan sans erreur ; CS-Fixer appliqué à une concaténation puis contrôle des fichiers concernés ; `git diff --check` réussi. La suite PHP complète n'est pas annoncée comme exécutée dans ce lot.
+- Premier passage avant renouvellement du cache de test : nouvelle couverture non enregistrée comme service, puis nouvelle alerte Twig absente du HTML compilé. Après cache de test renouvelé, la suite finale ci-dessus passe ; aucune assertion n'a été retirée pour masquer ces erreurs.
+- Navigateur sur HTML Symfony fictif : progression 1/2 et état de chaque scène, Studio/Séries et repli des vignettes contrôlés. Mobile 390 × 844 : pas de débordement horizontal ; viewport rétabli. La prévisualisation MP4 du navigateur intégré a montré le repli plutôt qu'une image décodée ; la capture effective des vignettes est également couverte par les tests existants. Pas de prétention à une lecture vidéo réelle dans ce navigateur de recette.
+- Captures et harnais temporaires ignorés dans `artifacts/` : `generation-progress-desktop.png`, `generation-progress-mobile.png`, `generation-series-desktop.png`, `generation-studio-desktop.png`. Images de diagnostic extraites des vrais clips : `real-plan-1-contact.png` et `real-plan-2-contact.png`, conservées localement.
+
+Pendant le développement du suivi, un rafraîchissement du cache dev a perturbé un worker encore actif : fichiers de services compilés introuvables, second clip passé en vérification lors de l'import. Le worker a redémarré. Une reprise strictement bornée au résultat distant existant a récupéré ce second clip puis terminé l'assemblage, sans nouvel envoi de génération. Le contrôle final confirme deux générations disponibles et l'assemblage prêt. Les workers ont ensuite été arrêtés gracieusement avant le dernier renouvellement de cache, puis redémarrés. Cette séquence doit être conservée pour éviter une nouvelle interruption pendant un traitement réel.
+
+Les clips et l'export du propriétaire restent disponibles, la validation lui appartient. Aucune nouvelle dépense, publication, récurrence réelle, suppression de ses données ou push.

@@ -54,6 +54,20 @@ class VideoAsset
         return $this->id;
     }
 
+    public function matchesRatio(string $ratio): bool
+    {
+        if ('auto' === $ratio) {
+            return true;
+        }
+        if ($this->width < 1 || $this->height < 1 || !preg_match('/^([1-9][0-9]?):([1-9][0-9]?)$/D', $ratio, $parts)) {
+            return false;
+        }
+        $expected = (int) $parts[1] / (int) $parts[2];
+
+        // Encoders may round dimensions to a multiple of 8 or 16.
+        return abs($this->width / $this->height - $expected) / $expected <= 0.03;
+    }
+
     public function getOwner(): User
     {
         return $this->owner;

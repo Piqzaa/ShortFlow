@@ -1,9 +1,10 @@
 {% extends 'studio/base.html.twig' %}
-{% block title %}{{ episode.title }} · Les plans — VydFlow{% include 'series/_publications.html.twig' with {summaries:publicationSummaries|default([])} %}
+{% block title %}{{ episode.title }} · Les plans — VydFlow
 {% endblock %}
 {% block studio_content %}
 {% if episode.standalone %}<a class="account-secondary composer-back" href="{{ path('app_studio') }}">← Studio</a>{% else %}<a class="account-secondary composer-back" href="{{ path('app_series_show',{id:episode.series.id,'_fragment':'episode-' ~ episode.id}) }}">← {{ episode.series.name }}</a>{% endif %}
 <div class="workspace-heading"><div><span class="eyebrow">TA VIDÉO, TES PLANS</span><h1>{{ episode.title }}</h1><p>{{ model.name }} · {{ recipe.ratio == 'auto' ? 'Format de l’image' : recipe.ratio }} · BYOK</p></div><span class="series-status">{{ episode.statusLabel }}</span></div>
+{% if episode.flowState in ['running','assembling','paused'] %}{% include 'series/_progress.html.twig' %}{% endif %}
 {% if error %}<p class="account-notice error" role="alert">{{ error }}</p>{% endif %}
 {% if episode.flowIssue %}<p class="account-notice" role="status">{{ episode.flowIssue }}</p>{% endif %}
 <details class="story-context"><summary>Contexte commun envoyé avec chaque scène</summary><p class="series-prompt">{{ episode.prompt }}</p>{% if recipe.reference %}<img class="series-reference" src="{{ path('app_ai_reference_image',{name:recipe.reference}) }}" alt="Référence commune des plans">{% endif %}<p class="library-note">Les scènes décrivent des actions différentes. Les références aident à garder le personnage, sans garantir une continuité parfaite.</p></details>
@@ -23,8 +24,9 @@
 <div class="series-actions"><button class="account-secondary" type="submit" name="intent" value="save">Enregistrer les scènes</button><button class="button" type="submit" name="intent" value="estimate">Vérifier l’estimation totale →</button></div>{{ form_end(storyForm) }}
 {% endif %}
 {% else %}
-<div class="story-watch"{% if episode.flowState in ['running','assembling'] %} data-controller="episode-watch" data-episode-watch-url-value="{{ path('app_series_episode_state',{id:episode.id}) }}" data-episode-watch-revision-value="{{ watchRevision }}"{% endif %}><p class="library-note" role="status" data-episode-watch-target="message">{{ episode.flowState in ['running','assembling'] ? 'Tu peux quitter cette page. Le traitement continue en arrière-plan ; aucune publication ne part automatiquement.' : 'Les résultats et les scènes restent enregistrés.' }}</p><a class="account-secondary" href="{{ path('app_series_episode',{id:episode.id}) }}">Actualiser le suivi ↻</a></div>
+{% if episode.flowState not in ['running','assembling','paused'] %}<p class="library-note">Les résultats et les scènes restent enregistrés.</p>{% endif %}
 <div class="story-shot-list">{% for shot in shots %}<article class="story-shot" id="shot-{{ shot.position }}"><header><h2><span>{{ '%02d'|format(shot.position) }}</span> Plan {{ shot.position }} · {{ shot.seconds }} s prévues</h2><span class="series-status">{{ shot.generation ? constant('App\\Entity\\AiGeneration::LABELS')[shot.generation.status] : 'À générer' }}</span></header><p class="series-prompt">{{ shot.prompt }}</p>
+{% if shot.generation and shot.generation.video %}{% include 'ai/_framing_warning.html.twig' with {video:shot.generation.video,requestedRatio:recipe.ratio} %}{% endif %}
 {% if shot.generation and shot.generation.issue %}<p class="library-note" role="status">{{ shot.generation.issue }}</p>{% endif %}
 {% if shot.generation and shot.generation.video %}<details><summary>Voir ce plan</summary><video class="story-player" controls playsinline preload="none" src="{{ path('app_video_stream',{id:shot.generation.video.id}) }}"></video></details>{% endif %}
 {% if episode.flowState in ['ready','paused'] and shot.generation and shot.generation.video %}<a class="account-secondary composer-back" href="{{ path('app_series_episode',{id:episode.id,redo:shot.id}) }}#story-quote">Refaire uniquement ce plan ↗</a>{% endif %}

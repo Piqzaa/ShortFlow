@@ -1,0 +1,1 @@
+<span class="creation-cover{{ videoId|default(null) ? ' has-video' : '' }}" aria-hidden="true">{% if videoId|default(null) %}<video data-preview-src="{{ path('app_video_stream',{id:videoId}) }}#t=0.1" data-video-thumbnails-target="video" preload="none" muted playsinline tabindex="-1"></video>{% endif %}<span class="creation-cover-fallback">✦</span></span>

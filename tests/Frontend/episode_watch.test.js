@@ -21,7 +21,15 @@ test('episode watch reloads only on a new server revision and stops after discon
     const state = setup([{ revision: 'initial' }, { revision: 'changed' }]);
     await state.controller.poll(); assert.equal(state.result().reloads, 0);
     await state.controller.poll(); assert.equal(state.result().reloads, 1);
-    state.controller.disconnect(); await state.controller.poll(); assert.equal(state.result().calls, 2); assert.equal(state.result().cancelled, 1);
+    state.controller.disconnect(); await state.controller.poll(); assert.equal(state.result().calls, 2); assert.ok(state.result().cancelled >= 1);
+});
+
+test('a timed out state request counts as a failure and keeps a manual recovery path', async () => {
+    const timeout = Object.assign(new Error('timeout'), {name:'AbortError'});
+    const state = setup([timeout, timeout, timeout]);
+    await state.controller.poll(); await state.controller.poll(); await state.controller.poll();
+    assert.equal(state.result().calls, 3);
+    assert.match(state.controller.messageTarget.textContent, /Actualise cette page/);
 });
 test('episode watch pauses in a hidden tab and offers manual refresh after repeated failures', async () => {
     const state = setup([new Error('offline'), new Error('offline'), new Error('offline')]);

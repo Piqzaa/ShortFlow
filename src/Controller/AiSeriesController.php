@@ -25,14 +25,16 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class AiSeriesController extends AbstractController
 {
     #[Route('/studio/series', name: 'app_series', methods: ['GET'])]
-    public function index(Request $request, #[CurrentUser] User $user, EntityManagerInterface $em): Response
+    public function index(Request $request, #[CurrentUser] User $user, EntityManagerInterface $em, \App\Service\EpisodeCovers $covers): Response
     {
         $page = max(1, $request->query->getInt('page', 1));
         $repository = $em->getRepository(AiSeries::class);
         $pages = max(1, (int) ceil($repository->count(['owner' => $user]) / 12));
         $page = min($page, $pages);
 
-        return $this->render('series/index.html.twig', ['seriesList' => $repository->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 12, ($page - 1) * 12), 'page' => $page, 'pages' => $pages, 'models' => AiCatalog::MODELS], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        $seriesList = $repository->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 12, ($page - 1) * 12);
+
+        return $this->render('series/index.html.twig', ['covers' => $covers->series($user, $seriesList), 'seriesList' => $seriesList, 'page' => $page, 'pages' => $pages, 'models' => AiCatalog::MODELS], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/nouvelle', name: 'app_series_new', methods: ['GET', 'POST'])]
@@ -112,7 +114,7 @@ final class AiSeriesController extends AbstractController
     }
 
     #[Route('/studio/series/{id}', name: 'app_series_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EntityManagerInterface $em, \App\Service\SeriesRecurrences $recurrences, EpisodePublications $publications): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EntityManagerInterface $em, \App\Service\SeriesRecurrences $recurrences, EpisodePublications $publications, \App\Service\EpisodeCovers $covers): Response
     {
         $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
         $episodes = $studio->episodes($series);
@@ -191,6 +193,6 @@ final class AiSeriesController extends AbstractController
         }
         $model = AiCatalog::MODELS[$series->getRecipe()['model']];
 
-        return $this->render('series/show.html.twig', ['recurrenceTotalCents' => ($recurrencePreview['cents'] ?? 0) * (is_int($recurrenceForm->get('limit')->getData()) ? $recurrenceForm->get('limit')->getData() : 0), 'recurrence' => $recurrence, 'recurrenceForm' => $recurrencePreview ? $recurrenceForm->createView() : null, 'recurrencePreview' => $recurrencePreview, 'recurrenceError' => $recurrenceError, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/show.html.twig', ['episodeCovers' => $covers->episodes($user, $episodes), 'recurrenceTotalCents' => ($recurrencePreview['cents'] ?? 0) * (is_int($recurrenceForm->get('limit')->getData()) ? $recurrenceForm->get('limit')->getData() : 0), 'recurrence' => $recurrence, 'recurrenceForm' => $recurrencePreview ? $recurrenceForm->createView() : null, 'recurrencePreview' => $recurrencePreview, 'recurrenceError' => $recurrenceError, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 }

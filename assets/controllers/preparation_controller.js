@@ -30,7 +30,7 @@ export default class extends Controller {
     this.fixContinuityTarget.hidden = single || possible || this.continuityTarget.value !== 'linked';
     if (single) this.continuityTarget.value = 'independent';
     this.continuityTarget.querySelector('[value="linked"]').disabled = false;
-    this.continuityHelpTarget.textContent = this.continuityTarget.value === 'linked' ? (possible ? 'Chaque clip repart de la dernière image du précédent. Cela aide les raccords, sans garantir un plan continu ni un personnage identique.' : 'Pour prolonger l’action, choisis « Animer une image », ajoute une référence et sélectionne un modèle compatible ici.') : 'Des scènes assemblées avec des changements de cadrage. Les références communes aident à garder le personnage ; son identité dépend du modèle.';
+    this.continuityHelpTarget.textContent = this.continuityTarget.value === 'linked' ? (possible ? 'Chaque clip repart de la dernière image du précédent. Cela aide les raccords, sans garantir un plan continu ni un personnage identique.' : 'Pour prolonger l’action, choisis « Animer une image », ajoute une référence et sélectionne un modèle compatible ici.') : 'Clips indépendants, assemblés avec des coupes visibles. Sans référence visuelle commune, le personnage peut changer entre les scènes. Pour prolonger une action, choisis un modèle image compatible et une référence.';
     if (!model || !this.editor) return;
     this.editor.modelValue = model;
     for (const row of this.editor.rows()) for (const option of row.querySelector('select').options) {

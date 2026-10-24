@@ -349,6 +349,9 @@ final class AiEpisodeFlow
                         if (!$job->getVideo()) {
                             throw new \RuntimeException('Un clip a été retiré de la bibliothèque. Aucun plan suivant n’a été demandé.');
                         }
+                        if (!$job->getVideo()->matchesRatio($recipe['ratio'])) {
+                            throw new \RuntimeException('Le plan '.$shot->getPosition().' a été demandé en '.$recipe['ratio'].' mais le fournisseur a livré '.$job->getVideo()->getWidth().' × '.$job->getVideo()->getHeight().' px. Le clip est conservé. Les étapes suivantes sont suspendues avant tout nouvel envoi ou assemblage ; aucun recadrage ni nouvel essai payant automatique.');
+                        }
                         if ($job->getVideo()->getDuration() < $shot->getSeconds() - 0.25) {
                             throw new \RuntimeException('Le plan '.$shot->getPosition().' est plus court que prévu. Vérifie son résultat ; tu peux refaire ce plan terminé avec une nouvelle confirmation de coût.');
                         }
@@ -457,7 +460,8 @@ final class AiEpisodeFlow
 
     private function prompt(AiEpisode $episode, AiShot $shot): string
     {
-        return $episode->getPrompt()."\n\n".$shot->getPrompt();
+        return 'SHOT TO GENERATE — perform only this scene within '.$shot->getSeconds()." seconds, with a clear ending before the cut:\n".$shot->getPrompt()
+            ."\n\nSHARED CONTEXT — use only for visual identity and style. Do not replay the full story or actions from other scenes:\n".$episode->getPrompt();
     }
 
     public function revisionHash(AiEpisode $episode): string
