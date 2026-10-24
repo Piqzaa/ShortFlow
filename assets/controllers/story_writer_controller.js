@@ -152,12 +152,18 @@ export default class extends Controller {
       this.statusTarget.textContent = 'Ta préparation a changé. Demande une nouvelle proposition avant de remplacer tes scènes.';
       return;
     }
+    const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
+    if (inputs.length !== this.proposal.shots.length && inputs.some(row=>row.startReference || row.endReference)) {
+      this.statusTarget.textContent = 'La proposition change le nombre de plans. Déplace ou retire leurs cadres avant de l’appliquer ; tes scènes restent conservées.';
+      return;
+    }
     this.editor.listTarget.replaceChildren();
     this.proposal.shots.forEach((shot, index) => {
       this.editor.listTarget.insertAdjacentHTML('beforeend', this.editor.prototypeTarget.innerHTML.replaceAll('__name__', String(index)));
       const row = this.editor.rows()[index];
       row.querySelector('textarea').value = shot.prompt;
       row.querySelector('select').value = String(shot.seconds);
+      for (const [name,value] of Object.entries(inputs[index] || {})) { const input=row.querySelector(`[name$="[${name}]"]`); if (input) input.value=value; }
     });
     this.form.querySelector('[name="ai_idea[title]"]').value = this.proposal.title;
     this.editor.update();

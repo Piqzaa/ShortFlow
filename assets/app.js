@@ -84,3 +84,7 @@ app.register('recurrence-budget', RecurrenceBudgetController);
 
 import SeriesReferenceController from './controllers/series_reference_controller.js';
 app.register('series-reference', SeriesReferenceController);
+import ReferencePickerController from './controllers/reference_picker_controller.js';
+import SubjectListController from './controllers/subject_list_controller.js';
+app.register('reference-picker', ReferencePickerController);
+app.register('subject-list', SubjectListController);

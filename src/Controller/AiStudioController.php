@@ -45,7 +45,7 @@ final class AiStudioController extends AbstractController
             $episode = $flow->owned($preparingEpisode, $user) ?? throw $this->createNotFoundException();
             $recipe = $episode->getPreparationRecipe();
             $shots = $flow->shots($episode);
-            $idea = ['title' => $episode->getTitle(), 'prompt' => $episode->getPrompt(), 'target' => $shots ? array_sum(array_map(static fn ($s): int => $s->getSeconds(), $shots)) : ($recipe['totalSeconds'] ?? 30), 'shots' => array_map(static fn ($s): array => ['prompt' => $s->getPrompt(), 'seconds' => $s->getSeconds()], $shots), 'source' => $catalog->referenceMode($recipe['model']), 'useEnd' => (bool) $recipe['endReference'], 'continuity' => $episode->getContinuity(), 'mute' => $episode->isMutePlans(), 'revision' => (string) $episode->getRevision()] + $recipe;
+            $idea = ['title' => $episode->getTitle(), 'prompt' => $episode->getPrompt(), 'target' => $shots ? array_sum(array_map(static fn ($s): int => $s->getSeconds(), $shots)) : ($recipe['totalSeconds'] ?? 30), 'shots' => array_map(static fn ($s): array => ['prompt' => $s->getPrompt(), 'seconds' => $s->getSeconds()] + $s->getInputs(), $shots), 'source' => $catalog->referenceMode($recipe['model']), 'useEnd' => (bool) $recipe['endReference'], 'continuity' => $episode->getContinuity(), 'mute' => $episode->isMutePlans(), 'revision' => (string) $episode->getRevision()] + $recipe;
         }
         $idea += ['target' => $idea['seconds'] ?? 30, 'shots' => [], 'continuity' => 'independent', 'mute' => false, 'revision' => '0'];
         if ($episode && !$episode->isStandalone() && '' === trim($idea['prompt'])) {
@@ -123,7 +123,10 @@ final class AiStudioController extends AbstractController
                     if ('replan' === $request->request->getString('intent')) {
                         $durations = $flow->durations($data['model'], (int) $data['target']);
                         $old = array_values($data['shots']);
-                        $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds], $durations, array_keys($durations));
+                        if (count($old) !== count($durations) && array_filter($old, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']))) {
+                            throw new \RuntimeException('Déplace ou retire les cadres des plans avant de changer automatiquement leur nombre. Tes scènes et images restent conservées.');
+                        }
+                        $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds] + array_intersect_key($old[$i] ?? [], array_flip(['startReference', 'endReference', 'referenceFit'])), $durations, array_keys($durations));
                         if (count($old) > count($durations)) {
                             $last = count($durations) - 1;
                             $data['shots'][$last]['prompt'] .= "\n".implode("\n", array_column(array_slice($old, count($durations)), 'prompt'));
@@ -194,6 +197,7 @@ final class AiStudioController extends AbstractController
                 if ('mcp' === $data['accessMode']) {
                     $job->useMcp();
                 }
+                $job->attachSubjects($data['subjects'] ?? []);
                 $em->persist($job);
                 $em->flush();
 
@@ -225,6 +229,25 @@ final class AiStudioController extends AbstractController
                 return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
             }
         }
+        foreach ($form->getData()['subjects'] ?? [] as $subject) {
+            try {
+                $references->path($user, $subject);
+            } catch (\RuntimeException) {
+                return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
+            }
+        }
+        foreach ($form->getData()['shots'] ?? [] as $shot) {
+            foreach (['startReference', 'endReference'] as $field) {
+                if (empty($shot[$field])) {
+                    continue;
+                }
+                try {
+                    $references->path($user, $shot[$field]);
+                } catch (\RuntimeException) {
+                    return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
+                }
+            }
+        }
         $revision = $request->request->getString('revision');
         $editor = $request->request->getString('editor');
         $sequence = $request->request->getInt('sequence');
@@ -249,7 +272,7 @@ final class AiStudioController extends AbstractController
     public function uploadReference(Request $request, #[CurrentUser] User $user, AiReferenceStorage $references, EntityManagerInterface $em, FormFactoryInterface $forms, #[Autowire(service: 'limiter.video_upload')] RateLimiterFactory $limiter): Response
     {
         $slot = $request->query->getString('slot', 'start');
-        if (!in_array($slot, ['start', 'end'], true)) {
+        if (!in_array($slot, ['start', 'end', 'plan'], true)) {
             throw $this->createNotFoundException();
         }
         $form = $forms->createNamed('end' === $slot ? 'ai_end_reference' : 'ai_reference', AiReferenceType::class)->handleRequest($request);
@@ -268,6 +291,9 @@ final class AiStudioController extends AbstractController
 
                         return $references->store($user, $file);
                     });
+                    if ('plan' === $slot) {
+                        return $this->json(['reference' => $name, 'url' => $this->generateUrl('app_ai_reference_image', ['name' => $name])], headers: ['Cache-Control' => 'private, no-store']);
+                    }
                     $idea = $request->getSession()->get('ai_idea', []);
                     $idea['end' === $slot ? 'endReference' : 'reference'] = $name;
                     $idea['source'] = ($idea['source'] ?? '') === 'subject' && 'end' !== $slot ? 'subject' : 'image';

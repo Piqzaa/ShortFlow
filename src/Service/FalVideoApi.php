@@ -50,9 +50,19 @@ final class FalVideoApi
                     throw new \RuntimeException('Une référence de personnage ne prend pas d’image de fin.');
                 }
                 // Keep the whole subject; this is an identity guide, not a first frame.
-                $payload['reference_image_urls'] = [$this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '')];
+                $names = array_values(array_unique([$job->getReferenceImage(), ...($job->getInputSettings()['subjects'] ?? [])]));
+                if (count($names) > $this->catalog->subjectLimit($job->getModel())) {
+                    throw new \RuntimeException('Trop de références de personnages pour ce modèle.');
+                }
+                $payload['reference_image_urls'] = array_map(fn (string $name): string => $this->references->dataUri($job->getOwner(), $name), $names);
 
                 return $payload;
+            }
+            if ($job->getInputSettings()['subjects'] ?? []) {
+                if ('kling-3-image' !== $job->getModel() || count($job->getInputSettings()['subjects']) > 2) {
+                    throw new \RuntimeException('Les références de personnages ne sont pas compatibles avec cet endpoint.');
+                }
+                $payload['elements'] = array_map(fn (string $name): array => ['frontal_image_url' => $this->references->dataUri($job->getOwner(), $name)], $job->getInputSettings()['subjects']);
             }
             $first = $this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '', $job->getRatio(), $job->getImageFit());
             $endName = $job->getEndReferenceImage();

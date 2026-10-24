@@ -40,6 +40,7 @@ final class AiIdeaType extends AbstractType
             ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])
             ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations()], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
         $builder
+            ->add('subjects', CollectionType::class, ['entry_type' => HiddenType::class, 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'constraints' => [new Assert\Count(max: 7)], 'entry_options' => ['required' => false, 'constraints' => [new Assert\Regex('/^[a-f0-9]{48}\.jpg$/D')]]])
             ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire une vidéo' => 'text', 'Animer une image de début' => 'image', 'Garder un personnage de référence' => 'subject'], 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
             ->add('reference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
             ->add('endReference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
@@ -64,18 +65,18 @@ final class AiIdeaType extends AbstractType
             if ((new AiCatalog())->referenceMode($data['model']) !== ($data['source'] ?? 'text')) {
                 $form->get('model')->addError(new FormError('Choisis un modèle compatible avec ton point de départ.'));
             }
-            if (($model['image'] ?? false) && empty($data['reference'])) {
+            if (!$form->getConfig()->getOption('composed') && ($model['image'] ?? false) && empty($data['reference'])) {
                 $form->get('reference')->addError(new FormError('Importe une image de départ avant de continuer.'));
             }
             if (($model['image'] ?? false) && ($data['useEnd'] ?? false)) {
                 if (!isset($model['endImageField'])) {
                     $form->get('model')->addError(new FormError('Ce modèle n’accepte pas d’image de fin. Choisis un modèle Début + fin ou retire cette option.'));
                 }
-                if (empty($data['endReference'])) {
+                if (!$form->getConfig()->getOption('composed') && empty($data['endReference'])) {
                     $form->get('endReference')->addError(new FormError('Importe ton image de fin avant de continuer.'));
                 }
             }
-            if (($model['requiresEnd'] ?? false) && !($data['useEnd'] ?? false)) {
+            if (!$form->getConfig()->getOption('composed') && ($model['requiresEnd'] ?? false) && !($data['useEnd'] ?? false)) {
                 $form->get('model')->addError(new FormError('Ce parcours nécessite une image de début et une image de fin.'));
             }
             if ('mcp' === ($data['accessMode'] ?? 'api') && 'fal' !== $model['provider']) {

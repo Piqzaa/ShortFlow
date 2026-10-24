@@ -1,0 +1,7 @@
+{% if quote.references|default([]) %}<section class="story-context reference-review"><h2>Ce qui sera envoyé au fournisseur</h2><p class="library-note">Chaque ligne correspond à un appel confirmé, avec ses propres références. Les personnages sont communs ; les cadres concernent le plan indiqué.</p>
+{% for item in quote.references %}<article class="story-shot"><h3>Appel {{ item.position }} · {{ item.seconds }} s · {{ model.name }}</h3>
+<p>{{ item.role == 'personnage' ? 'Personnage principal' : 'Début de ce plan' }} : {{ item.fromPrevious ? 'sera extrait du clip précédent, après sa génération' : (item.start ? 'image ci-dessous' : 'aucun cadre imposé') }}.</p>
+{% if item.start %}<img loading="lazy" src="{{ path('app_ai_reference_image',{name:item.start,ratio:item.role == 'personnage' ? 'auto' : recipe.ratio,fit:item.fit}) }}" alt="{{ item.role == 'personnage' ? 'Personnage principal' : 'Début du plan ' ~ item.position }}">{% endif %}
+<p>Fin de ce plan : {{ item.end ? 'image ci-dessous' : 'aucune image imposée' }}.</p>{% if item.end %}<img loading="lazy" src="{{ path('app_ai_reference_image',{name:item.end,ratio:recipe.ratio,fit:item.fit}) }}" alt="Fin du plan {{ item.position }}">{% endif %}
+{% if item.subjects %}<p>Personnages supplémentaires : {{ item.subjects|length }}.</p>{% for name in item.subjects %}<img loading="lazy" src="{{ path('app_ai_reference_image',{name:name}) }}" alt="Personnage supplémentaire {{ loop.index }} du plan {{ item.position }}">{% endfor %}{% endif %}
+</article>{% endfor %}</section>{% endif %}

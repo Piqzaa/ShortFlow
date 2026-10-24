@@ -25,6 +25,24 @@ class AiShot
     private array $previousGenerations = [];
     #[ORM\Column(length: 52, nullable: true)]
     private ?string $endAnchor = null;
+    /** @var array{startReference?:?string,endReference?:?string,referenceFit?:string} */
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $inputs = [];
+
+    /** @return array{startReference?:?string,endReference?:?string,referenceFit?:string} */
+    public function getInputs(): array
+    {
+        return $this->inputs;
+    }
+
+    /** @param array{startReference?:?string,endReference?:?string,referenceFit?:string} $inputs */
+    public function configureInputs(array $inputs): void
+    {
+        if ('draft' !== $this->episode->getFlowState()) {
+            throw new \RuntimeException('Les références confirmées ne sont plus modifiables.');
+        }
+        $this->inputs = $inputs;
+    }
 
     public function __construct(AiEpisode $episode, int $position, int $seconds)
     {

@@ -8,7 +8,7 @@ final class AiCatalog
     public const PROVIDERS = ['fal' => 'Fal', 'replicate' => 'Replicate', 'ltx' => 'LTX'];
     // IDs are durable execution choices: never rebind one to another provider/schema.
     public const MODELS = [
-        'vidu-q1-subject' => ['name' => 'Vidu Q1 · Référence de personnage', 'maker' => 'Vidu', 'provider' => 'fal', 'description' => 'Guide l’apparence du personnage sans imposer une image de début ou de fin. Scènes indépendantes, identité non garantie.', 'endpoint' => 'fal-ai/vidu/q1/reference-to-video', 'rateMicros' => 80000, 'audio' => false, 'seconds' => [5], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'subjectReference' => true, 'durationType' => 'none', 'checked' => '2026-10-24', 'input' => ['bgm' => false, 'movement_amplitude' => 'auto']],
+        'vidu-q1-subject' => ['name' => 'Vidu Q1 · Référence de personnage', 'maker' => 'Vidu', 'provider' => 'fal', 'description' => 'Guide l’apparence du personnage sans imposer une image de début ou de fin. Scènes indépendantes, identité non garantie.', 'endpoint' => 'fal-ai/vidu/q1/reference-to-video', 'rateMicros' => 80000, 'audio' => false, 'seconds' => [5], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'subjectReference' => true, 'subjectLimit' => 7, 'durationType' => 'none', 'checked' => '2026-10-24', 'input' => ['bgm' => false, 'movement_amplitude' => 'auto']],
         'kling-25' => ['name' => 'Kling 2.5 Turbo Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Mouvements et plans cinématiques.', 'endpoint' => 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video', 'rateMicros' => 70000, 'audio' => false, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
         'wan-25' => ['name' => 'Wan 2.5', 'maker' => 'Alibaba', 'provider' => 'fal', 'description' => 'Scènes créatives avec audio généré.', 'endpoint' => 'fal-ai/wan-25-preview/text-to-video', 'rateMicros' => 100000, 'audio' => true, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p'],
         'kling-3' => ['name' => 'Kling 3.0 Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Plans jusqu’à 15 secondes avec audio natif. Voix chinoises ou anglaises.', 'endpoint' => 'fal-ai/kling-video/v3/pro/text-to-video', 'rateMicros' => 168000, 'audio' => true, 'seconds' => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
@@ -31,7 +31,7 @@ final class AiCatalog
         'ltx-25-fast-1080' => ['name' => 'LTX 2.5 Fast · 1080p', 'maker' => 'Lightricks', 'provider' => 'ltx', 'description' => 'Scènes Full HD avec audio natif, jusqu’à 20 secondes.', 'endpoint' => 'ltx-2-5-fast', 'rateMicros' => 130000, 'audio' => true, 'seconds' => [6, 8, 10, 12, 14, 16, 18, 20], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
         'ltx-25-fast-4k' => ['name' => 'LTX 2.5 Fast · 4K', 'maker' => 'Lightricks', 'provider' => 'ltx', 'description' => 'Scènes 2160p avec audio natif.', 'endpoint' => 'ltx-2-5-fast', 'rateMicros' => 300000, 'audio' => true, 'seconds' => [6, 8, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '4k'],
         'kling-25-image' => ['name' => 'Kling 2.5 Turbo Pro · Image', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Anime ton image de départ. Ajoute une image de départ et, si tu veux, une image de fin.', 'endpoint' => 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video', 'rateMicros' => 70000, 'audio' => false, 'seconds' => [5, 10], 'ratios' => ['auto', '9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'endImageField' => 'tail_image_url', 'omitRatio' => true, 'checked' => '2026-10-20'],
-        'kling-3-image' => ['name' => 'Kling 3.0 Pro · Image', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'fal-ai/kling-video/v3/pro/image-to-video', 'rateMicros' => 168000, 'audio' => true, 'seconds' => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'ratios' => ['auto', '9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20', 'imageField' => 'start_image_url', 'endImageField' => 'end_image_url', 'input' => ['generate_audio' => true, 'shot_type' => 'customize']],
+        'kling-3-image' => ['name' => 'Kling 3.0 Pro · Image', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'fal-ai/kling-video/v3/pro/image-to-video', 'rateMicros' => 168000, 'audio' => true, 'seconds' => [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'ratios' => ['auto', '9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'subjectLimit' => 2, 'omitRatio' => true, 'checked' => '2026-10-20', 'imageField' => 'start_image_url', 'endImageField' => 'end_image_url', 'input' => ['generate_audio' => true, 'shot_type' => 'customize']],
         'wan-25-image-720p' => ['name' => 'Wan 2.5 · Image · 720p', 'maker' => 'Alibaba', 'provider' => 'fal', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'fal-ai/wan-25-preview/image-to-video', 'rateMicros' => 100000, 'audio' => true, 'seconds' => [5, 10], 'ratios' => ['auto', '9:16', '16:9', '1:1'], 'quality' => '720p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20', 'input' => ['resolution' => '720p', 'enable_prompt_expansion' => false]],
         'wan-25-image-1080p' => ['name' => 'Wan 2.5 · Image · 1080p', 'maker' => 'Alibaba', 'provider' => 'fal', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'fal-ai/wan-25-preview/image-to-video', 'rateMicros' => 150000, 'audio' => true, 'seconds' => [5, 10], 'ratios' => ['auto', '9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20', 'input' => ['resolution' => '1080p', 'enable_prompt_expansion' => false]],
         'pika-22-image-720p' => ['name' => 'Pika 2.2 · Image · 720p', 'maker' => 'Pika', 'retireOn' => '2026-10-29', 'provider' => 'fal', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'fal-ai/pika/v2.2/image-to-video', 'rateMicros' => 40000, 'audio' => false, 'seconds' => [5], 'ratios' => ['auto', '9:16', '16:9', '1:1'], 'quality' => '720p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20', 'durationType' => 'integer', 'omitSafety' => true, 'input' => ['resolution' => '720p']],
@@ -65,7 +65,7 @@ final class AiCatalog
         'veo-image-replicate-1080p' => ['name' => 'Veo 3.1 Fast · Image · 1080p', 'maker' => 'Google', 'provider' => 'replicate', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'google/veo-3.1-fast', 'rateMicros' => 150000, 'audio' => true, 'seconds' => [4, 6, 8], 'ratios' => ['9:16', '16:9'], 'quality' => '1080p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20', 'imageField' => 'image', 'endImageField' => 'last_frame', 'input' => ['resolution' => '1080p', 'generate_audio' => true]],
     ];
 
-    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,subjectReference?:bool,retireOn?:string,checked?:string,imageField?:string,endImageField?:string,requiresEnd?:bool,omitSafety?:bool,fixedMicros?:int} */
+    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,subjectReference?:bool,subjectLimit?:int,retireOn?:string,checked?:string,imageField?:string,endImageField?:string,requiresEnd?:bool,omitSafety?:bool,fixedMicros?:int} */
     public function model(string $id): array
     {
         return self::MODELS[$id] ?? throw new \InvalidArgumentException('Choisis un modèle disponible.');
@@ -107,6 +107,18 @@ final class AiCatalog
         return ($model['subjectReference'] ?? false) ? 'subject' : (($model['image'] ?? false) ? 'image' : 'text');
     }
 
+    public function subjectLimit(string $id): int
+    {
+        $model = $this->model($id);
+
+        return $model['subjectLimit'] ?? 0;
+    }
+
+    public function contract(string $id): string
+    {
+        return hash('sha256', serialize($this->model($id)));
+    }
+
     public function assertAvailable(string $id, ?\DateTimeImmutable $now = null): void
     {
         $retireOn = $this->model($id)['retireOn'] ?? null;
@@ -118,6 +130,9 @@ final class AiCatalog
     public function validateReferences(string $id, ?string $reference, ?string $endReference): void
     {
         $model = $this->model($id);
+        if (!($model['image'] ?? false) && ($reference || $endReference)) {
+            throw new \RuntimeException('Ce modèle texte n’accepte pas de cadres de référence. Retire-les ou choisis un modèle compatible.');
+        }
         if (($model['image'] ?? false) && !$reference) {
             throw new \RuntimeException('Ajoute une image dans la configuration avant de préparer ou générer cette vidéo.');
         }

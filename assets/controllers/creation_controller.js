@@ -17,6 +17,11 @@ export default class extends Controller {
       if (this.hasRecommendationsTarget) this.groupTarget.required = false;
       this.pickerSearchTarget.disabled = false;
     }
+    for (const option of this.modelTarget.options || []) {
+      option.dataset.subjectLimit = String(this.modelsValue[option.value]?.subjectLimit || 0);
+      option.dataset.referenceMode = this.modelMode(this.modelsValue[option.value]);
+      option.dataset.acceptsEnd = String(Boolean(this.modelsValue[option.value]?.endImageField));
+    }
     this.changeSource();
     this.changeModel();
     this.filter();

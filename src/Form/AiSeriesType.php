@@ -49,6 +49,12 @@ final class AiSeriesType extends AbstractType
         }
         $builder->add('removeImage', CheckboxType::class, ['label' => 'Retirer l’image enregistrée à la sauvegarde', 'required' => false]);
         $builder->add('removeEndImage', CheckboxType::class, ['label' => 'Retirer l’image de fin enregistrée à la sauvegarde', 'required' => false]);
+        $builder->add('subjectImages', FileType::class, ['label' => 'Autres références de personnages', 'multiple' => true, 'required' => false, 'help' => 'Vidu référence : jusqu’à sept images au total. Kling 3 image : jusqu’à deux personnages supplémentaires, avec un premier cadre propre à chaque plan. Aucun ajout n’est généré par IA.', 'constraints' => [new Assert\Count(max: 7), new Assert\All([new Assert\File(maxSize: '10M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'])])], 'attr' => ['accept' => 'image/jpeg,image/png,image/webp']]);
+        $choices = [];
+        foreach ($options['subjects'] as $index => $name) {
+            $choices['Retirer la référence supplémentaire '.($index + 1)] = $name;
+        }
+        $builder->add('removeSubjects', ChoiceType::class, ['label' => 'Références supplémentaires enregistrées', 'choices' => $choices, 'multiple' => true, 'expanded' => true, 'required' => false]);
         $builder->addEventListener(FormEvents::POST_SUBMIT, static function (FormEvent $event) use ($catalog): void {
             $data = $event->getData();
             if (!isset(AiCatalog::MODELS[$data['model'] ?? ''])) {
@@ -69,5 +75,7 @@ final class AiSeriesType extends AbstractType
     {
         $resolver->setDefault('creating', false);
         $resolver->setAllowedTypes('creating', 'bool');
+        $resolver->setDefault('subjects', []);
+        $resolver->setAllowedTypes('subjects', 'array');
     }
 }

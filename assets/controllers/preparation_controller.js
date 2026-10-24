@@ -9,6 +9,10 @@ export default class extends Controller {
   get editor() { return this.application.getControllerForElementAndIdentifier(this.element.querySelector('#ai-idea-form'), 'shot-editor'); }
   get model() { return this.modelsValue[this.element.querySelector('[data-creation-target="model"]').value]; }
 
+  guardPending(event) {
+    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { event.preventDefault(); this.noticeTarget.textContent = 'Attends la fin de l’import des images avant de préparer la vidéo.'; }
+  }
+
   change(event) {
     this.refresh();
     if (event.target.matches('[data-creation-target="model"]') && this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) this.redistribute();
@@ -59,6 +63,8 @@ export default class extends Controller {
     if (!this.editor || !this.model) return;
     const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds);
     if (!proposal.parts) { this.refresh(); return; }
+    const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
+    if (inputs.length !== proposal.parts.length && inputs.some(row=>row.startReference || row.endReference)) { this.noticeTarget.textContent = 'Déplace ou retire les cadres avant de changer le nombre de plans. Les scènes restent conservées.'; return; }
     const prompts = this.editor.rows().map(row => row.querySelector('textarea').value);
     this.editor.listTarget.replaceChildren();
     proposal.parts.forEach((seconds, index) => {
@@ -66,6 +72,7 @@ export default class extends Controller {
       const row = this.editor.rows()[index];
       row.querySelector('textarea').value = prompts[index] || '';
       row.querySelector('select').value = String(seconds);
+      for (const [name,value] of Object.entries(inputs[index] || {})) { const input=row.querySelector(`[name$="[${name}]"]`); if (input) input.value=value; }
     });
     if (prompts.length > proposal.parts.length) this.editor.rows().at(-1).querySelector('textarea').value += '\n' + prompts.slice(proposal.parts.length).join('\n');
     this.refresh();

@@ -2,9 +2,12 @@
 
 namespace App\Tests\Unit;
 
+use App\Entity\AiEpisode;
 use App\Entity\AiGeneration;
+use App\Entity\AiShot;
 use App\Entity\User;
 use App\Service\AiCatalog;
+use App\Service\AiPlanInputs;
 use App\Service\AiReferenceStorage;
 use App\Service\FalVideoApi;
 use App\Service\LtxVideoApi;
@@ -41,6 +44,64 @@ final class AiImageInputsTest extends TestCase
         }
         rmdir($this->directory.'/42');
         rmdir($this->directory);
+    }
+
+    public function testModernFramesBelongToTheirPlanAndLegacyFramesRemainReadable(): void
+    {
+        $recipe = ['model' => 'kling-3-image', 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => self::FIRST, 'endReference' => self::LAST, 'imageFit' => 'crop'];
+        $episode = new AiEpisode($this->owner, 1, 'Synthetic', 'Scene with Milo.', $recipe);
+        $episode->configurePreparation($recipe, 'Scene with Milo.', 'independent', false);
+        $first = new AiShot($episode, 1, 5);
+        $last = new AiShot($episode, 2, 5);
+        $inputs = new AiPlanInputs(new AiCatalog(), $this->storage);
+        self::assertSame(self::FIRST, $inputs->resolve($episode, $last, 1, 2)['start']);
+        self::assertNull($inputs->resolve($episode, $first, 0, 2)['end']);
+        self::assertSame(self::LAST, $inputs->resolve($episode, $last, 1, 2)['end']);
+        $episode->configurePreparation(array_replace($recipe, ['inputVersion' => 2, 'reference' => null, 'endReference' => null, 'subjects' => [self::LAST]]), 'Scene with Milo.', 'independent', false);
+        $first->configureInputs(['startReference' => self::FIRST, 'endReference' => null, 'referenceFit' => 'crop']);
+        $last->configureInputs(['startReference' => self::LAST, 'endReference' => self::FIRST, 'referenceFit' => 'contain']);
+        self::assertSame(self::FIRST, $inputs->resolve($episode, $first, 0, 2)['start']);
+        self::assertSame(self::LAST, $inputs->resolve($episode, $last, 1, 2)['start']);
+        self::assertSame('contain', $inputs->resolve($episode, $last, 1, 2)['fit']);
+        self::assertSame([self::LAST], $inputs->resolve($episode, $first, 0, 2)['subjects']);
+        $last->configureInputs(['startReference' => null, 'endReference' => null, 'referenceFit' => 'crop']);
+        $this->expectException(\RuntimeException::class);
+        $inputs->resolve($episode, $last, 1, 2);
+    }
+
+    public function testSubjectsChangeConsentAndAreSentBesideKlingFrames(): void
+    {
+        $job = new AiGeneration($this->owner, 'Synthetic', 'Scene with Milo and @Element1.', 'kling-3-image', 5, '9:16', 100);
+        $job->attachReference(self::FIRST);
+        $job->attachEndReference(self::LAST);
+        $revision = $job->getReviewRevision();
+        $job->attachSubjects([self::LAST]);
+        self::assertNotSame($revision, $job->getReviewRevision());
+        $http = new MockHttpClient(function (string $method, string $url, array $options): MockResponse {
+            $body = json_decode($options['body'], true, 32, JSON_THROW_ON_ERROR);
+            self::assertArrayHasKey('start_image_url', $body);
+            self::assertArrayHasKey('end_image_url', $body);
+            self::assertSame([['frontal_image_url' => $this->storage->dataUri($this->owner, self::LAST)]], $body['elements']);
+
+            return new MockResponse('{"status_url":"https://queue.fal.run/fal-ai/kling-video/requests/synthetic/status","response_url":"https://queue.fal.run/fal-ai/kling-video/requests/synthetic"}');
+        });
+        (new FalVideoApi($http, new AiCatalog(), $this->storage))->submit($job, 'synthetic-key');
+    }
+
+    public function testViduReceivesWholeSubjectImagesWithoutImposedFrames(): void
+    {
+        $job = new AiGeneration($this->owner, 'Synthetic', 'Milo.', 'vidu-q1-subject', 5, '9:16', 40);
+        $job->attachReference(self::FIRST);
+        $job->attachSubjects([self::LAST]);
+        $http = new MockHttpClient(function (string $method, string $url, array $options): MockResponse {
+            $body = json_decode($options['body'], true, 32, JSON_THROW_ON_ERROR);
+            self::assertSame([$this->storage->dataUri($this->owner, self::FIRST), $this->storage->dataUri($this->owner, self::LAST)], $body['reference_image_urls']);
+            self::assertArrayNotHasKey('start_image_url', $body);
+            self::assertArrayNotHasKey('end_image_url', $body);
+
+            return new MockResponse('{"status_url":"https://queue.fal.run/fal-ai/vidu/requests/synthetic/status","response_url":"https://queue.fal.run/fal-ai/vidu/requests/synthetic"}');
+        });
+        (new FalVideoApi($http, new AiCatalog(), $this->storage))->submit($job, 'synthetic-key');
     }
 
     public static function configurations(): iterable

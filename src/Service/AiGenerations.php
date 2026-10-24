@@ -251,6 +251,17 @@ final class AiGenerations
 
     private function assertReference(AiGeneration $job): void
     {
+        $settings = $job->getInputSettings();
+        if (isset($settings['contract']) && !hash_equals($settings['contract'], $this->catalog->contract($job->getModel()))) {
+            throw new \RuntimeException('Les paramètres d’exécution du modèle ont changé. Prépare et confirme un nouveau devis avant tout envoi.');
+        }
+        $subjects = $settings['subjects'] ?? [];
+        if (count($subjects) + (($this->catalog->model($job->getModel())['subjectReference'] ?? false) ? 1 : 0) > $this->catalog->subjectLimit($job->getModel())) {
+            throw new \RuntimeException('Trop de références de personnages pour ce modèle.');
+        }
+        foreach ($subjects as $name) {
+            $this->references->path($job->getOwner(), $name);
+        }
         $image = $this->catalog->model($job->getModel())['image'] ?? false;
         if ($image !== (null !== $job->getReferenceImage())) {
             throw new \RuntimeException('Vérifie l’image de départ et le modèle puis prépare une nouvelle estimation.');

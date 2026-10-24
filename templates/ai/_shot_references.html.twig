@@ -1,0 +1,5 @@
+{{ form_widget(shotForm.referenceFit) }}
+<details class="story-context"><summary>Cadres de ce plan</summary><p class="library-note">Ces images concernent ce plan uniquement. En raccord d’image, le début du plan suivant sera extrait du précédent ; laisse son cadre de début vide.</p><div class="series-two-columns">
+{% include 'ai/_reference_picker.html.twig' with {field:shotForm.startReference,kind:'frame',label:'Début de ce plan'} %}
+{% include 'ai/_reference_picker.html.twig' with {field:shotForm.endReference,kind:'frame',label:'Fin de ce plan',ending:true} %}
+</div><noscript><p class="library-note">Active JavaScript pour importer des cadres propres aux plans. Les cadres du premier/dernier plan peuvent aussi être importés dans la préparation commune avant de vérifier le devis.</p></noscript></details>

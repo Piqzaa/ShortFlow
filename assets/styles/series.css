@@ -15,3 +15,5 @@
 .series-recurrence [id$="_networks"]{display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px 10px;align-items:center}.series-recurrence [id$="_networks"] label{margin:0;line-height:1.5}.series-recurrence input[type="checkbox"]{width:18px;height:18px;flex-shrink:0}
 
 .series-reference-frame{width:100%;max-width:340px;max-height:460px;overflow:hidden;background:#000;border:1px solid var(--border);border-radius:12px;margin:16px 0}.series-reference-frame img{display:block;width:100%;height:100%;object-position:center}.series-reference-remove{margin-top:12px}
+
+.reference-review img{max-width:120px;max-height:180px;object-fit:contain;border-radius:8px;margin:8px}.plan-reference{min-width:0;padding:12px 0}.plan-reference input[type=file]{max-width:100%}

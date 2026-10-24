@@ -17,7 +17,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiEpisodeFlow
 {
-    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent)
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent, private AiPlanInputs $inputs)
     {
     }
 
@@ -53,7 +53,21 @@ final class AiEpisodeFlow
         $image = $model['image'] ?? false;
         $reference = $image ? ($data['reference'] ?: null) : null;
         $end = $image && ($data['useEnd'] ?? false) ? ($data['endReference'] ?: null) : null;
-        $this->catalog->validateReferences($data['model'], $reference, $end);
+        $subjects = $this->inputs->subjects($owner, $data['model'], $data['subjects'] ?? []);
+        if (($model['subjectReference'] ?? false) && !$reference && $subjects) {
+            $reference = array_shift($subjects);
+        }
+        if ($image && !$reference && empty($rows[0]['startReference'])) {
+            throw new \RuntimeException('Ajoute une référence ou le premier cadre du premier plan avant de continuer.');
+        }
+        if (!($model['subjectReference'] ?? false)) {
+            if ($reference) {
+                $rows[0]['startReference'] = $reference;
+            }
+            if ($end) {
+                $rows[count($rows) - 1]['endReference'] = $end;
+            }
+        }
         foreach ([$reference, $end] as $name) {
             if ($name) {
                 $this->references->path($owner, $name);
@@ -63,7 +77,7 @@ final class AiEpisodeFlow
         if ('linked' === $continuity && (!$image || ($model['subjectReference'] ?? false) || ($model['requiresEnd'] ?? false))) {
             throw new \RuntimeException('Pour les raccords, choisis ici un modèle image compatible et ajoute sa référence. Tes scènes restent conservées.');
         }
-        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $reference, 'endReference' => $end, 'imageFit' => $data['imageFit']];
+        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($model['subjectReference'] ?? false) ? $reference : null, 'endReference' => null, 'imageFit' => $data['imageFit'], 'inputVersion' => 2, 'subjects' => $subjects];
         $title = trim($data['title'] ?? '') ?: mb_substr(trim($data['prompt']), 0, 80);
 
         return $this->em->getConnection()->transactional(function () use ($owner, $data, $episode, $recipe, $title, $continuity, $rows): AiEpisode {
@@ -194,6 +208,7 @@ final class AiEpisodeFlow
             foreach ($rows as $index => $row) {
                 $shot = $shots[$index] ?? new AiShot($episode, $index + 1, $row['seconds']);
                 $shot->revise($row['prompt'], $row['seconds']);
+                $shot->configureInputs($this->inputs->row($episode->getOwner(), $row, $episode->getFlowRecipe()['imageFit']));
                 $this->em->persist($shot);
             }
             foreach (array_slice($shots, count($rows)) as $removed) {
@@ -203,7 +218,7 @@ final class AiEpisodeFlow
         });
     }
 
-    /** @return array{hash:string,cents:int,seconds:int,count:int,redo:int} */
+    /** @return array{hash:string,cents:int,seconds:int,count:int,redo:int,references:list<array<string,mixed>>} */
     public function quote(AiEpisode $episode, int $redo = 0): array
     {
         $recipe = $episode->getFlowRecipe() ?? throw new \RuntimeException('Prépare les plans avant de continuer.');
@@ -213,7 +228,8 @@ final class AiEpisodeFlow
         $shots = $this->shots($episode);
         $data = [];
         $cents = $seconds = 0;
-        foreach ($shots as $shot) {
+        $references = [];
+        foreach ($shots as $index => $shot) {
             if ($redo && $shot->getId() !== $redo) {
                 continue;
             }
@@ -223,7 +239,13 @@ final class AiEpisodeFlow
             $this->catalog->validate($recipe['model'], $shot->getSeconds(), $recipe['ratio']);
             $this->catalog->validatePrompt($recipe['model'], $this->prompt($episode, $shot));
             $price = $this->catalog->estimate($recipe['model'], $shot->getSeconds());
-            $data[] = [$shot->getId(), $shot->getPrompt(), $shot->getSeconds(), $price, $shot->getGeneration()?->getId()];
+            try {
+                $resolved = $this->inputs->resolve($episode, $shot, $index, count($shots));
+            } catch (\RuntimeException $failure) {
+                throw new \RuntimeException('Plan '.($index + 1).' : '.$failure->getMessage());
+            }
+            $references[] = ['position' => $shot->getPosition(), 'seconds' => $shot->getSeconds(), 'model' => $recipe['model']] + $resolved;
+            $data[] = [$shot->getId(), $shot->getPrompt(), $shot->getSeconds(), $price, $shot->getGeneration()?->getId(), $resolved];
             $cents += $price;
             $seconds += $shot->getSeconds();
         }
@@ -238,7 +260,7 @@ final class AiEpisodeFlow
             }
         }
 
-        return ['hash' => hash('sha256', serialize([$episode->getId(), $episode->getRevision(), $recipe, $episode->getContinuity(), $episode->isMutePlans(), $data, $this->tariff($episode)])), 'cents' => $cents, 'seconds' => $seconds, 'count' => count($data), 'redo' => $redo];
+        return ['hash' => hash('sha256', serialize([$episode->getId(), $episode->getRevision(), $recipe, $episode->getContinuity(), $episode->isMutePlans(), $data, $this->tariff($episode)])), 'cents' => $cents, 'seconds' => $seconds, 'count' => count($data), 'redo' => $redo, 'references' => $references];
     }
 
     public function confirm(AiEpisode $episode, string $hash, int $redo = 0): void
@@ -385,13 +407,15 @@ final class AiEpisodeFlow
                             }
                         }
                         if (!$job) {
-                            $reference = 'linked' === $episode->getContinuity() && $previous ? $this->frames->lastFrame($previous) : $recipe['reference'];
+                            $resolved = $this->inputs->resolve($episode, $shot, $index, count($shots));
+                            $reference = $resolved['fromPrevious'] && $previous ? $this->frames->lastFrame($previous) : $resolved['start'];
                             $job = new AiGeneration($owner, mb_substr($episode->getTitle(), 0, 100).' · plan '.$shot->getPosition(), $this->prompt($episode, $shot), $recipe['model'], $shot->getSeconds(), $recipe['ratio'], $this->catalog->estimate($recipe['model'], $shot->getSeconds()));
                             if ($reference) {
                                 $job->attachReference($reference);
-                                $job->frameImages($recipe['imageFit']);
+                                $job->frameImages($resolved['fit']);
                             }
-                            $end = $shot->getEndAnchor() ?? ($index === count($shots) - 1 || ($this->catalog->model($recipe['model'])['requiresEnd'] ?? false) ? $recipe['endReference'] : null);
+                            $job->attachSubjects($resolved['subjects']);
+                            $end = $resolved['end'];
                             if ($end) {
                                 $job->attachEndReference($end);
                             }
@@ -449,7 +473,9 @@ final class AiEpisodeFlow
         }
         $recipe = $episode->getFlowRecipe();
         $model = $this->catalog->model($recipe['model']);
-        $this->catalog->validateReferences($recipe['model'], $recipe['reference'], $recipe['endReference']);
+        if (($recipe['inputVersion'] ?? 1) < 2) {
+            $this->catalog->validateReferences($recipe['model'], $recipe['reference'], $recipe['endReference']);
+        }
         if (!$this->keys->hasAccess($episode->getOwner(), $model['provider'], $recipe['accessMode'])) {
             throw new \RuntimeException('Connecte l’accès BYOK choisi avant de continuer.');
         }
@@ -483,7 +509,12 @@ final class AiEpisodeFlow
     {
         $model = $episode->getFlowRecipe()['model'];
 
-        return hash('sha256', serialize([$this->catalog->model($model)['checked'] ?? AiCatalog::CHECKED, array_map(fn (AiShot $s): int => $this->catalog->estimate($model, $s->getSeconds()), $this->shots($episode))]));
+        $parts = [$this->catalog->model($model)['checked'] ?? AiCatalog::CHECKED, array_map(fn (AiShot $s): int => $this->catalog->estimate($model, $s->getSeconds()), $this->shots($episode))];
+        if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 2) {
+            $parts[] = $this->catalog->contract($model);
+        }
+
+        return hash('sha256', serialize($parts));
     }
 
     private function capacity(AiEpisode $episode, int $additional = 0): void

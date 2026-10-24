@@ -54,6 +54,21 @@ final class AiSeriesStudio
             $previous = $series?->getRecipe();
             $image = $previous['reference'] ?? null;
             $endImage = $previous['endReference'] ?? null;
+            $subjects = array_values(array_diff($previous['subjects'] ?? [], $data['removeSubjects'] ?? []));
+            $uploads = $data['subjectImages'] ?? [];
+            $limit = $this->catalog->subjectLimit($data['model']) - (($model['subjectReference'] ?? false) ? 1 : 0);
+            if (count($subjects) + count($uploads) > max(0, $limit)) {
+                throw new \RuntimeException('Trop de références de personnages pour ce modèle. Retire les références incompatibles ou choisis explicitement un autre modèle.');
+            }
+            foreach ($subjects as $name) {
+                $this->references->path($owner, $name);
+            }
+            foreach ($uploads as $file) {
+                if (!$file instanceof UploadedFile) {
+                    throw new \RuntimeException('Référence de personnage invalide.');
+                }
+                $subjects[] = $this->references->store($owner, $file);
+            }
             if ($data['removeImage'] ?? false) {
                 $image = null;
             }
@@ -92,7 +107,7 @@ final class AiSeriesStudio
             if ('mcp' === $data['accessMode'] && 'fal' !== $model['provider']) {
                 throw new \RuntimeException('Choisis un accès API pour ce fournisseur.');
             }
-            $recipe = ['totalSeconds' => $data['totalSeconds'] ?? 30, 'model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit']];
+            $recipe = ['totalSeconds' => $data['totalSeconds'] ?? 30, 'model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit'], 'subjects' => $subjects];
             if ($series) {
                 $series->configure(trim($data['name']), trim($data['theme']), trim($data['style'] ?? ''), trim($data['characters'] ?? ''), $recipe);
             } else {
@@ -179,6 +194,7 @@ final class AiSeriesStudio
                 return $existing;
             }
             $job = new AiGeneration($owner, $episode->getTitle(), $episode->getPrompt(), $recipe['model'], $recipe['seconds'], $recipe['ratio'], $this->catalog->estimate($recipe['model'], $recipe['seconds']));
+            $job->attachSubjects($recipe['subjects'] ?? []);
             if ($recipe['reference']) {
                 $job->attachReference($recipe['reference']);
                 $job->frameImages($recipe['imageFit']);

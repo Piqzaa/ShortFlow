@@ -49,6 +49,29 @@ class AiGeneration
     private ?string $endReferenceImage = null;
     #[ORM\Column(length: 8, options: ['default' => 'crop'])]
     private string $imageFit = 'crop';
+    /** @var array{contract?:string,subjects?:list<string>} */
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $inputSettings = [];
+
+    /** @return array{contract?:string,subjects?:list<string>} */
+    public function getInputSettings(): array
+    {
+        return $this->inputSettings;
+    }
+
+    /** @param list<string> $subjects */
+    public function attachSubjects(array $subjects): void
+    {
+        if ('prepared' !== $this->status || count($subjects) > 7) {
+            throw new \LogicException('Références de sujets indisponibles.');
+        }
+        foreach ($subjects as $name) {
+            if (!preg_match('/^[a-f0-9]{48}\.jpg$/D', $name)) {
+                throw new \LogicException('Référence de sujet invalide.');
+            }
+        }
+        $this->inputSettings['subjects'] = array_values(array_unique($subjects));
+    }
 
     #[ORM\Column(length: 12, nullable: true)]
     private ?string $providerStage = null;
@@ -81,6 +104,7 @@ class AiGeneration
         $this->title = $title;
         $this->prompt = $prompt;
         $this->model = $model;
+        $this->inputSettings['contract'] = hash('sha256', serialize(\App\Service\AiCatalog::MODELS[$model]));
         $this->seconds = $seconds;
         $this->ratio = $ratio;
         $this->estimatedCents = $estimatedCents;
@@ -185,7 +209,12 @@ class AiGeneration
 
     public function getReviewRevision(): string
     {
-        return hash('sha256', serialize([$this->title, $this->prompt, $this->model, $this->seconds, $this->ratio, $this->estimatedCents, $this->priceChecked, $this->referenceImage, $this->endReferenceImage, $this->imageFit, $this->accessMode]));
+        $data = [$this->title, $this->prompt, $this->model, $this->seconds, $this->ratio, $this->estimatedCents, $this->priceChecked, $this->referenceImage, $this->endReferenceImage, $this->imageFit, $this->accessMode];
+        if ($this->inputSettings) {
+            $data[] = $this->inputSettings;
+        }
+
+        return hash('sha256', serialize($data));
     }
 
     public function getModel(): string

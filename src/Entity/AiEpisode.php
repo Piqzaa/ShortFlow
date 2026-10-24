@@ -35,7 +35,7 @@ class AiEpisode
     #[ORM\Column(length: 16, nullable: true)]
     private ?string $flowState = null;
 
-    /** @var array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string}|null */
+    /** @var array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,inputVersion?:int,subjects?:list<string>}|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $flowRecipe = null;
 
@@ -113,7 +113,7 @@ class AiEpisode
         return $this->approvedVideo;
     }
 
-    /** @return array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string}|null */
+    /** @return array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,inputVersion?:int,subjects?:list<string>}|null */
     public function getFlowRecipe(): ?array
     {
         return $this->flowRecipe;
@@ -132,7 +132,7 @@ class AiEpisode
         ++$this->revision;
     }
 
-    /** @param array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string} $recipe */
+    /** @param array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,inputVersion?:int,subjects?:list<string>} $recipe */
     public function configurePreparation(array $recipe, string $context, string $continuity, bool $mute): void
     {
         if ($this->flowState && 'draft' !== $this->flowState) {
@@ -179,7 +179,7 @@ class AiEpisode
         ++$this->revision;
     }
 
-    /** @param array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string}|null $recipe */
+    /** @param array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,inputVersion?:int,subjects?:list<string>}|null $recipe */
     public function __construct(AiSeries|User $series, int $number, string $title = '', string $prompt = '', ?array $recipe = null)
     {
         $this->series = $series instanceof AiSeries ? $series : null;
@@ -200,7 +200,7 @@ class AiEpisode
         return $this->owner ?? $this->getSeries()->getOwner();
     }
 
-    /** @return array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string} */
+    /** @return array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,inputVersion?:int,subjects?:list<string>} */
     public function getPreparationRecipe(): array
     {
         if ($this->flowRecipe) {

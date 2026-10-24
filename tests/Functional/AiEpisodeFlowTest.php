@@ -574,7 +574,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $crawler = $this->client->request('GET', $url);
         $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[source]' => 'image', 'ai_idea[model]' => 'kling-25-image', 'ai_idea[continuity]' => 'linked']));
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('.creation-form', 'Importe une image');
+        self::assertSelectorTextContains('.creation-form', 'premier cadre');
         self::assertSelectorExists('select[name="ai_idea[model]"]');
         self::assertSelectorExists('textarea[name="ai_idea[shots][1][prompt]"]');
         $crawler = $this->client->request('GET', $url);
@@ -583,6 +583,33 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSelectorExists('input[name="ai_idea[target]"][value="32"]');
         self::assertSelectorTextContains('.creation-form', 'total exact');
         self::assertSelectorTextContains('textarea[name="ai_idea[shots][1][prompt]"]', 'Scene 2');
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testPerPlanReferencesArePersistedAndReviewedWithoutRepeatingTheFirstFrame(): void
+    {
+        $episode = $this->episode(true);
+        $first = $episode->getPreparationRecipe()['reference'];
+        $data = ['model' => 'kling-3-image', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => $first, 'endReference' => null, 'useEnd' => false, 'imageFit' => 'crop', 'prompt' => 'Milo explores.', 'title' => 'Synthetic per-plan frames', 'target' => 10, 'mute' => false, 'continuity' => 'independent', 'revision' => $episode->getRevision(), 'subjects' => [$first], 'shots' => [['prompt' => 'Scene 1: Milo opens a door.', 'seconds' => 5], ['prompt' => 'Scene 2: Milo enters.', 'seconds' => 5]]];
+        $this->flow()->prepare($this->owner, $data, $episode);
+        self::assertSame(2, $episode->getFlowRecipe()['inputVersion']);
+        self::assertNull($episode->getFlowRecipe()['reference']);
+        try {
+            $this->flow()->quote($episode);
+            self::fail('The missing frame of the second independent plan must not fall back to the first.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('Plan 2', $error->getMessage());
+        }
+        $data['revision'] = $episode->getRevision();
+        $data['shots'][1]['startReference'] = $first;
+        $data['shots'][1]['referenceFit'] = 'contain';
+        $this->flow()->prepare($this->owner, $data, $episode);
+        self::assertSame('contain', $this->flow()->shots($episode)[1]->getInputs()['referenceFit']);
+        self::assertCount(2, $this->flow()->quote($episode)['references']);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?review=1');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.reference-review', 'Appel 2');
+        self::assertSelectorCount(4, '.reference-review img');
         self::assertSame(0, $this->submissions);
     }
 }

@@ -71,7 +71,7 @@ final class AiSeriesController extends AbstractController
         if (!$series) {
             $data['episodeCount'] = 1;
         }
-        $form = $this->createForm(AiSeriesType::class, $data, ['creating' => null === $series]);
+        $form = $this->createForm(AiSeriesType::class, $data, ['creating' => null === $series, 'subjects' => $series?->getRecipe()['subjects'] ?? []]);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             try {
