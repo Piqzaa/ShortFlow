@@ -84,6 +84,96 @@ final class AiSeriesTest extends WebTestCase
         return $this->client->request('GET', '/studio/series/'.$series->getId());
     }
 
+    public function testDeletionRequiresOwnershipConsentAndFreshCsrfAndKeepsVideosAndScheduledDrafts(): void
+    {
+        $series = $this->createSeries();
+        $id = $series->getId();
+        $episode = $this->episodes($series)[0];
+        $owner = $this->em()->find(User::class, $this->owner->getId());
+        $video = new \App\Entity\VideoAsset($owner, 'Keep this video', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 100, 5, 720, 1280, 'h264');
+        $this->em()->persist($video);
+        $episode->flow('ready');
+        $episode->approve($video);
+        $this->em()->flush();
+        $draft = static::getContainer()->get(\App\Service\EpisodePublications::class)->prepare($owner, $episode, $episode->getRevision());
+        $draft->plan(new \DateTimeImmutable('+1 day'), 'Europe/Paris', (new \DateTimeImmutable('+1 day'))->format('Y-m-d\\TH:i'), new \DateTimeImmutable());
+        $draft->arm(new \DateTimeImmutable());
+        $this->em()->flush();
+        $videoId = $video->getId();
+        $draftId = $draft->getId();
+        $url = '/studio/series/'.$id.'/supprimer';
+        $crawler = $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        $values = $crawler->selectButton('Supprimer la série et ses épisodes')->form(['form[confirm]' => '1'])->getPhpValues();
+        $bad = $values;
+        $bad['form']['_token'] = 'invalid';
+        $this->client->request('POST', $url, $bad);
+        self::assertResponseStatusCodeSame(422);
+        $bad = $values;
+        unset($bad['form']['confirm']);
+        $this->client->request('POST', $url, $bad);
+        self::assertResponseStatusCodeSame(422);
+        $bad = $values;
+        $bad['form']['revision'] = '0';
+        $this->client->request('POST', $url, $bad);
+        self::assertResponseStatusCodeSame(422);
+        $this->client->loginUser($this->other);
+        $this->client->request('POST', $url, $values);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->owner);
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->selectButton('Supprimer la série et ses épisodes')->form(['form[confirm]' => '1']));
+        self::assertResponseRedirects('/studio/series', 303);
+        $this->em()->clear();
+        self::assertNull($this->em()->find(AiSeries::class, $id));
+        self::assertNotNull($this->em()->find(\App\Entity\VideoAsset::class, $videoId));
+        $kept = $this->em()->find(\App\Entity\PublicationDraft::class, $draftId);
+        self::assertSame('scheduled', $kept->getStatus());
+        self::assertSame([$videoId], $kept->videoIds());
+        self::assertNull($kept->getEpisode());
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testDeletionCannotOrphanAnActiveGenerationOrLocalWriting(): void
+    {
+        $series = $this->createSeries();
+        $job = $this->legacyPrepare($series);
+        $job->progress('queued');
+        $this->em()->flush();
+        $url = '/studio/series/'.$series->getId().'/supprimer';
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->selectButton('Supprimer la série et ses épisodes')->form(['form[confirm]' => '1']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.form-errors, .account-form', 'encore en rédaction');
+        self::assertNotNull($this->em()->find(AiSeries::class, $series->getId()));
+        $job = $this->em()->find(AiGeneration::class, $job->getId());
+        $job->progress('prepared');
+        $writing = new \App\Entity\StoryProposal($this->em()->find(User::class, $this->owner->getId()), $this->episodes($series)[0]->getId(), 'fingerprint', []);
+        $this->em()->persist($writing);
+        $this->em()->flush();
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->selectButton('Supprimer la série et ses épisodes')->form(['form[confirm]' => '1']));
+        self::assertResponseStatusCodeSame(422);
+        $writing = $this->em()->find(\App\Entity\StoryProposal::class, $writing->getId());
+        $writing->fail('Synthetic failure');
+        $recurrence = new \App\Entity\SeriesRecurrence($this->em()->find(AiSeries::class, $series->getId()));
+        $recurrence->activate([], new \DateTimeImmutable('+1 day'), new \DateTimeImmutable());
+        $this->em()->persist($recurrence);
+        $this->em()->flush();
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->selectButton('Supprimer la série et ses épisodes')->form(['form[confirm]' => '1']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.account-form', 'Mets la récurrence en pause');
+    }
+
+    public function testReferenceChoiceIsExplicitEvenWithATextModel(): void
+    {
+        $this->client->request('GET', '/studio/series/nouvelle');
+        self::assertSelectorExists('select[name="ai_series[source]"] option[value="image"]');
+        self::assertSelectorExists('[data-series-settings-target="images"] input[type="file"]');
+        self::assertSelectorTextContains('label[for="ai_series_characters"]', 'Description textuelle');
+    }
+
     public function testCreatesThreeDurablePrivateEpisodesWithoutGenerationOrMessages(): void
     {
         $this->client->request('GET', '/studio/series');

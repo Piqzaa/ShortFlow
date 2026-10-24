@@ -29,6 +29,21 @@ test('changing a series model only retains supported duration and ratio and expl
     assert.equal(controller.secondsTarget.value, '5');
     assert.equal(controller.secondsTarget.options[0].disabled, false);
     assert.match(controller.hintTarget.textContent, /n’utilise pas d’image/);
-    assert.equal(controller.imagesTarget.hidden, true);
+    assert.equal(controller.imagesTarget.hidden, false);
     assert.equal(imageInput.disabled, true);
+});
+
+test('requesting an image reference clears an incompatible text model without silently choosing a paid model', () => {
+    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class SeriesSettings');
+    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {} });
+    const controller = new Settings();
+    controller.modelsValue = { text: {image:false}, image: {image:true} };
+    controller.sourceTarget = {value:'image'};
+    controller.modelTarget = {value:'text',options:[{value:''},{value:'text'},{value:'image'}],focus() {}};
+    controller.hintTarget = {};
+    controller.changeSource();
+    assert.equal(controller.modelTarget.value, '');
+    assert.equal(controller.modelTarget.options[1].disabled, true);
+    assert.equal(controller.modelTarget.options[2].disabled, false);
+    assert.match(controller.hintTarget.textContent, /explicitement/);
 });

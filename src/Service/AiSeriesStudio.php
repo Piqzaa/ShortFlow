@@ -192,4 +192,39 @@ final class AiSeriesStudio
             throw new \RuntimeException('Cette page a changé dans un autre onglet. Recharge-la avant d’enregistrer ; ton texte saisi reste affiché.');
         }
     }
+
+    public function delete(AiSeries $series, User $owner, int $revision): void
+    {
+        $this->em->getConnection()->transactional(function () use ($series, $owner, $revision): void {
+            $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
+            if ($series->getOwner()->getId() !== $owner->getId()) {
+                throw new \RuntimeException('Série indisponible.');
+            }
+            $this->assertRevision($series->getRevision(), $revision);
+            $db = $this->em->getConnection();
+            if ((int) $db->fetchOne("SELECT COUNT(*) FROM series_recurrence WHERE series_id = ? AND status = 'active'", [$series->getId()]) > 0) {
+                throw new \RuntimeException('Mets la récurrence en pause avant de supprimer cette série.');
+            }
+            $busy = $db->fetchOne("SELECT COUNT(DISTINCT e.id) FROM ai_episode e
+                LEFT JOIN ai_generation g ON g.id = e.generation_id
+                LEFT JOIN ai_shot shot ON shot.episode_id = e.id
+                LEFT JOIN ai_generation clip ON clip.id = shot.generation_id
+                LEFT JOIN video_edit edit ON edit.id = e.assembly_id
+                WHERE e.series_id = :series AND (
+                    e.flow_state IN ('running','assembling')
+                    OR g.status IN ('queued','submitting','processing')
+                    OR clip.status IN ('queued','submitting','processing')
+                    OR edit.status IN ('queued','rendering','transcribing')
+                    OR EXISTS (SELECT 1 FROM series_occurrence o WHERE o.episode_id = e.id AND o.status = 'writing')
+                    OR EXISTS (SELECT 1 FROM story_proposal p WHERE p.scope = e.id AND p.owner_id = :owner AND p.status IN ('queued','story','shots'))
+                )", ['series' => $series->getId(), 'owner' => $owner->getId()]);
+            if ((int) $busy > 0) {
+                throw new \RuntimeException('Un épisode est encore en rédaction, génération ou assemblage. Attends sa fin ou arrête les étapes restantes avant de supprimer la série.');
+            }
+            // Episode relations cascade; videos, generation history and publication drafts remain.
+            $this->em->remove($series);
+            $this->em->flush();
+        });
+    }
 }

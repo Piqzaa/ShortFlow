@@ -1,0 +1,11 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Supprimer {{ series.name }} — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ path('app_series_show',{id:series.id}) }}">← Garder la série</a>
+<section class="story-panel"><span class="eyebrow">GÉRER MA SÉRIE</span><h1>Supprimer cette série ?</h1><h2>{{ series.name }}</h2>
+<p>La configuration et les épisodes de cette série seront supprimés définitivement. Tes vidéos déjà obtenues restent dans ta bibliothèque, et l’historique des générations reste disponible.</p>
+<p>Les brouillons et programmations de publication sont conservés dans le calendrier et les préparations. Supprimer la série n’annule pas ces programmations.</p>
+<p class="account-notice">La suppression est bloquée pendant une rédaction, une génération, un assemblage ou une récurrence active. Elle n’annule jamais une demande déjà envoyée au fournisseur.</p>
+{{ form_start(deleteForm,{attr:{class:'account-form'}}) }}{{ form_errors(deleteForm) }}{{ form_row(deleteForm.confirm) }}{{ form_widget(deleteForm.revision) }}<div class="series-actions"><button class="button" type="submit">Supprimer la série et ses épisodes</button><a class="account-secondary" href="{{ path('app_series_show',{id:series.id}) }}">Garder ma série</a></div>{{ form_end(deleteForm) }}
+</section>
+{% endblock %}

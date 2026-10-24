@@ -24,6 +24,28 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class AiSeriesController extends AbstractController
 {
+    #[Route('/studio/series/{id}/supprimer', name: 'app_series_delete', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function delete(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio): Response
+    {
+        $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
+        $form = $this->createFormBuilder(['revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_delete_'.$id])
+            ->add('revision', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, ['constraints' => [new \Symfony\Component\Validator\Constraints\Regex('/^\d+$/D')]])
+            ->add('confirm', \Symfony\Component\Form\Extension\Core\Type\CheckboxType::class, ['label' => 'Je confirme la suppression définitive de cette série et de ses épisodes.', 'constraints' => [new \Symfony\Component\Validator\Constraints\IsTrue(message: 'Confirme la suppression de la série.')]])
+            ->getForm()->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            try {
+                $studio->delete($series, $user, (int) $form->getData()['revision']);
+                $this->addFlash('success', 'Série supprimée. Tes vidéos, ton historique de générations et tes préparations de publication sont conservés.');
+
+                return $this->redirectToRoute('app_series', status: 303);
+            } catch (\RuntimeException $error) {
+                $form->addError(new FormError($error->getMessage()));
+            }
+        }
+
+        return $this->render('series/delete.html.twig', ['series' => $series, 'deleteForm' => $form], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+    }
+
     #[Route('/studio/series', name: 'app_series', methods: ['GET'])]
     public function index(Request $request, #[CurrentUser] User $user, EntityManagerInterface $em, \App\Service\EpisodeCovers $covers): Response
     {
