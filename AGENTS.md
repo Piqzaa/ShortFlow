@@ -1,5 +1,7 @@
 # VydFlow — instructions de travail
 
+Mise à jour du 24 octobre 2026 : le propriétaire autorise la suite et ses deux commits locaux : récurrence supervisée hebdomadaire, rédaction locale puis génération/assemblage existants, autorisation explicite de coûts BYOK bornée à 1–12 créneaux, pause, mémoire narrative bornée et validation avant publication. Voir docs/recurrence-supervisee.md. Les tests restent simulés ; aucune activation de série réelle, génération vidéo payante, publication autonome réelle ou push implicitement autorisé.
+
 Mise à jour du 24 octobre 2026 : lot lien série/calendrier et correction du rédacteur local autorisé. Préparation durable liée à la version validée, suivi par destination dans la série, source figée, réutilisation du calendrier ; diagnostic local et délais explicites. Voir docs/series-publications-redacteur.md. Aucun envoi social réel ou génération vidéo payante supplémentaire, récurrence et consentement automatique restent distincts.
 
 Mise à jour du 24 octobre 2026 : corrections studio/séries autorisées. Rédaction asynchrone privée via Messenger et worker story_writing, suivi et reprise ; nombre initial d’épisodes choisi et ajouts révisionnés, prompts nouveaux laissés à préparer ; choix d’enchaînement adapté aux clips. Voir docs/corrections-studio-series-recurrence.md. Le moteur récurrent complet reste un chantier distinct ; aucune activation de génération payante ou de publication autonome réelle dans ce lot.

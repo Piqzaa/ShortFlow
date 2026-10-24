@@ -73,6 +73,17 @@ final class AiKeys
         return 'mcp' === $mode ? 'fal' === $provider && null !== $this->falOAuth->connection($owner) : null !== $this->connection($owner, $provider);
     }
 
+    public function identity(User $owner, string $provider, string $mode): string
+    {
+        $credential = 'mcp' === $mode ? $this->falOAuth->connection($owner) : $this->connection($owner, $provider);
+        if (!$credential) {
+            throw new \RuntimeException('Reconnecte l’accès BYOK de la série.');
+        }
+        $this->em->refresh($credential);
+
+        return 'mcp' === $mode ? ($this->falOAuth->accountId($owner) ?? throw new \RuntimeException('Reconnecte ton compte Fal.')) : hash('sha256', $credential->getEncryptedKey());
+    }
+
     public function plain(User $owner, string $provider = 'fal', string $mode = 'api'): string
     {
         if ('mcp' === $mode) {

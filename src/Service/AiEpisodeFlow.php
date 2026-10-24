@@ -17,7 +17,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiEpisodeFlow
 {
-    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus)
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent)
     {
     }
 
@@ -359,6 +359,7 @@ final class AiEpisodeFlow
                         throw new \RuntimeException($job->getIssue() ?? 'Vérifie la génération de ce plan avant de continuer.');
                     }
                     if (!$job || 'prepared' === $job->getStatus()) {
+                        $this->seriesConsent->assertAllowed($episode);
                         $this->access($episode);
                         if ($this->tariff($episode) !== $episode->getFlowTariff()) {
                             throw new \RuntimeException('Le tarif a changé depuis la confirmation. Les plans suivants restent suspendus.');

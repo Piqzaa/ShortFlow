@@ -43,7 +43,7 @@ final class AiEpisodeController extends AbstractController
     }
 
     #[Route('/studio/series/episodes/{id}', name: 'app_series_episode', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiGenerations $generations, EntityManagerInterface $em, VideoAssetRepository $videos, EpisodePublications $publications, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiGenerations $generations, EntityManagerInterface $em, VideoAssetRepository $videos, EpisodePublications $publications, \App\Service\SeriesGenerationConsent $seriesConsent, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
         $episode = $flow->owned($id, $user) ?? throw $this->createNotFoundException();
         if (!$episode->getFlowState() && $episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus()) {
@@ -131,7 +131,7 @@ final class AiEpisodeController extends AbstractController
                         if (!$request->request->getBoolean('confirm')) {
                             throw new \RuntimeException('Confirme le coût total fournisseur avant de lancer.');
                         }
-                        $flow->confirm($episode, $request->request->getString('quote'), $request->request->getInt('redo'));
+                        $seriesConsent->manual($episode, fn () => $flow->confirm($episode, $request->request->getString('quote'), $request->request->getInt('redo')));
                     } elseif ('pause' === $intent) {
                         $flow->pause($episode);
                     } elseif ('stop' === $intent) {
@@ -143,7 +143,7 @@ final class AiEpisodeController extends AbstractController
                         if (!$request->request->getBoolean('confirm')) {
                             throw new \RuntimeException('Confirme la reprise des plans restant à générer et de leur coût déjà accepté.');
                         }
-                        $flow->resume($episode);
+                        $seriesConsent->manual($episode, fn () => $flow->resume($episode));
                     } elseif ('approve' === $intent) {
                         $video = $videos->owned($request->request->getInt('video'), $user) ?? throw $this->createNotFoundException();
                         $em->getConnection()->transactional(function () use ($em, $user, $episode, $video, $request): void {

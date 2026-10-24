@@ -13,7 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class EpisodePublications
 {
-    public function __construct(private EntityManagerInterface $em, private PublicationDrafts $drafts, private PublicationCalendar $calendar, private PublicationLock $lock)
+    public function __construct(private EntityManagerInterface $em, private PublicationDrafts $drafts, private PublicationCalendar $calendar, private PublicationLock $lock, private MultiNetworkPublishing $publishing, private \Symfony\Component\Clock\ClockInterface $clock)
     {
     }
 
@@ -39,7 +39,27 @@ final class EpisodePublications
                 }
             }
             $title = ($episode->isStandalone() ? '' : $episode->getSeries()->getName().' · ').$episode->getTitle();
-            $draft = $this->drafts->save($owner, [(int) $video->getId()], [], [], [], mb_substr($title, 0, 120));
+            $occurrence = $this->em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode]);
+            $networks = $occurrence?->getNetworks() ?? [];
+            $content = [];
+            $accounts = [];
+            $destinations = $networks ? $this->publishing->destinations($owner) : [];
+            foreach ($networks as $network) {
+                $accounts[$network] = $destinations[$network]['account'];
+                $content[$network]['videos'][$video->getId()] = match ($network) {
+                    'youtube' => ['title' => mb_substr($episode->getTitle(), 0, 100), 'description' => $occurrence->getSummary() ?? '', 'privacy' => 'public', 'audience' => 'yes', 'synthetic' => true],
+                    'instagram' => ['caption' => $occurrence->getSummary() ?: $episode->getTitle(), 'shareToFeed' => true, 'synthetic' => true],
+                    'tiktok' => ['caption' => $occurrence->getSummary() ?: $episode->getTitle(), 'privacy' => null, 'comment' => false, 'duet' => false, 'stitch' => false, 'disclosure' => false, 'ownBrand' => false, 'partnerBrand' => false, 'synthetic' => true],
+                    default => throw new \LogicException('Unknown stored network.'),
+                };
+            }
+            $draft = $this->drafts->save($owner, [(int) $video->getId()], $networks, $content, $accounts, mb_substr($title, 0, 120));
+            if ($occurrence) {
+                $at = $occurrence->getScheduledAt();
+                $zone = $occurrence->getTimezone();
+                // This is only a proposed date. Normal confirmation still rejects expired slots.
+                $draft->plan($at, $zone, $at->setTimezone(new \DateTimeZone($zone))->format('Y-m-d\TH:i'), $this->clock->now());
+            }
             $draft->attachEpisode($episode);
             $this->em->flush();
 

@@ -4,9 +4,11 @@
 <a class="account-secondary composer-back" href="{{ path('app_series') }}">← Mes séries</a>
 <div class="workspace-heading"><div><span class="eyebrow">STUDIO DE SÉRIES</span><h1>{{ series.name }}</h1><p>{{ series.theme }}</p></div><a class="account-secondary" href="{{ path('app_series_edit',{id:series.id}) }}">Configurer la série ↗</a></div>
 <div class="series-overview"><span><small>MODÈLE COMMUN</small><strong>{{ model.name }} · {{ provider }}</strong></span><span><small>ÉPISODES</small><strong>{{ episodes|length }} épisode{{ episodes|length > 1 ? 's' : '' }}</strong></span><span><small>GÉNÉRATION</small><strong>BYOK · {{ series.recipe.totalSeconds|default(30) }} s finales · {{ series.recipe.ratio }}</strong></span></div>
-<p class="library-note series-intro">Ouvre un épisode pour préparer son idée, son modèle et ses plans sur un seul écran. La génération demande ensuite une confirmation séparée. Aucune publication automatique.</p>
+<p class="library-note series-intro">Prépare un épisode à ton rythme ou active la récurrence supervisée. Chaque vidéo attend ta validation avant publication.</p>
+{% if recurrence is defined %}{% include 'series/_recurrence.html.twig' %}{% endif %}
 <section class="series-episodes" aria-labelledby="episodes-title"><div class="series-episodes-heading"><h2 id="episodes-title">Les épisodes</h2><a class="account-secondary" href="{{ path('app_series_show',{id:series.id}) }}">Actualiser les états ↻</a></div>{% for episode in episodes %}
 <article class="series-episode" id="episode-{{ episode.id }}"><header><span class="series-number">{{ '%02d'|format(episode.number) }}</span><h3>{{ episode.title }}</h3><span class="series-status{{ episode.generation and episode.generation.status == 'available' ? ' is-ready' : '' }}">{{ episode.statusLabel }}</span></header>
+{% set occurrence = occurrenceByEpisode[episode.id]|default(null) %}{% if occurrence %}<p class="library-note">Créneau visé : {{ occurrence.scheduledAt|date('d/m/Y à H:i',occurrence.timezone) }} · validation avant publication</p>{% if occurrence.status == 'writing' %}<p class="library-note" role="status">{{ occurrence.createdAt|date('U') < date('-10 minutes')|date('U') ? 'Rédaction interrompue : ouvre l’épisode pour reprendre manuellement.' : 'L’IA écrit l’histoire de cet épisode…' }}</p>{% endif %}{% if occurrence.issue %}<p class="account-notice" role="status">{{ occurrence.issue }}</p>{% endif %}{% endif %}
 {% if episode.flowState %}
 <p class="library-note">Vidéo préparée · {{ episode.statusLabel }}</p><a class="button" href="{{ path('app_series_episode',{id:episode.id}) }}">Ouvrir les plans →</a>
 {% elseif episode.generation and episode.generation.status != 'prepared' %}
@@ -18,5 +20,5 @@
 {% include 'series/_publications.html.twig' with {summaries:publicationSummaries[episode.id]|default([])} %}
 </article>{% else %}<p class="library-note">Ton univers est enregistré. Ajoute un épisode pour préparer ta première histoire.</p>{% endfor %}</section>
 {% if addEpisodesForm|default(null) %}{{ form_start(addEpisodesForm,{attr:{class:'account-form series-add-episodes'}}) }}{{ form_errors(addEpisodesForm) }}{{ form_row(addEpisodesForm.count) }}<button class="account-secondary" type="submit">Ajouter les épisodes →</button>{{ form_end(addEpisodesForm) }}{% endif %}
-<p class="library-note">Le suivi affiche l’état réel de chaque génération. Valide une vidéo pour choisir ses réseaux et son créneau. Le lancement groupé et la récurrence restent à venir.</p>
+<p class="library-note">Le suivi affiche l’état réel de chaque génération. Valide une vidéo pour choisir ses réseaux et son créneau. La récurrence prépare les prochains épisodes ; les publications restent à confirmer.</p>
 {% endblock %}

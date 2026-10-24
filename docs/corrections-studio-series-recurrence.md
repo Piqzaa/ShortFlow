@@ -1,5 +1,7 @@
 # Studio et séries : corrections et prochaine chaîne récurrente — 24 octobre 2026
 
+Évolution ultérieure du même jour : le lot supervisé est livré dans [recurrence-supervisee.md](recurrence-supervisee.md). Les mentions de récurrence à venir ci-dessous décrivent l’état au moment de ce lot antérieur.
+
 ## Ce qui est corrigé
 
 ### Un clip ou plusieurs clips

@@ -93,13 +93,68 @@ final class AiSeriesController extends AbstractController
         return $this->redirectToRoute('app_series_show', ['id' => $id], 303);
     }
 
+    #[Route('/studio/series/{id}/recurrence/pause', name: 'app_series_recurrence_pause', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function pauseRecurrence(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, \App\Service\SeriesRecurrences $recurrences): Response
+    {
+        $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
+        if (!$this->isCsrfTokenValid('series_pause_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $recurrence = $recurrences->find($series) ?? throw $this->createNotFoundException();
+        try {
+            $recurrences->pause($recurrence, $request->request->getInt('revision'));
+            $this->addFlash('success', 'La récurrence est en pause.');
+        } catch (\RuntimeException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_series_show', ['id' => $id], 303);
+    }
+
     #[Route('/studio/series/{id}', name: 'app_series_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EpisodePublications $publications): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EntityManagerInterface $em, \App\Service\SeriesRecurrences $recurrences, EpisodePublications $publications): Response
     {
         $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
         $episodes = $studio->episodes($series);
-        $episodeForms = [];
+        $recurrence = $recurrences->find($series);
+        $recurrenceError = null;
+        $recurrencePreview = null;
         $invalid = false;
+        try {
+            $recurrencePreview = $recurrences->preview($series);
+        } catch (\RuntimeException|\InvalidArgumentException $error) {
+            $recurrenceError = $error->getMessage();
+        }
+        $settings = $recurrence?->getSettings() ?? [];
+        $data = array_intersect_key($settings, array_flip(['weekday', 'hour', 'timezone', 'networks', 'limit', 'tone', 'continuity'])) + ['weekday' => 2, 'hour' => '18:00', 'timezone' => $user->getTimezone(), 'networks' => [], 'limit' => 4, 'tone' => 'auto', 'continuity' => 'independent'];
+        $recurrenceForm = $this->createForm(\App\Form\SeriesRecurrenceType::class, $data + ['revision' => (string) ($recurrence?->getRevision() ?? 0), 'quote' => $recurrencePreview['hash'] ?? str_repeat('0', 64), 'consent' => false], ['csrf_token_id' => 'recurrence_'.$id]);
+        if ($recurrencePreview) {
+            $recurrenceForm->handleRequest($request);
+            if ($recurrenceForm->isSubmitted()) {
+                $invalid = true;
+                if ($recurrenceForm->isValid()) {
+                    try {
+                        $recurrences->activate($series, $recurrenceForm->getData());
+                        $this->addFlash('success', 'Récurrence activée avec ton autorisation de coûts. Chaque vidéo attendra ta validation avant publication.');
+
+                        return $this->redirectToRoute('app_series_show', ['id' => $id], 303);
+                    } catch (\RuntimeException|\InvalidArgumentException $error) {
+                        $recurrenceForm->addError(new FormError($error->getMessage()));
+                    }
+                }
+            }
+        }
+        $occurrences = $recurrence ? $em->getRepository(\App\Entity\SeriesOccurrence::class)->findBy(['recurrence' => $recurrence], ['scheduledAt' => 'DESC']) : [];
+        $occurrenceByEpisode = [];
+        $missed = [];
+        foreach ($occurrences as $occurrence) {
+            if ($occurrence->getEpisode()) {
+                $occurrenceByEpisode[$occurrence->getEpisode()->getId()] = $occurrence;
+            } elseif (count($missed) < 3) {
+                $missed[] = $occurrence;
+            }
+        }
+        $episodeForms = [];
         foreach ($episodes as $episode) {
             if ($episode->getFlowState() || ($episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus())) {
                 continue;
@@ -136,6 +191,6 @@ final class AiSeriesController extends AbstractController
         }
         $model = AiCatalog::MODELS[$series->getRecipe()['model']];
 
-        return $this->render('series/show.html.twig', ['publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/show.html.twig', ['recurrenceTotalCents' => ($recurrencePreview['cents'] ?? 0) * (is_int($recurrenceForm->get('limit')->getData()) ? $recurrenceForm->get('limit')->getData() : 0), 'recurrence' => $recurrence, 'recurrenceForm' => $recurrencePreview ? $recurrenceForm->createView() : null, 'recurrencePreview' => $recurrencePreview, 'recurrenceError' => $recurrenceError, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 }

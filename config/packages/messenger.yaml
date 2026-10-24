@@ -48,6 +48,7 @@ framework:
                     auto_setup: false
                     use_notify: false
         routing:
+            App\Message\PrepareSeriesEpisode: story_writing
             App\Message\WriteStoryProposal: story_writing
             App\Message\AdvanceAiEpisode: background
             App\Message\BuildEditWaveform: video_edits

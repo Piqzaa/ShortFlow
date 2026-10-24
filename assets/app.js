@@ -78,3 +78,6 @@ app.register('preparation', PreparationController);
 
 import StoryWriterController from './controllers/story_writer_controller.js';
 app.register('story-writer', StoryWriterController);
+
+import RecurrenceBudgetController from './controllers/recurrence_budget_controller.js';
+app.register('recurrence-budget', RecurrenceBudgetController);

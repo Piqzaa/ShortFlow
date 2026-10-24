@@ -1,5 +1,7 @@
 # Épisode → programmation et diagnostic du rédacteur — 24 octobre 2026
 
+Évolution ultérieure du même jour : le lot supervisé est livré dans [recurrence-supervisee.md](recurrence-supervisee.md). Les mentions de récurrence à venir ci-dessous décrivent l’état au moment de ce lot antérieur.
+
 ## Objectif et parcours livré
 
 Une vidéo validée dans un épisode ouvre maintenant une préparation durable liée à cet épisode. Le studio autonome utilise le même parcours. Réseaux, textes et date restent sur le préparateur existant ; la confirmation finale reste obligatoire. Le calendrier et le moteur d’envoi ne sont pas reconstruits.

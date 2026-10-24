@@ -16,7 +16,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiGenerations
 {
-    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry, private VideoAssetRepository $videos, private AiReferenceStorage $references, private EpisodeReservations $episodeReservations)
+    public function __construct(private EntityManagerInterface $em, private AiKeys $keys, private AiCatalog $catalog, private AiVideoApi $api, private VideoLibrary $library, private PrivateVideoStorage $storage, private MessageBusInterface $bus, private PublicationLock $lock, #[Autowire('%env(bool:AI_GENERATION_ENABLED)%')] private bool $enabled, private ManagerRegistry $registry, private VideoAssetRepository $videos, private AiReferenceStorage $references, private EpisodeReservations $episodeReservations, private SeriesGenerationConsent $seriesConsent)
     {
     }
 
@@ -169,6 +169,17 @@ final class AiGenerations
                     }
                     if ('queued' !== $job->getStatus() || ($shot && 'running' !== $shot->getEpisode()->getFlowState())) {
                         return false;
+                    }
+                    if ($shot) {
+                        try {
+                            $this->seriesConsent->assertAllowed($shot->getEpisode());
+                        } catch (\RuntimeException $failure) {
+                            $job->progress('review', $failure->getMessage());
+                            $shot->getEpisode()->flow('paused', $failure->getMessage());
+                            $this->em->flush();
+
+                            return false;
+                        }
                     }
                     $job->progress('submitting');
                     $this->em->flush();
