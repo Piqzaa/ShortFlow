@@ -9,10 +9,26 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PublicationDraftRepository::class)]
 #[ORM\Index(name: 'draft_owner_date', columns: ['owner_id', 'scheduled_at'])]
+#[ORM\Index(name: 'idx_draft_episode', columns: ['episode_id'])]
 class PublicationDraft
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
+    #[ORM\ManyToOne, ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?AiEpisode $episode = null;
+
+    public function getEpisode(): ?AiEpisode
+    {
+        return $this->episode;
+    }
+
+    public function attachEpisode(AiEpisode $episode): void
+    {
+        if ($this->episode || $episode->getOwner()->getId() !== $this->owner->getId() || $this->videoIds() !== [$episode->getApprovedVideo()?->getId()]) {
+            throw new \LogicException('Invalid episode publication source.');
+        }
+        $this->episode = $episode;
+    }
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $owner;
     #[ORM\Column(length: 120)]

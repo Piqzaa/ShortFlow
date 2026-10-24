@@ -217,6 +217,11 @@ final class PublicationDraftController extends AbstractController
     public function sources(int $id, Request $request, #[CurrentUser] User $user, PublicationDraftRepository $repository, VideoAssetRepository $videos, PublicationDrafts $service): Response
     {
         $draft = $repository->owned($id, $user) ?? throw $this->createNotFoundException();
+        if ($draft->getEpisode()) {
+            $this->addFlash('error', 'Choisis et valide une autre version vidéo depuis l’épisode. Cette préparation conserve sa version source.');
+
+            return $this->redirectToRoute('app_series_episode', ['id' => $draft->getEpisode()->getId()], 303);
+        }
         $choices = [];
         foreach ($videos->findBy(['owner' => $user], ['id' => 'DESC']) as $video) {
             $choices[$video->getTitle().' · #'.$video->getId()] = $video->getId();

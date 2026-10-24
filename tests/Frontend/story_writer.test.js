@@ -86,6 +86,15 @@ test('returning after applying or changing scenes ignores an older completed pro
   assert.equal(writer.generateTarget.disabled, false);
 });
 
+test('an old failure from another preparation does not appear on a fresh video', async () => {
+  const writer = setup(async () => {});
+  writer.latestValue = '/recent'; writer.active = true;
+  writer.request = async () => ({status:'failed',fingerprint:'previous preparation',error:'Previous failed story'});
+  await writer.restore();
+  assert.equal(writer.statusTarget.textContent, '');
+  assert.equal(writer.generateTarget.disabled, false);
+});
+
 test('the progress indicator follows the real worker stages and a failure allows another request', async () => {
   const writer = setup(async () => {});
   writer.active = true; writer.hasProgressTarget = true; writer.progressTarget = {};

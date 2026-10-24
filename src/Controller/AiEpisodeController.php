@@ -10,6 +10,7 @@ use App\Repository\VideoAssetRepository;
 use App\Service\AiCatalog;
 use App\Service\AiEpisodeFlow;
 use App\Service\AiGenerations;
+use App\Service\EpisodePublications;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,8 +24,26 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class AiEpisodeController extends AbstractController
 {
+    #[Route('/studio/series/episodes/{id}/publication', name: 'app_episode_publication', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function publication(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, EpisodePublications $publications): Response
+    {
+        $episode = $flow->owned($id, $user) ?? throw $this->createNotFoundException();
+        if (!$this->isCsrfTokenValid('episode_publication_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        try {
+            $draft = $publications->prepare($user, $episode, $request->request->getInt('revision'));
+
+            return $this->redirectToRoute('draft' === $draft->getStatus() ? 'app_composer_start' : 'app_draft', ['draft' === $draft->getStatus() ? 'draft' : 'id' => $draft->getId()], 303);
+        } catch (\App\Service\PublicationException $error) {
+            $this->addFlash('error', $error->getMessage());
+
+            return $this->redirectToRoute('app_series_episode', ['id' => $id], 303);
+        }
+    }
+
     #[Route('/studio/series/episodes/{id}', name: 'app_series_episode', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiGenerations $generations, EntityManagerInterface $em, VideoAssetRepository $videos, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiGenerations $generations, EntityManagerInterface $em, VideoAssetRepository $videos, EpisodePublications $publications, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
         $episode = $flow->owned($id, $user) ?? throw $this->createNotFoundException();
         if (!$episode->getFlowState() && $episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus()) {
@@ -165,7 +184,7 @@ final class AiEpisodeController extends AbstractController
         $recipe = $episode->getPreparationRecipe();
         $library = 'ready' === $episode->getFlowState() ? $videos->findBy(['owner' => $user], ['createdAt' => 'DESC'], 100) : [];
 
-        return $this->render('series/episode.html.twig', ['layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'error' => $error, 'model' => AiCatalog::MODELS[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'error' => $error, 'model' => AiCatalog::MODELS[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/episodes/{id}/etat', name: 'app_series_episode_state', requirements: ['id' => '\d+'], methods: ['GET'])]

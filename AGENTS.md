@@ -1,5 +1,7 @@
 # VydFlow — instructions de travail
 
+Mise à jour du 24 octobre 2026 : lot lien série/calendrier et correction du rédacteur local autorisé. Préparation durable liée à la version validée, suivi par destination dans la série, source figée, réutilisation du calendrier ; diagnostic local et délais explicites. Voir docs/series-publications-redacteur.md. Aucun envoi social réel ou génération vidéo payante supplémentaire, récurrence et consentement automatique restent distincts.
+
 Mise à jour du 24 octobre 2026 : corrections studio/séries autorisées. Rédaction asynchrone privée via Messenger et worker story_writing, suivi et reprise ; nombre initial d’épisodes choisi et ajouts révisionnés, prompts nouveaux laissés à préparer ; choix d’enchaînement adapté aux clips. Voir docs/corrections-studio-series-recurrence.md. Le moteur récurrent complet reste un chantier distinct ; aucune activation de génération payante ou de publication autonome réelle dans ce lot.
 
 Mise à jour complémentaire : le propriétaire autorise la rédaction locale sur demande et la clarification scènes/prolongement sur la préparation commune. Pilote Qwen3 8B, aperçu avant application, confirmation vidéo maintenue. Aucun pilote récurrent ou payant activé. Voir docs/scenario-local-supervise.md.

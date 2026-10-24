@@ -286,10 +286,11 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame($assembly->getId(), $episode->getAssembly()->getId());
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         self::assertSelectorNotExists('a[href*="publications/preparer"]');
+        self::assertSelectorNotExists('form[action$="/publication"]');
         $this->client->submit($crawler->selectButton('Valider cette version →')->form());
         self::assertResponseStatusCodeSame(303);
         $this->client->followRedirect();
-        self::assertSelectorExists('a.button[href*="videos%5B0%5D"]');
+        self::assertSelectorExists('form[method="post"][action="/studio/series/episodes/'.$episode->getId().'/publication"] button[type="submit"]');
         self::assertNotNull($this->fresh($episode)->getApprovedVideo());
         self::assertSame(3, $this->submissions);
     }

@@ -106,6 +106,7 @@ final class PublicationComposerController extends AbstractController
         if ($state['expires'] < time()) {
             throw new GoneHttpException('Cette préparation a expiré. Rouvre le brouillon ou choisis à nouveau tes vidéos.');
         }
+        $stored = null;
         if ($state['persistentId']) {
             $stored = $repository->owned($state['persistentId'], $user) ?? throw $this->createNotFoundException();
             if ('draft' !== $stored->getStatus()) {
@@ -222,7 +223,7 @@ final class PublicationComposerController extends AbstractController
             }
         }
 
-        return $this->render('publication/composer.html.twig', $context + ['form' => $form, 'key' => $key, 'selectedNetworks' => $selected, 'state' => $state, 'networkLabels' => MultiNetworkPublishing::LABELS, 'accountChanged' => $accountChanged], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'no-store, private']));
+        return $this->render('publication/composer.html.twig', $context + ['sourceEpisode' => $stored?->getEpisode(), 'form' => $form, 'key' => $key, 'selectedNetworks' => $selected, 'state' => $state, 'networkLabels' => MultiNetworkPublishing::LABELS, 'accountChanged' => $accountChanged], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'no-store, private']));
     }
 
     /** @param array<string, mixed> $state */

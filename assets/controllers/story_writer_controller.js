@@ -50,7 +50,7 @@ export default class extends Controller {
     try {
       const job = await this.request(this.latestValue);
       if (!this.active || this.pending || !job || job.status === 'none') return;
-      if (job.status === 'ready' && job.fingerprint !== this.fingerprint()) return;
+      if (['ready', 'failed'].includes(job.status) && job.fingerprint !== this.fingerprint()) return;
       this.requestFingerprint = job.fingerprint;
       await this.watch(job);
     } catch (error) { if (this.active) this.failed(error); }

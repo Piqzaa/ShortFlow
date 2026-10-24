@@ -10,6 +10,7 @@ use App\Form\AiSeriesType;
 use App\Service\AiCatalog;
 use App\Service\AiKeys;
 use App\Service\AiSeriesStudio;
+use App\Service\EpisodePublications;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -93,7 +94,7 @@ final class AiSeriesController extends AbstractController
     }
 
     #[Route('/studio/series/{id}', name: 'app_series_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EpisodePublications $publications): Response
     {
         $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
         $episodes = $studio->episodes($series);
@@ -135,6 +136,6 @@ final class AiSeriesController extends AbstractController
         }
         $model = AiCatalog::MODELS[$series->getRecipe()['model']];
 
-        return $this->render('series/show.html.twig', ['series' => $series, 'episodes' => $episodes, 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/show.html.twig', ['publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 }

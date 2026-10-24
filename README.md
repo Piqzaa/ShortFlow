@@ -1,5 +1,7 @@
 # VydFlow — bêta, studio IA et publication
 
+Épisodes et calendrier : préparation liée à la version validée, suivi des réseaux depuis la série ; rédacteur local avec erreurs explicites. [Parcours, composants et tests](docs/series-publications-redacteur.md).
+
 Corrections du 24 octobre : rédaction locale en arrière-plan avec suivi et reprise, navigation libérée, choix d’enchaînement adapté au nombre de clips, épisodes initiaux configurables et ajoutables. Guide Symfony et état de la récurrence : [docs/corrections-studio-series-recurrence.md](docs/corrections-studio-series-recurrence.md).
 
 Scénario local supervisé : proposition d’histoire et de scènes depuis le studio ou un épisode, application volontaire et confirmation vidéo inchangée. Guide et comparaison 4B/8B : [docs/scenario-local-supervise.md](docs/scenario-local-supervise.md).

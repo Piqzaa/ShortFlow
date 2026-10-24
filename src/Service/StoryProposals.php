@@ -106,6 +106,8 @@ final class StoryProposals
                 $this->em->flush();
             });
             $job->complete($result);
+        } catch (StoryWritingException $failure) {
+            $job->fail($failure->getMessage());
         } catch (\Throwable) {
             $job->fail('Le rédacteur n’a pas fourni de scénario exploitable. Tes scènes sont conservées. Tu peux réessayer ou les écrire toi-même.');
         }

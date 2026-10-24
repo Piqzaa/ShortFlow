@@ -2,6 +2,8 @@
 
 ## État courant — 24 octobre 2026
 
+**Lien épisode → programmation livré localement** : brouillon durable par version validée, source conservée, date/fuseau et états distincts des réseaux dans la série, préparateur/calendrier réutilisés. Diagnostic du rédacteur et délai local corrigés ; qualité narrative encore à valider. [Guide](series-publications-redacteur.md).
+
 **Corrections studio/séries livrées localement** : rédaction en file dédiée, étapes visibles et reprise après navigation ; clips uniques sans choix d’enchaînement, prolongement sélectionnable avec correction guidée ; nombre initial d’épisodes configurable et ajout d’épisodes, sans faux scénarios copiés. Le moteur récurrent complet reste à construire. [Guide et chaîne cible](corrections-studio-series-recurrence.md).
 
 **Préparation commune studio/séries simplifiée** : idée, durée finale, modèle, références et plans sur un écran ; options de raccord guidées. Rédaction locale sur demande intégrée en pilote supervisé : aperçu français, prompts vidéo, application volontaire ; qualité à évaluer avant autonomie. [Guide du pilote](scenario-local-supervise.md). [Résultats et pédagogie](preparation-unifiee-essai-local.md).
@@ -16,7 +18,7 @@ Prochaines étapes par valeur utilisateur et complexité :
 
 | Priorité | Lot | Valeur utilisateur | Complexité |
 | --- | --- | --- | --- |
-| 1 | Relier chaque épisode validé à sa programmation et au suivi des destinations existants | Terminer le parcours série → publication sans ressaisie | Moyenne |
+| Livré | Relier chaque épisode validé à sa programmation et au suivi des destinations existants | Parcours série → publication sans ressaisie | — |
 | 2 | Orchestration récurrente supervisée : créneaux uniques, histoire et plans, génération et assemblage en avance | Préparer chaque semaine la suite depuis le thème et les personnages | Élevée |
 | 3 | Mode entièrement automatique explicite, consentement BYOK durable, limites et pause | Publier à la fréquence choisie avec des dépenses encadrées | Élevée |
 | 4 | Limites de bibliothèque par offre et facturation après validation des offres | Commercialiser deux offres simples | Moyenne |

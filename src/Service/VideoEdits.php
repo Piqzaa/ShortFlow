@@ -51,6 +51,9 @@ final class VideoEdits
 
     public function forPublication(\App\Entity\PublicationDraft $draft, int $source): VideoEdit
     {
+        if ($draft->getEpisode()) {
+            throw new PublicationException('Ouvre le montage depuis l’épisode, puis valide la version exportée avant de préparer sa publication.');
+        }
         if ('draft' !== $draft->getStatus() || !in_array($source, $draft->videoIds(), true)) {
             throw new VideoLibraryException('Rouvre cette préparation avant de modifier sa vidéo.');
         }

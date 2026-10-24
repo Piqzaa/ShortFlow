@@ -62,6 +62,9 @@ final class PublicationDrafts
                 $structuralCreator = ['privacy_level_options' => ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'FOLLOWER_OF_CREATOR', 'SELF_ONLY'], 'comment_disabled' => false, 'duet_disabled' => false, 'stitch_disabled' => false];
                 $normalized = $this->validate($knownContent, $selected, array_keys($knownContent), $structuralCreator, true);
                 $draft = null === $id ? new PublicationDraft($owner, $title ?: $selected[0]->getTitle(), $this->clock->now()) : $this->editable($owner, $id, $revision);
+                if ($draft->getEpisode() && $ids !== $draft->videoIds()) {
+                    throw new PublicationException('Cette préparation est liée à une version validée de l’épisode. Valide une autre version depuis la série pour préparer sa publication.');
+                }
                 $draft->edit($title ?: $selected[0]->getTitle(), $networks, array_intersect_key($accounts, array_flip($networks)), $this->clock->now());
                 $previous = [];
                 foreach ($draft->getItems() as $item) {
@@ -325,6 +328,9 @@ final class PublicationDrafts
                     return $this->drafts->owned($context['draft'], $owner) ?? throw new PublicationException('Cette préparation a été retirée. La vidéo reste dans ta bibliothèque.');
                 }
                 $draft = $this->editable($owner, $context['draft'], $context['revision']);
+                if ($draft->getEpisode()) {
+                    throw new PublicationException('Valide la vidéo montée depuis l’épisode avant de préparer sa publication. Cette préparation conserve sa version source.');
+                }
                 $item = null;
                 foreach ($draft->getItems() as $candidate) {
                     if ($candidate->getVideoId() === $output->getId()) {
