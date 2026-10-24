@@ -2,6 +2,8 @@
 
 ## État courant — 24 octobre 2026
 
+**Fiabilité du rédacteur renforcée et évaluée localement** : consignes par format, identité commune des prompts, alertes de relecture et pause de la récurrence avant génération pour les propositions signalées. Dix sujets et deux répétitions réels avec Qwen3 8B, puis correction ciblée du clip unique. Langue améliorée sur cet échantillon ; erreurs de fond et chutes encore insuffisantes pour valider l'autonomie éditoriale. [Résultats, contrôles et pédagogie](redacteur-local-fiabilite.md).
+
 **Récurrence supervisée livrée localement** : créneau hebdomadaire, préparation la veille, mémoire de résumés, génération et assemblage existants, autorisation BYOK bornée, pause et contrôle avant chaque nouveau POST payant. Validation et confirmation de publication restent manuelles. Aucune série réelle activée pendant le développement. [Guide](recurrence-supervisee.md).
 
 **Lien épisode → programmation livré localement** : brouillon durable par version validée, source conservée, date/fuseau et états distincts des réseaux dans la série, préparateur/calendrier réutilisés. Diagnostic du rédacteur et délai local corrigés ; qualité narrative encore à valider. [Guide](series-publications-redacteur.md).

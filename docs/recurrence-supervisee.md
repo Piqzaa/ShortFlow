@@ -1,5 +1,7 @@
 # Récurrence supervisée — 24 octobre 2026
 
+Complément du même jour : le [contrôle de relecture du rédacteur](redacteur-local-fiabilite.md) conserve les scènes signalées comme brouillon modifiable et met la récurrence en pause avant réservation du budget ou confirmation vidéo. L'absence d'alerte ne valide pas la qualité narrative ; la validation finale de la vidéo reste manuelle.
+
 ## Objectif et parcours
 
 Une série peut préparer chaque semaine une nouvelle vidéo à partir de son thème, de ses personnages et de ses références. Le créneau est une date de publication **visée**, pas une autorisation de publier sans validation. Le scénario, les clips et l’assemblage sont automatiques après activation ; la vidéo attend ensuite le créateur.

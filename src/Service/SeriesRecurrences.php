@@ -188,9 +188,17 @@ final class SeriesRecurrences
                 }
                 $recipe = $settings['recipe'];
                 $this->flow->prepare($series->getOwner(), $recipe + ['source' => $recipe['reference'] ? 'image' : 'text', 'target' => array_sum($settings['durations']), 'shots' => $story['shots'], 'prompt' => $series->initialPrompt(), 'title' => $story['title'], 'continuity' => $settings['continuity'], 'mute' => false, 'useEnd' => (bool) $recipe['endReference'], 'revision' => 1], $episode);
+                $occurrence->story($story['summary']);
+                if ($story['warnings']) {
+                    $issue = 'Scénario à relire dans l’épisode avant génération. '.implode(' ', $story['warnings']);
+                    $occurrence->fail($issue);
+                    $recurrence->pause($issue);
+                    $this->em->flush();
+
+                    return;
+                }
                 $quote = $this->flow->quote($episode);
                 $recurrence->reserve($quote['cents']);
-                $occurrence->story($story['summary']);
                 $occurrence->produced($quote['cents']);
                 $this->em->flush();
                 $this->flow->confirm($episode, $quote['hash']);

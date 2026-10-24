@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
-function setup(fetch) {
+function setup(fetch, document = {}) {
   const source = readFileSync(new URL('../../assets/controllers/story_writer_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Writer');
-  const Writer = runInNewContext(`${source}\nWriter`, { Controller: class {}, AbortController, URLSearchParams, fetch, setTimeout, clearTimeout, setInterval, clearInterval });
+  const Writer = runInNewContext(`${source}\nWriter`, { Controller: class {}, AbortController, URLSearchParams, fetch, setTimeout, clearTimeout, setInterval, clearInterval, document });
   const writer = new Writer();
   writer.urlValue = '/scenario'; writer.tokenValue = 'csrf';
   writer.payload = () => ({ idea: 'Milo chat blanc', model: 'kling', target: '40' });
@@ -22,6 +22,25 @@ test('a text engine error leaves the current scenes untouched and permits retry'
   assert.equal(writer.statusTarget.textContent, 'Moteur indisponible');
   assert.equal(writer.generateTarget.disabled, false);
   assert.equal(writer.proposal, null);
+});
+
+test('quality warnings stay visible as plain text and disappear on the next clean proposal', () => {
+  const element = () => ({ children: [], append(...items) { this.children.push(...items); }, replaceChildren() { this.children = []; } });
+  const writer = setup(async () => {}, { createElement: element });
+  writer.requestFingerprint = 'original';
+  writer.hasWarningsTarget = true;
+  writer.warningsTarget = element();
+  writer.titleTarget = {}; writer.summaryTarget = {}; writer.scenesTarget = element();
+  const warning = '<img src=x onerror=alert(1)> Langue à vérifier';
+  writer.render({ title: 'Milo', summary: 'Une histoire', shots: [], warnings: [warning] });
+  assert.equal(writer.warningsTarget.hidden, false);
+  assert.equal(writer.warningsTarget.children[0].textContent, warning);
+  assert.match(writer.statusTarget.textContent, /à vérifier/);
+  assert.equal(writer.previewTarget.hidden, false);
+  writer.render({ title: 'Milo', summary: 'Une autre histoire', shots: [] });
+  assert.equal(writer.warningsTarget.hidden, true);
+  assert.equal(writer.warningsTarget.children.length, 0);
+  assert.match(writer.statusTarget.textContent, /ne garantit pas/);
 });
 
 test('a delayed proposal cannot replace scenes edited during the request', async () => {

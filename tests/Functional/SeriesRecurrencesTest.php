@@ -35,6 +35,7 @@ final class SeriesRecurrencesTest extends WebTestCase
     private ?\Closure $duringWriting = null;
     private bool $badStory = false;
     private bool $acceptProvider = false;
+    private bool $suspiciousStory = false;
 
     protected function setUp(): void
     {
@@ -75,7 +76,7 @@ final class SeriesRecurrencesTest extends WebTestCase
                 $count = $input['format']['properties']['beats']['maxItems'];
                 $result = ['title' => 'Milo et la boîte', 'summary' => 'Milo découvre une boîte et finit par dormir dedans.', 'identity' => 'white playful cat', 'beats' => array_map(static fn (int $i): string => 'Milo explore la boîte, étape '.$i, range(1, $count))];
             } else {
-                $result = ['shots' => array_map(static fn (int $s, int $i): array => ['seconds' => $s, 'prompt' => 'The same white cat Milo explores a cardboard box in a sunny room, scene '.$i.'. Slow camera push.'], $brief['seconds'], array_keys($brief['seconds']))];
+                $result = ['identity' => 'White playful cat Milo'.($this->suspiciousStory ? ' wearing a leather collar' : ''), 'shots' => array_map(static fn (int $s, int $i): array => ['seconds' => $s, 'prompt' => 'The same white cat Milo explores a cardboard box in a sunny room, scene '.$i.'. Slow camera push.'], $brief['seconds'], array_keys($brief['seconds']))];
             }
 
             return new MockResponse(json_encode(['done' => true, 'done_reason' => 'stop', 'message' => ['content' => json_encode($result, JSON_THROW_ON_ERROR)]], JSON_THROW_ON_ERROR));
@@ -111,6 +112,28 @@ final class SeriesRecurrencesTest extends WebTestCase
     private function due(): void
     {
         $this->clock->modify('2026-10-26T17:00:00Z');
+    }
+
+    public function testQualityWarningPreservesAnEditableDraftAndPausesBeforeAnyPaidRequest(): void
+    {
+        $r = $this->service()->activate($this->series, $this->data());
+        $message = $this->message($r);
+        $this->due();
+        $this->suspiciousStory = true;
+        $this->service()->produce($message);
+        self::assertSame('paused', $r->getStatus());
+        self::assertSame(0, $r->getReservedCents());
+        self::assertSame(0, $this->paidCalls);
+        self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
+        $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $r]);
+        self::assertSame('attention', $occurrence->getStatus());
+        self::assertStringContainsString('Scénario à relire', $occurrence->getIssue());
+        self::assertNotNull($occurrence->getSummary());
+        self::assertSame('draft', $occurrence->getEpisode()->getFlowState());
+        self::assertNotEmpty(static::getContainer()->get(AiEpisodeFlow::class)->shots($occurrence->getEpisode()));
+        $this->service()->produce($message);
+        self::assertSame(2, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
     }
 
     public function testActivationRequiresConsentAndCsrfAndIsPrivateAndRevisioned(): void

@@ -2,6 +2,8 @@
 
 Évolution du 24 octobre : la rédaction est désormais traitée en arrière-plan et retrouvable au retour. Le parcours et les composants qui remplacent la requête longue de ce premier pilote sont décrits dans [corrections-studio-series-recurrence.md](corrections-studio-series-recurrence.md).
 
+Les limites de 55 secondes et la mémoire de trois épisodes mentionnées ci-dessous décrivent le pilote initial. Le délai actuel est de **180 secondes par appel**, jusqu'à deux appels successifs ; la récurrence transmet les **cinq derniers résumés disponibles**. Voir [le diagnostic](series-publications-redacteur.md) et [la récurrence supervisée](recurrence-supervisee.md). La recette locale multi-thèmes est disponible avec `docker compose exec -T php php scripts/try-story-local.php qwen3:8b --suite --repeat --warm` : dix sujets synthétiques et deux répétitions, sans accès à la base métier ni appel vidéo, résultats dans un nouveau dossier ignoré `artifacts/story-local/`. Les consignes par format, le préfixe d'identité, les alertes et leurs limites sont décrits dans [le lot de fiabilité](redacteur-local-fiabilite.md).
+
 ## Objectif et périmètre livré
 
 Depuis le même écran de préparation du studio ou d’un épisode modifiable : écrire une idée courte, choisir la durée et le modèle vidéo, puis demander « Proposer mon scénario ». L’ambiance Automatique respecte le sujet et propose un humour léger si aucun ton n’est précisé. Une proposition affiche un titre, une histoire et les actions en français ; les prompts vidéo sont consultables dans des détails repliés.

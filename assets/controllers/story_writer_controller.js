@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['tone', 'generate', 'status', 'preview', 'title', 'summary', 'scenes', 'loading', 'progress', 'elapsed', 'retry'];
+  static targets = ['tone', 'generate', 'status', 'preview', 'title', 'summary', 'scenes', 'loading', 'progress', 'elapsed', 'retry', 'warnings'];
   static values = { url: String, latest: String, token: String, episode: Number };
 
   get form() { return this.element.querySelector('#ai-idea-form'); }
@@ -117,6 +117,16 @@ export default class extends Controller {
     this.proposal = data;
     this.titleTarget.textContent = data.title;
     this.summaryTarget.textContent = data.summary;
+    const warnings = Array.isArray(data.warnings) ? data.warnings : [];
+    if (this.hasWarningsTarget) {
+      this.warningsTarget.replaceChildren();
+      warnings.forEach(warning => {
+        const item = document.createElement('li');
+        item.textContent = warning;
+        this.warningsTarget.append(item);
+      });
+      this.warningsTarget.hidden = warnings.length === 0;
+    }
     this.scenesTarget.replaceChildren();
     data.shots.forEach((shot, index) => {
       const scene = document.createElement('li');
@@ -134,7 +144,7 @@ export default class extends Controller {
       this.scenesTarget.append(scene);
     });
     this.previewTarget.hidden = false;
-    this.statusTarget.textContent = stale ? 'Proposition terminée, mais ta préparation a changé. Consulte ce résultat et demande une nouvelle proposition pour appliquer tes réglages actuels.' : 'Proposition prête. Relis-la puis utilise ces scènes si elles te conviennent.';
+    this.statusTarget.textContent = warnings.length ? 'Proposition à vérifier : des points demandent ta relecture avant d’utiliser ces scènes.' : 'Proposition prête. Relis-la puis utilise ces scènes si elles te conviennent. L’absence d’alerte ne garantit pas sa fidélité.';
   }
   apply() {
     if (!this.proposal) return;

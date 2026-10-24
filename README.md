@@ -55,11 +55,11 @@ Créer .env.local avant le premier démarrage sur un nouveau clone : APP_SECRET 
 Git transfère le code et les migrations, pas la base, les vidéos importées ni `.env.local`. Après un pull :
 
 ```sh
-docker compose stop worker background-worker edit-worker
+docker compose stop worker story-worker background-worker edit-worker
 docker compose up -d database mailpit php
 docker compose exec php composer db:sync
 docker compose --profile tools run --rm --no-deps node
-docker compose up -d --no-deps --force-recreate worker background-worker edit-worker
+docker compose up -d --no-deps --force-recreate worker story-worker background-worker edit-worker
 ```
 
 Si `composer.lock` a changé, réinstaller d'abord les dépendances comme indiqué ci-dessous. Si le Dockerfile a changé, reconstruire l'image PHP. Si les assets ont changé, relancer le build frontend.
@@ -110,6 +110,26 @@ Le studio est sur http://localhost:8000/studio ; l’inscription sur http://loca
 Bibliothèque : http://localhost:8000/studio/bibliotheque. Après mise à jour du Dockerfile, relancer `docker compose build php` puis `docker compose up -d` pour installer ffprobe et les limites d’upload. Limites bêta : MP4 H.264/AAC ou WebM compatible 8 bits, 100 Mo/fichier, 180 secondes, 1 Go et 100 vidéos/compte. Stockage ignoré dans var/storage/videos/dev, jamais sous public ; sauvegarder les fichiers avec PostgreSQL. Lecture via route privée avec Range. Guide complet et pédagogie : docs/library.md.
 
 Avec Node local : npm ci puis npm run build remplace le conteneur outils. Après chaque changement frontend, relancer npm run build et recharger la page. npm run dev n’est pas relié aux templates ; le mode courant utilise les fichiers compilés. Le dossier public/build est généré et ignoré. PHP local par défaut est 8.1 : utiliser le conteneur PHP 8.4 pour toutes les commandes applicatives.
+
+### Rédacteur de scénarios local
+
+Remise en route sur ce poste, résultats narratifs et limites : [recette du 24 octobre](docs/redacteur-local-recette.md).
+
+Fiabilité du rédacteur : consignes adaptées aux récits/tutoriels/présentations, identité commune dans les prompts, alertes de relecture et pause de la récurrence avant génération si un problème est signalé. Douze propositions réelles évaluées ; langue améliorée sur cet échantillon, qualité narrative encore à relire. [Fonctionnement, résultats et tests](docs/redacteur-local-fiabilite.md).
+
+Le code récupéré par Git n'installe pas Ollama ni ses modèles sur un autre PC. Avec Ollama installé et démarré, installer explicitement le modèle retenu avec `ollama pull qwen3:8b`, puis ajouter dans `.env.local` :
+
+```dotenv
+AI_STORY_ENABLED=1
+AI_STORY_URL=http://host.docker.internal:11434
+AI_STORY_MODEL=qwen3:8b
+```
+
+Après les migrations et le build frontend, renouveler le cache dev puis démarrer le consommateur dédié : `docker compose exec -T php php bin/console cache:clear --env=dev --no-debug` puis `docker compose up -d --no-deps story-worker`. Ce service traite les propositions de scénarios et les réveils récurrents déjà autorisés ; aucune série n'est activée par son démarrage. L'activation du texte ne modifie pas `AI_GENERATION_ENABLED` et ne confirme aucune publication.
+
+Le modèle écrit l'histoire puis les prompts vidéo, avec au plus 180 secondes par appel. Le worker dispose de sept minutes pour terminer la tâche lors d'un arrêt Docker normal. Une coupure du poste ou un arrêt forcé peut tout de même interrompre la rédaction. Le résultat doit être relu et appliqué volontairement dans le studio.
+
+La commande `docker compose exec -T php php scripts/try-story-local.php qwen3:8b --suite --repeat --warm` évalue dix sujets synthétiques et deux répétitions avec le service réel, après préchargement explicite. Elle ne touche ni la base métier ni les API vidéo ; elle conserve chaque entrée, résultat ou erreur et durée dans un nouveau dossier ignoré `artifacts/story-local/`. Le code de sortie vaut 1 si au moins un cas échoue. La qualité narrative doit être évaluée en lisant les résultats, même lorsque leur structure est valide. Les diagnostics peuvent être recalculés sans appel au modèle avec `scripts/review-story-local.php`, voir le guide ci-dessus.
 
 ## Vérifications
 

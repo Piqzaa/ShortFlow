@@ -36,7 +36,8 @@ services:
     init: true
     command: ["sh", "/app/docker/php/worker.sh"]
     restart: unless-stopped
-    stop_grace_period: 3m
+    # Two local inference calls can each take 180 seconds; allow the job to finish.
+    stop_grace_period: 7m
     volumes: *app_volumes
     environment:
       <<: *app_environment
