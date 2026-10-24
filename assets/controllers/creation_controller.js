@@ -23,19 +23,18 @@ export default class extends Controller {
     if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = Boolean(this.modelTarget.value && !this.recommendationTargets.some(button => button.dataset.modelId === this.modelTarget.value));
   }
 
+  modelMode(model) { return model?.subjectReference ? 'subject' : model?.image ? 'image' : 'text'; }
+
   sourceMode() { return this.hasSourceTarget ? this.sourceTarget.value || 'text' : 'text'; }
 
   changeSource() {
     if (!this.hasSourceTarget) return;
-    const image = this.sourceMode() === 'image';
+    const image = this.sourceMode() !== 'text';
     this.referencePanelTarget.hidden = !image;
     if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = !image;
-    const allowed = Object.keys(this.modelsValue).filter(id => Boolean(this.modelsValue[id].image) === image && (!image || !this.hasUseEndTarget || !this.useEndTarget.checked || this.modelsValue[id].endImageField));
+    const allowed = Object.keys(this.modelsValue).filter(id => this.modelMode(this.modelsValue[id]) === this.sourceMode() && (!image || !this.hasUseEndTarget || !this.useEndTarget.checked || this.modelsValue[id].endImageField));
     if (!allowed.includes(this.modelTarget.value)) {
-      const previous = this.modelsValue[this.modelTarget.value];
-      const preferred = allowed.find(id => this.modelsValue[id].provider === previous?.provider && this.modelsValue[id].maker === previous?.maker && this.modelsValue[id].quality === previous?.quality)
-        || allowed.find(id => this.modelsValue[id].provider === previous?.provider);
-      this.modelTarget.value = image ? preferred || allowed[0] || '' : '';
+      this.modelTarget.value = '';
     }
     if (this.hasPickerTarget) Array.from(this.groupTarget.options).forEach(option => {
       option.hidden = option.disabled = Boolean(option.value && !this.cardTargets.some(card => card.dataset.groupId === option.value && this.variantIds(card).some(id => allowed.includes(id))));
@@ -52,7 +51,7 @@ export default class extends Controller {
     target.value = event.detail.reference || '';
     this.pendingImages ??= new Set();
     if (event.detail.pending) this.pendingImages.add(slot); else this.pendingImages.delete(slot);
-    this.sourceTarget.value = 'image';
+    if (this.sourceMode() === 'text') this.sourceTarget.value = 'image';
     this.changeSource();
     target.dispatchEvent(new Event('change', {bubbles:true}));
     this.element.querySelectorAll('#ai-idea-form button[type="submit"]').forEach(button => { button.disabled = this.pendingImages.size > 0; });
@@ -89,12 +88,13 @@ export default class extends Controller {
   changeModel() {
     if (this.hasPickerTarget) this.syncPicker();
     const model = this.modelsValue[this.modelTarget.value];
+    if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = this.sourceMode() === 'text' || Boolean(model?.subjectReference);
     if (model?.requiresEnd && this.hasUseEndTarget && !this.useEndTarget.checked) {
       this.useEndTarget.checked = true;
       this.changeSource();
       return;
     }
-    if (this.hasEndPanelTarget) this.endPanelTarget.hidden = this.sourceMode() !== 'image' || !this.useEndTarget.checked;
+    if (this.hasEndPanelTarget) this.endPanelTarget.hidden = this.sourceMode() === 'text' || !this.useEndTarget.checked;
     if (this.hasReferencePanelTarget) {
       const label = this.referencePanelTarget.querySelector('label');
       if (label) label.textContent = model?.subjectReference ? 'Image du personnage' : 'Image de début';
@@ -120,9 +120,9 @@ export default class extends Controller {
   updateRecommendations() {
     if (!this.hasRecommendationsTarget) return;
     this.recommendationsTarget.hidden = false;
-    const image = this.sourceMode() === 'image';
+    const image = this.sourceMode() !== 'text';
     this.recommendationTargets.forEach(button => {
-      const id = image ? (this.useEndTarget.checked ? button.dataset.framesModel : button.dataset.imageModel) : button.dataset.textModel;
+      const id = this.sourceMode() === 'subject' ? button.dataset.subjectModel : image ? (this.useEndTarget.checked ? button.dataset.framesModel : button.dataset.imageModel) : button.dataset.textModel;
       const model = this.modelsValue[id];
       button.hidden = !model;
       button.dataset.modelId = id;
@@ -163,7 +163,7 @@ export default class extends Controller {
       this.pickerResultsTarget.hidden = !query;
       this.pickerResultTargets.forEach(button => {
         const option = Array.from(this.groupTarget.options).find(option => option.value === button.dataset.groupId);
-        const matches = Boolean(option?.textContent.toLocaleLowerCase('fr').includes(query)) && (!this.hasSourceTarget || button.dataset.source === this.sourceMode()) && (!this.hasUseEndTarget || !this.useEndTarget.checked || this.sourceMode() !== 'image' || this.cardTargets.some(card => card.dataset.groupId === button.dataset.groupId && this.variantIds(card).some(id => this.modelsValue[id]?.endImageField)));
+        const matches = Boolean(option?.textContent.toLocaleLowerCase('fr').includes(query)) && (!this.hasSourceTarget || button.dataset.source === this.sourceMode()) && (!this.hasUseEndTarget || !this.useEndTarget.checked || this.sourceMode() === 'text' || this.cardTargets.some(card => card.dataset.groupId === button.dataset.groupId && this.variantIds(card).some(id => this.modelsValue[id]?.endImageField)));
         button.hidden = !matches;
         if (matches) count++;
       });
@@ -286,7 +286,7 @@ export default class extends Controller {
     this.cardTargets.forEach(card => {
       const matches = this.variantIds(card).filter(id => {
       const model = this.modelsValue[id];
-      return Boolean(model) && Boolean(model.image) === (this.sourceMode() === 'image') && (!model.image || !this.hasUseEndTarget || !this.useEndTarget.checked || model.endImageField) && `${model.name} ${model.maker} ${model.provider} ${model.quality}`.toLocaleLowerCase('fr').includes(query)
+      return Boolean(model) && this.modelMode(model) === this.sourceMode() && (!model.image || !this.hasUseEndTarget || !this.useEndTarget.checked || model.endImageField) && `${model.name} ${model.maker} ${model.provider} ${model.quality}`.toLocaleLowerCase('fr').includes(query)
         && (!this.providerTarget.value || model.provider === this.providerTarget.value)
         && (!this.audioTarget.value || model.audio === (this.audioTarget.value === 'yes'))
         && (!this.minimumTarget.value || Math.max(...model.seconds) >= Number(this.minimumTarget.value))

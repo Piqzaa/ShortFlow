@@ -37,12 +37,15 @@ final class AiStudioController extends AbstractController
         }
         $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16']);
         $idea += ['accessMode' => null !== $keys->connection($user, 'fal') ? 'api' : 'mcp', 'source' => 'text', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop'];
+        if ($request->isMethod('GET') && isset(AiCatalog::MODELS[$idea['model'] ?? ''])) {
+            $idea['source'] = $catalog->referenceMode($idea['model']);
+        }
         $episode = null;
         if ($preparingEpisode) {
             $episode = $flow->owned($preparingEpisode, $user) ?? throw $this->createNotFoundException();
             $recipe = $episode->getPreparationRecipe();
             $shots = $flow->shots($episode);
-            $idea = ['title' => $episode->getTitle(), 'prompt' => $episode->getPrompt(), 'target' => $shots ? array_sum(array_map(static fn ($s): int => $s->getSeconds(), $shots)) : ($recipe['totalSeconds'] ?? 30), 'shots' => array_map(static fn ($s): array => ['prompt' => $s->getPrompt(), 'seconds' => $s->getSeconds()], $shots), 'source' => (AiCatalog::MODELS[$recipe['model']]['image'] ?? false) ? 'image' : 'text', 'useEnd' => (bool) $recipe['endReference'], 'continuity' => $episode->getContinuity(), 'mute' => $episode->isMutePlans(), 'revision' => (string) $episode->getRevision()] + $recipe;
+            $idea = ['title' => $episode->getTitle(), 'prompt' => $episode->getPrompt(), 'target' => $shots ? array_sum(array_map(static fn ($s): int => $s->getSeconds(), $shots)) : ($recipe['totalSeconds'] ?? 30), 'shots' => array_map(static fn ($s): array => ['prompt' => $s->getPrompt(), 'seconds' => $s->getSeconds()], $shots), 'source' => $catalog->referenceMode($recipe['model']), 'useEnd' => (bool) $recipe['endReference'], 'continuity' => $episode->getContinuity(), 'mute' => $episode->isMutePlans(), 'revision' => (string) $episode->getRevision()] + $recipe;
         }
         $idea += ['target' => $idea['seconds'] ?? 30, 'shots' => [], 'continuity' => 'independent', 'mute' => false, 'revision' => '0'];
         if ($episode && !$episode->isStandalone() && '' === trim($idea['prompt'])) {
@@ -78,7 +81,7 @@ final class AiStudioController extends AbstractController
                     $endReferenceUrl = $url;
                 }
             } catch (\RuntimeException $error) {
-                if ($form->isSubmitted() && 'image' === $form->get('source')->getData() && ('reference' === $field || $form->get('useEnd')->getData())) {
+                if ($form->isSubmitted() && in_array($form->get('source')->getData(), ['image', 'subject'], true) && ('reference' === $field || $form->get('useEnd')->getData())) {
                     $form->get($field)->addError(new FormError($error->getMessage()));
                 }
             }
@@ -213,7 +216,7 @@ final class AiStudioController extends AbstractController
             return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
         }
         foreach (['reference', 'endReference'] as $field) {
-            if ('image' !== $form->getData()['source'] || !$form->getData()[$field] || ('endReference' === $field && !$form->getData()['useEnd'])) {
+            if (!in_array($form->getData()['source'], ['image', 'subject'], true) || !$form->getData()[$field] || ('endReference' === $field && !$form->getData()['useEnd'])) {
                 continue;
             }
             try {
@@ -267,17 +270,17 @@ final class AiStudioController extends AbstractController
                     });
                     $idea = $request->getSession()->get('ai_idea', []);
                     $idea['end' === $slot ? 'endReference' : 'reference'] = $name;
-                    $idea['source'] = 'image';
+                    $idea['source'] = ($idea['source'] ?? '') === 'subject' && 'end' !== $slot ? 'subject' : 'image';
                     if ('end' === $slot) {
                         $idea['useEnd'] = true;
                     }
                     $model = AiCatalog::MODELS[$idea['model'] ?? ''] ?? [];
                     if (!($model['image'] ?? false) || ('end' === $slot && !isset($model['endImageField']))) {
-                        $idea['model'] = 'kling-25-image';
-                        $model = AiCatalog::MODELS['kling-25-image'];
+                        $idea['model'] = '';
+                        $model = [];
                     }
-                    if (!in_array($idea['ratio'] ?? '', $model['ratios'], true)) {
-                        $idea['ratio'] = $model['ratios'][0];
+                    if ($model && !in_array($idea['ratio'] ?? '', $model['ratios'], true)) {
+                        $idea['ratio'] = '';
                     }
                     $request->getSession()->set('ai_idea', $idea);
                     if ('application/json' === $request->headers->get('Accept')) {
@@ -409,7 +412,7 @@ final class AiStudioController extends AbstractController
             throw $this->createAccessDeniedException();
         }
         $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
-        $request->getSession()->set('ai_idea', ['title' => $job->getTitle(), 'prompt' => $job->getPrompt(), 'model' => $job->getModel(), 'seconds' => $job->getSeconds(), 'ratio' => $job->getRatio(), 'accessMode' => $job->getAccessMode(), 'source' => null !== $job->getReferenceImage() ? 'image' : 'text', 'reference' => $job->getReferenceImage(), 'endReference' => $job->getEndReferenceImage(), 'useEnd' => null !== $job->getEndReferenceImage(), 'imageFit' => $job->getImageFit()]);
+        $request->getSession()->set('ai_idea', ['title' => $job->getTitle(), 'prompt' => $job->getPrompt(), 'model' => $job->getModel(), 'seconds' => $job->getSeconds(), 'ratio' => $job->getRatio(), 'accessMode' => $job->getAccessMode(), 'source' => (new AiCatalog())->referenceMode($job->getModel()), 'reference' => $job->getReferenceImage(), 'endReference' => $job->getEndReferenceImage(), 'useEnd' => null !== $job->getEndReferenceImage(), 'imageFit' => $job->getImageFit()]);
         $this->addFlash('success', 'Ton idée et ses réglages sont repris. Modifie-les puis vérifie une nouvelle estimation avant de générer.');
 
         return $this->redirectToRoute('app_studio', status: 303);

@@ -188,7 +188,7 @@ final class SeriesRecurrences
                     throw new \RuntimeException('Les paramètres ou l’accès BYOK ont changé pendant la rédaction. Confirme à nouveau la récurrence.');
                 }
                 $recipe = $settings['recipe'];
-                $this->flow->prepare($series->getOwner(), $recipe + ['source' => $recipe['reference'] ? 'image' : 'text', 'target' => array_sum($settings['durations']), 'shots' => $story['shots'], 'prompt' => $series->initialPrompt(), 'title' => $story['title'], 'continuity' => $settings['continuity'], 'mute' => false, 'useEnd' => (bool) $recipe['endReference'], 'revision' => 1], $episode);
+                $this->flow->prepare($series->getOwner(), $recipe + ['source' => $this->catalog->referenceMode($recipe['model']), 'target' => array_sum($settings['durations']), 'shots' => $story['shots'], 'prompt' => $series->initialPrompt(), 'title' => $story['title'], 'continuity' => $settings['continuity'], 'mute' => false, 'useEnd' => (bool) $recipe['endReference'], 'revision' => 1], $episode);
                 $occurrence->story($story['summary']);
                 if ($story['warnings']) {
                     $issue = 'Scénario à relire dans l’épisode avant génération. '.implode(' ', $story['warnings']);

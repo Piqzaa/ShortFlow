@@ -180,7 +180,7 @@ final class AiStudioTest extends WebTestCase
         $this->client->submit($this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[reference]' => $name, 'ai_idea[model]' => 'kling-25-image', 'ai_idea[prompt]' => 'Animate the trees', 'ai_idea[seconds]' => 10, 'ai_idea[ratio]' => 'auto']));
         self::assertResponseStatusCodeSame(303);
         $this->client->followRedirect();
-        self::assertSelectorExists('img[alt="Image de départ de cette génération"]');
+        self::assertSelectorExists('img[alt="Référence visuelle de cette génération"]');
         self::assertSelectorTextContains('.profile-facts', '0,70');
         $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
         self::assertSame($name, $job->getReferenceImage());

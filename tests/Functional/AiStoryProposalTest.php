@@ -77,6 +77,7 @@ final class AiStoryProposalTest extends WebTestCase
         static::getContainer()->set(\App\Service\LocalStoryWriter::class, new \App\Service\LocalStoryWriter(static::getContainer()->get('story.http'), true, 'http://host.docker.internal:11434', 'synthetic'));
         $payload = ['_token' => $token, 'idea' => 'Milo mon chat blanc joueur', 'model' => 'kling-25', 'target' => '30', 'continuity' => 'independent', 'tone' => 'auto'];
         $before = static::getContainer()->get(Connection::class)->fetchOne('SELECT count(*) FROM ai_generation');
+        $queuedBefore = (int) static::getContainer()->get(Connection::class)->fetchOne("SELECT count(*) FROM messenger_messages WHERE queue_name = 'story_writing'");
         $client->request('POST', '/studio/creation/scenario', $payload);
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('no-store', $client->getResponse()->headers->get('Cache-Control'));
@@ -85,7 +86,7 @@ final class AiStoryProposalTest extends WebTestCase
         $client->request('POST', '/studio/creation/scenario', $payload);
         self::assertResponseStatusCodeSame(202);
         self::assertSame($queued['id'], json_decode($client->getResponse()->getContent(), true, 32, JSON_THROW_ON_ERROR)['id']);
-        self::assertSame(1, (int) static::getContainer()->get(Connection::class)->fetchOne("SELECT count(*) FROM messenger_messages WHERE queue_name = 'story_writing'"));
+        self::assertSame($queuedBefore + 1, (int) static::getContainer()->get(Connection::class)->fetchOne("SELECT count(*) FROM messenger_messages WHERE queue_name = 'story_writing'"));
         $client->request('GET', '/studio/series');
         self::assertResponseIsSuccessful();
         self::assertSame(0, $calls);

@@ -36,6 +36,9 @@ final class AiEpisodeFlow
     public function prepare(User $owner, array $data, ?AiEpisode $episode = null): AiEpisode
     {
         $model = $this->catalog->model($data['model']);
+        if ('auto' === $data['ratio']) {
+            throw new \RuntimeException('Choisis un format final explicite : vertical 9:16, paysage 16:9 ou carré 1:1. Le format original de l’image ne garantit pas celui du montage.');
+        }
         $rows = array_values($data['shots'] ?? []);
         if (!$rows || count($rows) > 8) {
             throw new \RuntimeException('Prépare de 1 à 8 plans dans le même écran.');
@@ -204,6 +207,9 @@ final class AiEpisodeFlow
     public function quote(AiEpisode $episode, int $redo = 0): array
     {
         $recipe = $episode->getFlowRecipe() ?? throw new \RuntimeException('Prépare les plans avant de continuer.');
+        if ('auto' === $recipe['ratio']) {
+            throw new \RuntimeException('Choisis un format final explicite dans la préparation avant de confirmer les coûts.');
+        }
         $shots = $this->shots($episode);
         $data = [];
         $cents = $seconds = 0;

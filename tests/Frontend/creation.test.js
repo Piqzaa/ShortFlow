@@ -229,7 +229,7 @@ test('model search exposes clickable results and picking one changes the real co
   assert.equal(c.resolutionTarget.focused, true);
 });
 
-test('image mode filters out text models, keeps auto framing and preserves the prompt-independent selection', () => {
+test('changing source filters models and requires an explicit compatible model choice', () => {
   const c = creation();
   c.modelsValue.image = {...c.modelsValue.kling,image:true,ratios:['auto']};
   c.cardTargets.push({dataset:{modelId:'image',groupId:'image'},classList:{toggle(){}}});
@@ -237,6 +237,8 @@ test('image mode filters out text models, keeps auto framing and preserves the p
   c.ratioTarget.options.push({value:'auto'});
   c.modelTarget.dispatchEvent = () => c.changeModel();
   c.changeSource();
+  assert.equal(c.modelTarget.value, '');
+  c.modelTarget.value = 'image'; c.changeModel();
   assert.equal(c.modelTarget.value, 'image');
   assert.equal(c.ratioTarget.value, 'auto');
   assert.equal(c.referencePanelTarget.hidden, false);
@@ -282,7 +284,7 @@ test('framing previews honor the selected ratio and fit without marking image lo
   assert.match(c.framingNoticeTarget.textContent, /Format d’origine/);
 });
 
-test('choosing a transition enables the ending frame; unchecking it can return to one image', () => {
+test('choosing a transition enables the ending frame; unchecking requires an explicit replacement', () => {
   const c = creation();
   c.modelsValue.image = {...c.modelsValue.kling,image:true,endImageField:'tail_image_url'};
   c.modelsValue.transition = {...c.modelsValue.image,requiresEnd:true};
@@ -295,7 +297,7 @@ test('choosing a transition enables the ending frame; unchecking it can return t
   assert.equal(c.endPanelTarget.hidden, false);
   c.useEndTarget.checked = false; c.changeEnd();
   assert.equal(c.useEndTarget.checked, false);
-  assert.equal(c.modelTarget.value, 'image');
+  assert.equal(c.modelTarget.value, '');
   assert.equal(c.endPanelTarget.hidden, true);
 });
 

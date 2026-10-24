@@ -35,12 +35,12 @@ final class AiIdeaType extends AbstractType
             $choices[(in_array($id, $favoriteVariants, true) ? '★ ' : '').$model['name'].$resolution.' · '.AiCatalog::PROVIDERS[$model['provider']].($disconnected ? ' · à connecter' : '')] = $id;
         }
         $builder->add('target', IntegerType::class, ['label' => 'Durée finale souhaitée (secondes)', 'required' => false, 'constraints' => [new Assert\Range(min: 1, max: 60)], 'attr' => ['min' => 1, 'max' => 60]])
-            ->add('continuity', ChoiceType::class, ['label' => 'Comment enchaîner les clips ?', 'required' => true, 'placeholder' => false, 'empty_data' => 'independent', 'choices' => ['Plusieurs scènes' => 'independent', 'Prolonger l’action' => 'linked']])
+            ->add('continuity', ChoiceType::class, ['label' => 'Comment enchaîner les clips ?', 'required' => true, 'placeholder' => false, 'empty_data' => 'independent', 'choices' => ['Plusieurs scènes' => 'independent', 'Raccord depuis la dernière image · génération séparée' => 'linked']])
             ->add('mute', CheckboxType::class, ['label' => 'Couper le son des plans au montage', 'required' => false])
             ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])
             ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations()], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
         $builder
-            ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire une vidéo' => 'text', 'Utiliser une image' => 'image'], 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
+            ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire une vidéo' => 'text', 'Animer une image de début' => 'image', 'Garder un personnage de référence' => 'subject'], 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
             ->add('reference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
             ->add('endReference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
             ->add('useEnd', CheckboxType::class, ['label' => 'Ajouter une image de fin', 'required' => false])
@@ -61,7 +61,7 @@ final class AiIdeaType extends AbstractType
                 return;
             }
             $model = AiCatalog::MODELS[$data['model']];
-            if (($model['image'] ?? false) !== ('image' === ($data['source'] ?? 'text'))) {
+            if ((new AiCatalog())->referenceMode($data['model']) !== ($data['source'] ?? 'text')) {
                 $form->get('model')->addError(new FormError('Choisis un modèle compatible avec ton point de départ.'));
             }
             if (($model['image'] ?? false) && empty($data['reference'])) {

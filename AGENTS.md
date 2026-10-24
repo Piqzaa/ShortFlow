@@ -1,5 +1,7 @@
 # VydFlow — instructions de travail
 
+Mise à jour du 24 octobre 2026 : le propriétaire autorise l’exécution successive des quatre lots issus de l’audit génération Studio/Séries : cohérence des modes/catalogue/formats, références de personnages et cadres par plan, continuité native compatible, puis qualité/exploitation. Préserver les préparations existantes, consentements de coûts et contrôles de propriété. Vérifications simulées, commits locaux par lot ; aucun essai vidéo payant, publication réelle, activation de récurrence réelle ou push autorisé par cette demande. Suivi : docs/generation-quatre-lots.md.
+
 Mise à jour complémentaire du 24 octobre 2026 : le propriétaire autorise le lot de fiabilité du rédacteur local et demande un commit local final. Consignes adaptées au format, identité commune, alertes vérifiables, pause des récurrences signalées avant génération, évaluation locale multi-thèmes et répétitions. Voir docs/redacteur-local-fiabilite.md. Aucune génération vidéo payante, publication réelle, activation de série ou push dans ce lot.
 
 Mise à jour du 24 octobre 2026 : le propriétaire autorise la suite et ses deux commits locaux : récurrence supervisée hebdomadaire, rédaction locale puis génération/assemblage existants, autorisation explicite de coûts BYOK bornée à 1–12 créneaux, pause, mémoire narrative bornée et validation avant publication. Voir docs/recurrence-supervisee.md. Les tests restent simulés ; aucune activation de série réelle, génération vidéo payante, publication autonome réelle ou push implicitement autorisé.
