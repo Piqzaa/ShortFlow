@@ -20,11 +20,13 @@ final class RecoverSeriesRecurrencesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $interrupted = $this->recurrences->recoverInterrupted();
         $rows = $this->em->getRepository(SeriesRecurrence::class)->findBy(['status' => 'active']);
         foreach ($rows as $row) {
             $this->recurrences->wake($row);
         }
         $output->writeln(count($rows).' current series wake-ups queued. Duplicate deliveries do not create another episode.');
+        $output->writeln($interrupted.' interrupted writing occurrence(s) marked for review without generating a new video.');
 
         return Command::SUCCESS;
     }

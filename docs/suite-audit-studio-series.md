@@ -5,7 +5,7 @@ Le propriétaire a autorisé l’action après le rapport `audit-studio-series-g
 - [x] Lot 1 : prompts/contexte figés, cadres sans priorité cachée, empreinte récurrente complète.
 - [x] Lot 2 : références nommées, capacités communes, transitions, limites et prévol cohérents.
 - [x] Lot 3 : profil éditorial et propositions locales par réseau, liés à la vidéo validée.
-- [ ] Lot 4 : reprise des occurrences interrompues, états et action suivante.
+- [x] Lot 4 : reprise des occurrences interrompues, états et action suivante.
 - [ ] Lot 5 : recette de montage limitée aux fonctions existantes et finition UX.
 - [ ] Recette finale simulée, navigateur et remise en route des workers.
 
@@ -46,3 +46,13 @@ Une version vidéo validée peut demander une proposition locale par réseau dep
 Fichiers, parcours et flux Symfony détaillés dans `editorial-supervise.md`. La route de profil est séparée (`/studio/series/{id}/textes`) ; le bouton de rédaction est dans le préparateur de la vidéo validée. Une nouvelle version/profil/réseau invalide l’application de l’ancien résultat, sans effacer les brouillons antérieurs.
 
 Vérifications consolidées : cinq tests fonctionnels éditoriaux, 52 assertions réussies sur `shortflow_test`, sans API sociale ni vidéo. Les tests ont révélé puis corrigé la conservation de clés numériques dans `PublicationDraft.videoIds()` après une seconde sauvegarde ; ils vérifient aussi un champ volontairement vidé. L’agent a vérifié 19 tests unitaires (65 assertions, incluant le rédacteur existant) et trois tests frontend du nouveau suivi. La suite globale de fin de chantier revérifiera les scénarios et publications existants.
+
+## Lot 4 — rédaction interrompue et suivi de récurrence
+
+La création d’une occurrence programme `InspectSeriesWriting` sur le transport de fond existant. Après dix minutes, le contrôle relit sous verrou l’occurrence : une rédaction automatique réellement interrompue passe « à vérifier » et suspend la même autorisation. Un contrôle trop précoce se reprogramme ; un ancien contrôle ne suspend pas une nouvelle autorisation. Aucune rédaction ni vidéo n’est renvoyée par ce contrôle. `RecoverSeriesRecurrencesCommand` réconcilie également les anciennes occurrences interrompues avant de réveiller les récurrences encore actives.
+
+Une reprise humaine normalise le statut dans `SeriesOccurrence::manageManually`, et une réponse tardive du rédacteur ne peut plus reprendre la main ni réserver un budget. Les résultats existants sont conservés. Réautoriser une série saute un créneau qui possède déjà une occurrence, plutôt que provoquer une collision de la contrainte unique. Les textes de l’interface distinguent publication visée, vidéo à valider, textes à relire et publication à confirmer ; les états sociaux restent ceux du moteur existant.
+
+Fichiers : `SeriesRecurrences`, `SeriesOccurrence`, message/handler `InspectSeriesWriting`, routage Messenger et commande de récupération ; templates série et récurrence. Pas de nouvelle table ni de boucle de rattrapage. Symfony persiste le contrôle différé avec l’occurrence dans la même transaction ; une redélivrance réexamine l’état courant au lieu de répéter le travail.
+
+Vérifications : toute la classe `SeriesRecurrencesTest` passe, 16 tests et 138 assertions sur `shortflow_test`, clients texte/vidéo/sociaux simulés. Elle couvre mort du worker représentée par une occurrence durable, rédaction de six minutes non interrompue, ancien contrôle, reprise manuelle pendant rédaction, changement de clé/recette/délai, déduplication et réautorisation du créneau. Aucun contrôle d’entretien n’a été exécuté sur les séries réelles du propriétaire.

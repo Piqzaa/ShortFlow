@@ -114,6 +114,120 @@ final class SeriesRecurrencesTest extends WebTestCase
         $this->clock->modify('2026-10-26T17:00:00Z');
     }
 
+    private function interruptedOccurrence(SeriesRecurrence $recurrence, int $ageSeconds = 660): SeriesOccurrence
+    {
+        return $this->em->getConnection()->transactional(function () use ($recurrence, $ageSeconds): SeriesOccurrence {
+            $episode = new AiEpisode($this->series, 1);
+            $occurrence = new SeriesOccurrence($recurrence, $recurrence->getNextAt(), 'Europe/Paris', ['youtube'], $this->clock->now()->modify('-'.$ageSeconds.' seconds'), $episode);
+            $recurrence->advanceSchedule($recurrence->getNextAt()->modify('+7 days'));
+            $this->em->persist($episode);
+            $this->em->persist($occurrence);
+            $this->em->flush();
+
+            return $occurrence;
+        });
+    }
+
+    public function testRecoverMarksAnInterruptedWritingBeforeWakingOtherSlotsWithoutReplayingIt(): void
+    {
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        $message = $this->message($recurrence);
+        $this->due();
+        $occurrence = $this->interruptedOccurrence($recurrence);
+        $wakeUps = (int) $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'story_writing'");
+        $this->service()->produce($message);
+        self::assertSame('writing', $occurrence->getStatus(), 'A redelivery must not create another episode or restart its writer.');
+        $tester = new \Symfony\Component\Console\Tester\CommandTester(new \App\Command\RecoverSeriesRecurrencesCommand($this->em, $this->service()));
+        self::assertSame(0, $tester->execute([]));
+        self::assertStringContainsString('1 interrupted writing', $tester->getDisplay());
+        self::assertSame('attention', $occurrence->getStatus());
+        self::assertStringContainsString('dix minutes', $occurrence->getIssue());
+        self::assertSame('paused', $recurrence->getStatus());
+        self::assertSame($wakeUps, (int) $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'story_writing'"), 'Recovery must pause before considering another wake-up.');
+        self::assertFalse($this->service()->inspectWriting($occurrence->getId()));
+        $this->service()->produce($message);
+        self::assertSame(1, $this->em->getRepository(AiEpisode::class)->count([]));
+        self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
+    }
+
+    public function testReauthorizationSkipsAnOccurrenceAlreadyCreatedForTheSameSlot(): void
+    {
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        $message = $this->message($recurrence);
+        $this->due();
+        $this->service()->produce($message);
+        $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence]);
+        $firstSlot = $occurrence->getScheduledAt();
+        $this->service()->activate($this->series, $this->data());
+        self::assertGreaterThan($firstSlot, $recurrence->getNextAt());
+        $this->service()->produce($message);
+        self::assertSame(1, $this->em->getRepository(SeriesOccurrence::class)->count(['recurrence' => $recurrence]));
+        self::assertSame(2, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
+    }
+
+    public function testSixMinuteWritingIsNotInterruptedAndItsWatchIsQueuedInTheBackground(): void
+    {
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        $message = $this->message($recurrence);
+        $this->due();
+        $this->duringWriting = function () use ($recurrence): void {
+            $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence]);
+            self::assertSame(1, (int) $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'background'"));
+            $this->clock->modify('+6 minutes');
+            self::assertFalse($this->service()->inspectWriting($occurrence->getId()));
+            self::assertSame('writing', $occurrence->getStatus());
+            self::assertSame('active', $recurrence->getStatus());
+        };
+        $this->service()->produce($message);
+        $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence]);
+        self::assertSame('production', $occurrence->getStatus());
+        self::assertFalse($this->service()->inspectWriting($occurrence->getId()));
+        self::assertSame(2, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
+    }
+
+    public function testAnOldWritingWatchCannotPauseANewerAuthorization(): void
+    {
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        $this->due();
+        $occurrence = $this->interruptedOccurrence($recurrence);
+        $oldRevision = $occurrence->getAuthorizationRevision();
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        self::assertNotSame($oldRevision, $recurrence->getRevision());
+        $next = $recurrence->getNextAt();
+        self::assertTrue($this->service()->inspectWriting($occurrence->getId()));
+        self::assertSame('attention', $occurrence->getStatus());
+        self::assertSame('active', $recurrence->getStatus());
+        self::assertEquals($next, $recurrence->getNextAt());
+        self::assertSame(0, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
+    }
+
+    public function testManualTakeoverDuringWritingCannotBeOverwrittenByItsLateResult(): void
+    {
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        $message = $this->message($recurrence);
+        $this->due();
+        $this->duringWriting = function () use ($recurrence): void {
+            $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence]);
+            static::getContainer()->get(\App\Service\SeriesGenerationConsent::class)->manual($occurrence->getEpisode(), static fn () => null);
+        };
+        $this->service()->produce($message);
+        $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence]);
+        self::assertFalse($occurrence->isAutomatic());
+        self::assertSame('manual', $occurrence->getStatus());
+        self::assertNull($occurrence->getIssue());
+        self::assertNull($occurrence->getEpisode()->getFlowState());
+        self::assertFalse($this->service()->inspectWriting($occurrence->getId()));
+        self::assertSame('active', $recurrence->getStatus());
+        self::assertSame(0, $recurrence->getReservedCents());
+        self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, $this->paidCalls);
+    }
+
     public function testQualityWarningPreservesAnEditableDraftAndPausesBeforeAnyPaidRequest(): void
     {
         $r = $this->service()->activate($this->series, $this->data());

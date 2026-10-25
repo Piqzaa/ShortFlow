@@ -117,6 +117,10 @@ class SeriesOccurrence
     public function manageManually(): void
     {
         $this->automatic = false;
+        if (in_array($this->status, ['writing', 'attention'], true)) {
+            $this->status = 'manual';
+            $this->issue = null;
+        }
     }
 
     public function story(string $summary): void

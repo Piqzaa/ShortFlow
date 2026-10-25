@@ -6,6 +6,7 @@ use App\Entity\AiEpisode;
 use App\Entity\AiSeries;
 use App\Entity\SeriesOccurrence;
 use App\Entity\SeriesRecurrence;
+use App\Message\InspectSeriesWriting;
 use App\Message\PrepareSeriesEpisode;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,6 +16,8 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class SeriesRecurrences
 {
+    private const WRITING_TIMEOUT_SECONDS = 600;
+
     public function __construct(private EntityManagerInterface $em, private AiEpisodeFlow $flow, private AiCatalog $catalog, private AiKeys $keys, private AiReferenceStorage $references, private AiGenerations $generations, private LocalStoryWriter $writer, private WeeklySeriesTime $time, private ClockInterface $clock, private MessageBusInterface $bus)
     {
     }
@@ -87,6 +90,11 @@ final class SeriesRecurrences
                 throw new \RuntimeException('Pour prolonger l’action, configure un modèle image compatible et sa référence dans la série.');
             }
             $next = $this->time->next($data['weekday'], $data['hour'], $data['timezone'], $this->clock->now()->modify('+2 hours'));
+            if ($recurrence) {
+                while ($this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence, 'scheduledAt' => $next])) {
+                    $next = $this->time->next($data['weekday'], $data['hour'], $data['timezone'], $next);
+                }
+            }
             $recurrence ??= new SeriesRecurrence($series);
             $this->pauseEpisodes($recurrence);
             $settings = array_intersect_key($data, array_flip(['weekday', 'hour', 'timezone', 'networks', 'limit', 'tone', 'continuity'])) + $preview;
@@ -120,6 +128,59 @@ final class SeriesRecurrences
         }
         $delay = max(0, ($recurrence->getNextAt()->getTimestamp() - 86400 - $this->clock->now()->getTimestamp()) * 1000);
         $this->bus->dispatch(new PrepareSeriesEpisode((int) $recurrence->getId(), $recurrence->getRevision(), $recurrence->getNextAt()->format(DATE_ATOM)), $delay ? [new DelayStamp($delay)] : []);
+    }
+
+    public function inspectWriting(int $id): bool
+    {
+        $occurrence = $this->em->find(SeriesOccurrence::class, $id);
+        if (!$occurrence) {
+            return false;
+        }
+
+        return $this->em->getConnection()->transactional(function () use ($occurrence): bool {
+            $recurrence = $occurrence->getRecurrence();
+            $this->em->lock($recurrence->getSeries()->getOwner(), LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($occurrence, LockMode::PESSIMISTIC_WRITE);
+            if ('writing' !== $occurrence->getStatus()) {
+                return false;
+            }
+            if (!$occurrence->isAutomatic()) {
+                $occurrence->manageManually();
+                $this->em->flush();
+
+                return true;
+            }
+            $expiresAt = $occurrence->getCreatedAt()->modify('+'.self::WRITING_TIMEOUT_SECONDS.' seconds');
+            if ($expiresAt > $this->clock->now()) {
+                $delay = max(1000, ($expiresAt->getTimestamp() - $this->clock->now()->getTimestamp()) * 1000);
+                $this->bus->dispatch(new InspectSeriesWriting((int) $occurrence->getId()), [new DelayStamp($delay)]);
+
+                return false;
+            }
+            $issue = 'La rédaction a été interrompue ou a dépassé dix minutes. Ouvre l’épisode pour le préparer manuellement ; aucun appel vidéo n’a été relancé.';
+            $occurrence->fail($issue);
+            $this->em->refresh($recurrence, LockMode::PESSIMISTIC_WRITE);
+            if ($recurrence->getRevision() === $occurrence->getAuthorizationRevision()) {
+                $recurrence->pause($issue);
+                $this->pauseEpisodes($recurrence);
+            }
+            $this->em->flush();
+
+            return true;
+        });
+    }
+
+    public function recoverInterrupted(): int
+    {
+        $rows = $this->em->createQueryBuilder()->select('o.id')->from(SeriesOccurrence::class, 'o')->where('o.status = :status AND o.createdAt <= :before')->setParameter('status', 'writing')->setParameter('before', $this->clock->now()->modify('-'.self::WRITING_TIMEOUT_SECONDS.' seconds'))->getQuery()->getScalarResult();
+        $recovered = 0;
+        foreach ($rows as $row) {
+            if ($this->inspectWriting((int) $row['id'])) {
+                ++$recovered;
+            }
+        }
+
+        return $recovered;
     }
 
     public function produce(PrepareSeriesEpisode $message): void
@@ -167,6 +228,9 @@ final class SeriesRecurrences
             $recurrence->advanceSchedule($next);
             $this->em->persist($occurrence);
             $this->em->flush();
+            if ($episode) {
+                $this->bus->dispatch(new InspectSeriesWriting((int) $occurrence->getId()), [new DelayStamp(self::WRITING_TIMEOUT_SECONDS * 1000)]);
+            }
             $this->wake($recurrence);
 
             return $episode ? $occurrence : null;
@@ -191,6 +255,16 @@ final class SeriesRecurrences
                 $this->em->refresh($recurrence, LockMode::PESSIMISTIC_WRITE);
                 $this->em->refresh($series);
                 $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
+                $this->em->refresh($occurrence, LockMode::PESSIMISTIC_WRITE);
+                if (!$occurrence->isAutomatic()) {
+                    $occurrence->manageManually();
+                    $this->em->flush();
+
+                    return;
+                }
+                if ('writing' !== $occurrence->getStatus()) {
+                    return;
+                }
                 if ('paused' === $recurrence->getStatus() || $recurrence->getRevision() !== $message->revision || 1 !== $episode->getRevision() || $occurrence->getScheduledAt() <= $this->clock->now()->modify('+2 minutes')) {
                     throw new \RuntimeException('La préparation a été suspendue, modifiée ou son créneau est dépassé. Aucun lancement payant automatique.');
                 }
@@ -222,6 +296,12 @@ final class SeriesRecurrences
                 $this->em->lock($recurrence->getSeries()->getOwner(), LockMode::PESSIMISTIC_WRITE);
                 $this->em->refresh($recurrence, LockMode::PESSIMISTIC_WRITE);
                 $this->em->refresh($occurrence, LockMode::PESSIMISTIC_WRITE);
+                if (!$occurrence->isAutomatic()) {
+                    $occurrence->manageManually();
+                    $this->em->flush();
+
+                    return;
+                }
                 $issue = $failure instanceof StoryWritingException || $failure instanceof PublicationException || \RuntimeException::class === get_class($failure) ? $failure->getMessage() : 'La production a été interrompue. Ouvre l’épisode pour vérifier et reprendre manuellement.';
                 $occurrence->fail($issue);
                 if ($recurrence->getRevision() === $message->revision) {

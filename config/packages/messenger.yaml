@@ -49,6 +49,7 @@ framework:
                     use_notify: false
         routing:
             App\Message\PrepareSeriesEpisode: story_writing
+            App\Message\InspectSeriesWriting: background
             App\Message\WriteStoryProposal: story_writing
             App\Message\AdvanceAiEpisode: background
             App\Message\BuildEditWaveform: video_edits
