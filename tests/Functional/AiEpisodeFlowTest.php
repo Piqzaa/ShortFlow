@@ -612,4 +612,106 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSelectorCount(4, '.reference-review img');
         self::assertSame(0, $this->submissions);
     }
+
+    public function testSingleTakeMustUseOneNativeClipAndNeverChangesTheSelectedModel(): void
+    {
+        $episode = $this->planned(false, 10);
+        $url = '/studio/series/episodes/'.$episode->getId();
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->selectButton('Préparer un plan unique')->form());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(1, '[data-shot-editor-target="list"] [data-shot-editor-row] textarea');
+        self::assertSelectorExists('select[name="ai_idea[continuity]"] option[value="single"][selected]');
+        $crawler = $this->client->getCrawler();
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form());
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame('single', $this->fresh($episode)->getContinuity());
+        self::assertSame(1, $this->flow()->quote($episode)['count']);
+        self::assertSame('kling-25', $episode->getFlowRecipe()['model']);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testNativeExtensionUsesTheSourceVideoAndRecoversWithoutResubmitting(): void
+    {
+        $sourceFile = tempnam(sys_get_temp_dir(), 'synthetic-source-');
+        $this->files[] = $sourceFile;
+        copy(self::$clip, $sourceFile);
+        $video = static::getContainer()->get(\App\Service\VideoLibrary::class)->import($this->owner, new UploadedFile($sourceFile, 'source.mp4', null, null, true), 'Milo source');
+        $this->files[] = static::getContainer()->get(\App\Service\PrivateVideoStorage::class)->path($video->getStorageName());
+        $resultFile = tempnam(sys_get_temp_dir(), 'synthetic-extended-');
+        $this->files[] = $resultFile;
+        (new Process(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=purple:s=360x640:r=10', '-t', '15', '-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', '-f', 'mp4', $resultFile]))->mustRun();
+        $posts = 0;
+        $http = static::getContainer()->get('ai.http');
+        self::assertInstanceOf(MockHttpClient::class, $http);
+        $http->setResponseFactory(function (string $method, string $url, array $options) use (&$posts, $resultFile): MockResponse {
+            if ('POST' === $method) {
+                ++$posts;
+                self::assertSame('https://api.ltx.io/v2/extend', $url);
+                $body = json_decode($options['body'], true, 32, JSON_THROW_ON_ERROR);
+                self::assertStringStartsWith('data:video/mp4;base64,', $body['video_uri']);
+                self::assertSame('ltx-2-3-pro', $body['model']);
+                self::assertEquals(3, $body['context']);
+                self::assertArrayNotHasKey('image_uri', $body);
+
+                return new MockResponse('{"id":"synthetic-extension"}');
+            }
+            if ('https://api.ltx.io/v2/extend/synthetic-extension' === $url) {
+                return new MockResponse('{"status":"completed","result":{"video_url":"https://storage.googleapis.com/ltx-test/result.mp4"}}');
+            }
+            self::assertSame('https://storage.googleapis.com/ltx-test/result.mp4', $url);
+
+            return new MockResponse(file_get_contents($resultFile));
+        });
+        static::getContainer()->get(AiKeys::class)->save($this->owner, 'synthetic-ltx-key-never-real-1234567890', 'ltx');
+        $this->em()->flush();
+        $crawler = $this->client->request('GET', '/studio/videos/'.$video->getId().'/prolonger');
+        self::assertResponseIsSuccessful();
+        $this->client->submit($crawler->selectButton('Vérifier l’extension et son coût →')->form(['form[prompt]' => 'Milo continues walking.', 'form[seconds]' => 5, 'form[context]' => 3]));
+        self::assertResponseStatusCodeSame(303);
+        $job = $this->em()->getRepository(AiGeneration::class)->findOneBy(['model' => 'ltx-23-extend']);
+        self::assertNotNull($job);
+        self::assertSame(80, $job->getEstimatedCents());
+        self::assertSame(0, $posts);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.story-context', 'Contexte transmis et facturé : 3 s');
+        $owner = $this->em()->find(User::class, $this->owner->getId());
+        $job = $this->em()->find(AiGeneration::class, $job->getId());
+        $generations = static::getContainer()->get(AiGenerations::class);
+        $generations->confirm($owner, $job->getId(), $job->getReviewRevision());
+        $generations->process($job->getId());
+        self::assertSame(1, $posts);
+        $generations->process($job->getId());
+        $generations->process($job->getId());
+        $this->em()->refresh($job);
+        self::assertSame('available', $job->getStatus(), $job->getIssue() ?? '');
+        self::assertEqualsWithDelta(15, $job->getVideo()->getDuration(), 0.1);
+        self::assertSame(1, $posts);
+        $this->files[] = static::getContainer()->get(\App\Service\PrivateVideoStorage::class)->path($job->getVideo()->getStorageName());
+    }
+
+    public function testExtensionSourceIsPrivateAndAnUnsentPreparationCanBeAbandoned(): void
+    {
+        $file = tempnam(sys_get_temp_dir(), 'synthetic-extend-');
+        $this->files[] = $file;
+        copy(self::$clip, $file);
+        $source = static::getContainer()->get(\App\Service\VideoLibrary::class)->import($this->owner, new UploadedFile($file, 'source.mp4', null, null, true), 'Milo');
+        $this->files[] = static::getContainer()->get(\App\Service\PrivateVideoStorage::class)->path($source->getStorageName());
+        $job = static::getContainer()->get(\App\Service\NativeExtensions::class)->prepare($this->owner, $source, 5, 3, 'Milo continues.');
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', '/studio/videos/'.$source->getId().'/prolonger');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('POST', '/studio/ia/extensions/'.$job->getId().'/abandonner');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->owner);
+        $this->client->request('POST', '/studio/ia/extensions/'.$job->getId().'/abandonner');
+        self::assertResponseStatusCodeSame(403);
+        $crawler = $this->client->request('GET', '/studio/ia/generations/'.$job->getId());
+        $this->client->submit($crawler->selectButton('Abandonner avant envoi')->form());
+        self::assertResponseStatusCodeSame(303);
+        $job = $this->em()->find(AiGeneration::class, $job->getId());
+        self::assertSame('cancelled', $job->getStatus());
+        self::assertSame(0, $this->submissions);
+    }
 }

@@ -1,0 +1,9 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Prolonger une vidéo — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary" href="{{ path('app_video_show',{id:video.id}) }}">← {{ video.title }}</a>
+<div class="studio-heading"><div><span class="eyebrow">CONTINUER L’ACTION</span><h1>Prolonger cette vidéo</h1><p>LTX 2.3 Pro reçoit la vidéo et son mouvement, avec le contexte audio disponible.</p></div></div>
+<video class="ai-result-player" controls playsinline preload="metadata" src="{{ path('app_video_stream',{id:video.id}) }}" aria-label="Vidéo source"></video>
+<p class="library-note">Source : {{ video.duration|number_format(1,',',' ') }} s. Sortie 1080p, au même format 9:16 ou 16:9. MP4 H.264 de 11 Mo maximum ; les formats nécessitant un recadrage sont refusés. La continuité visuelle dépend du modèle.</p>
+{{ form_start(form,{attr:{class:'account-form'}}) }}{{ form_errors(form) }}{{ form_widget(form) }}<p>Tarif indicatif : 0,10 $ US par seconde ajoutée et par seconde de contexte, vérifié le 24/10/2026. Tu vérifieras le total avant toute confirmation.</p><button class="button" type="submit">Vérifier l’extension et son coût →</button>{{ form_end(form) }}
+{% endblock %}

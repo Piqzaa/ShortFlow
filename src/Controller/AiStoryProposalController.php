@@ -42,7 +42,7 @@ final class AiStoryProposalController extends AbstractController
             $target = $request->request->getInt('target');
             $continuity = $request->request->getString('continuity', 'independent');
             $tone = $request->request->getString('tone', 'auto');
-            if ('' === $idea || mb_strlen($idea) > 1500 || $target < 1 || $target > 60 || !in_array($continuity, ['independent', 'linked'], true) || !in_array($tone, ['auto', 'humour', 'aventure', 'calme'], true)) {
+            if ('' === $idea || mb_strlen($idea) > 1500 || $target < 1 || $target > 60 || !in_array($continuity, ['single', 'independent', 'linked'], true) || !in_array($tone, ['auto', 'humour', 'aventure', 'calme'], true)) {
                 throw new \InvalidArgumentException('Décris ton idée et choisis une durée entre 1 et 60 secondes.');
             }
             $durations = $flow->durations($request->request->getString('model'), $target);
@@ -55,6 +55,9 @@ final class AiStoryProposalController extends AbstractController
                 if (array_sum($durations) !== $target || array_diff($durations, $catalog->model($request->request->getString('model'))['seconds'])) {
                     throw new \InvalidArgumentException('Ajuste les durées des scènes pour respecter le modèle et le total souhaité.');
                 }
+            }
+            if ('single' === $continuity && (1 !== count($durations) || !in_array($target, $catalog->model($request->request->getString('model'))['seconds'], true))) {
+                throw new \InvalidArgumentException('Prépare un seul clip de durée native avant de demander un scénario en plan unique.');
             }
             if (!$limiter->create('story-'.$user->getId())->consume()->isAccepted()) {
                 return $this->json(['error' => 'Plusieurs scénarios ont déjà été demandés. Réessaie dans quelques minutes.'], 429, $headers);

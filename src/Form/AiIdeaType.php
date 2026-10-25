@@ -30,12 +30,15 @@ final class AiIdeaType extends AbstractType
             }
         }
         foreach (AiCatalog::MODELS as $id => $model) {
+            if (isset($model['operation'])) {
+                continue;
+            }
             $resolution = str_contains(strtolower($model['name']), strtolower($model['quality'])) ? '' : ' · '.('4k' === $model['quality'] ? '4K' : $model['quality']);
             $disconnected = isset($options['connected_providers'][$model['provider']]) && !$options['connected_providers'][$model['provider']];
             $choices[(in_array($id, $favoriteVariants, true) ? '★ ' : '').$model['name'].$resolution.' · '.AiCatalog::PROVIDERS[$model['provider']].($disconnected ? ' · à connecter' : '')] = $id;
         }
         $builder->add('target', IntegerType::class, ['label' => 'Durée finale souhaitée (secondes)', 'required' => false, 'constraints' => [new Assert\Range(min: 1, max: 60)], 'attr' => ['min' => 1, 'max' => 60]])
-            ->add('continuity', ChoiceType::class, ['label' => 'Comment enchaîner les clips ?', 'required' => true, 'placeholder' => false, 'empty_data' => 'independent', 'choices' => ['Plusieurs scènes' => 'independent', 'Raccord depuis la dernière image · génération séparée' => 'linked']])
+            ->add('continuity', ChoiceType::class, ['label' => 'Comment filmer cette vidéo ?', 'required' => true, 'placeholder' => false, 'empty_data' => 'independent', 'choices' => ['Plan unique · un seul appel' => 'single', 'Plusieurs scènes' => 'independent', 'Raccord depuis la dernière image · génération séparée' => 'linked']])
             ->add('mute', CheckboxType::class, ['label' => 'Couper le son des plans au montage', 'required' => false])
             ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])
             ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations()], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);

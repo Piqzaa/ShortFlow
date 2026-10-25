@@ -8,7 +8,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class LtxVideoApi
 {
-    public function __construct(#[Autowire(service: 'ai.http')] private HttpClientInterface $http, private AiCatalog $catalog, private AiReferenceStorage $references)
+    public function __construct(#[Autowire(service: 'ai.http')] private HttpClientInterface $http, private AiCatalog $catalog, private AiReferenceStorage $references, private ?NativeExtensions $extensions = null)
     {
     }
 
@@ -33,6 +33,10 @@ final class LtxVideoApi
                 $input['last_frame_uri'] = $this->references->dataUri($job->getOwner(), $job->getEndReferenceImage(), $job->getRatio(), $job->getImageFit());
             }
         }
+        if ('extend' === ($model['operation'] ?? null)) {
+            $path = 'extend';
+            $input = ($this->extensions ?? throw new \LogicException('Extension indisponible.'))->input($job);
+        }
         $data = $this->http->request('POST', 'https://api.ltx.io/v2/'.$path, [...$this->options($key), 'json' => $input])->toArray();
         $id = $data['id'] ?? null;
         if (!is_string($id) || !preg_match('/^[a-zA-Z0-9_-]{1,100}$/D', $id)) {
@@ -49,7 +53,9 @@ final class LtxVideoApi
         if (!preg_match('/^[a-zA-Z0-9_-]{1,100}$/D', $id)) {
             throw new \RuntimeException('Référence LTX invalide.');
         }
-        $data = $this->http->request('GET', 'https://api.ltx.io/v2/'.(($this->catalog->model($job->getModel())['image'] ?? false) ? 'image-to-video' : 'text-to-video').'/'.$id, $this->options($key))->toArray();
+        $model = $this->catalog->model($job->getModel());
+        $path = 'extend' === ($model['operation'] ?? null) ? 'extend' : (($model['image'] ?? false) ? 'image-to-video' : 'text-to-video');
+        $data = $this->http->request('GET', 'https://api.ltx.io/v2/'.$path.'/'.$id, $this->options($key))->toArray();
         if (in_array($data['status'] ?? '', ['pending', 'processing'], true)) {
             return ['ready' => false, 'stage' => 'pending' === $data['status'] ? 'queued' : 'running'];
         }

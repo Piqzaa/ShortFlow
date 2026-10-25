@@ -26,15 +26,16 @@ export default class extends Controller {
   refresh() {
     const model = this.model;
     const reference = this.element.querySelector('[data-creation-target="reference"]').value;
-    const possible = Boolean(model?.image && reference && !model.subjectReference && !model.requiresEnd);
+    const firstFrame = this.editor?.rows()[0]?.querySelector('[name$="[startReference]"]')?.value;
+    const possible = Boolean(model?.image && (reference || firstFrame) && !model.subjectReference && !model.requiresEnd);
     const single = !this.editor || this.editor.rows().length <= 1;
-    this.continuityPanelTarget.hidden = single;
+    this.continuityPanelTarget.hidden = false;
     this.singleTarget.hidden = !single;
     this.singleTarget.textContent = this.editor?.rows().length === 1 ? 'Un seul clip : aucun enchaînement à régler.' : 'Le découpage sera proposé avec ton modèle.';
     this.fixContinuityTarget.hidden = single || possible || this.continuityTarget.value !== 'linked';
-    if (single) this.continuityTarget.value = 'independent';
     this.continuityTarget.querySelector('[value="linked"]').disabled = false;
     this.continuityHelpTarget.textContent = this.continuityTarget.value === 'linked' ? (possible ? 'Chaque clip repart de la dernière image du précédent. Cela aide les raccords, sans garantir un plan continu ni un personnage identique.' : 'Le raccord depuis une image exige un premier cadre et un modèle compatible. Il ne transmet ni le mouvement ni le son du clip précédent.') : 'Clips indépendants, assemblés avec des coupes visibles. Sans référence visuelle commune, le personnage peut changer entre les scènes. Pour prolonger une action, choisis un modèle image compatible et une référence.';
+    if (this.continuityTarget.value === 'single') this.continuityHelpTarget.textContent = single ? 'Une prise continue demandée en un seul appel. Le modèle peut introduire une coupe ; aucun raccord entre générations.' : 'Choisis « Préparer un plan unique » avec une durée native, ou conserve tes plans en choisissant plusieurs scènes.';
     if (!model || !this.editor) return;
     this.editor.modelValue = model;
     for (const row of this.editor.rows()) for (const option of row.querySelector('select').options) {

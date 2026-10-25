@@ -36,6 +36,9 @@ final class AiEpisodeFlow
     public function prepare(User $owner, array $data, ?AiEpisode $episode = null): AiEpisode
     {
         $model = $this->catalog->model($data['model']);
+        if (isset($model['operation'])) {
+            throw new \RuntimeException('Une extension native se prépare depuis une vidéo existante de la bibliothèque.');
+        }
         if ('auto' === $data['ratio']) {
             throw new \RuntimeException('Choisis un format final explicite : vertical 9:16, paysage 16:9 ou carré 1:1. Le format original de l’image ne garantit pas celui du montage.');
         }
@@ -73,7 +76,13 @@ final class AiEpisodeFlow
                 $this->references->path($owner, $name);
             }
         }
-        $continuity = 1 === count($rows) ? 'independent' : ($data['continuity'] ?: 'independent');
+        $continuity = $data['continuity'] ?: 'independent';
+        if (!in_array($continuity, ['single', 'independent', 'linked'], true) || ('single' === $continuity && 1 !== count($rows))) {
+            throw new \RuntimeException('Le plan unique exige un seul clip de durée native. Utilise « Préparer un plan unique » ou choisis plusieurs scènes.');
+        }
+        if (1 === count($rows) && 'single' !== $continuity) {
+            $continuity = 'independent';
+        }
         if ('linked' === $continuity && (!$image || ($model['subjectReference'] ?? false) || ($model['requiresEnd'] ?? false))) {
             throw new \RuntimeException('Pour les raccords, choisis ici un modèle image compatible et ajoute sa référence. Tes scènes restent conservées.');
         }
@@ -491,6 +500,10 @@ final class AiEpisodeFlow
 
     private function prompt(AiEpisode $episode, AiShot $shot): string
     {
+        if ('single' === $episode->getContinuity()) {
+            return 'ONE CONTINUOUS TAKE — '.$shot->getSeconds()." seconds. No cuts, no montage, no scene change. Complete one simple action smoothly within this shot:\n".$shot->getPrompt()."\nVisual identity and style only:\n".$episode->getPrompt();
+        }
+
         return 'SHOT TO GENERATE — perform only this scene within '.$shot->getSeconds()." seconds, with a clear ending before the cut:\n".$shot->getPrompt()
             ."\n\nSHARED CONTEXT — use only for visual identity and style. Do not replay the full story or actions from other scenes:\n".$episode->getPrompt();
     }

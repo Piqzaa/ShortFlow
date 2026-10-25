@@ -65,7 +65,7 @@ final class AiStudioController extends AbstractController
         $connected['fal-api'] = null !== $keys->connection($user, 'fal');
         $connected['fal-mcp'] = null !== $falOAuth->connection($user);
         $connecting = $request->isMethod('POST') && 'connect' === $request->request->getString('intent');
-        $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => in_array($request->request->getString('intent'), ['compose', 'replan'], true) || $request->request->has('plan_action'), 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea'])->handleRequest($request);
+        $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => in_array($request->request->getString('intent'), ['compose', 'replan', 'single'], true) || $request->request->has('plan_action'), 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea'])->handleRequest($request);
         $referenceUrl = $endReferenceUrl = null;
         foreach (['reference', 'endReference'] as $field) {
             $reference = $form->get($field)->getData();
@@ -98,7 +98,7 @@ final class AiStudioController extends AbstractController
                 }
 
                 return $this->redirectToRoute('app_ai_keys', ['next' => 'idea', 'provider' => $catalog->model($data['model'])['provider']], 303);
-            } elseif (in_array($request->request->getString('intent'), ['compose', 'replan'], true) || $request->request->has('plan_action')) {
+            } elseif (in_array($request->request->getString('intent'), ['compose', 'replan', 'single'], true) || $request->request->has('plan_action')) {
                 try {
                     if ($request->request->has('plan_action')) {
                         $rows = array_values($data['shots']);
@@ -120,8 +120,15 @@ final class AiStudioController extends AbstractController
 
                         return $this->redirectToRoute('app_series_episode', ['id' => $saved->getId()], 303);
                     }
-                    if ('replan' === $request->request->getString('intent')) {
-                        $durations = $flow->durations($data['model'], (int) $data['target']);
+                    if (in_array($request->request->getString('intent'), ['replan', 'single'], true)) {
+                        $single = 'single' === $request->request->getString('intent');
+                        if ($single && !in_array((int) $data['target'], $catalog->model($data['model'])['seconds'], true)) {
+                            throw new \RuntimeException('Ce modèle ne produit pas un seul clip de cette durée. Choisis une durée native ou plusieurs scènes ; aucun modèle ne sera remplacé.');
+                        }
+                        $durations = $single ? [(int) $data['target']] : $flow->durations($data['model'], (int) $data['target']);
+                        if ($single) {
+                            $data['continuity'] = 'single';
+                        }
                         $old = array_values($data['shots']);
                         if (count($old) !== count($durations) && array_filter($old, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']))) {
                             throw new \RuntimeException('Déplace ou retire les cadres des plans avant de changer automatiquement leur nombre. Tes scènes et images restent conservées.');
@@ -388,7 +395,7 @@ final class AiStudioController extends AbstractController
                 if ('retry' === $request->request->getString('intent')) {
                     $generations->retry($user, $id, '1' === $request->request->getString('confirm'));
                 } elseif ('1' === $request->request->getString('confirm')) {
-                    $generations->confirm($user, $id, $episode ? $request->request->getString('idea_revision') : null);
+                    $generations->confirm($user, $id, $episode || 'ltx-23-extend' === $job->getModel() ? $request->request->getString('idea_revision') : null);
                 } else {
                     throw new \RuntimeException('Confirme le coût fournisseur avant de lancer.');
                 }
@@ -436,6 +443,9 @@ final class AiStudioController extends AbstractController
         $job = $generations->owned($id, $user) ?? throw $this->createNotFoundException();
         if (!$this->isCsrfTokenValid('ai_reuse_'.$id, $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
+        }
+        if ($extension = $job->getInputSettings()['extension'] ?? null) {
+            return $this->redirectToRoute('app_ai_extend', ['id' => $extension['sourceId']], 303);
         }
         $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
         $request->getSession()->set('ai_idea', ['title' => $job->getTitle(), 'prompt' => $job->getPrompt(), 'model' => $job->getModel(), 'seconds' => $job->getSeconds(), 'ratio' => $job->getRatio(), 'accessMode' => $job->getAccessMode(), 'source' => (new AiCatalog())->referenceMode($job->getModel()), 'reference' => $job->getReferenceImage(), 'endReference' => $job->getEndReferenceImage(), 'useEnd' => null !== $job->getEndReferenceImage(), 'imageFit' => $job->getImageFit()]);

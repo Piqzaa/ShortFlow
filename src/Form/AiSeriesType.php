@@ -24,6 +24,9 @@ final class AiSeriesType extends AbstractType
     {
         $models = [];
         foreach (AiCatalog::MODELS as $id => $model) {
+            if (isset($model['operation'])) {
+                continue;
+            }
             $resolution = str_contains(strtolower($model['name']), strtolower($model['quality'])) ? '' : ' · '.('4k' === $model['quality'] ? '4K' : $model['quality']);
             $models[AiCatalog::PROVIDERS[$model['provider']]][$model['name'].$resolution] = $id;
         }

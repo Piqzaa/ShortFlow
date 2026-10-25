@@ -27,6 +27,12 @@ final class VideoLibrary
             throw new VideoLibraryException('Choisis une vidéo valide de 100 Mo maximum.');
         }
         $info = $this->probe->inspect($file);
+        if ($completingGeneration && ($extension = $completingGeneration->getInputSettings()['extension'] ?? null)) {
+            $expected = $extension['inputSeconds'] + $completingGeneration->getSeconds();
+            if (abs($info['duration'] - $expected) > 0.6 || !$info['height'] || abs($info['width'] / $info['height'] - ('9:16' === $completingGeneration->getRatio() ? 9 / 16 : 16 / 9)) > 0.03) {
+                throw new VideoLibraryException('Le résultat de l’extension ne correspond pas à la durée complète ou au format confirmés.');
+            }
+        }
         $name = bin2hex(random_bytes(24)).'.'.$info['extension'];
         $title = trim($title ?? '');
         if ('' === $title) {
@@ -98,6 +104,10 @@ final class VideoLibrary
                         throw new VideoLibraryException('Sélection indisponible.');
                     }
                     $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
+                    $extensionUse = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM ai_generation WHERE owner_id = ? AND input_settings->'extension'->>'sourceId' = ? AND status IN ('prepared', 'queued', 'submitting', 'processing', 'waiting_key', 'review')", [$owner->getId(), (string) $video->getId()]);
+                    if ($extensionUse) {
+                        throw new VideoLibraryException('Cette vidéo est la source d’une extension préparée ou en cours. Retire sa préparation avant de supprimer la source. Aucune vidéo supprimée.');
+                    }
                     $episodeUse = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM ai_shot s JOIN ai_episode e ON e.id = s.episode_id JOIN ai_generation g ON g.id = s.generation_id WHERE g.video_id = ? AND e.flow_state IN ('running', 'assembling', 'paused')", [$video->getId()]);
                     if ($episodeUse) {
                         throw new VideoLibraryException('Ce clip est utilisé par un épisode en cours ou suspendu. Termine cet épisode avant de le retirer. Aucune vidéo supprimée.');

@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'ai_generation')]
 class AiGeneration
 {
-    public const LABELS = ['prepared' => 'À confirmer', 'queued' => 'En attente', 'submitting' => 'Demande en cours', 'processing' => 'Génération en cours', 'waiting_key' => 'Connexion à vérifier', 'review' => 'À vérifier', 'available' => 'Vidéo prête'];
+    public const LABELS = ['prepared' => 'À confirmer', 'cancelled' => 'Abandonnée avant envoi', 'queued' => 'En attente', 'submitting' => 'Demande en cours', 'processing' => 'Génération en cours', 'waiting_key' => 'Connexion à vérifier', 'review' => 'À vérifier', 'available' => 'Vidéo prête'];
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -49,14 +49,23 @@ class AiGeneration
     private ?string $endReferenceImage = null;
     #[ORM\Column(length: 8, options: ['default' => 'crop'])]
     private string $imageFit = 'crop';
-    /** @var array{contract?:string,subjects?:list<string>} */
+    /** @var array{contract?:string,subjects?:list<string>,extension?:array<string,mixed>} */
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $inputSettings = [];
 
-    /** @return array{contract?:string,subjects?:list<string>} */
+    /** @return array{contract?:string,subjects?:list<string>,extension?:array<string,mixed>} */
     public function getInputSettings(): array
     {
         return $this->inputSettings;
+    }
+
+    /** @param array<string,mixed> $source */
+    public function attachExtension(array $source): void
+    {
+        if ('prepared' !== $this->status || 'ltx-23-extend' !== $this->model) {
+            throw new \LogicException('Extension indisponible.');
+        }
+        $this->inputSettings['extension'] = $source;
     }
 
     /** @param list<string> $subjects */

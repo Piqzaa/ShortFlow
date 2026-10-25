@@ -8,6 +8,7 @@ final class AiCatalog
     public const PROVIDERS = ['fal' => 'Fal', 'replicate' => 'Replicate', 'ltx' => 'LTX'];
     // IDs are durable execution choices: never rebind one to another provider/schema.
     public const MODELS = [
+        'ltx-23-extend' => ['name' => 'LTX 2.3 Pro · Extension vidéo', 'maker' => 'Lightricks', 'provider' => 'ltx', 'description' => 'Prolonge une vidéo existante avec son mouvement et son contexte audio.', 'endpoint' => 'ltx-2-3-pro', 'operation' => 'extend', 'rateMicros' => 100000, 'audio' => true, 'seconds' => [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], 'ratios' => ['9:16', '16:9'], 'quality' => '1080p', 'checked' => '2026-10-24'],
         'vidu-q1-subject' => ['name' => 'Vidu Q1 · Référence de personnage', 'maker' => 'Vidu', 'provider' => 'fal', 'description' => 'Guide l’apparence du personnage sans imposer une image de début ou de fin. Scènes indépendantes, identité non garantie.', 'endpoint' => 'fal-ai/vidu/q1/reference-to-video', 'rateMicros' => 80000, 'audio' => false, 'seconds' => [5], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'subjectReference' => true, 'subjectLimit' => 7, 'durationType' => 'none', 'checked' => '2026-10-24', 'input' => ['bgm' => false, 'movement_amplitude' => 'auto']],
         'kling-25' => ['name' => 'Kling 2.5 Turbo Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Mouvements et plans cinématiques.', 'endpoint' => 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video', 'rateMicros' => 70000, 'audio' => false, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
         'wan-25' => ['name' => 'Wan 2.5', 'maker' => 'Alibaba', 'provider' => 'fal', 'description' => 'Scènes créatives avec audio généré.', 'endpoint' => 'fal-ai/wan-25-preview/text-to-video', 'rateMicros' => 100000, 'audio' => true, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '720p'],
@@ -65,7 +66,7 @@ final class AiCatalog
         'veo-image-replicate-1080p' => ['name' => 'Veo 3.1 Fast · Image · 1080p', 'maker' => 'Google', 'provider' => 'replicate', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'google/veo-3.1-fast', 'rateMicros' => 150000, 'audio' => true, 'seconds' => [4, 6, 8], 'ratios' => ['9:16', '16:9'], 'quality' => '1080p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20', 'imageField' => 'image', 'endImageField' => 'last_frame', 'input' => ['resolution' => '1080p', 'generate_audio' => true]],
     ];
 
-    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,subjectReference?:bool,subjectLimit?:int,retireOn?:string,checked?:string,imageField?:string,endImageField?:string,requiresEnd?:bool,omitSafety?:bool,fixedMicros?:int} */
+    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,subjectReference?:bool,subjectLimit?:int,retireOn?:string,checked?:string,imageField?:string,endImageField?:string,requiresEnd?:bool,omitSafety?:bool,fixedMicros?:int,operation?:string} */
     public function model(string $id): array
     {
         return self::MODELS[$id] ?? throw new \InvalidArgumentException('Choisis un modèle disponible.');
@@ -170,6 +171,9 @@ final class AiCatalog
         $groups = [];
         $keys = [];
         foreach (self::MODELS as $id => $model) {
+            if (isset($model['operation'])) {
+                continue;
+            }
             $key = $model['provider'].'/'.$model['endpoint'].'/'.(($model['image'] ?? false) ? 'image' : 'text');
             $first = $keys[$key] ??= $id;
             $groups[$first] ??= ['name' => preg_replace('/ · (720p|1080p|4K)$/i', '', $model['name']), 'variants' => []];
