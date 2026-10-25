@@ -193,6 +193,23 @@ final class AiStudioTest extends WebTestCase
         self::assertSame(0, $this->submissions);
     }
 
+    public function testLegacyPlansKeepNamedSubjectReferencesWithoutSubmitting(): void
+    {
+        $name = $this->imageUpload();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $this->legacyForm($crawler, ['ai_idea[source]' => 'image', 'ai_idea[reference]' => $name, 'ai_idea[model]' => 'kling-3-image', 'ai_idea[prompt]' => 'Milo enters the room.', 'ai_idea[seconds]' => 5, 'ai_idea[ratio]' => '9:16'])->getPhpValues();
+        $values['intent'] = 'plans';
+        $values['ai_idea']['subjects'] = [$name];
+        $values['ai_idea']['subjectDetails'] = [['reference' => $name, 'name' => 'Milo', 'role' => 'character', 'presence' => 'enters', 'views' => []]];
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(303);
+        $episode = $this->em()->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner]);
+        self::assertNotNull($episode);
+        self::assertSame([$name], $episode->getPreparationRecipe()['subjects']);
+        self::assertSame('Milo', $episode->getPreparationRecipe()['subjectDetails'][0]['name']);
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testImageWorkerUsesOnlyTheConfirmedOwnedImageAndNeverSubmitsTwice(): void
     {
         $name = $this->imageUpload();

@@ -25,7 +25,7 @@ class AiSeries
     #[ORM\Column(type: 'text')]
     private string $characters;
 
-    /** @var array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} */
+    /** @var array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} */
     #[ORM\Column(type: 'json')]
     private array $recipe;
     /** @var array<string,string> */
@@ -51,7 +51,7 @@ class AiSeries
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
-    /** @param array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} $recipe */
+    /** @param array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} $recipe */
     public function __construct(User $owner, string $name, string $theme, string $style, string $characters, array $recipe)
     {
         $this->owner = $owner;
@@ -103,13 +103,13 @@ class AiSeries
         return $this->createdAt;
     }
 
-    /** @return array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} */
+    /** @return array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} */
     public function getRecipe(): array
     {
         return $this->recipe;
     }
 
-    /** @param array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} $recipe */
+    /** @param array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} $recipe */
     public function configure(string $name, string $theme, string $style, string $characters, array $recipe): void
     {
         $this->name = $name;

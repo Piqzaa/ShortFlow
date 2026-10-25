@@ -126,8 +126,19 @@ final class AiSeriesStudio
                 }
                 unset($detail);
             }
+            $removedReferences = array_values(array_diff($data['removeSubjects'] ?? [], ($model['subjectReference'] ?? false) && $image ? [$image] : []));
+            if (($data['removeImage'] ?? false) && !$image) {
+                $removedReferences[] = 'primary';
+                if (isset($previous['reference']) && !in_array($previous['reference'], $subjects, true)) {
+                    $removedReferences[] = $previous['reference'];
+                }
+            }
+            $details = array_values(array_filter($details, static fn (array $detail): bool => !in_array($detail['reference'] ?? '', $removedReferences, true)));
             $details = $inputs->subjectDetails($owner, $data['model'], $subjects, $details, ($model['subjectReference'] ?? false) ? $image : null, false);
             $recipe = ['totalSeconds' => $data['totalSeconds'] ?? 30, 'model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit'], 'subjects' => $subjects, 'subjectDetails' => $details];
+            if (isset($previous['montage'])) {
+                $recipe['montage'] = SeriesMontage::normalize($previous['montage']);
+            }
             if ($series) {
                 $series->configure(trim($data['name']), trim($data['theme']), trim($data['style'] ?? ''), trim($data['characters'] ?? ''), $recipe);
             } else {
@@ -265,7 +276,7 @@ final class AiSeriesStudio
                     OR clip.status IN ('queued','submitting','processing')
                     OR edit.status IN ('queued','rendering','transcribing')
                     OR EXISTS (SELECT 1 FROM series_occurrence o WHERE o.episode_id = e.id AND o.status = 'writing')
-                    OR EXISTS (SELECT 1 FROM story_proposal p WHERE p.scope = e.id AND p.owner_id = :owner AND p.status IN ('queued','story','shots'))
+                    OR EXISTS (SELECT 1 FROM story_proposal p WHERE p.scope = e.id AND p.owner_id = :owner AND p.kind = 'story' AND p.status IN ('queued','story','shots'))
                 )", ['series' => $series->getId(), 'owner' => $owner->getId()]);
             if ((int) $busy > 0) {
                 throw new \RuntimeException('Un épisode est encore en rédaction, génération ou assemblage. Attends sa fin ou arrête les étapes restantes avant de supprimer la série.');

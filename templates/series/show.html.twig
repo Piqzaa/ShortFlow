@@ -2,6 +2,7 @@
 {% block title %}{{ series.name }} — Mes séries{% endblock %}
 {% block studio_content %}
 <a class="account-secondary composer-back" href="{{ path('app_series') }}">← Mes séries</a>
+<div class="series-actions"><a class="account-secondary" href="{{ path('app_series_editorial',{id:series.id}) }}">Voix et hashtags de la série ↗</a><a class="account-secondary" href="{{ path('app_series_montage',{id:series.id}) }}">Profil de montage ↗</a></div>
 <div class="workspace-heading"><div><span class="eyebrow">STUDIO DE SÉRIES</span><h1>{{ series.name }}</h1><p>{{ series.theme }}</p></div><div class="workspace-heading-actions"><a class="account-secondary" href="{{ path('app_series_edit',{id:series.id}) }}">Configurer la série ↗</a><a class="account-secondary" href="{{ path('app_series_delete',{id:series.id}) }}">Supprimer la série…</a></div></div>
 <div class="series-overview"><span><small>MODÈLE COMMUN</small><strong>{{ model.name }} · {{ provider }}</strong></span><span><small>ÉPISODES</small><strong>{{ episodes|length }} épisode{{ episodes|length > 1 ? 's' : '' }}</strong></span><span><small>GÉNÉRATION</small><strong>BYOK · {{ series.recipe.totalSeconds|default(30) }} s finales · {{ series.recipe.ratio }}</strong></span></div>
 <p class="library-note series-intro">Prépare un épisode à ton rythme ou active la récurrence supervisée. Chaque vidéo attend ta validation avant publication.</p>

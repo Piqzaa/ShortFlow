@@ -109,7 +109,8 @@ final class AiEpisodeFlow
                 $this->em->refresh($episode->getSeries());
             }
             $recipe['visualContext'] = $episode->isStandalone() ? trim($data['prompt']) : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle();
-            $episode->configurePreparation($recipe, $data['prompt'], $continuity, (bool) $data['mute']);
+            $recipe['montage'] = SeriesMontage::normalize($data['montage'] ?? $episode->getFlowRecipe()['montage'] ?? ($episode->isStandalone() ? [] : ($episode->getSeries()->getRecipe()['montage'] ?? [])));
+            $episode->configurePreparation($recipe, $data['prompt'], $continuity, (bool) $data['mute'] || 0 === $recipe['montage']['sourceVolume']);
             $this->em->flush();
             $this->save($episode, $episode->getRevision(), $title, $rows);
 
@@ -318,6 +319,7 @@ final class AiEpisodeFlow
                 $account = json_decode($this->keys->plain($episode->getOwner(), $this->catalog->model($recipe['model'])['provider'], 'mcp'), true, 32, JSON_THROW_ON_ERROR)['account_id'];
             }
             $tariff = $this->tariff($episode);
+            $confirmedShots = $this->shots($episode);
             if ($redo) {
                 $shot = $this->em->find(AiShot::class, $redo);
                 $anchor = 'linked' === $episode->getContinuity() && isset($this->catalog->model($recipe['model'])['endImageField']) ? $this->frames->lastFrame($shot->getGeneration()->getVideo()) : null;
@@ -327,7 +329,7 @@ final class AiEpisodeFlow
             if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 3) {
                 $episode->freezeVisualContext($this->visualContext($episode));
             }
-            foreach ($this->shots($episode) as $confirmedShot) {
+            foreach ($confirmedShots as $confirmedShot) {
                 foreach ($quote['references'] as $reference) {
                     if ($confirmedShot->getPosition() === $reference['position']) {
                         $confirmedShot->confirmPrompt($reference['prompt']);

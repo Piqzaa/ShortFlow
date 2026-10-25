@@ -251,7 +251,8 @@ final class VideoEdits
                     $format = $first->getWidth() === $first->getHeight() ? '1:1' : ($first->getWidth() > $first->getHeight() ? '16:9' : '9:16');
                 }
                 $project->revise($episode->getTitle(), $format, $clips);
-                $project->configure(array_replace($project->getSettings(), ['sourceVolume' => $episode->isMutePlans() ? 0 : 100]));
+                $montage = SeriesMontage::normalize($episode->getFlowRecipe()['montage'] ?? []);
+                $project->configure(array_replace($project->getSettings(), $montage, ['sourceVolume' => $episode->isMutePlans() ? 0 : $montage['sourceVolume']]));
                 $this->em->persist($project);
                 $episode->assembleWith($project);
                 $this->em->flush();

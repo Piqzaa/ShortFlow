@@ -169,6 +169,8 @@ final class AiStudioController extends AbstractController
                 }
                 if ('plans' === $request->request->getString('intent')) {
                     $recipe = ['model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($catalog->model($data['model'])['image'] ?? false) ? $data['reference'] : null, 'endReference' => ($data['useEnd'] ?? false) ? $data['endReference'] : null, 'imageFit' => $data['imageFit'] ?? 'crop'];
+                    $recipe['subjects'] = $data['subjects'] ?? [];
+                    $recipe['subjectDetails'] = (new \App\Service\AiPlanInputs($catalog, $references))->subjectDetails($user, $data['model'], $recipe['subjects'], $data['subjectDetails'] ?? [], ($catalog->model($data['model'])['subjectReference'] ?? false) ? $data['reference'] : null, false);
                     $fingerprint = hash('sha256', serialize([$title, trim($data['prompt']), $recipe]));
                     $previous = $request->getSession()->get('ai_plan_preparation', []);
                     $project = null;

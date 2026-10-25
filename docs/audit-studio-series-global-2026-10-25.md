@@ -1,5 +1,7 @@
 # Audit global Studio, Séries et génération IA — 25 octobre 2026
 
+Ce rapport décrit l’état initial au commit `b54189e`. Les corrections autorisées ensuite et leurs vérifications sont suivies dans [la suite de l’audit](suite-audit-studio-series.md) ; les constats ci-dessous restent conservés comme référence historique.
+
 ## Verdict
 
 Le socle est exploitable et l’identité graphique est cohérente. Il reste des incohérences importantes : le contexte d’un épisode confirmé n’est pas complètement figé, deux contrôles peuvent se contredire sur les cadres, les capacités ne sont pas représentées de façon identique dans Studio et Séries, et la préparation éditoriale des publications est encore minimale. Les quatre lots précédents ont amélioré ces parcours ; ils n’ont pas démontré que toute la chaîne est parfaite.

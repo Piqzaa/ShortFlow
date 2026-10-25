@@ -458,6 +458,55 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame(0, $this->submissions);
     }
 
+    public function testSeriesMontageIsFrozenAndAppliedByTheExistingAssembler(): void
+    {
+        $episode = $this->episode();
+        $series = $episode->getSeries();
+        $recipe = $series->getRecipe();
+        $recipe['montage'] = ['sourceVolume' => 25, 'intro' => true, 'fit' => 'cover'];
+        $series->configure($series->getName(), $series->getTheme(), $series->getStyle(), $series->getCharacters(), $recipe);
+        $this->em()->flush();
+        $this->flow()->prepare($this->owner, ['model' => 'kling-25', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop', 'prompt' => 'Milo explores.', 'title' => 'Milo title', 'target' => 10, 'mute' => false, 'continuity' => 'single', 'revision' => $episode->getRevision(), 'subjects' => [], 'shots' => [['prompt' => 'Scene: Milo opens the door and pauses.', 'seconds' => 10]]], $episode);
+        $quote = $this->flow()->quote($episode);
+        $recipe['montage'] = ['sourceVolume' => 100, 'intro' => false, 'fit' => 'contain'];
+        $series->configure($series->getName(), $series->getTheme(), $series->getStyle(), $series->getCharacters(), $recipe);
+        $this->em()->flush();
+        self::assertSame($quote['hash'], $this->flow()->quote($episode)['hash']);
+        $this->flow()->confirm($episode, $quote['hash']);
+        $this->flow()->advance($episode->getId());
+        $this->completeShot($this->flow()->shots($episode)[0]);
+        $this->flow()->advance($episode->getId());
+        self::assertSame(25, $episode->getAssembly()->getSettings()['sourceVolume']);
+        self::assertTrue($episode->getAssembly()->getSettings()['intro']);
+        self::assertSame('cover', $episode->getAssembly()->getSettings()['fit']);
+        static::getContainer()->get(VideoEdits::class)->process($episode->getAssembly()->getId());
+        self::assertSame('ready', $episode->getAssembly()->getStatus(), $episode->getAssembly()->getIssue() ?? '');
+        self::assertNotNull($episode->getAssembly()->getOutput());
+        self::assertSame(1, $this->submissions);
+    }
+
+    public function testMontageProfileRequiresItsOwnerAndAValidCsrfToken(): void
+    {
+        $episode = $this->episode();
+        $seriesId = $episode->getSeries()->getId();
+        $url = '/studio/series/'.$seriesId.'/montage';
+        $crawler = $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        $this->client->submit($crawler->selectButton('Enregistrer le profil de montage')->form(['series_montage[sourceVolume]' => 0, 'series_montage[intro]' => '1', 'series_montage[fit]' => 'cover']));
+        self::assertResponseStatusCodeSame(303);
+        $series = $this->em()->find(AiSeries::class, $seriesId);
+        self::assertSame(0, $series->getRecipe()['montage']['sourceVolume']);
+        $this->client->request('POST', $url, ['series_montage' => ['sourceVolume' => 99, 'intro' => '1', 'fit' => 'cover', 'revision' => (string) $series->getRevision(), '_token' => 'wrong']]);
+        self::assertResponseStatusCodeSame(422);
+        $series = $this->em()->find(AiSeries::class, $seriesId);
+        $this->em()->refresh($series);
+        self::assertSame(0, $series->getRecipe()['montage']['sourceVolume']);
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', $url);
+        self::assertResponseStatusCodeSame(404);
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testLegacyUnsentJobRequiresNewQuoteWithoutDiscardingHistory(): void
     {
         $episode = $this->planned(false, 10);

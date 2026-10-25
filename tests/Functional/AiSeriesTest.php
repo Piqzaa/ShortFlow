@@ -101,6 +101,10 @@ final class AiSeriesTest extends WebTestCase
         $this->em()->flush();
         $videoId = $video->getId();
         $draftId = $draft->getId();
+        // Editorial scopes identify publication drafts, not episodes with the same numeric id.
+        $editorial = new \App\Entity\StoryProposal($owner, $episode->getId(), 'unrelated-editorial', [], 'editorial');
+        $this->em()->persist($editorial);
+        $this->em()->flush();
         $url = '/studio/series/'.$id.'/supprimer';
         $crawler = $this->client->request('GET', $url);
         self::assertResponseIsSuccessful();
@@ -182,6 +186,11 @@ final class AiSeriesTest extends WebTestCase
         $series = $this->createSeries(['ai_series[model]' => 'vidu-q1-subject', 'ai_series[image]' => new UploadedFile($file, 'character.jpg', 'image/jpeg', null, true)]);
         $image = $series->getRecipe()['reference'];
         $this->files[] = static::getContainer()->get(AiReferenceStorage::class)->path($this->owner, $image);
+        $recipe = $series->getRecipe();
+        $recipe['subjects'] = [$image];
+        $recipe['subjectDetails'] = [['reference' => $image, 'name' => 'Milo', 'role' => 'character', 'presence' => 'enters', 'views' => []]];
+        $series->configure($series->getName(), $series->getTheme(), $series->getStyle(), $series->getCharacters(), $recipe);
+        $this->em()->flush();
         $job = $this->legacyPrepare($series);
         self::assertSame($image, $job->getReferenceImage());
         self::assertNull($job->getEndReferenceImage());
@@ -193,6 +202,13 @@ final class AiSeriesTest extends WebTestCase
             self::assertStringContainsString('raccords', $error->getMessage());
         }
         $url = '/studio/series/'.$series->getId().'/configuration';
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->selectButton('Enregistrer la configuration')->form(['ai_series[removeSubjects]' => [$image]]));
+        self::assertResponseStatusCodeSame(303);
+        $series = $this->em()->find(AiSeries::class, $series->getId());
+        self::assertSame($image, $series->getRecipe()['reference']);
+        self::assertSame([], $series->getRecipe()['subjects']);
+        self::assertSame('Milo', $series->getRecipe()['subjectDetails'][0]['name']);
         $crawler = $this->client->request('GET', $url);
         self::assertSelectorExists('select[name="ai_series[source]"] option[value="subject"][selected]');
         self::assertSelectorExists('[data-series-reference-original-value] img');

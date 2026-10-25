@@ -6,8 +6,8 @@ Le propriétaire a autorisé l’action après le rapport `audit-studio-series-g
 - [x] Lot 2 : références nommées, capacités communes, transitions, limites et prévol cohérents.
 - [x] Lot 3 : profil éditorial et propositions locales par réseau, liés à la vidéo validée.
 - [x] Lot 4 : reprise des occurrences interrompues, états et action suivante.
-- [ ] Lot 5 : recette de montage limitée aux fonctions existantes et finition UX.
-- [ ] Recette finale simulée, navigateur et remise en route des workers.
+- [x] Lot 5 : recette de montage limitée aux fonctions existantes et finition UX.
+- [x] Recette finale simulée, navigateur et remise en route des workers.
 
 Les résultats, fichiers, flux Symfony et tests seront consignés à la fin de chaque lot. Les essais réels restent séparément confirmés.
 
@@ -56,3 +56,37 @@ Une reprise humaine normalise le statut dans `SeriesOccurrence::manageManually`,
 Fichiers : `SeriesRecurrences`, `SeriesOccurrence`, message/handler `InspectSeriesWriting`, routage Messenger et commande de récupération ; templates série et récurrence. Pas de nouvelle table ni de boucle de rattrapage. Symfony persiste le contrôle différé avec l’occurrence dans la même transaction ; une redélivrance réexamine l’état courant au lieu de répéter le travail.
 
 Vérifications : toute la classe `SeriesRecurrencesTest` passe, 16 tests et 138 assertions sur `shortflow_test`, clients texte/vidéo/sociaux simulés. Elle couvre mort du worker représentée par une occurrence durable, rédaction de six minutes non interrompue, ancien contrôle, reprise manuelle pendant rédaction, changement de clé/recette/délai, déduplication et réautorisation du créneau. Aucun contrôle d’entretien n’a été exécuté sur les séries réelles du propriétaire.
+
+## Lot 5 — montage commun et finition
+
+Objectif : conserver les choix de finition avec chaque préparation. Le lien « Profil de montage » de la série ouvre le volume des clips (0–100 %), un titre pendant les 2,5 premières secondes et le choix image entière/recadrage centré. Ces réglages utilisent le moteur de montage existant. Ils ne changent pas le format demandé au fournisseur et ne réparent pas un clip généré au mauvais format. Musique et sous-titres restent accessibles dans le montage individuel, sans import ni transcription automatique.
+
+`SeriesMontageType` valide les champs du formulaire ; `SeriesMontageController` contrôle propriétaire, CSRF et révision sous verrou ; `SeriesMontage` normalise les trois valeurs autorisées dans le JSON existant. `AiSeriesStudio` conserve le profil lors d’une modification des autres réglages. `AiEpisodeFlow` en fige un instantané avec la préparation ; `VideoEdits` le transmet à l’assemblage. L’option de coupure du son de l’épisode reste prioritaire. Aucun nouveau schéma SQL propre à ce lot.
+
+Flux Symfony : formulaire → validation et verrou Doctrine → recette de série → instantané de préparation → devis → génération existante → assemblage Messenger/FFmpeg. Une modification ultérieure du profil ne change pas un épisode déjà préparé. Le récapitulatif indique les valeurs réellement retenues.
+
+Vérifications ciblées : dix tests unitaires, onze assertions ; test fonctionnel de propriété/CSRF, huit assertions ; assemblage réel FFmpeg d’un clip synthétique avec titre et volume réduit réussi. Aucun fournisseur vidéo contacté. Pour tester manuellement sans coût : modifier le profil, préparer un épisode sans confirmer la génération, puis lire ses réglages au récapitulatif ; changer ensuite le profil et constater que la préparation précédente reste identique.
+
+La vérification navigateur sur six pages fictives couvre configuration, références, récapitulatif, profil éditorial, profil de montage et propositions de textes. Les transitions Kling/Vidu conservent les images et signalent les vues incompatibles ; le mode identité désactive l’image de fin. Contrôle clavier des champs éditoriaux et largeurs 1280/390 px : aucun débordement horizontal ; aucune erreur ou alerte console relevée. Le contrôle mobile a révélé et corrigé la taille excessive des sous-titres du profil de montage. Les formulaires du serveur de recette étaient bloqués en écriture (405), sans données ni envois réels.
+
+La revue finale indépendante n’a trouvé aucun blocage dans le profil de montage. Elle a signalé une omission dans l’ancienne branche `intent=plans`, toujours acceptée en POST malgré l’absence de bouton actuel : les références et leurs noms sont désormais conservés dans sa recette et son empreinte, comme dans le parcours commun.
+
+La suite élargie a également fait vérifier le retrait sans JavaScript d’une image de série : les métadonnées d’une référence explicitement retirée sont éliminées avant normalisation, tout en gardant celles d’une image encore utilisée comme référence principale. La revue croisée a précisé ce dernier cas. Les fichiers privés et les instantanés des anciennes préparations restent conservés.
+
+Le garde-fou de suppression des séries filtre aussi `StoryProposal.kind = story` : une proposition éditoriale porte l’identifiant d’un brouillon de publication, qui peut partager sa valeur numérique avec un épisode sans rapport. Le test de suppression conserve désormais une proposition éditoriale en attente pour couvrir cette collision.
+
+La suite élargie a trouvé une deuxième régression dans la réparation d’un plan : une requête Doctrine avec jointure exécutée après détachement du clip, mais avant `flush`, pouvait réhydrater l’ancienne relation. La confirmation charge maintenant sa liste de plans avant de modifier la relation, puis fige les prompts sur ces mêmes objets. Le clip remplacé reste dans l’historique ; un seul nouveau plan est autorisé, les autres et leur coût ne changent pas. Le test existant de réparation contrôle aussi la double confirmation et l’invalidation de la vidéo approuvée.
+
+Limites : cette recette vérifie le parcours et les contrats simulés, pas la fidélité visuelle d’un modèle distant ni la qualité sémantique du rédacteur local réel. Les vues complémentaires Kling suivent le chemin documenté ; leur acceptation réelle n’a pas été essayée avec des crédits. Une prise continue reste une consigne au modèle et ne garantit pas l’absence de coupe.
+
+## Bilan de vérification — 26 octobre 2026
+
+- Suite PHP élargie : 267 tests, 3 585 assertions, deux échecs initiaux (retrait des métadonnées d’image et réparation d’un plan). Ces deux défauts ont été corrigés. La suite complète n’a pas été relancée après ces corrections.
+- Rejeu après corrections : toute la classe `AiSeriesTest`, réparation, deux scénarios de montage et ancien chemin de préparation avec sujet nommé : **18 tests, 222 assertions, tous réussis**. Les cas de retrait d’image et de suppression ont été enrichis pour les bords trouvés en revue. Journaux locaux ignorés : `artifacts/suite-audit-final-php.log` et `artifacts/suite-audit-corrections-php.log`.
+- PHPStan niveau 5 : aucune erreur. CS-Fixer : zéro fichier à corriger sur 288 fichiers, puis contrôle des trois fichiers concernés par les derniers correctifs réussi. `git diff --check` réussi.
+- Twig : 98 templates valides ; YAML : 19 fichiers valides ; conteneur Symfony valide. Schémas Doctrine local et test synchronisés. Migration additive `Version20261025190000` appliquée aux deux bases.
+- Frontend : `npm run check`, **128 tests UI**, puis `npm run build` réussis. Le build conserve les avertissements existants sur les URL statiques résolues à l’exécution et le chunk Three.js dépassant 500 Ko.
+- Navigateur : six pages synthétiques, desktop/mobile, clavier, transitions des références, protection du titre existant, aucune erreur console relevée. Captures locales dans `artifacts/suite-audit-montage-mobile.png` et `artifacts/suite-audit-editorial-desktop.png`.
+- Les quatre workers sont remis en route, l’application locale répond en HTTP 200 et le conteneur temporaire de recette a été supprimé. Aucun essai vidéo payant, envoi social, activation de récurrence réelle ni push réalisé.
+
+Suite recommandée : parcourir manuellement une préparation réelle sans confirmer le coût, puis tester la rédaction locale de textes depuis une vidéo validée existante. Un essai vidéo fournisseur reste une étape distincte à autoriser avec modèle, durée et coût choisis. Une notification d’approche de date et un profil de montage plus riche restent des améliorations possibles ; les états et actions suivantes sont disponibles dans l’interface.
