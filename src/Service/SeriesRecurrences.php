@@ -47,9 +47,9 @@ final class SeriesRecurrences
             }
         }
         $cents = array_sum(array_map(fn (int $s): int => $this->catalog->estimate($recipe['model'], $s), $durations));
-        $hash = hash('sha256', serialize([$recipe, $series->initialPrompt(), $durations, $cents, $model['checked'] ?? AiCatalog::CHECKED, $identity]));
+        $hash = (new SeriesAuthorization($this->catalog))->fingerprint($recipe, $series->initialPrompt(), $durations, $cents, $identity);
 
-        return ['recipe' => $recipe, 'brief' => $series->initialPrompt(), 'durations' => $durations, 'cents' => $cents, 'hash' => $hash];
+        return ['recipe' => $recipe, 'brief' => $series->initialPrompt(), 'durations' => $durations, 'cents' => $cents, 'hash' => $hash, 'authorizationVersion' => SeriesAuthorization::VERSION];
     }
 
     /** @param array<string,mixed> $data */

@@ -132,6 +132,10 @@ final class AiEpisodeController extends AbstractController
                             throw new \RuntimeException('Confirme le coût total fournisseur avant de lancer.');
                         }
                         $seriesConsent->manual($episode, fn () => $flow->confirm($episode, $request->request->getString('quote'), $request->request->getInt('redo')));
+                    } elseif ('review_remaining' === $intent) {
+                        $flow->reviewRemaining($episode, $request->request->getInt('revision'));
+
+                        return $this->redirectToRoute('app_series_episode', ['id' => $id, 'review' => 1], 303);
                     } elseif ('repair_prompt' === $intent) {
                         $flow->stageRepair($episode, $request->request->getInt('redo'), $request->request->getInt('revision'), $request->request->getString('repair_prompt'));
 
@@ -178,7 +182,7 @@ final class AiEpisodeController extends AbstractController
                 $invalid = true;
             }
         }
-        if ($request->query->getBoolean('review') || $request->query->getInt('redo')) {
+        if ('review' === $episode->getFlowState() || $request->query->getBoolean('review') || $request->query->getInt('redo')) {
             try {
                 $quote = $flow->quote($episode, $request->query->getInt('redo'));
             } catch (\RuntimeException|\InvalidArgumentException $failure) {

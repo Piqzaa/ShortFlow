@@ -30,8 +30,8 @@ final class SeriesGenerationConsent
         $recipe = $settings['recipe'];
         $model = $this->catalog->model($recipe['model']);
         $cents = array_sum(array_map(fn (int $s): int => $this->catalog->estimate($recipe['model'], $s), $settings['durations']));
-        $hash = hash('sha256', serialize([$recipe, $settings['brief'], $settings['durations'], $cents, $model['checked'] ?? AiCatalog::CHECKED, $this->keys->identity($episode->getOwner(), $model['provider'], $recipe['accessMode'])]));
-        if ('paused' === $recurrence->getStatus() || $recurrence->getRevision() !== $occurrence->getAuthorizationRevision() || $occurrence->getReservedCents() !== $cents || !hash_equals($settings['hash'], $hash) || $occurrence->getScheduledAt() <= $this->clock->now()->modify('+2 minutes')) {
+        $hash = (new SeriesAuthorization($this->catalog))->fingerprint($recipe, $settings['brief'], $settings['durations'], $cents, $this->keys->identity($episode->getOwner(), $model['provider'], $recipe['accessMode']));
+        if (($settings['authorizationVersion'] ?? 0) !== SeriesAuthorization::VERSION || 'paused' === $recurrence->getStatus() || $recurrence->getRevision() !== $occurrence->getAuthorizationRevision() || $occurrence->getReservedCents() !== $cents || !hash_equals($settings['hash'], $hash) || $occurrence->getScheduledAt() <= $this->clock->now()->modify('+2 minutes')) {
             throw new \RuntimeException('L’autorisation récurrente a changé, est suspendue ou son créneau est dépassé. Aucun nouvel appel payant. Vérifie puis reprends manuellement l’épisode.');
         }
     }

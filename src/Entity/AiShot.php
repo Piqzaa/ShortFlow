@@ -25,17 +25,17 @@ class AiShot
     private array $previousGenerations = [];
     #[ORM\Column(length: 52, nullable: true)]
     private ?string $endAnchor = null;
-    /** @var array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string} */
+    /** @var array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string,confirmedPrompt?:string} */
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $inputs = [];
 
-    /** @return array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string} */
+    /** @return array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string,confirmedPrompt?:string} */
     public function getInputs(): array
     {
         return $this->inputs;
     }
 
-    /** @param array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string} $inputs */
+    /** @param array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string,confirmedPrompt?:string} $inputs */
     public function configureInputs(array $inputs): void
     {
         if ('draft' !== $this->episode->getFlowState()) {
@@ -117,6 +117,22 @@ class AiShot
         $this->inputs['repairPrompt'] = trim($prompt);
     }
 
+    public function confirmPrompt(string $prompt): void
+    {
+        $this->inputs['confirmedPrompt'] = $prompt;
+    }
+
+    public function releaseUnsent(): void
+    {
+        if (!$this->generation || $this->generation->getRemote() || !in_array($this->generation->getStatus(), ['prepared', 'queued', 'waiting_key'], true)) {
+            throw new \RuntimeException('Une demande transmise doit être récupérée avant de réviser les plans restants.');
+        }
+        $this->generation->progress('cancelled', 'Ancienne préparation remplacée avant envoi, sans nouvelle génération.');
+        $this->previousGenerations[] = (int) $this->generation->getId();
+        $this->generation = null;
+        unset($this->inputs['confirmedPrompt']);
+    }
+
     public function replace(?string $endAnchor, ?string $prompt = null): void
     {
         if (!$this->generation || 'available' !== $this->generation->getStatus() || !$this->generation->getVideo()) {
@@ -128,6 +144,6 @@ class AiShot
         if (null !== $prompt) {
             $this->prompt = $prompt;
         }
-        unset($this->inputs['repairPrompt']);
+        unset($this->inputs['repairPrompt'], $this->inputs['confirmedPrompt']);
     }
 }

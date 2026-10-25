@@ -423,6 +423,71 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame(4, $this->submissions);
     }
 
+    public function testConfirmedPromptsKeepThePreparedIdentityAfterSeriesEdits(): void
+    {
+        $episode = $this->episode();
+        $data = ['model' => 'kling-25', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop', 'prompt' => 'Milo explores.', 'title' => 'Frozen identity', 'target' => 10, 'mute' => false, 'continuity' => 'independent', 'revision' => $episode->getRevision(), 'subjects' => [], 'shots' => [['prompt' => 'Scene 1: Milo steps forward.', 'seconds' => 5], ['prompt' => 'Scene 2: Milo opens the door.', 'seconds' => 5]]];
+        $this->flow()->prepare($this->owner, $data, $episode);
+        $quote = $this->flow()->quote($episode);
+        $series = $episode->getSeries();
+        $series->configure('Changed', 'Changed story', 'Photorealistic', 'Milo is now a black dog.', $series->getRecipe());
+        $this->em()->flush();
+        self::assertSame($quote['hash'], $this->flow()->quote($episode)['hash']);
+        $this->flow()->confirm($episode, $quote['hash']);
+        $this->flow()->advance($episode->getId());
+        $shot = $this->flow()->shots($episode)[0];
+        self::assertSame($quote['references'][0]['prompt'], $shot->getGeneration()->getPrompt());
+        self::assertStringContainsString('ginger cat', $shot->getGeneration()->getPrompt());
+        self::assertStringNotContainsString('black dog', $shot->getGeneration()->getPrompt());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testExplicitFirstAndLastFramesTakePriorityOverShortcuts(): void
+    {
+        $episode = $this->episode(true);
+        $storage = static::getContainer()->get(AiReferenceStorage::class);
+        $common = $episode->getSeries()->getRecipe()['reference'];
+        $explicit = bin2hex(random_bytes(24)).'.jpg';
+        $path = dirname($storage->path($this->owner, $common)).'/'.$explicit;
+        copy($storage->path($this->owner, $common), $path);
+        $this->files[] = $path;
+        $this->flow()->prepare($this->owner, ['model' => 'kling-25-image', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => $common, 'endReference' => $common, 'useEnd' => true, 'imageFit' => 'crop', 'prompt' => 'Milo explores.', 'title' => 'Explicit frames', 'target' => 10, 'mute' => false, 'continuity' => 'independent', 'revision' => $episode->getRevision(), 'subjects' => [], 'shots' => [['prompt' => 'Scene 1: Milo steps forward.', 'seconds' => 5, 'startReference' => $explicit], ['prompt' => 'Scene 2: Milo pauses.', 'seconds' => 5, 'startReference' => $common, 'endReference' => $explicit]]], $episode);
+        $quote = $this->flow()->quote($episode);
+        self::assertSame($explicit, $quote['references'][0]['start']);
+        self::assertSame($explicit, $quote['references'][1]['end']);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testLegacyUnsentJobRequiresNewQuoteWithoutDiscardingHistory(): void
+    {
+        $episode = $this->planned(false, 10);
+        $recipe = $episode->getFlowRecipe();
+        $recipe['inputVersion'] = 3;
+        $episode->configurePreparation($recipe, 'Milo explores.', 'independent', false);
+        $tariff = (new \ReflectionMethod(AiEpisodeFlow::class, 'tariff'))->invoke($this->flow(), $episode);
+        $episode->consent($tariff, null, str_repeat('a', 64));
+        $shot = $this->flow()->shots($episode)[0];
+        $job = new AiGeneration($this->owner, 'Old unsent plan', 'Scene: Milo in a legacy preparation.', 'kling-25', 10, '9:16', 70);
+        $job->progress('queued');
+        $shot->bind($job);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        static::getContainer()->get(AiGenerations::class)->process($job->getId());
+        self::assertSame('waiting_key', $job->getStatus());
+        self::assertSame('paused', $episode->getFlowState());
+        self::assertSame(0, $this->submissions);
+        $this->flow()->reviewRemaining($episode, $episode->getRevision());
+        self::assertSame('cancelled', $job->getStatus());
+        self::assertSame('review', $episode->getFlowState());
+        self::assertContains($job->getId(), $shot->getPreviousGenerations());
+        $quote = $this->flow()->quote($episode);
+        $this->flow()->confirm($episode, $quote['hash']);
+        $this->flow()->advance($episode->getId());
+        self::assertNotSame($job->getId(), $shot->getGeneration()->getId());
+        self::assertSame($quote['references'][0]['prompt'], $shot->getGeneration()->getPrompt());
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testRepairCannotBreakFollowingLinkedShotWithoutAnEndFrameCapability(): void
     {
         $episode = $this->episode(true);
@@ -672,7 +737,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $first = $episode->getPreparationRecipe()['reference'];
         $data = ['model' => 'kling-3-image', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => $first, 'endReference' => null, 'useEnd' => false, 'imageFit' => 'crop', 'prompt' => 'Milo explores.', 'title' => 'Synthetic per-plan frames', 'target' => 10, 'mute' => false, 'continuity' => 'independent', 'revision' => $episode->getRevision(), 'subjects' => [$first], 'shots' => [['prompt' => 'Scene 1: Milo opens a door.', 'seconds' => 5], ['prompt' => 'Scene 2: Milo enters.', 'seconds' => 5]]];
         $this->flow()->prepare($this->owner, $data, $episode);
-        self::assertSame(3, $episode->getFlowRecipe()['inputVersion']);
+        self::assertSame(4, $episode->getFlowRecipe()['inputVersion']);
         self::assertNull($episode->getFlowRecipe()['reference']);
         try {
             $this->flow()->quote($episode);

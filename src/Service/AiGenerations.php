@@ -134,6 +134,9 @@ final class AiGenerations
             if (!in_array($job->getStatus(), ['queued', 'processing'], true)) {
                 return;
             }
+            if ('queued' === $job->getStatus() && $this->blockLegacyUnsent($job)) {
+                return;
+            }
             try {
                 $key = $this->keys->plain($job->getOwner(), $this->catalog->model($job->getModel())['provider'], $job->getAccessMode());
             } catch (\Throwable) {
@@ -172,6 +175,14 @@ final class AiGenerations
                     }
                     if ($shot) {
                         try {
+                            if (3 === ($shot->getEpisode()->getFlowRecipe()['inputVersion'] ?? 1) && !isset($shot->getInputs()['confirmedPrompt'])) {
+                                $issue = 'Ancienne préparation sans prompt figé : revois les plans restants depuis l’épisode avant tout nouvel envoi.';
+                                $job->progress('waiting_key', $issue);
+                                $shot->getEpisode()->flow('paused', $issue);
+                                $this->em->flush();
+
+                                return false;
+                            }
                             $this->seriesConsent->assertAllowed($shot->getEpisode());
                         } catch (\RuntimeException $failure) {
                             $job->progress('review', $failure->getMessage());
@@ -281,6 +292,28 @@ final class AiGenerations
         if (null !== $job->getEndReferenceImage()) {
             $this->references->path($job->getOwner(), $job->getEndReferenceImage());
         }
+    }
+
+    private function blockLegacyUnsent(AiGeneration $job): bool
+    {
+        return $this->em->getConnection()->transactional(function () use ($job): bool {
+            $this->em->lock($job->getOwner(), LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
+            $shot = $this->em->getRepository(\App\Entity\AiShot::class)->findOneBy(['generation' => $job]);
+            if (!$shot) {
+                return false;
+            }
+            $this->em->refresh($shot->getEpisode());
+            if (3 !== ($shot->getEpisode()->getFlowRecipe()['inputVersion'] ?? 1) || isset($shot->getInputs()['confirmedPrompt']) || 'queued' !== $job->getStatus()) {
+                return false;
+            }
+            $issue = 'Ancienne préparation sans prompt figé : revois les plans restants depuis l’épisode avant tout nouvel envoi.';
+            $job->progress('waiting_key', $issue);
+            $shot->getEpisode()->flow('paused', $issue);
+            $this->em->flush();
+
+            return true;
+        });
     }
 
     private function estimatedCost(AiGeneration $job): int

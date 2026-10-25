@@ -64,10 +64,10 @@ final class AiEpisodeFlow
             throw new \RuntimeException('Ajoute une référence ou le premier cadre du premier plan avant de continuer.');
         }
         if (!($model['subjectReference'] ?? false)) {
-            if ($reference) {
+            if ($reference && empty($rows[0]['startReference'])) {
                 $rows[0]['startReference'] = $reference;
             }
-            if ($end) {
+            if ($end && empty($rows[count($rows) - 1]['endReference'])) {
                 $rows[count($rows) - 1]['endReference'] = $end;
             }
         }
@@ -86,7 +86,7 @@ final class AiEpisodeFlow
         if ('linked' === $continuity && (!$image || ($model['subjectReference'] ?? false) || ($model['requiresEnd'] ?? false))) {
             throw new \RuntimeException('Pour les raccords, choisis ici un modèle image compatible et ajoute sa référence. Tes scènes restent conservées.');
         }
-        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($model['subjectReference'] ?? false) ? $reference : null, 'endReference' => null, 'imageFit' => $data['imageFit'], 'inputVersion' => 3, 'subjects' => $subjects];
+        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($model['subjectReference'] ?? false) ? $reference : null, 'endReference' => null, 'imageFit' => $data['imageFit'], 'inputVersion' => 4, 'subjects' => $subjects];
         $title = trim($data['title'] ?? '') ?: mb_substr(trim($data['prompt']), 0, 80);
 
         return $this->em->getConnection()->transactional(function () use ($owner, $data, $episode, $recipe, $title, $continuity, $rows): AiEpisode {
@@ -104,6 +104,10 @@ final class AiEpisodeFlow
                 $episode = new AiEpisode($owner, 1, $title, trim($data['prompt']), $recipe);
                 $this->em->persist($episode);
             }
+            if (!$episode->isStandalone()) {
+                $this->em->refresh($episode->getSeries());
+            }
+            $recipe['visualContext'] = $episode->isStandalone() ? trim($data['prompt']) : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle();
             $episode->configurePreparation($recipe, $data['prompt'], $continuity, (bool) $data['mute']);
             $this->em->flush();
             $this->save($episode, $episode->getRevision(), $title, $rows);
@@ -239,6 +243,9 @@ final class AiEpisodeFlow
         $cents = $seconds = 0;
         $references = [];
         foreach ($shots as $index => $shot) {
+            if ('review' === $episode->getFlowState() && 'available' === $shot->getGeneration()?->getStatus()) {
+                continue;
+            }
             if ($redo && $shot->getId() !== $redo) {
                 continue;
             }
@@ -292,7 +299,7 @@ final class AiEpisodeFlow
             if (!$redo && in_array($episode->getFlowState(), ['running', 'assembling', 'ready'], true)) {
                 return;
             }
-            if (!$redo && 'draft' !== $episode->getFlowState()) {
+            if (!$redo && !in_array($episode->getFlowState(), ['draft', 'review'], true)) {
                 throw new \RuntimeException('Reprends l’épisode depuis son suivi.');
             }
             $quote = $this->quote($episode, $redo);
@@ -315,6 +322,16 @@ final class AiEpisodeFlow
                 $anchor = 'linked' === $episode->getContinuity() && isset($this->catalog->model($recipe['model'])['endImageField']) ? $this->frames->lastFrame($shot->getGeneration()->getVideo()) : null;
                 $shot->replace($anchor, $shot->getInputs()['repairPrompt'] ?? null);
                 $episode->repair();
+            }
+            if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 3) {
+                $episode->freezeVisualContext($this->visualContext($episode));
+            }
+            foreach ($this->shots($episode) as $confirmedShot) {
+                foreach ($quote['references'] as $reference) {
+                    if ($confirmedShot->getPosition() === $reference['position']) {
+                        $confirmedShot->confirmPrompt($reference['prompt']);
+                    }
+                }
             }
             $episode->consent($tariff, $account, $hash);
             $this->em->flush();
@@ -377,6 +394,40 @@ final class AiEpisodeFlow
             $episode->flow('running');
             $this->em->flush();
             $this->later($episode, 0);
+        });
+    }
+
+    public function reviewRemaining(AiEpisode $episode, int $revision): void
+    {
+        $this->locked($episode, function () use ($episode, $revision): void {
+            $this->revision($episode, $revision);
+            if ('paused' !== $episode->getFlowState()) {
+                throw new \RuntimeException('Suspends les plans avant de revoir leur devis.');
+            }
+            $shots = $this->shots($episode);
+            if (!array_filter($shots, static fn (AiShot $shot): bool => 'available' !== $shot->getGeneration()?->getStatus())) {
+                throw new \RuntimeException('Tous les plans sont terminés. Reprends l’assemblage sans régénérer les clips.');
+            }
+            foreach ($shots as $shot) {
+                if ($job = $shot->getGeneration()) {
+                    $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
+                    if ('available' !== $job->getStatus() && ($job->getRemote() || !in_array($job->getStatus(), ['prepared', 'queued', 'waiting_key'], true))) {
+                        throw new \RuntimeException('Récupère les demandes déjà transmises avant de revoir les plans restants. Aucun renvoi automatique.');
+                    }
+                }
+            }
+            foreach ($shots as $shot) {
+                if ($shot->getGeneration() && 'available' !== $shot->getGeneration()->getStatus()) {
+                    $shot->releaseUnsent();
+                }
+            }
+            $recipe = $episode->getFlowRecipe();
+            if (!$episode->isStandalone()) {
+                $this->em->refresh($episode->getSeries());
+            }
+            $recipe['visualContext'] = $this->visualContext($episode);
+            $recipe['inputVersion'] = max(4, $recipe['inputVersion'] ?? 1);
+            $episode->reviewRemaining($recipe);
         });
     }
 
@@ -445,9 +496,12 @@ final class AiEpisodeFlow
                             }
                         }
                         if (!$job) {
+                            if (3 === ($recipe['inputVersion'] ?? 1) && !isset($shot->getInputs()['confirmedPrompt'])) {
+                                throw new \RuntimeException('Cette ancienne préparation ne conserve pas son prompt accepté. Utilise « Revoir les plans restants » pour vérifier un nouveau devis. Les clips existants sont conservés.');
+                            }
                             $resolved = $this->inputs->resolve($episode, $shot, $index, count($shots));
                             $reference = $resolved['fromPrevious'] && $previous ? $this->frames->lastFrame($previous) : $resolved['start'];
-                            $job = new AiGeneration($owner, mb_substr($episode->getTitle(), 0, 100).' · plan '.$shot->getPosition(), $this->prompt($episode, $shot), $recipe['model'], $shot->getSeconds(), $recipe['ratio'], $this->catalog->estimate($recipe['model'], $shot->getSeconds()));
+                            $job = new AiGeneration($owner, mb_substr($episode->getTitle(), 0, 100).' · plan '.$shot->getPosition(), $shot->getInputs()['confirmedPrompt'] ?? $this->prompt($episode, $shot), $recipe['model'], $shot->getSeconds(), $recipe['ratio'], $this->catalog->estimate($recipe['model'], $shot->getSeconds()));
                             if ($reference) {
                                 $job->attachReference($reference);
                                 $job->frameImages($resolved['fit']);
@@ -532,7 +586,7 @@ final class AiEpisodeFlow
         $scene ??= $shot->getPrompt();
         $recipe = $episode->getFlowRecipe();
         if (($recipe['inputVersion'] ?? 1) >= 3) {
-            $context = $episode->isStandalone() ? $episode->getPrompt() : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle();
+            $context = $recipe['visualContext'] ?? $this->visualContext($episode);
 
             return $this->prompts->build($recipe['model'], $shot->getSeconds(), $scene, $context, $episode->getContinuity(), count($recipe['subjects'] ?? []));
         }
@@ -552,6 +606,11 @@ final class AiEpisodeFlow
         }
 
         return hash('sha256', serialize($revision));
+    }
+
+    private function visualContext(AiEpisode $episode): string
+    {
+        return $episode->getFlowRecipe()['visualContext'] ?? ($episode->isStandalone() ? $episode->getPrompt() : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle());
     }
 
     private function tariff(AiEpisode $episode): string
