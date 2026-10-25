@@ -205,6 +205,7 @@ final class AiStudioController extends AbstractController
                     $job->useMcp();
                 }
                 $job->attachSubjects($data['subjects'] ?? []);
+                $job->attachSubjectDetails((new \App\Service\AiPlanInputs($catalog, $references))->subjectDetails($user, $data['model'], $data['subjects'] ?? [], $data['subjectDetails'] ?? [], ($catalog->model($data['model'])['subjectReference'] ?? false) ? $data['reference'] : null, false));
                 $em->persist($job);
                 $em->flush();
 
@@ -241,6 +242,21 @@ final class AiStudioController extends AbstractController
                 $references->path($user, $subject);
             } catch (\RuntimeException) {
                 return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
+            }
+        }
+        foreach ($form->getData()['subjectDetails'] ?? [] as $detail) {
+            foreach (array_merge(['primary' === ($detail['reference'] ?? '') ? null : ($detail['reference'] ?? null)], $detail['views'] ?? []) as $name) {
+                if (!$name) {
+                    continue;
+                }
+                try {
+                    if (!is_string($name)) {
+                        throw new \RuntimeException('Référence invalide.');
+                    }
+                    $references->path($user, $name);
+                } catch (\RuntimeException) {
+                    return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
+                }
             }
         }
         foreach ($form->getData()['shots'] ?? [] as $shot) {
@@ -448,7 +464,7 @@ final class AiStudioController extends AbstractController
             return $this->redirectToRoute('app_ai_extend', ['id' => $extension['sourceId']], 303);
         }
         $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
-        $request->getSession()->set('ai_idea', ['title' => $job->getTitle(), 'prompt' => $job->getPrompt(), 'model' => $job->getModel(), 'seconds' => $job->getSeconds(), 'ratio' => $job->getRatio(), 'accessMode' => $job->getAccessMode(), 'source' => (new AiCatalog())->referenceMode($job->getModel()), 'reference' => $job->getReferenceImage(), 'endReference' => $job->getEndReferenceImage(), 'useEnd' => null !== $job->getEndReferenceImage(), 'imageFit' => $job->getImageFit(), 'subjects' => $job->getInputSettings()['subjects'] ?? []]);
+        $request->getSession()->set('ai_idea', ['title' => $job->getTitle(), 'prompt' => $job->getPrompt(), 'model' => $job->getModel(), 'seconds' => $job->getSeconds(), 'ratio' => $job->getRatio(), 'accessMode' => $job->getAccessMode(), 'source' => (new AiCatalog())->referenceMode($job->getModel()), 'reference' => $job->getReferenceImage(), 'endReference' => $job->getEndReferenceImage(), 'useEnd' => null !== $job->getEndReferenceImage(), 'imageFit' => $job->getImageFit(), 'subjects' => $job->getInputSettings()['subjects'] ?? [], 'subjectDetails' => $job->getInputSettings()['subjectDetails'] ?? []]);
         $this->addFlash('success', 'Ton idée et ses réglages sont repris. Modifie-les puis vérifie une nouvelle estimation avant de générer.');
 
         return $this->redirectToRoute('app_studio', status: 303);

@@ -47,3 +47,34 @@ test('requesting an image reference clears an incompatible text model without si
     assert.equal(controller.modelTarget.options[2].disabled, false);
     assert.match(controller.hintTarget.textContent, /explicitement/);
 });
+
+test('series exposes the same subject and frame capabilities and refuses unsupported legacy subject uploads', () => {
+    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class SeriesSettings');
+    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {} });
+    const controller = new Settings();
+    const options = ['kling', 'wan'].map(value => ({value,dataset:{}}));
+    controller.modelTarget = {value:'kling',options};
+    controller.modelsValue = {kling:{image:true,end:true,subjectLimit:2,seconds:[5],ratios:['9:16']},wan:{image:true,seconds:[5],ratios:['9:16']}};
+    controller.secondsTarget = {value:'5',options:[{value:'5'}]}; controller.ratioTarget = {value:'9:16',options:[{value:'9:16'}]}; controller.hintTarget = {};
+    const subjectUpload = {name:'ai_series[subjectImages][]'}, firstFrame = {name:'ai_series[image]'};
+    controller.hasImagesTarget = true; controller.imagesTarget = {querySelectorAll:()=>[subjectUpload,firstFrame]};
+    controller.connect();
+    assert.equal(options[0].dataset.subjectLimit, '2');
+    assert.equal(options[0].dataset.referenceMode, 'image');
+    assert.equal(options[0].dataset.acceptsEnd, 'true');
+    assert.equal(subjectUpload.disabled, false);
+    controller.modelTarget.value = 'wan'; controller.change();
+    assert.equal(subjectUpload.disabled, true);
+    assert.equal(firstFrame.disabled, false);
+});
+
+test('a pending private reference upload keeps the series form unsaved and blocks submission', () => {
+    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class SeriesSettings');
+    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {} });
+    const controller = new Settings();
+    controller.element = {querySelector:()=>({})}; controller.hintTarget = {focus(){this.focused=true;}};
+    let prevented = false, stopped = false;
+    controller.guardPending({preventDefault(){prevented=true;},stopImmediatePropagation(){stopped=true;}});
+    assert.equal(prevented, true); assert.equal(stopped, true); assert.equal(controller.hintTarget.focused, true);
+    assert.match(controller.hintTarget.textContent, /fin de l’import/);
+});

@@ -735,7 +735,13 @@ final class AiEpisodeFlowTest extends WebTestCase
     {
         $episode = $this->episode(true);
         $first = $episode->getPreparationRecipe()['reference'];
+        $storage = static::getContainer()->get(AiReferenceStorage::class);
+        $view = bin2hex(random_bytes(24)).'.jpg';
+        $viewPath = dirname($storage->path($this->owner, $first)).'/'.$view;
+        copy($storage->path($this->owner, $first), $viewPath);
+        $this->files[] = $viewPath;
         $data = ['model' => 'kling-3-image', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => $first, 'endReference' => null, 'useEnd' => false, 'imageFit' => 'crop', 'prompt' => 'Milo explores.', 'title' => 'Synthetic per-plan frames', 'target' => 10, 'mute' => false, 'continuity' => 'independent', 'revision' => $episode->getRevision(), 'subjects' => [$first], 'shots' => [['prompt' => 'Scene 1: Milo opens a door.', 'seconds' => 5], ['prompt' => 'Scene 2: Milo enters.', 'seconds' => 5]]];
+        $data['subjectDetails'] = [['reference' => $first, 'name' => 'Milo', 'role' => 'character', 'presence' => 'enters', 'views' => [$view]]];
         $this->flow()->prepare($this->owner, $data, $episode);
         self::assertSame(4, $episode->getFlowRecipe()['inputVersion']);
         self::assertNull($episode->getFlowRecipe()['reference']);
@@ -754,7 +760,9 @@ final class AiEpisodeFlowTest extends WebTestCase
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?review=1');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.reference-review', 'Appel 2');
-        self::assertSelectorCount(4, '.reference-review img');
+        self::assertSelectorCount(6, '.reference-review img');
+        self::assertSelectorTextContains('.reference-review', 'Milo');
+        self::assertStringContainsString('@Element1', $this->flow()->quote($episode)['references'][0]['prompt']);
         self::assertSame(0, $this->submissions);
     }
 

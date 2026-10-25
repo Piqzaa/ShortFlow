@@ -62,7 +62,8 @@ final class FalVideoApi
                 if ('kling-3-image' !== $job->getModel() || count($job->getInputSettings()['subjects']) > 2) {
                     throw new \RuntimeException('Les références de personnages ne sont pas compatibles avec cet endpoint.');
                 }
-                $payload['elements'] = array_map(fn (string $name): array => ['frontal_image_url' => $this->references->dataUri($job->getOwner(), $name)], $job->getInputSettings()['subjects']);
+                $details = (new AiPlanInputs($this->catalog, $this->references))->subjectDetails($job->getOwner(), $job->getModel(), $job->getInputSettings()['subjects'], $job->getInputSettings()['subjectDetails'] ?? []);
+                $payload['elements'] = array_map(fn (array $detail): array => ['frontal_image_url' => $this->references->dataUri($job->getOwner(), $detail['reference']), 'reference_image_urls' => array_map(fn (string $name): string => $this->references->dataUri($job->getOwner(), $name), $detail['views'])], $details);
             }
             $first = $this->references->dataUri($job->getOwner(), $job->getReferenceImage() ?? '', $job->getRatio(), $job->getImageFit());
             $endName = $job->getEndReferenceImage();

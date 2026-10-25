@@ -28,11 +28,15 @@ final class SeriesRecurrences
     public function preview(AiSeries $series): array
     {
         $recipe = $series->getRecipe();
+        if ('auto' === $recipe['ratio']) {
+            throw new \RuntimeException('Choisis un format final explicite dans la série avant d’autoriser sa récurrence.');
+        }
         $model = $this->catalog->model($recipe['model']);
         $this->catalog->validateReferences($recipe['model'], $recipe['reference'], $recipe['endReference']);
         foreach ($recipe['subjects'] ?? [] as $subject) {
             $this->references->path($series->getOwner(), $subject);
         }
+        (new AiPlanInputs($this->catalog, $this->references))->subjectDetails($series->getOwner(), $recipe['model'], $recipe['subjects'] ?? [], $recipe['subjectDetails'] ?? [], ($model['subjectReference'] ?? false) ? $recipe['reference'] : null);
         $durations = $this->flow->durations($recipe['model'], $recipe['totalSeconds'] ?? 30);
         foreach ($durations as $duration) {
             $this->catalog->validate($recipe['model'], $duration, $recipe['ratio']);
@@ -181,7 +185,7 @@ final class SeriesRecurrences
                     $memory[] = ['title' => $old->getEpisode()?->getTitle(), 'summary' => $old->getSummary()];
                 }
             }
-            $story = $this->writer->propose($series->getTheme(), $settings['durations'], $settings['continuity'], $settings['tone'], ['style' => $series->getStyle(), 'characters' => $series->getCharacters(), 'previous' => $memory, 'generation' => (new AiShotPrompts($this->catalog))->writingContext($settings['recipe']['model'])]);
+            $story = $this->writer->propose($series->getTheme(), $settings['durations'], $settings['continuity'], $settings['tone'], ['style' => $series->getStyle(), 'characters' => $series->getCharacters(), 'previous' => $memory, 'generation' => (new AiShotPrompts($this->catalog))->writingContext($settings['recipe']['model'], $settings['recipe']['subjectDetails'] ?? [])]);
             $this->em->getConnection()->transactional(function () use ($occurrence, $recurrence, $episode, $story, $message, $series, $settings): void {
                 $this->em->lock($series->getOwner(), LockMode::PESSIMISTIC_WRITE);
                 $this->em->refresh($recurrence, LockMode::PESSIMISTIC_WRITE);

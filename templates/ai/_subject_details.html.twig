@@ -1,0 +1,13 @@
+<section class="subject-profile" data-subject-profile>
+<h3 data-subject-profile-title>Nom et rôle de cette référence</h3>
+{{ form_widget(detailForm.reference,{attr:{'data-subject-profile-reference':''}}) }}{{ form_errors(detailForm.reference) }}
+{{ form_row(detailForm.name,{attr:{'data-subject-name':''}}) }}
+<div class="series-two-columns">{{ form_row(detailForm.role) }}{{ form_row(detailForm.presence,{label:'Présence dans la scène'}) }}</div>
+<p class="library-note" data-subject-presence-help>Utilise ce nom dans tes scènes. La présence décrit l’action souhaitée ; la photo de référence ne remplace pas les éléments de l’image de début.</p>
+<section class="subject-views" data-subject-views>
+<h4>Vues complémentaires du même sujet</h4><p class="library-note" data-subject-views-notice>Selon le modèle, des vues complémentaires peuvent être nécessaires.</p>
+<div data-subject-views-list>{% for field in detailForm.views %}<div data-subject-view>{% include 'ai/_reference_picker.html.twig' with {field:field,kind:'view',label:'Vue complémentaire du sujet',removable:false} %}<button class="account-secondary" type="button" data-action="subject-list#removeView">Retirer cette vue</button></div>{% endfor %}</div>
+<template data-subject-views-prototype><div data-subject-view>{% include 'ai/_reference_picker.html.twig' with {field:detailForm.views.vars.prototype,kind:'view',label:'Vue complémentaire du sujet',removable:false} %}<button class="account-secondary" type="button" data-action="subject-list#removeView">Retirer cette vue</button></div></template>
+<button class="account-secondary" type="button" data-subject-add-view data-action="subject-list#addView">Ajouter une vue du même sujet</button>
+</section>
+</section>

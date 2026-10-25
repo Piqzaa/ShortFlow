@@ -70,7 +70,17 @@ final class AiStoryProposalController extends AbstractController
                 $previous = $em->createQueryBuilder()->select('e')->from(AiEpisode::class, 'e')->where('e.series = :series AND e.number < :number')->setParameter('series', $series)->setParameter('number', $episode->getNumber())->orderBy('e.number', 'DESC')->setMaxResults(3)->getQuery()->getResult();
                 $context['previous'] = array_map(static fn (AiEpisode $e): array => ['title' => $e->getTitle(), 'scenes' => array_map(static fn ($shot): string => mb_substr($shot->getPrompt(), 0, 180), array_slice($flow->shots($e), 0, 3))], $previous);
             }
-            $context['generation'] = $prompts->writingContext($request->request->getString('model'));
+            $rawHints = $request->request->getString('subjectHints', '[]');
+            $hints = strlen($rawHints) <= 6000 ? json_decode($rawHints, true) : null;
+            if (!is_array($hints) || !array_is_list($hints) || count($hints) > 7) {
+                throw new \InvalidArgumentException('Vérifie les descriptions des références avant de proposer le scénario.');
+            }
+            foreach ($hints as $hint) {
+                if (!is_array($hint) || !is_string($hint['name'] ?? null) || mb_strlen($hint['name']) > 60 || !in_array($hint['role'] ?? '', ['character', 'object'], true) || !in_array($hint['presence'] ?? '', ['visible', 'enters', 'unspecified'], true)) {
+                    throw new \InvalidArgumentException('Vérifie le nom et le rôle de tes références.');
+                }
+            }
+            $context['generation'] = $prompts->writingContext($request->request->getString('model'), $hints);
             $job = $proposals->create($user, $id ?: 0, $request->request->getString('fingerprint'), ['idea' => $idea, 'durations' => $durations, 'continuity' => $continuity, 'tone' => $tone, 'context' => $context]);
 
             return $this->json($this->payload($job), 202, $headers);

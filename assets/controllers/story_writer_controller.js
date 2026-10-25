@@ -10,7 +10,11 @@ export default class extends Controller {
     const field = name => this.form.querySelector(`[name="ai_idea[${name}]"]`).value;
     const parts = this.editor.rows().map(row => Number(row.querySelector('select').value));
     const layout = parts.length && parts.reduce((sum, seconds) => sum + seconds, 0) === Number(field('target')) && parts.every(seconds => this.editor.modelValue.seconds?.includes(seconds)) ? parts.join('+') : '';
-    return { idea: field('prompt'), model: field('model'), target: field('target'), layout, continuity: field('continuity'), tone: this.toneTarget.value, episode: String(this.episodeValue) };
+    const subjectHints = [...this.form.querySelectorAll('[data-subject-profile]')]
+      .filter(profile => !profile.querySelector('[data-subject-profile-reference]')?.disabled)
+      .map(profile => ({ name: profile.querySelector('[data-subject-name]')?.value.trim() || '', role: profile.querySelector('[name$="[role]"]')?.value || 'character', presence: profile.querySelector('[name$="[presence]"]')?.value || 'unspecified' }))
+      .filter(subject => subject.name);
+    return { idea: field('prompt'), model: field('model'), target: field('target'), layout, continuity: field('continuity'), tone: this.toneTarget.value, episode: String(this.episodeValue), subjectHints: JSON.stringify(subjectHints) };
   }
   fingerprint() {
     return JSON.stringify({
@@ -20,6 +24,7 @@ export default class extends Controller {
         return input?.type === 'checkbox' ? input.checked : input?.value;
       }),
       subjects: [...this.form.querySelectorAll('[name^="ai_idea[subjects]"]')].map(input => input.value),
+      subjectDetails: [...this.form.querySelectorAll('[name^="ai_idea[subjectDetails]"]')].filter(input => !input.disabled).map(input => [input.name, input.value]),
       shots: this.editor.rows().map(row => [
         row.querySelector('textarea').value, row.querySelector('select').value,
         ...['startReference', 'endReference', 'referenceFit'].map(name => row.querySelector(`[name$="[${name}]"]`)?.value || ''),

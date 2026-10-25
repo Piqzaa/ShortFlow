@@ -276,6 +276,7 @@ final class AiGenerations
         foreach ($subjects as $name) {
             $this->references->path($job->getOwner(), $name);
         }
+        (new AiPlanInputs($this->catalog, $this->references))->subjectDetails($job->getOwner(), $job->getModel(), $subjects, $settings['subjectDetails'] ?? [], ($this->catalog->model($job->getModel())['subjectReference'] ?? false) ? $job->getReferenceImage() : null);
         $image = $this->catalog->model($job->getModel())['image'] ?? false;
         if ($image !== (null !== $job->getReferenceImage())) {
             throw new \RuntimeException('Vérifie l’image de départ et le modèle puis prépare une nouvelle estimation.');

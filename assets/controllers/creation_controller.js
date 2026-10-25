@@ -34,6 +34,7 @@ export default class extends Controller {
 
   changeSource() {
     if (!this.hasSourceTarget) return;
+    if (this.sourceMode() !== 'image' && this.hasUseEndTarget) this.useEndTarget.checked = false;
     const image = this.sourceMode() !== 'text';
     this.referencePanelTarget.hidden = !image;
     if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = !image;
@@ -70,7 +71,7 @@ export default class extends Controller {
 
   frameChanged(event) {
     if (!this.hasStartPreviewTarget) return;
-    const subject = this.modelsValue[this.modelTarget.value]?.subjectReference;
+    const subject = this.modelsValue[this.modelTarget.value]?.subjectReference || this.sourceMode() === 'subject';
     const ratio = subject ? 'auto' : this.ratioTarget.value;
     const start = this.startPreviewTarget;
     const nativeRatio = start.naturalWidth && start.naturalHeight ? `${start.naturalWidth} / ${start.naturalHeight}` : '9 / 16';
@@ -102,8 +103,12 @@ export default class extends Controller {
     if (this.hasEndPanelTarget) this.endPanelTarget.hidden = this.sourceMode() === 'text' || !this.useEndTarget.checked;
     if (this.hasReferencePanelTarget) {
       const label = this.referencePanelTarget.querySelector('label');
-      if (label) label.textContent = model?.subjectReference ? 'Image du personnage' : 'Image de début';
-      if (this.hasUseEndTarget) this.useEndTarget.disabled = Boolean(model?.subjectReference);
+      if (label) label.textContent = model?.subjectReference || this.sourceMode() === 'subject' ? 'Image principale du sujet' : 'Début du premier plan';
+      if (this.hasUseEndTarget) this.useEndTarget.disabled = Boolean(model?.subjectReference || this.sourceMode() === 'subject');
+      const endLabel = this.hasEndPanelTarget ? this.endPanelTarget.querySelector?.('label') : null;
+      if (endLabel) endLabel.textContent = 'Fin du dernier plan';
+      const optionLabel = this.hasUseEndTarget ? this.useEndTarget.labels?.[0] : null;
+      if (optionLabel) optionLabel.textContent = 'Ajouter une image de fin pour le dernier plan';
     }
     this.restrict(this.durationTarget, model?.seconds);
     this.restrict(this.ratioTarget, model?.ratios);

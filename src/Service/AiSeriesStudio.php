@@ -54,7 +54,12 @@ final class AiSeriesStudio
             $previous = $series?->getRecipe();
             $image = $previous['reference'] ?? null;
             $endImage = $previous['endReference'] ?? null;
-            $subjects = array_values(array_diff($previous['subjects'] ?? [], $data['removeSubjects'] ?? []));
+            $managedSubjects = '1' === (string) ($data['subjectsManaged'] ?? '0');
+            $subjects = $managedSubjects ? ($data['subjects'] ?? []) : ($previous['subjects'] ?? []);
+            if (!is_array($subjects)) {
+                throw new \RuntimeException('La liste des références est invalide.');
+            }
+            $subjects = array_values(array_diff($subjects, $data['removeSubjects'] ?? []));
             $uploads = $data['subjectImages'] ?? [];
             $limit = $this->catalog->subjectLimit($data['model']) - (($model['subjectReference'] ?? false) ? 1 : 0);
             if (count($subjects) + count($uploads) > max(0, $limit)) {
@@ -107,7 +112,22 @@ final class AiSeriesStudio
             if ('mcp' === $data['accessMode'] && 'fal' !== $model['provider']) {
                 throw new \RuntimeException('Choisis un accès API pour ce fournisseur.');
             }
-            $recipe = ['totalSeconds' => $data['totalSeconds'] ?? 30, 'model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit'], 'subjects' => $subjects];
+            $inputs = new AiPlanInputs($this->catalog, $this->references);
+            $subjects = $inputs->subjects($owner, $data['model'], $subjects);
+            $details = $data['subjectDetails'] ?? [];
+            if (!$managedSubjects && !$details) {
+                $details = array_values(array_filter($previous['subjectDetails'] ?? [], static fn (array $detail): bool => in_array($detail['reference'], $subjects, true) || $detail['reference'] === ($previous['reference'] ?? null)));
+            }
+            if (($model['subjectReference'] ?? false) && $image && ($previous['reference'] ?? null) !== $image) {
+                foreach ($details as &$detail) {
+                    if (($detail['reference'] ?? null) === ($previous['reference'] ?? null)) {
+                        $detail['reference'] = $image;
+                    }
+                }
+                unset($detail);
+            }
+            $details = $inputs->subjectDetails($owner, $data['model'], $subjects, $details, ($model['subjectReference'] ?? false) ? $image : null, false);
+            $recipe = ['totalSeconds' => $data['totalSeconds'] ?? 30, 'model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit'], 'subjects' => $subjects, 'subjectDetails' => $details];
             if ($series) {
                 $series->configure(trim($data['name']), trim($data['theme']), trim($data['style'] ?? ''), trim($data['characters'] ?? ''), $recipe);
             } else {
@@ -202,6 +222,7 @@ final class AiSeriesStudio
                     $job->attachEndReference($recipe['endReference']);
                 }
             }
+            $job->attachSubjectDetails((new AiPlanInputs($this->catalog, $this->references))->subjectDetails($owner, $recipe['model'], $recipe['subjects'] ?? [], $recipe['subjectDetails'] ?? [], ($this->catalog->model($recipe['model'])['subjectReference'] ?? false) ? $recipe['reference'] : null));
             if ('mcp' === $recipe['accessMode']) {
                 $job->useMcp();
             }

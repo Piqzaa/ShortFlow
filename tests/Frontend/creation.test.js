@@ -249,6 +249,21 @@ test('changing source filters models and requires an explicit compatible model c
   assert.equal(c.cardTargets.at(-1).hidden, true);
 });
 
+test('switching from end frames to identity references releases the obsolete end-frame filter', () => {
+  const c = creation();
+  c.modelsValue.subject = { ...c.modelsValue.kling, image: true, subjectReference: true, subjectLimit: 7 };
+  c.cardTargets.push({ dataset: { modelId: 'subject', groupId: 'subject' }, classList: { toggle() {} } });
+  c.hasSourceTarget = true; c.sourceTarget = { value: 'subject' }; c.referencePanelTarget = {};
+  c.hasUseEndTarget = true; c.useEndTarget = { checked: true };
+  c.endReferenceTarget = { value: 'saved-last-frame.jpg' };
+  c.modelTarget.dispatchEvent = () => c.changeModel();
+  c.changeSource();
+  assert.equal(c.useEndTarget.checked, false);
+  assert.equal(c.endReferenceTarget.value, 'saved-last-frame.jpg');
+  assert.equal(c.modelTarget.value, '');
+  assert.equal(c.cardTargets.at(-1).hidden, false);
+});
+
 test('two pending image uploads keep preparation disabled until both settle', () => {
   const c = creation(), button = {};
   c.hasEndReferenceTarget = true;

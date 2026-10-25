@@ -49,11 +49,11 @@ class AiGeneration
     private ?string $endReferenceImage = null;
     #[ORM\Column(length: 8, options: ['default' => 'crop'])]
     private string $imageFit = 'crop';
-    /** @var array{contract?:string,subjects?:list<string>,extension?:array<string,mixed>} */
+    /** @var array{contract?:string,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>,extension?:array<string,mixed>} */
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $inputSettings = [];
 
-    /** @return array{contract?:string,subjects?:list<string>,extension?:array<string,mixed>} */
+    /** @return array{contract?:string,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>,extension?:array<string,mixed>} */
     public function getInputSettings(): array
     {
         return $this->inputSettings;
@@ -80,6 +80,33 @@ class AiGeneration
             }
         }
         $this->inputSettings['subjects'] = array_values(array_unique($subjects));
+    }
+
+    /** @param list<array{reference:string,name:string,role:string,presence:string,views:list<string>}> $details */
+    public function attachSubjectDetails(array $details): void
+    {
+        if ('prepared' !== $this->status || count($details) > 7) {
+            throw new \LogicException('Descriptions de références indisponibles.');
+        }
+        $names = $this->inputSettings['subjects'] ?? [];
+        if ((\App\Service\AiCatalog::MODELS[$this->model]['subjectReference'] ?? false) && $this->referenceImage) {
+            array_unshift($names, $this->referenceImage);
+        }
+        $seen = [];
+        foreach ($details as $detail) {
+            if (!in_array($detail['reference'], $names, true) || in_array($detail['reference'], $seen, true) || mb_strlen($detail['name']) > 60 || !in_array($detail['role'], ['character', 'object'], true) || !in_array($detail['presence'], ['visible', 'enters', 'unspecified'], true) || count($detail['views']) > 3) {
+                throw new \LogicException('Description de référence invalide.');
+            }
+            $seen[] = $detail['reference'];
+            $views = [];
+            foreach ($detail['views'] as $view) {
+                if (!preg_match('/^[a-f0-9]{48}\.jpg$/D', $view) || $view === $detail['reference'] || in_array($view, $views, true)) {
+                    throw new \LogicException('Vue de référence invalide.');
+                }
+                $views[] = $view;
+            }
+        }
+        $this->inputSettings['subjectDetails'] = $details;
     }
 
     #[ORM\Column(length: 12, nullable: true)]

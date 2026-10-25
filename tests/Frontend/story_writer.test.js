@@ -22,8 +22,9 @@ test('changing a subject or a per-shot frame invalidates an earlier story previe
   const fields = { title: 'Milo', reference: '', endReference: '', source: 'image', ratio: '9:16', imageFit: 'crop', useEnd: false };
   const frame = { startReference: 'first.jpg', endReference: '', referenceFit: 'crop' };
   const subjects = [{ value: 'subject.jpg' }];
+  const subjectDetails = [{ name: 'ai_idea[subjectDetails][0][name]', value: 'Milo' }];
   const row = { querySelector: selector => ({ value: selector === 'textarea' ? 'Milo walks.' : selector === 'select' ? '5' : frame[selector.match(/\[([^\[\]]+)\]/g)?.at(-1)?.slice(1, -1)] || '' }) };
-  const form = { querySelector: selector => ({ value: fields[selector.match(/ai_idea\[([^\]]+)/)?.[1]] }), querySelectorAll: () => subjects };
+  const form = { querySelector: selector => ({ value: fields[selector.match(/ai_idea\[([^\]]+)/)?.[1]] }), querySelectorAll: selector => selector.includes('subjectDetails') ? subjectDetails : subjects };
   writer.element = { querySelector: selector => selector === '#ai-idea-form' ? form : form.querySelector(selector) };
   writer.application = { getControllerForElementAndIdentifier: () => ({ rows: () => [row] }) };
   const original = writer.fingerprint();
@@ -32,6 +33,9 @@ test('changing a subject or a per-shot frame invalidates an earlier story previe
   assert.notEqual(changedSubject, original);
   frame.startReference = 'another-first.jpg';
   assert.notEqual(writer.fingerprint(), changedSubject);
+  const changedFrame = writer.fingerprint();
+  subjectDetails[0].value = 'Alice';
+  assert.notEqual(writer.fingerprint(), changedFrame);
 });
 
 test('a text engine error leaves the current scenes untouched and permits retry', async () => {
@@ -40,6 +44,20 @@ test('a text engine error leaves the current scenes untouched and permits retry'
   assert.equal(writer.statusTarget.textContent, 'Moteur indisponible');
   assert.equal(writer.generateTarget.disabled, false);
   assert.equal(writer.proposal, null);
+});
+
+test('the local writer receives subject names and roles without photo identifiers or views', () => {
+  const writer = setup(() => assert.fail('No request expected'));
+  delete writer.payload;
+  const profiles = [{ querySelector: selector => ({ value: selector.includes('name]') ? 'Milo' : selector.includes('[role]') ? 'character' : selector.includes('[presence]') ? 'enters' : 'private-photo.jpg', disabled: false }) }];
+  const fields = { prompt: 'Milo enters the street.', model: 'kling-3-image', target: '5', continuity: 'single' };
+  const form = { querySelector: selector => ({ value: fields[selector.match(/ai_idea\[([^\]]+)/)?.[1]] }), querySelectorAll: () => profiles };
+  writer.element = { querySelector: () => form };
+  writer.application = { getControllerForElementAndIdentifier: () => ({ rows: () => [{ querySelector: () => ({ value: '5' }) }], modelValue: { seconds: [5] } }) };
+  writer.toneTarget = { value: 'auto' }; writer.episodeValue = 2;
+  const hints = JSON.parse(writer.payload().subjectHints);
+  assert.deepEqual(hints, [{ name: 'Milo', role: 'character', presence: 'enters' }]);
+  assert.equal(writer.payload().subjectHints.includes('private-photo'), false);
 });
 
 test('a preparation error before the request is visible and allows retry without calling a provider', async () => {

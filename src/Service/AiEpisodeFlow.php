@@ -60,6 +60,7 @@ final class AiEpisodeFlow
         if (($model['subjectReference'] ?? false) && !$reference && $subjects) {
             $reference = array_shift($subjects);
         }
+        $subjectDetails = $this->inputs->subjectDetails($owner, $data['model'], $subjects, $data['subjectDetails'] ?? [], ($model['subjectReference'] ?? false) ? $reference : null, false);
         if ($image && !$reference && empty($rows[0]['startReference'])) {
             throw new \RuntimeException('Ajoute une référence ou le premier cadre du premier plan avant de continuer.');
         }
@@ -86,7 +87,7 @@ final class AiEpisodeFlow
         if ('linked' === $continuity && (!$image || ($model['subjectReference'] ?? false) || ($model['requiresEnd'] ?? false))) {
             throw new \RuntimeException('Pour les raccords, choisis ici un modèle image compatible et ajoute sa référence. Tes scènes restent conservées.');
         }
-        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($model['subjectReference'] ?? false) ? $reference : null, 'endReference' => null, 'imageFit' => $data['imageFit'], 'inputVersion' => 4, 'subjects' => $subjects];
+        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($model['subjectReference'] ?? false) ? $reference : null, 'endReference' => null, 'imageFit' => $data['imageFit'], 'inputVersion' => 4, 'subjects' => $subjects, 'subjectDetails' => $subjectDetails];
         $title = trim($data['title'] ?? '') ?: mb_substr(trim($data['prompt']), 0, 80);
 
         return $this->em->getConnection()->transactional(function () use ($owner, $data, $episode, $recipe, $title, $continuity, $rows): AiEpisode {
@@ -507,6 +508,7 @@ final class AiEpisodeFlow
                                 $job->frameImages($resolved['fit']);
                             }
                             $job->attachSubjects($resolved['subjects']);
+                            $job->attachSubjectDetails($resolved['subjectDetails']);
                             $end = $resolved['end'];
                             if ($end) {
                                 $job->attachEndReference($end);
@@ -588,7 +590,7 @@ final class AiEpisodeFlow
         if (($recipe['inputVersion'] ?? 1) >= 3) {
             $context = $recipe['visualContext'] ?? $this->visualContext($episode);
 
-            return $this->prompts->build($recipe['model'], $shot->getSeconds(), $scene, $context, $episode->getContinuity(), count($recipe['subjects'] ?? []));
+            return $this->prompts->build($recipe['model'], $shot->getSeconds(), $scene, $context, $episode->getContinuity(), count($recipe['subjects'] ?? []), $recipe['subjectDetails'] ?? []);
         }
         if ('single' === $episode->getContinuity()) {
             return 'ONE CONTINUOUS TAKE — '.$shot->getSeconds()." seconds. No cuts, no montage, no scene change. Complete one simple action smoothly within this shot:\n".$scene."\nVisual identity and style only:\n".$episode->getPrompt();

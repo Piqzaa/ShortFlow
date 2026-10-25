@@ -48,6 +48,23 @@ test('restoring the same saved image after removal rebuilds its private preview'
   assert.equal(controller.frameTarget.hidden, false);
 });
 
+test('complementary subject views stay whole and are offered only to Kling elements', () => {
+  const { controller } = picker(() => assert.fail('No upload expected'));
+  controller.kindValue = 'view';
+  controller.valueTarget.value = 'd'.repeat(48) + '.jpg';
+  controller.allowRemoveValue = false;
+  const model = { value: 'kling-3-image', selectedOptions: [{ dataset: { subjectLimit: '2', referenceMode: 'image' } }] };
+  controller.form.querySelector = selector => selector.includes('target="model"') ? model : null;
+  controller.render();
+  assert.equal(controller.fileTarget.disabled, false);
+  assert.equal(controller.previewTarget.style.objectFit, 'contain');
+  assert.equal(controller.removeTarget.hidden, true);
+  model.value = 'wan-image'; controller.render();
+  assert.equal(controller.fileTarget.disabled, true);
+  assert.equal(controller.frameTarget.hidden, false);
+  assert.match(controller.statusTarget.textContent, /ne convient pas/);
+});
+
 test('an invalid replacement clears pending state and preserves the earlier saved reference', async () => {
   let finish;
   const { controller } = picker(() => new Promise(resolve => { finish = resolve; }));

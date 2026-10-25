@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
   static targets = ['file', 'value', 'preview', 'frame', 'remove', 'status', 'fit'];
-  static values = { upload: String, token: String, kind: String, end: Boolean, ratio: String, image: String };
+  static values = { upload: String, token: String, kind: String, end: Boolean, ratio: String, image: String, allowRemove: { type: Boolean, default: true } };
 
   connect() {
     this.form = this.element.closest('form');
@@ -79,25 +79,26 @@ export default class extends Controller {
       this.imageValue = url.href;
       this.renderName = name;
     }
-    const select = this.form.querySelector('[data-creation-target="model"]');
+    const select = this.form.querySelector('[data-creation-target="model"], [data-series-settings-target="model"]');
     const option = select?.selectedOptions[0];
-    const allowed = !select || (this.kindValue === 'subject' ? Number(option?.dataset.subjectLimit) > 0 : option?.dataset.referenceMode === 'image' && (!this.endValue || option?.dataset.acceptsEnd === 'true'));
+    const identity = this.kindValue === 'subject' || this.kindValue === 'view';
+    const allowed = !select || (this.kindValue === 'view' ? select.value === 'kling-3-image' : this.kindValue === 'subject' ? Number(option?.dataset.subjectLimit) > 0 : option?.dataset.referenceMode === 'image' && (!this.endValue || option?.dataset.acceptsEnd === 'true'));
     const src = this.localUrl || (this.valueTarget.value ? this.imageValue : '');
     this.element.hidden = !allowed && !src;
     this.fileTarget.disabled = !allowed;
-    this.removeTarget.hidden = !src;
+    this.removeTarget.hidden = !src || this.allowRemoveValue === false;
     this.frameTarget.hidden = !src;
     if (src && this.previewTarget.getAttribute('src') !== src) this.previewTarget.src = src;
     if (!src) this.previewTarget.removeAttribute('src');
-    const ratio = this.kindValue === 'subject' ? 'auto' : this.form.querySelector('[data-creation-target="ratio"]')?.value || this.ratioValue || '9:16';
+    const ratio = identity ? 'auto' : this.form.querySelector('[data-creation-target="ratio"], [data-series-settings-target="ratio"]')?.value || this.ratioValue || '9:16';
     const fit = this.element.closest('[data-shot-editor-row]')?.querySelector('[name$="[referenceFit]"]')?.value || 'crop';
     const native = `${this.previewTarget.naturalWidth || 1} / ${this.previewTarget.naturalHeight || 1}`;
     this.frameTarget.style.aspectRatio = ratio === 'auto' ? native : ratio.replace(':',' / ');
     const [a,b] = this.frameTarget.style.aspectRatio.split('/').map(Number);
     this.frameTarget.style.maxWidth = `${Math.min(280, 330*a/b)}px`;
-    this.previewTarget.style.objectFit = this.kindValue === 'subject' || fit === 'contain' ? 'contain' : 'cover';
-    if (this.hasFitTarget) { this.fitTarget.hidden = this.kindValue === 'subject'; this.fitTarget.value = fit; }
-    this.statusTarget.textContent = !allowed && src ? 'Cette référence ne convient pas au modèle choisi : retire-la ou choisis un modèle compatible.' : src ? (this.kindValue === 'subject' ? 'Personnage commun : image entière.' : `${ratio} · ${fit === 'contain' ? 'image entière avec bandes si nécessaire' : 'recadrage centré'} · ce plan uniquement.`) : 'Aucune image affectée ici.';
+    this.previewTarget.style.objectFit = identity || fit === 'contain' ? 'contain' : 'cover';
+    if (this.hasFitTarget) { this.fitTarget.hidden = identity; this.fitTarget.value = fit; }
+    this.statusTarget.textContent = !allowed && src ? 'Cette référence ne convient pas au modèle choisi : retire-la ou choisis un modèle compatible.' : src ? (identity ? 'Référence d’identité : image entière.' : `${ratio} · ${fit === 'contain' ? 'image entière avec bandes si nécessaire' : 'recadrage centré'} · ce plan uniquement.`) : 'Aucune image affectée ici.';
   }
 
   changed() { this.valueTarget.dispatchEvent(new Event('change',{bubbles:true})); }

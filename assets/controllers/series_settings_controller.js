@@ -8,11 +8,22 @@ export default class extends Controller {
         for (const option of this.modelTarget.options || []) {
             const model = this.modelsValue[option.value];
             option.dataset.subject = String(Boolean(model?.subject));
+            option.dataset.referenceMode = model?.subject ? 'subject' : model?.image ? 'image' : 'text';
+            option.dataset.subjectLimit = String(model?.subjectLimit || 0);
+            option.dataset.acceptsEnd = String(Boolean(model?.end));
             if (this.hasSourceTarget && model) option.disabled = option.hidden = (model.subject ? 'subject' : model.image ? 'image' : 'text') !== this.sourceTarget.value;
         }
         this.update(false);
     }
     change() { this.update(true); }
+    guardPending(event) {
+        if (!this.element.querySelector('[data-plan-reference-busy="true"]')) return;
+        event.preventDefault();
+        event.stopImmediatePropagation?.();
+        this.hintTarget.textContent = 'Attends la fin de l’import des références avant d’enregistrer la série.';
+        this.hintTarget.tabIndex = -1;
+        this.hintTarget.focus();
+    }
 
     changeSource() {
         const mode = this.sourceTarget.value;
@@ -31,7 +42,7 @@ export default class extends Controller {
         const model = this.modelsValue[this.modelTarget.value];
         if (this.hasImagesTarget) {
             this.imagesTarget.hidden = false;
-            for (const input of this.imagesTarget.querySelectorAll('input[type="file"]')) input.disabled = !model?.image || (input.name?.endsWith('[endImage]') && !model.end && !model.requiresEnd);
+            for (const input of this.imagesTarget.querySelectorAll('input[type="file"][name]')) input.disabled = input.name?.endsWith('[subjectImages][]') || input.name?.endsWith('[subjectImages]') ? !(model?.subjectLimit > 0) : !model?.image || (input.name?.endsWith('[endImage]') && !model.end && !model.requiresEnd);
         }
         if (!model) { this.hintTarget.textContent = 'Choisis explicitement un modèle compatible ci-dessus. Aucun fournisseur ni tarif n’est sélectionné automatiquement.'; return; }
         if (this.hasSourceTarget) this.sourceTarget.value = model.subject ? 'subject' : model.image ? 'image' : 'text';

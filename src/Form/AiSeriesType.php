@@ -6,6 +6,7 @@ use App\Service\AiCatalog;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -52,6 +53,9 @@ final class AiSeriesType extends AbstractType
         }
         $builder->add('removeImage', CheckboxType::class, ['label' => 'Retirer l’image enregistrée à la sauvegarde', 'required' => false]);
         $builder->add('removeEndImage', CheckboxType::class, ['label' => 'Retirer l’image de fin enregistrée à la sauvegarde', 'required' => false]);
+        $builder->add('subjectsManaged', HiddenType::class, ['data' => '1', 'required' => false, 'empty_data' => '0']);
+        $builder->add('subjects', CollectionType::class, ['entry_type' => HiddenType::class, 'entry_options' => ['required' => false, 'constraints' => [new Assert\Regex('/^[a-f0-9]{48}\.jpg$/D')]], 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'label' => false, 'constraints' => [new Assert\Count(max: 7)]]);
+        $builder->add('subjectDetails', CollectionType::class, ['entry_type' => AiSubjectType::class, 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'label' => false, 'constraints' => [new Assert\Count(max: 7)]]);
         $builder->add('subjectImages', FileType::class, ['label' => 'Autres références de personnages', 'multiple' => true, 'required' => false, 'help' => 'Vidu référence : jusqu’à sept images au total. Kling 3 image : jusqu’à deux personnages supplémentaires, avec un premier cadre propre à chaque plan. Aucun ajout n’est généré par IA.', 'constraints' => [new Assert\Count(max: 7), new Assert\All([new Assert\File(maxSize: '10M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'])])], 'attr' => ['accept' => 'image/jpeg,image/png,image/webp']]);
         $choices = [];
         foreach ($options['subjects'] as $index => $name) {
