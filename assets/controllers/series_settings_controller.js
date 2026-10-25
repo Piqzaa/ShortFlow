@@ -39,7 +39,7 @@ export default class extends Controller {
         if (this.hasFitPanelTarget) this.fitPanelTarget.hidden = Boolean(model.subject);
         if (this.hasImagesTarget) {
             const label = this.imagesTarget.querySelector?.('label');
-            if (label) label.textContent = model.subject ? 'Image du personnage' : 'Image de début commune';
+            if (label) label.textContent = model.subject ? 'Image du personnage' : 'Début du premier plan';
         }
         for (const [select, values] of [[this.secondsTarget, model.seconds], [this.ratioTarget, model.ratios]]) {
             for (const option of select.options) option.disabled = !values.map(String).includes(option.value);

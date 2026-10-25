@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'fixContinuity'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'fixContinuity', 'audioHelp'];
   static values = { models: Object };
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) this.refresh(); }); }
@@ -25,6 +25,7 @@ export default class extends Controller {
 
   refresh() {
     const model = this.model;
+    if (this.hasAudioHelpTarget) this.audioHelpTarget.textContent = model?.audio ? 'Ce modèle génère son propre audio pour chaque clip. Le raccord par image ne transmet pas le son précédent. « Couper le son » agit au montage, sans réduire le coût de génération.' : model ? 'Ce modèle produit des clips sans audio. Tu peux ajouter une bande sonore dans le montage. Le réglage ci-dessous concerne uniquement le son conservé à l’export.' : 'Choisis un modèle pour connaître son audio. Couper le son au montage ne réduit pas le coût de génération.';
     const reference = this.element.querySelector('[data-creation-target="reference"]').value;
     const firstFrame = this.editor?.rows()[0]?.querySelector('[name$="[startReference]"]')?.value;
     const possible = Boolean(model?.image && (reference || firstFrame) && !model.subjectReference && !model.requiresEnd);

@@ -47,7 +47,7 @@ final class AiSeriesType extends AbstractType
             ->add('accessMode', ChoiceType::class, ['label' => 'Accès BYOK existant', 'choices' => ['Ma clé API' => 'api', 'Mon compte Fal connecté par navigateur' => 'mcp'], 'help' => 'La série utilise ta connexion dans VydFlow. Aucune clé à recopier.'])
             ->add('imageFit', ChoiceType::class, ['label' => 'Cadrage des images', 'choices' => ['Recadrage centré' => 'crop', 'Image entière avec bandes' => 'contain']])
             ->add('revision', HiddenType::class, ['constraints' => [new Assert\Regex('/^\d+$/D')]]);
-        foreach (['image' => 'Image de départ commune', 'endImage' => 'Image de fin commune (facultative selon le modèle)'] as $field => $label) {
+        foreach (['image' => 'Début du premier plan de chaque épisode', 'endImage' => 'Fin du dernier plan de chaque épisode (selon le modèle)'] as $field => $label) {
             $builder->add($field, FileType::class, ['label' => $label, 'required' => false, 'constraints' => [new Assert\File(maxSize: '10M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'])], 'attr' => ['accept' => 'image/jpeg,image/png,image/webp']]);
         }
         $builder->add('removeImage', CheckboxType::class, ['label' => 'Retirer l’image enregistrée à la sauvegarde', 'required' => false]);

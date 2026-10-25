@@ -13,7 +13,18 @@ export default class extends Controller {
     return { idea: field('prompt'), model: field('model'), target: field('target'), layout, continuity: field('continuity'), tone: this.toneTarget.value, episode: String(this.episodeValue) };
   }
   fingerprint() {
-    return JSON.stringify({ ...this.payload(), title: this.form.querySelector('[name="ai_idea[title]"]').value, framing: ['reference', 'endReference', 'source', 'ratio', 'imageFit', 'useEnd'].map(name => { const input = this.element.querySelector(`[name="ai_idea[${name}]"]`); return input?.type === 'checkbox' ? input.checked : input?.value; }), shots: this.editor.rows().map(row => [row.querySelector('textarea').value, row.querySelector('select').value]) });
+    return JSON.stringify({
+      ...this.payload(), title: this.form.querySelector('[name="ai_idea[title]"]').value,
+      framing: ['reference', 'endReference', 'source', 'ratio', 'imageFit', 'useEnd'].map(name => {
+        const input = this.element.querySelector(`[name="ai_idea[${name}]"]`);
+        return input?.type === 'checkbox' ? input.checked : input?.value;
+      }),
+      subjects: [...this.form.querySelectorAll('[name^="ai_idea[subjects]"]')].map(input => input.value),
+      shots: this.editor.rows().map(row => [
+        row.querySelector('textarea').value, row.querySelector('select').value,
+        ...['startReference', 'endReference', 'referenceFit'].map(name => row.querySelector(`[name$="[${name}]"]`)?.value || ''),
+      ]),
+    });
   }
   connect() { this.active = true; this.restore(); }
 

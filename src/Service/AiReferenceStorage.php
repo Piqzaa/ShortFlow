@@ -107,4 +107,36 @@ final class AiReferenceStorage
     {
         return 'data:image/jpeg;base64,'.base64_encode($this->bytes($owner, $name, $ratio, $fit, $match));
     }
+
+    /** @param list<string> $keep
+     * @return array{files:int,bytes:int}
+     */
+    public function sweep(User $owner, array $keep, \DateTimeImmutable $before, bool $apply = false): array
+    {
+        if ($before > new \DateTimeImmutable('-30 days')) {
+            throw new \InvalidArgumentException('Le délai de conservation minimal est de 30 jours.');
+        }
+        $directory = $this->directory($owner);
+        $retained = array_fill_keys($keep, true);
+        $result = ['files' => 0, 'bytes' => 0];
+        foreach (glob($directory.'/*.jpg') ?: [] as $path) {
+            $name = basename($path);
+            if (!preg_match('/^[a-f0-9]{48}\.jpg$/D', $name) || isset($retained[$name]) || is_link($path) || !is_file($path)) {
+                continue;
+            }
+            clearstatcache(true, $path);
+            $mtime = filemtime($path);
+            $size = filesize($path);
+            if (false === $mtime || false === $size || $mtime >= $before->getTimestamp()) {
+                continue;
+            }
+            if ($apply && !unlink($path)) {
+                throw new \RuntimeException('Une image inutilisée n’a pas pu être retirée.');
+            }
+            ++$result['files'];
+            $result['bytes'] += $size;
+        }
+
+        return $result;
+    }
 }

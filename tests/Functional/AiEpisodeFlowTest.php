@@ -11,6 +11,7 @@ use App\Entity\VideoAsset;
 use App\Service\AiEpisodeFlow;
 use App\Service\AiGenerations;
 use App\Service\AiKeys;
+use App\Service\AiReferenceMaintenance;
 use App\Service\AiReferenceStorage;
 use App\Service\EpisodeReservations;
 use App\Service\VideoEdits;
@@ -103,6 +104,42 @@ final class AiEpisodeFlowTest extends WebTestCase
     private function em(): EntityManagerInterface
     {
         return static::getContainer()->get(EntityManagerInterface::class);
+    }
+
+    public function testReferenceMaintenanceKeepsDatabaseSessionAndRecentImages(): void
+    {
+        $episode = $this->episode(true);
+        $storage = static::getContainer()->get(AiReferenceStorage::class);
+        $pinned = $storage->path($this->owner, $episode->getSeries()->getRecipe()['reference']);
+        touch($pinned, time() - 60 * 86400);
+        $names = [];
+        foreach (['orphan', 'session', 'recent'] as $kind) {
+            $names[$kind] = bin2hex(random_bytes(24)).'.jpg';
+            $path = dirname($pinned).'/'.$names[$kind];
+            copy($pinned, $path);
+            $this->files[] = $path;
+            if ('recent' !== $kind) {
+                touch($path, time() - 60 * 86400);
+            }
+        }
+        $sessions = sys_get_temp_dir().'/reference-sessions-'.bin2hex(random_bytes(8));
+        mkdir($sessions);
+        $sessionFile = $sessions.'/sess_synthetic';
+        file_put_contents($sessionFile, 'pending-reference:'.$names['session']);
+        try {
+            $maintenance = new AiReferenceMaintenance($this->em(), $storage, $sessions);
+            $report = $maintenance->inspect($this->owner);
+            self::assertSame(1, $report['files']);
+            self::assertFileExists(dirname($pinned).'/'.$names['orphan']);
+            self::assertSame($report, $maintenance->inspect($this->owner, true));
+            self::assertFileDoesNotExist(dirname($pinned).'/'.$names['orphan']);
+            self::assertFileExists($pinned);
+            self::assertFileExists(dirname($pinned).'/'.$names['session']);
+            self::assertFileExists(dirname($pinned).'/'.$names['recent']);
+        } finally {
+            unlink($sessionFile);
+            rmdir($sessions);
+        }
     }
 
     private function flow(): AiEpisodeFlow
@@ -354,6 +391,22 @@ final class AiEpisodeFlowTest extends WebTestCase
         $old = array_map(static fn (AiShot $s): int => $s->getGeneration()->getId(), $shots);
         $quote = $this->flow()->quote($episode, $shots[1]->getId());
         self::assertSame(70, $quote['cents']);
+        self::assertSame(1, $quote['count']);
+        $originalPrompt = $shots[1]->getPrompt();
+        $this->flow()->stageRepair($episode, $shots[1]->getId(), $episode->getRevision(), 'Scene 2: Milo opens the door slowly, then holds it open.');
+        self::assertSame($originalPrompt, $shots[1]->getPrompt());
+        self::assertNotNull($episode->getApprovedVideo());
+        self::assertSame(3, $this->submissions);
+        $corrected = $this->flow()->quote($episode, $shots[1]->getId());
+        self::assertNotSame($quote['hash'], $corrected['hash']);
+        self::assertStringContainsString('holds it open', $corrected['references'][0]['prompt']);
+        try {
+            $this->flow()->confirm($episode, $quote['hash'], $shots[1]->getId());
+            self::fail('The old quote must not authorize the corrected prompt.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('changé', $error->getMessage());
+        }
+        $quote = $corrected;
         $this->flow()->confirm($episode, $quote['hash'], $shots[1]->getId());
         $this->flow()->confirm($episode, $quote['hash'], $shots[1]->getId());
         self::assertNull($episode->getApprovedVideo());
@@ -361,12 +414,39 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertNull($shots[1]->getGeneration(), 'The chosen shot must be unbound before advancing');
         $this->flow()->advance($episode->getId());
         self::assertNotSame('paused', $episode->getFlowState(), $episode->getFlowIssue() ?? '');
+        self::assertStringContainsString('holds it open', $shots[1]->getGeneration()->getPrompt());
         $this->completeShot($shots[1]);
         self::assertSame($old[0], $shots[0]->getGeneration()->getId());
         self::assertSame($old[2], $shots[2]->getGeneration()->getId());
         self::assertNotSame($old[1], $shots[1]->getGeneration()->getId());
         self::assertSame([$old[1]], $shots[1]->getPreviousGenerations());
         self::assertSame(4, $this->submissions);
+    }
+
+    public function testRepairCannotBreakFollowingLinkedShotWithoutAnEndFrameCapability(): void
+    {
+        $episode = $this->episode(true);
+        $reference = $episode->getSeries()->getRecipe()['reference'];
+        $this->flow()->prepare($this->owner, ['model' => 'vidu-q1-image', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => $reference, 'endReference' => null, 'useEnd' => false, 'imageFit' => 'crop', 'prompt' => 'Milo walks.', 'title' => 'Linked repair', 'target' => 10, 'mute' => false, 'continuity' => 'linked', 'revision' => $episode->getRevision(), 'subjects' => [], 'shots' => [['prompt' => 'Scene 1: Milo steps forward.', 'seconds' => 5], ['prompt' => 'Scene 2: Milo keeps walking.', 'seconds' => 5]]], $episode);
+        $shots = $this->flow()->shots($episode);
+        foreach ($shots as $shot) {
+            $video = new VideoAsset($this->owner, 'Synthetic repair clip', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 100, 5, 360, 640, 'h264');
+            $job = new AiGeneration($this->owner, 'Synthetic plan', $shot->getPrompt(), 'vidu-q1-image', 5, '9:16', 40);
+            $job->complete($video);
+            $shot->bind($job);
+            $this->em()->persist($video);
+            $this->em()->persist($job);
+        }
+        $episode->flow('ready');
+        $this->em()->flush();
+        try {
+            $this->flow()->quote($episode, $shots[0]->getId());
+            self::fail('A linked successor must not silently keep a broken input.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('ne fixe pas l’image de fin', $error->getMessage());
+        }
+        self::assertSame(1, $this->flow()->quote($episode, $shots[1]->getId())['count']);
+        self::assertSame(0, $this->submissions);
     }
 
     public function testCapacityIncludesAllFuturePlansAndExportAndProtectsOtherGenerations(): void
@@ -592,7 +672,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $first = $episode->getPreparationRecipe()['reference'];
         $data = ['model' => 'kling-3-image', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => $first, 'endReference' => null, 'useEnd' => false, 'imageFit' => 'crop', 'prompt' => 'Milo explores.', 'title' => 'Synthetic per-plan frames', 'target' => 10, 'mute' => false, 'continuity' => 'independent', 'revision' => $episode->getRevision(), 'subjects' => [$first], 'shots' => [['prompt' => 'Scene 1: Milo opens a door.', 'seconds' => 5], ['prompt' => 'Scene 2: Milo enters.', 'seconds' => 5]]];
         $this->flow()->prepare($this->owner, $data, $episode);
-        self::assertSame(2, $episode->getFlowRecipe()['inputVersion']);
+        self::assertSame(3, $episode->getFlowRecipe()['inputVersion']);
         self::assertNull($episode->getFlowRecipe()['reference']);
         try {
             $this->flow()->quote($episode);

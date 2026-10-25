@@ -25,17 +25,17 @@ class AiShot
     private array $previousGenerations = [];
     #[ORM\Column(length: 52, nullable: true)]
     private ?string $endAnchor = null;
-    /** @var array{startReference?:?string,endReference?:?string,referenceFit?:string} */
+    /** @var array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string} */
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $inputs = [];
 
-    /** @return array{startReference?:?string,endReference?:?string,referenceFit?:string} */
+    /** @return array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string} */
     public function getInputs(): array
     {
         return $this->inputs;
     }
 
-    /** @param array{startReference?:?string,endReference?:?string,referenceFit?:string} $inputs */
+    /** @param array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string} $inputs */
     public function configureInputs(array $inputs): void
     {
         if ('draft' !== $this->episode->getFlowState()) {
@@ -109,7 +109,15 @@ class AiShot
         $this->generation = $job;
     }
 
-    public function replace(?string $endAnchor): void
+    public function stageRepair(string $prompt): void
+    {
+        if (!in_array($this->episode->getFlowState(), ['ready', 'paused'], true) || 'available' !== $this->generation?->getStatus()) {
+            throw new \RuntimeException('Attends un plan terminé avant de préparer sa réparation.');
+        }
+        $this->inputs['repairPrompt'] = trim($prompt);
+    }
+
+    public function replace(?string $endAnchor, ?string $prompt = null): void
     {
         if (!$this->generation || 'available' !== $this->generation->getStatus() || !$this->generation->getVideo()) {
             throw new \RuntimeException('Seul un résultat terminé peut être refait. Un résultat incertain doit être récupéré, jamais renvoyé automatiquement.');
@@ -117,5 +125,9 @@ class AiShot
         $this->previousGenerations[] = (int) $this->generation->getId();
         $this->generation = null;
         $this->endAnchor = $endAnchor;
+        if (null !== $prompt) {
+            $this->prompt = $prompt;
+        }
+        unset($this->inputs['repairPrompt']);
     }
 }

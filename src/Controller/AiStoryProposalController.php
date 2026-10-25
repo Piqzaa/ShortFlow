@@ -7,6 +7,7 @@ use App\Entity\StoryProposal;
 use App\Entity\User;
 use App\Service\AiCatalog;
 use App\Service\AiEpisodeFlow;
+use App\Service\AiShotPrompts;
 use App\Service\LocalStoryWriter;
 use App\Service\StoryProposals;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,7 +22,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class AiStoryProposalController extends AbstractController
 {
     #[Route('/studio/creation/scenario', name: 'app_ai_story_proposal', methods: ['POST'])]
-    public function propose(Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiCatalog $catalog, LocalStoryWriter $writer, StoryProposals $proposals, EntityManagerInterface $em, #[Autowire(service: 'limiter.story_proposal')] RateLimiterFactory $limiter): Response
+    public function propose(Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiCatalog $catalog, LocalStoryWriter $writer, StoryProposals $proposals, EntityManagerInterface $em, AiShotPrompts $prompts, #[Autowire(service: 'limiter.story_proposal')] RateLimiterFactory $limiter): Response
     {
         $headers = ['Cache-Control' => 'private, no-store'];
         if (!$this->isCsrfTokenValid('story_proposal', $request->request->getString('_token'))) {
@@ -69,6 +70,7 @@ final class AiStoryProposalController extends AbstractController
                 $previous = $em->createQueryBuilder()->select('e')->from(AiEpisode::class, 'e')->where('e.series = :series AND e.number < :number')->setParameter('series', $series)->setParameter('number', $episode->getNumber())->orderBy('e.number', 'DESC')->setMaxResults(3)->getQuery()->getResult();
                 $context['previous'] = array_map(static fn (AiEpisode $e): array => ['title' => $e->getTitle(), 'scenes' => array_map(static fn ($shot): string => mb_substr($shot->getPrompt(), 0, 180), array_slice($flow->shots($e), 0, 3))], $previous);
             }
+            $context['generation'] = $prompts->writingContext($request->request->getString('model'));
             $job = $proposals->create($user, $id ?: 0, $request->request->getString('fingerprint'), ['idea' => $idea, 'durations' => $durations, 'continuity' => $continuity, 'tone' => $tone, 'context' => $context]);
 
             return $this->json($this->payload($job), 202, $headers);

@@ -132,6 +132,10 @@ final class AiEpisodeController extends AbstractController
                             throw new \RuntimeException('Confirme le coût total fournisseur avant de lancer.');
                         }
                         $seriesConsent->manual($episode, fn () => $flow->confirm($episode, $request->request->getString('quote'), $request->request->getInt('redo')));
+                    } elseif ('repair_prompt' === $intent) {
+                        $flow->stageRepair($episode, $request->request->getInt('redo'), $request->request->getInt('revision'), $request->request->getString('repair_prompt'));
+
+                        return $this->redirectToRoute('app_series_episode', ['id' => $id, 'redo' => $request->request->getInt('redo'), '_fragment' => 'story-quote'], 303);
                     } elseif ('pause' === $intent) {
                         $flow->pause($episode);
                     } elseif ('stop' === $intent) {

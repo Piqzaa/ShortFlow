@@ -38,7 +38,7 @@
 {% include 'ai/_preparation_plans.html.twig' %}
 <div class="ai-actions"><button class="button" type="submit" name="intent" value="compose">Voir le récapitulatif →</button><button data-creation-target="connect" class="account-secondary" type="submit" name="intent" value="connect" formnovalidate>Connecter mon fournisseur</button></div><p class="library-note">Aucune dépense à cette étape. Tu confirmeras les scènes et le coût total avant le lancement.</p>{{ form_end(ideaForm) }}
 
-<details class="creation-details creation-models" data-creation-target="catalog"><summary>Explorer le catalogue · {{ groups|length }} modèles · {{ models|length }} configurations</summary>
+<details class="creation-details creation-models" data-creation-target="catalog"><summary>Explorer le catalogue · {{ groups|length }} modèles · {{ models|filter(model => model.operation is not defined)|length }} configurations</summary>
 <p class="catalog-fourk">La 4K est disponible avec LTX 2.3 Fast et LTX 2.5 Fast. Connexion LTX requise · texte ou images de début et de fin. <button type="button" class="account-secondary" data-action="creation#showFourK" data-creation-target="fourK" hidden>Voir les modèles 4K</button></p>
 <div class="catalog-filters" data-creation-target="filters" hidden>
 <div><label for="catalog-search">Rechercher un modèle</label><input id="catalog-search" type="search" placeholder="Kling, Wan, Alibaba…" data-creation-target="search" data-action="input->creation#filter"></div>

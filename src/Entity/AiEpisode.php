@@ -170,6 +170,14 @@ class AiEpisode
         $this->flow('running');
     }
 
+    public function touchRepair(): void
+    {
+        if (!in_array($this->flowState, ['ready', 'paused'], true)) {
+            throw new \RuntimeException('La vidéo n’est pas prête pour une réparation.');
+        }
+        ++$this->revision;
+    }
+
     public function approve(VideoAsset $video): void
     {
         if ('ready' !== $this->flowState || $video->getOwner()->getId() !== $this->getOwner()->getId()) {

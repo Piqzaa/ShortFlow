@@ -16,6 +16,24 @@ function setup(fetch, document = {}) {
   return writer;
 }
 
+test('changing a subject or a per-shot frame invalidates an earlier story preview', () => {
+  const writer = setup(() => assert.fail('No network request expected'));
+  delete writer.fingerprint;
+  const fields = { title: 'Milo', reference: '', endReference: '', source: 'image', ratio: '9:16', imageFit: 'crop', useEnd: false };
+  const frame = { startReference: 'first.jpg', endReference: '', referenceFit: 'crop' };
+  const subjects = [{ value: 'subject.jpg' }];
+  const row = { querySelector: selector => ({ value: selector === 'textarea' ? 'Milo walks.' : selector === 'select' ? '5' : frame[selector.match(/\[([^\[\]]+)\]/g)?.at(-1)?.slice(1, -1)] || '' }) };
+  const form = { querySelector: selector => ({ value: fields[selector.match(/ai_idea\[([^\]]+)/)?.[1]] }), querySelectorAll: () => subjects };
+  writer.element = { querySelector: selector => selector === '#ai-idea-form' ? form : form.querySelector(selector) };
+  writer.application = { getControllerForElementAndIdentifier: () => ({ rows: () => [row] }) };
+  const original = writer.fingerprint();
+  subjects[0].value = 'another-subject.jpg';
+  const changedSubject = writer.fingerprint();
+  assert.notEqual(changedSubject, original);
+  frame.startReference = 'another-first.jpg';
+  assert.notEqual(writer.fingerprint(), changedSubject);
+});
+
 test('a text engine error leaves the current scenes untouched and permits retry', async () => {
   const writer = setup(async () => ({ ok: false, json: async () => ({ error: 'Moteur indisponible' }) }));
   await writer.propose();

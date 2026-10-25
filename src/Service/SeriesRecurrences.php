@@ -181,7 +181,7 @@ final class SeriesRecurrences
                     $memory[] = ['title' => $old->getEpisode()?->getTitle(), 'summary' => $old->getSummary()];
                 }
             }
-            $story = $this->writer->propose($series->getTheme(), $settings['durations'], $settings['continuity'], $settings['tone'], ['style' => $series->getStyle(), 'characters' => $series->getCharacters(), 'previous' => $memory]);
+            $story = $this->writer->propose($series->getTheme(), $settings['durations'], $settings['continuity'], $settings['tone'], ['style' => $series->getStyle(), 'characters' => $series->getCharacters(), 'previous' => $memory, 'generation' => (new AiShotPrompts($this->catalog))->writingContext($settings['recipe']['model'])]);
             $this->em->getConnection()->transactional(function () use ($occurrence, $recurrence, $episode, $story, $message, $series, $settings): void {
                 $this->em->lock($series->getOwner(), LockMode::PESSIMISTIC_WRITE);
                 $this->em->refresh($recurrence, LockMode::PESSIMISTIC_WRITE);

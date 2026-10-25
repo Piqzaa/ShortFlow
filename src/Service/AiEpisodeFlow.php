@@ -17,7 +17,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiEpisodeFlow
 {
-    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent, private AiPlanInputs $inputs)
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent, private AiPlanInputs $inputs, private AiShotPrompts $prompts)
     {
     }
 
@@ -86,7 +86,7 @@ final class AiEpisodeFlow
         if ('linked' === $continuity && (!$image || ($model['subjectReference'] ?? false) || ($model['requiresEnd'] ?? false))) {
             throw new \RuntimeException('Pour les raccords, choisis ici un modèle image compatible et ajoute sa référence. Tes scènes restent conservées.');
         }
-        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($model['subjectReference'] ?? false) ? $reference : null, 'endReference' => null, 'imageFit' => $data['imageFit'], 'inputVersion' => 2, 'subjects' => $subjects];
+        $recipe = ['model' => $data['model'], 'seconds' => min($model['seconds']), 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => ($model['subjectReference'] ?? false) ? $reference : null, 'endReference' => null, 'imageFit' => $data['imageFit'], 'inputVersion' => 3, 'subjects' => $subjects];
         $title = trim($data['title'] ?? '') ?: mb_substr(trim($data['prompt']), 0, 80);
 
         return $this->em->getConnection()->transactional(function () use ($owner, $data, $episode, $recipe, $title, $continuity, $rows): AiEpisode {
@@ -242,19 +242,27 @@ final class AiEpisodeFlow
             if ($redo && $shot->getId() !== $redo) {
                 continue;
             }
-            if ('' === trim($shot->getPrompt()) || mb_strlen($shot->getPrompt()) > 1500) {
+            $scene = $redo ? ($shot->getInputs()['repairPrompt'] ?? $shot->getPrompt()) : $shot->getPrompt();
+            if ('' === trim($scene) || mb_strlen($scene) > 1500) {
                 throw new \RuntimeException('Complète le prompt de chaque plan avant de vérifier l’estimation.');
             }
             $this->catalog->validate($recipe['model'], $shot->getSeconds(), $recipe['ratio']);
-            $this->catalog->validatePrompt($recipe['model'], $this->prompt($episode, $shot));
+            $effectivePrompt = $this->prompt($episode, $shot, $scene);
+            $this->catalog->validatePrompt($recipe['model'], $effectivePrompt);
             $price = $this->catalog->estimate($recipe['model'], $shot->getSeconds());
             try {
                 $resolved = $this->inputs->resolve($episode, $shot, $index, count($shots));
             } catch (\RuntimeException $failure) {
                 throw new \RuntimeException('Plan '.($index + 1).' : '.$failure->getMessage());
             }
-            $references[] = ['position' => $shot->getPosition(), 'seconds' => $shot->getSeconds(), 'model' => $recipe['model']] + $resolved;
+            if ($redo && 'linked' === $episode->getContinuity() && isset($this->catalog->model($recipe['model'])['endImageField'])) {
+                $resolved['endFromExisting'] = true;
+            }
+            $references[] = ['position' => $shot->getPosition(), 'seconds' => $shot->getSeconds(), 'model' => $recipe['model'], 'prompt' => $effectivePrompt] + $resolved;
             $data[] = [$shot->getId(), $shot->getPrompt(), $shot->getSeconds(), $price, $shot->getGeneration()?->getId(), $resolved];
+            if (($recipe['inputVersion'] ?? 1) >= 3 || $redo) {
+                $data[] = $effectivePrompt;
+            }
             $cents += $price;
             $seconds += $shot->getSeconds();
         }
@@ -263,13 +271,16 @@ final class AiEpisodeFlow
         }
         if ($redo) {
             $shot = $this->em->find(AiShot::class, $redo);
+            if ('linked' === $episode->getContinuity() && $shot && $shot->getPosition() < count($shots) && !isset($this->catalog->model($recipe['model'])['endImageField'])) {
+                throw new \RuntimeException('Ce plan alimente le suivant et ce modèle ne fixe pas l’image de fin. Prépare une nouvelle vidéo pour modifier cet enchaînement ; aucun plan suivant ne sera régénéré sans accord.');
+            }
             $unsafe = array_filter($shots, static fn (AiShot $s): bool => $s->getGeneration() && 'available' !== $s->getGeneration()->getStatus());
             if (!in_array($episode->getFlowState(), ['ready', 'paused'], true) || $unsafe || $episode->getAssembly()?->isActive() || !$shot || 'available' !== $shot->getGeneration()?->getStatus() || !$shot->getGeneration()->getVideo()) {
                 throw new \RuntimeException('Attends un épisode terminé pour refaire uniquement ce plan.');
             }
         }
 
-        return ['hash' => hash('sha256', serialize([$episode->getId(), $episode->getRevision(), $recipe, $episode->getContinuity(), $episode->isMutePlans(), $data, $this->tariff($episode)])), 'cents' => $cents, 'seconds' => $seconds, 'count' => count($data), 'redo' => $redo, 'references' => $references];
+        return ['hash' => hash('sha256', serialize([$episode->getId(), $episode->getRevision(), $recipe, $episode->getContinuity(), $episode->isMutePlans(), $data, $this->tariff($episode)])), 'cents' => $cents, 'seconds' => $seconds, 'count' => count($references), 'redo' => $redo, 'references' => $references];
     }
 
     public function confirm(AiEpisode $episode, string $hash, int $redo = 0): void
@@ -302,7 +313,7 @@ final class AiEpisodeFlow
             if ($redo) {
                 $shot = $this->em->find(AiShot::class, $redo);
                 $anchor = 'linked' === $episode->getContinuity() && isset($this->catalog->model($recipe['model'])['endImageField']) ? $this->frames->lastFrame($shot->getGeneration()->getVideo()) : null;
-                $shot->replace($anchor);
+                $shot->replace($anchor, $shot->getInputs()['repairPrompt'] ?? null);
                 $episode->repair();
             }
             $episode->consent($tariff, $account, $hash);
@@ -317,6 +328,24 @@ final class AiEpisodeFlow
             if (in_array($episode->getFlowState(), ['running', 'assembling'], true)) {
                 $episode->flow('paused', 'Les plans suivants sont suspendus. Une demande déjà transmise ou un assemblage en cours peut se terminer.');
             }
+        });
+    }
+
+    public function stageRepair(AiEpisode $episode, int $shotId, int $revision, string $prompt): void
+    {
+        $this->locked($episode, function () use ($episode, $shotId, $revision, $prompt): void {
+            $this->revision($episode, $revision);
+            $shot = $this->em->find(AiShot::class, $shotId);
+            if (!$shot || $shot->getEpisode()->getId() !== $episode->getId()) {
+                throw new \RuntimeException('Plan indisponible.');
+            }
+            if ('' === trim($prompt) || mb_strlen($prompt) > 1500) {
+                throw new \RuntimeException('Décris la réparation en 1 à 1 500 caractères.');
+            }
+            $this->quote($episode, $shotId);
+            $this->catalog->validatePrompt($episode->getFlowRecipe()['model'], $this->prompt($episode, $shot, $prompt));
+            $shot->stageRepair($prompt);
+            $episode->touchRepair();
         });
     }
 
@@ -498,13 +527,20 @@ final class AiEpisodeFlow
         }
     }
 
-    private function prompt(AiEpisode $episode, AiShot $shot): string
+    private function prompt(AiEpisode $episode, AiShot $shot, ?string $scene = null): string
     {
+        $scene ??= $shot->getPrompt();
+        $recipe = $episode->getFlowRecipe();
+        if (($recipe['inputVersion'] ?? 1) >= 3) {
+            $context = $episode->isStandalone() ? $episode->getPrompt() : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle();
+
+            return $this->prompts->build($recipe['model'], $shot->getSeconds(), $scene, $context, $episode->getContinuity(), count($recipe['subjects'] ?? []));
+        }
         if ('single' === $episode->getContinuity()) {
-            return 'ONE CONTINUOUS TAKE — '.$shot->getSeconds()." seconds. No cuts, no montage, no scene change. Complete one simple action smoothly within this shot:\n".$shot->getPrompt()."\nVisual identity and style only:\n".$episode->getPrompt();
+            return 'ONE CONTINUOUS TAKE — '.$shot->getSeconds()." seconds. No cuts, no montage, no scene change. Complete one simple action smoothly within this shot:\n".$scene."\nVisual identity and style only:\n".$episode->getPrompt();
         }
 
-        return 'SHOT TO GENERATE — perform only this scene within '.$shot->getSeconds()." seconds, with a clear ending before the cut:\n".$shot->getPrompt()
+        return 'SHOT TO GENERATE — perform only this scene within '.$shot->getSeconds()." seconds, with a clear ending before the cut:\n".$scene
             ."\n\nSHARED CONTEXT — use only for visual identity and style. Do not replay the full story or actions from other scenes:\n".$episode->getPrompt();
     }
 
@@ -525,6 +561,9 @@ final class AiEpisodeFlow
         $parts = [$this->catalog->model($model)['checked'] ?? AiCatalog::CHECKED, array_map(fn (AiShot $s): int => $this->catalog->estimate($model, $s->getSeconds()), $this->shots($episode))];
         if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 2) {
             $parts[] = $this->catalog->contract($model);
+        }
+        if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 3) {
+            $parts[] = AiShotPrompts::VERSION;
         }
 
         return hash('sha256', serialize($parts));

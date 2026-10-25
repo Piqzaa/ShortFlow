@@ -73,7 +73,7 @@ export default class extends Controller {
 
   render() {
     const name = this.valueTarget.value;
-    if (/^[a-f0-9]{48}\.jpg$/.test(name) && this.renderName !== name && !this.localUrl) {
+    if (/^[a-f0-9]{48}\.jpg$/.test(name) && (!this.imageValue || this.renderName !== name) && !this.localUrl) {
       const url = new URL(this.uploadValue, location.href);
       url.search = ''; url.pathname += '/'+name;
       this.imageValue = url.href;
