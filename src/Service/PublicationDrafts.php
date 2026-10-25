@@ -65,6 +65,7 @@ final class PublicationDrafts
                 if ($draft->getEpisode() && $ids !== $draft->videoIds()) {
                     throw new PublicationException('Cette préparation est liée à une version validée de l’épisode. Valide une autre version depuis la série pour préparer sa publication.');
                 }
+                $previousContent = $draft->content();
                 $draft->edit($title ?: $selected[0]->getTitle(), $networks, array_intersect_key($accounts, array_flip($networks)), $this->clock->now());
                 $previous = [];
                 foreach ($draft->getItems() as $item) {
@@ -80,6 +81,7 @@ final class PublicationDrafts
                     $item->setContent($rowContent);
                     $draft->addItem($item);
                 }
+                $draft->trackEditorialChanges($previousContent);
                 $this->em()->persist($draft);
                 $this->em()->flush();
 

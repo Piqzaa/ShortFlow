@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Index(name: 'story_owner_scope', columns: ['owner_id', 'scope', 'created_at'])]
+#[ORM\Index(name: 'editorial_owner_scope', columns: ['owner_id', 'kind', 'scope', 'created_at'])]
 class StoryProposal
 {
     #[ORM\Id, ORM\Column(length: 32)]
@@ -14,6 +15,8 @@ class StoryProposal
     private User $owner;
     #[ORM\Column]
     private int $scope;
+    #[ORM\Column(length: 16, options: ['default' => 'story'])]
+    private string $kind = 'story';
     #[ORM\Column(type: 'text')]
     private string $fingerprint;
     /** @var array<string,mixed> */
@@ -30,7 +33,7 @@ class StoryProposal
     private \DateTimeImmutable $createdAt;
 
     /** @param array<string,mixed> $input */
-    public function __construct(User $owner, int $scope, string $fingerprint, array $input)
+    public function __construct(User $owner, int $scope, string $fingerprint, array $input, string $kind = 'story')
     {
         // Keep latest deterministic when several jobs share a database timestamp second.
         $this->id = sprintf('%014x', (int) (microtime(true) * 1000000)).bin2hex(random_bytes(9));
@@ -38,6 +41,10 @@ class StoryProposal
         $this->scope = $scope;
         $this->fingerprint = $fingerprint;
         $this->input = $input;
+        if (!in_array($kind, ['story', 'editorial'], true)) {
+            throw new \InvalidArgumentException('Type de rédaction indisponible.');
+        }
+        $this->kind = $kind;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -54,6 +61,11 @@ class StoryProposal
     public function getScope(): int
     {
         return $this->scope;
+    }
+
+    public function getKind(): string
+    {
+        return $this->kind;
     }
 
     public function getFingerprint(): string

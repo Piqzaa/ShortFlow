@@ -28,6 +28,22 @@ class AiSeries
     /** @var array{totalSeconds?:int,model:string, seconds:int, ratio:string, accessMode:string, reference:?string, endReference:?string, imageFit:string,inputVersion?:int,subjects?:list<string>,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} */
     #[ORM\Column(type: 'json')]
     private array $recipe;
+    /** @var array<string,string> */
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $editorialProfile = [];
+
+    /** @return array<string,string> */
+    public function getEditorialProfile(): array
+    {
+        return $this->editorialProfile;
+    }
+
+    /** @param array<string,string> $profile */
+    public function configureEditorial(array $profile): void
+    {
+        $this->editorialProfile = $profile;
+        ++$this->revision;
+    }
 
     #[ORM\Column]
     private int $revision = 1;

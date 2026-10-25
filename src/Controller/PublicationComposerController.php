@@ -9,6 +9,7 @@ use App\Repository\PublicationDraftRepository;
 use App\Repository\VideoAssetRepository;
 use App\Service\MultiNetworkPublishing;
 use App\Service\PublicationDrafts;
+use App\Service\PublicationEditorial;
 use App\Service\PublicationException;
 use App\Service\PublicationRetry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -97,7 +98,7 @@ final class PublicationComposerController extends AbstractController
     }
 
     #[Route('/studio/composer/{key}', name: 'app_composer', requirements: ['key' => '[a-f0-9]{48}'], methods: ['GET', 'POST'])]
-    public function compose(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts, PublicationDraftRepository $repository, \App\Service\VideoEdits $edits): Response
+    public function compose(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts, PublicationDraftRepository $repository, \App\Service\VideoEdits $edits, PublicationEditorial $editorial): Response
     {
         $state = $request->getSession()->get('composer_workspaces', [])[$key] ?? null;
         if (!is_array($state) || $state['owner'] !== $user->getId()) {
@@ -122,7 +123,7 @@ final class PublicationComposerController extends AbstractController
         if (null !== $editSource && !in_array($editSource, $state['ids'], true)) {
             throw $this->createNotFoundException();
         }
-        $partial = null !== $editSource || in_array($intent, ['refresh', 'save'], true);
+        $partial = null !== $editSource || in_array($intent, ['refresh', 'save', 'editorial', 'editorial_apply'], true);
         $selected = $state['networks'];
         if ($submitted) {
             $values = $submitted['networks'] ?? [];
@@ -198,6 +199,20 @@ final class PublicationComposerController extends AbstractController
                     // Save the draft before planning; a bad date must never lose edited text.
                     $this->save($request, $key, $next);
                     $state = $next;
+                    if (in_array($intent, ['editorial', 'editorial_apply'], true)) {
+                        if ('editorial' === $intent) {
+                            $editorial->request($user, $stored, $request->request->getString('editorial_brief'));
+                        } else {
+                            $stored = $editorial->apply($user, $stored, $request->request->getString('editorial_job'), $request->request->all('editorial_fields'), $request->request->getBoolean('editorial_overwrite'));
+                        }
+                        // Preserve timing choices too; text generation never arms or silently resets a publication.
+                        $next['content'] = $stored->content();
+                        $next['persistentRevision'] = $stored->getRevision();
+                        $next['revision'] = bin2hex(random_bytes(16));
+                        $this->save($request, $key, $next);
+
+                        return $this->redirectToRoute('app_composer', ['key' => $key], 303);
+                    }
                     $local = 'scheduled' === $next['mode'] ? ($next['local'] ?: ('review' === $intent ? '' : null)) : null;
                     $drafts->plan($user, (int) $stored->getId(), $stored->getRevision(), $local, $next['timezone']);
                     $next['persistentRevision'] = $stored->getRevision();
@@ -223,7 +238,7 @@ final class PublicationComposerController extends AbstractController
             }
         }
 
-        return $this->render('publication/composer.html.twig', $context + ['sourceEpisode' => $stored?->getEpisode(), 'form' => $form, 'key' => $key, 'selectedNetworks' => $selected, 'state' => $state, 'networkLabels' => MultiNetworkPublishing::LABELS, 'accountChanged' => $accountChanged], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'no-store, private']));
+        return $this->render('publication/composer.html.twig', $context + ['sourceEpisode' => $stored?->getEpisode(), 'editorial' => $stored?->getEpisode() ? $editorial->view($stored) : null, 'editorialDraft' => $stored, 'form' => $form, 'key' => $key, 'selectedNetworks' => $selected, 'state' => $state, 'networkLabels' => MultiNetworkPublishing::LABELS, 'accountChanged' => $accountChanged], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'no-store, private']));
     }
 
     /** @param array<string, mixed> $state */

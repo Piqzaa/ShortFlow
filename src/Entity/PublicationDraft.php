@@ -36,6 +36,42 @@ class PublicationDraft
     /** @var list<string> */
     #[ORM\Column(type: 'json')]
     private array $networks = [];
+    /** @var array<string,mixed> */
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $editorial = [];
+
+    /** @return array<string,mixed> */
+    public function getEditorial(): array
+    {
+        return $this->editorial;
+    }
+
+    /** @param array<string,mixed> $editorial */
+    public function setEditorial(array $editorial): void
+    {
+        $this->editorial = $editorial;
+    }
+
+    /** Record deliberate changes, including clearing a generated field.
+     * @param array<string,array<string,mixed>> $previous
+     */
+    public function trackEditorialChanges(array $previous): void
+    {
+        if (!$this->editorial) {
+            return;
+        }
+        foreach ($this->content() as $network => $rows) {
+            foreach ($rows['videos'] ?? [] as $video => $settings) {
+                foreach ('youtube' === $network ? ['title', 'description'] : ['caption'] as $field) {
+                    $old = $previous[$network]['videos'][$video][$field] ?? '';
+                    $value = $settings[$field] ?? '';
+                    if ($value !== $old) {
+                        $this->editorial['human'][$network][$field] = true;
+                    }
+                }
+            }
+        }
+    }
     /** @var array<string, ?string> */
     #[ORM\Column(type: 'json')]
     private array $accounts = [];
@@ -226,7 +262,7 @@ class PublicationDraft
     /** @return list<int> */
     public function videoIds(): array
     {
-        return array_map(static fn (PublicationDraftItem $item): int => $item->getVideoId(), $this->items->toArray());
+        return array_values(array_map(static fn (PublicationDraftItem $item): int => $item->getVideoId(), $this->items->toArray()));
     }
 
     /** @return array<string, array<string, mixed>> */

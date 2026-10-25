@@ -1,0 +1,9 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Textes de la série — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ path('app_series_show',{id:series.id}) }}">← {{ series.name }}</a>
+<div class="workspace-heading"><div><span class="eyebrow">LA VOIX DE TA SÉRIE</span><h1>Des textes qui te ressemblent.</h1><p>Ces indications guideront les propositions locales de titres, descriptions et légendes. Tu les reliras avant publication.</p></div></div>
+{{ form_start(form,{attr:{class:'account-form series-config','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}{{ form_errors(form) }}{{ form_widget(form) }}
+<p class="library-note">Sépare les hashtags par des espaces ou des virgules, dix maximum par liste. Une liste autorisée non vide limite les propositions à ces hashtags. Le rédacteur ne regarde pas la vidéo et ne choisit ni visibilité, ni audience réglementaire, ni déclarations.</p>
+<button class="button" type="submit">Enregistrer mon profil éditorial</button>{{ form_end(form) }}
+{% endblock %}

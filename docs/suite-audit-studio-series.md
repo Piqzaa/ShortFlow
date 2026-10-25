@@ -4,7 +4,7 @@ Le propriétaire a autorisé l’action après le rapport `audit-studio-series-g
 
 - [x] Lot 1 : prompts/contexte figés, cadres sans priorité cachée, empreinte récurrente complète.
 - [x] Lot 2 : références nommées, capacités communes, transitions, limites et prévol cohérents.
-- [ ] Lot 3 : profil éditorial et propositions locales par réseau, liés à la vidéo validée.
+- [x] Lot 3 : profil éditorial et propositions locales par réseau, liés à la vidéo validée.
 - [ ] Lot 4 : reprise des occurrences interrompues, états et action suivante.
 - [ ] Lot 5 : recette de montage limitée aux fonctions existantes et finition UX.
 - [ ] Recette finale simulée, navigateur et remise en route des workers.
@@ -36,3 +36,13 @@ Studio et Séries utilisent les mêmes cartes et limites. Changer vers une réf�
 Vérifications : trois tests fonctionnels ciblés, 24 assertions réussies sur `shortflow_test` ; cartes/cadres distincts, identité figée et devis avec vues nommées. Les agents ont vérifié 15 tests unitaires/44 assertions sur sujets, budgets et formulaires, et 92 tests/1 700 assertions de contrats images simulés. Suite frontend à ce stade : 126 tests réussis, avec les nouveaux contrôles de transitions et de références. La recette navigateur et la suite globale sont encore à consolider en fin de chantier.
 
 En Symfony, les collections indexées sont transformées par les formulaires, puis normalisées dans le service ; le nom du fichier n’est pas utilisé comme nom de champ. Les données de l’interface ne donnent jamais accès à un fichier d’un autre propriétaire. À tester sans coût : décor en cadre initial, sujet nommé qui entre dans l’action, vues Kling distinctes, puis récapitulatif des entrées exactes.
+
+## Lot 3 — textes de publication supervisés
+
+Une version vidéo validée peut demander une proposition locale par réseau depuis son préparateur existant. Le profil de série précise langue, ton, public, mots-clés, marque, appel à l’action et hashtags autorisés/exclus. Il reste distinct de la recette vidéo. Le moteur local reçoit les scènes connues et une description facultative de la version ; il ne regarde pas la vidéo. Les hashtags sont assemblés dans les descriptions/légendes existantes, sans modifier les réglages sociaux.
+
+`StoryProposal.kind` isole les scénarios des textes éditoriaux en réutilisant Messenger et le mutex du moteur local. `PublicationEditorial` lie la proposition à la vidéo approuvée, aux scènes, au profil et aux réseaux. `PublicationDraft.editorial` conserve l’origine des champs : existant, généré ou modifié par le créateur. Le préparateur sauvegarde les saisies avant toute demande/application et demande un accord explicite pour remplacer un champ modifié. Les dates et programmations ne changent pas. La migration additive `Version20261025190000` conserve les anciennes données.
+
+Fichiers, parcours et flux Symfony détaillés dans `editorial-supervise.md`. La route de profil est séparée (`/studio/series/{id}/textes`) ; le bouton de rédaction est dans le préparateur de la vidéo validée. Une nouvelle version/profil/réseau invalide l’application de l’ancien résultat, sans effacer les brouillons antérieurs.
+
+Vérifications consolidées : cinq tests fonctionnels éditoriaux, 52 assertions réussies sur `shortflow_test`, sans API sociale ni vidéo. Les tests ont révélé puis corrigé la conservation de clés numériques dans `PublicationDraft.videoIds()` après une seconde sauvegarde ; ils vérifient aussi un champ volontairement vidé. L’agent a vérifié 19 tests unitaires (65 assertions, incluant le rédacteur existant) et trois tests frontend du nouveau suivi. La suite globale de fin de chantier revérifiera les scénarios et publications existants.
