@@ -1,11 +1,8 @@
-{% extends 'studio/base.html.twig' %}
-{% block title %}À valider — VydFlow{% endblock %}
-{% block studio_content %}
-<div class="studio-heading"><div><span class="eyebrow">LA PROCHAINE ÉTAPE, AU BON ENDROIT</span><h1>À valider.</h1><p>Retrouve les vidéos à regarder, les publications à préparer et les points à corriger.</p></div></div>
+<details id="etapes" class="activity-next-steps dashboard-guide"{% if app.request.query.has('filter') or app.request.query.has('page') %} open{% endif %}><summary>Étapes à terminer · {{ queue.counts|reduce((total,n)=>total+n,0) }}</summary>
 <p class="library-note">Ouvrir un élément ne valide rien et ne lance aucun envoi. Chaque action conserve son récapitulatif et sa confirmation.</p>
 <nav class="validation-filters" aria-label="Filtrer les éléments à valider">
-<a href="{{ path('app_validation_queue') }}"{% if not queue.filter %} aria-current="page"{% endif %}>Tout <span>{{ queue.counts|reduce((total,n)=>total+n,0) }}</span></a>
-{% for key,label in labels %}<a href="{{ path('app_validation_queue',{filter:key}) }}"{% if queue.filter == key %} aria-current="page"{% endif %}>{{ label }} <span>{{ queue.counts[key] }}</span></a>{% endfor %}</nav>
+<a href="{{ path('app_activity',{page:1,_fragment:'etapes'}) }}"{% if not queue.filter %} aria-current="page"{% endif %}>Tout <span>{{ queue.counts|reduce((total,n)=>total+n,0) }}</span></a>
+{% for key,label in labels %}<a href="{{ path('app_activity',{filter:key,_fragment:'etapes'}) }}"{% if queue.filter == key %} aria-current="page"{% endif %}>{{ label }} <span>{{ queue.counts[key] }}</span></a>{% endfor %}</nav>
 <p class="library-note" role="status">{{ queue.total }} élément{{ queue.total > 1 ? 's' : '' }}{{ queue.filter ? ' dans cette catégorie' : ' en attente de ton intervention' }}.</p>
 <div class="validation-list">
 {% for item in queue.items %}
@@ -16,5 +13,7 @@
 {% else %}<a class="button small" href="{{ path('app_publications',{network:item.network,state:'attention'}) }}">Vérifier l’envoi →</a>{% endif %}</article>
 {% else %}<section class="studio-empty"><h2>{{ queue.filter ? 'Rien dans cette catégorie.' : 'Tout est à jour.' }}</h2><p>{{ queue.filter ? 'Choisis une autre catégorie pour voir les autres étapes.' : 'Les prochaines vidéos et préparations qui attendent ton intervention apparaîtront ici.' }}</p><a class="account-secondary" href="{{ path(queue.filter ? 'app_validation_queue' : 'app_dashboard') }}">{{ queue.filter ? 'Voir tous les éléments' : 'Retour à mes vidéos' }} ↗</a></section>{% endfor %}
 </div>
-{% if queue.pages > 1 %}<nav class="calendar-nav" aria-label="Pages des éléments à valider">{% if queue.page > 1 %}<a href="{{ path('app_validation_queue',{filter:queue.filter,page:queue.page-1}) }}">← Précédente</a>{% endif %}<span>Page {{ queue.page }} / {{ queue.pages }}</span>{% if queue.page < queue.pages %}<a href="{{ path('app_validation_queue',{filter:queue.filter,page:queue.page+1}) }}">Suivante →</a>{% endif %}</nav>{% endif %}
-{% endblock %}
+{% if queue.pages > 1 %}<nav class="calendar-nav" aria-label="Pages des éléments à valider">{% if queue.page > 1 %}<a href="{{ path('app_activity',{filter:queue.filter,page:queue.page-1,_fragment:'etapes'}) }}">← Précédente</a>{% endif %}<span>Page {{ queue.page }} / {{ queue.pages }}</span>{% if queue.page < queue.pages %}<a href="{{ path('app_activity',{filter:queue.filter,page:queue.page+1,_fragment:'etapes'}) }}">Suivante →</a>{% endif %}</nav>{% endif %}
+
+
+</details>

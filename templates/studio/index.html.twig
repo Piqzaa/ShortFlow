@@ -10,6 +10,7 @@
   <a href="{{ path('app_publications', {state:'published'}) }}"><span>Publiées</span><strong>{{ counts.published }}</strong><small>destinations réussies ↗</small></a>
   <a href="{{ path('app_library') }}"><span>Bibliothèque</span><strong>{{ usage.count }}</strong><small>vidéo{{ usage.count > 1 ? 's' : '' }} disponible{{ usage.count > 1 ? 's' : '' }} ↗</small></a>
 </nav>
+{% if queue.counts|reduce((total,n)=>total+n,0) or queue.filter %}{% include 'studio/validation.html.twig' %}{% endif %}
 {% if attention %}{% include 'studio/_activity.html.twig' with {jobs:attention,state:'attention'} %}{% endif %}
 <div class="dashboard-planning">
   <section class="dashboard-panel" aria-labelledby="upcoming-title">

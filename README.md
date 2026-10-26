@@ -190,7 +190,7 @@ Pour une nouvelle modification de schéma : doctrine:migrations:diff dans le con
 Un controller coordonne une requête ; un service porte un comportement réutilisable ; une entité décrit les données persistées ; une migration versionne le schéma ; Twig représente la page. Cette séparation reste volontairement simple.
 
 ## Limites avant production
-Vue de supervision : [À valider](docs/a-valider.md), accessible dans le studio, regroupe les vidéos et préparations en attente d’une intervention humaine, avec filtres et reprise des parcours existants.
+Suivi : les étapes en attente sont regroupées dans l’Activité existante, sans rubrique supplémentaire. Le menu mobile commun donne accès aux six rubriques. [Guide](docs/a-valider.md).
 
 Comptes sociaux multiples : ajout et reconnexion par identité, choix du compte destinataire dans les préparations, dates distinctes par vidéo sélectionnée et comptes figés dans les séries. Voir [le guide multi-comptes](docs/comptes-sociaux-multiples.md) et [la préparation par vidéo](docs/publications-par-video.md).
 

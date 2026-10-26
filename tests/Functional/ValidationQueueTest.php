@@ -100,18 +100,20 @@ final class ValidationQueueTest extends WebTestCase
         $queue = static::getContainer()->get(ValidationQueue::class)->page($this->owner);
         self::assertSame(['watch' => 1, 'prepare' => 1, 'confirm' => 1, 'blocked' => 2], $queue['counts']);
         self::assertSame('blocked', $queue['items'][0]['kind']);
-        $this->client->request('GET', '/studio/a-valider');
+        $this->client->request('GET', '/studio/activite');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
         self::assertSelectorCount(5, '.validation-card');
         self::assertSelectorTextContains('.validation-list', '27/10/2026 à 12:57 · Europe/Paris');
-        self::assertSelectorTextContains('.studio-topbar > span', 'À valider');
-        self::assertSelectorNotExists('main script');
+        self::assertSelectorTextContains('.studio-topbar > span', 'Vidéos');
+        self::assertSelectorNotExists('.validation-list script');
         self::assertStringContainsString('&lt;script&gt;Regarder&lt;/script&gt;', $this->client->getResponse()->getContent());
         self::assertStringNotContainsString('SECRET AUTRE COMPTE', $this->client->getResponse()->getContent());
         self::assertSelectorExists('a[href="/studio/series/episodes/'.$watch->getId().'"]');
         self::assertSelectorCount(6, '.studio-bottom-nav a');
-        self::assertSelectorExists('.studio-sidebar a[aria-current="page"][href="/studio/a-valider"]');
+        self::assertSelectorCount(6, '.studio-sidebar nav > a');
+        self::assertSelectorCount(7, '.studio-menu nav > a');
+        self::assertSelectorNotExists('.studio-sidebar a[href="/studio/a-valider"]');
         self::assertSame($before, $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM publication_draft'));
         self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
@@ -160,7 +162,7 @@ final class ValidationQueueTest extends WebTestCase
         $queue = static::getContainer()->get(ValidationQueue::class)->page($this->owner, 'blocked');
         self::assertSame(2, $queue['total']);
         self::assertEqualsCanonicalizing(['draft', 'job'], array_column($queue['items'], 'resource'));
-        $this->client->request('GET', '/studio/a-valider?filter=blocked');
+        $this->client->request('GET', '/studio/activite?filter=blocked');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href="/studio/brouillons/'.$draft->getId().'"]');
         self::assertSelectorExists('a[href="/studio/publications?network=youtube&state=attention"]');
@@ -179,17 +181,43 @@ final class ValidationQueueTest extends WebTestCase
         self::assertCount(3, $page['items']);
         self::assertSame($page['items'], $service->page($this->owner, 'confirm', 2)['items']);
         self::assertSame('', $service->page($this->owner, 'invalid')['filter']);
-        $this->client->request('GET', '/studio/a-valider?filter=watch');
+        $this->client->request('GET', '/studio/activite?page=2');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.activity-next-steps[open]');
+        self::assertSelectorCount(3, '.validation-card');
+        $this->client->request('GET', '/studio/activite?page=1');
+        self::assertSelectorExists('.activity-next-steps[open]');
+        self::assertSelectorCount(20, '.validation-card');
+        $this->client->request('GET', '/studio/activite?filter=watch');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.studio-empty', 'Rien dans cette catégorie');
         $this->client->request('POST', '/studio/a-valider');
         self::assertResponseStatusCodeSame(405);
         $this->client->loginUser($this->other);
-        $this->client->request('GET', '/studio/a-valider');
+        $this->client->request('GET', '/studio/activite');
         self::assertSelectorCount(0, '.validation-card');
-        self::assertSelectorTextContains('.studio-empty', 'Tout est à jour');
+        self::assertSelectorNotExists('.activity-next-steps');
         $this->client->restart();
-        $this->client->request('GET', '/studio/a-valider');
+        $this->client->request('GET', '/studio/activite');
         self::assertResponseRedirects('http://localhost/connexion');
+    }
+
+    public function testFormerQueueEntryRedirectsToExistingActivity(): void
+    {
+        $this->client->request('GET', '/studio/a-valider?filter=watch');
+        self::assertResponseRedirects('/studio/activite?filter=watch&page=1#etapes', 303);
+    }
+
+    public function testSharedMenuKeepsAllDestinationsOnEveryStudioPage(): void
+    {
+        foreach (['/studio', '/studio/creation', '/studio/series', '/studio/calendrier', '/studio/publications', '/studio/connexions'] as $path) {
+            $this->client->request('GET', $path);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorCount(6, '.studio-sidebar nav > a');
+            self::assertSelectorCount(6, '.studio-bottom-nav > a');
+            self::assertSelectorCount(7, '.studio-menu nav > a');
+            self::assertSelectorTextContains('.studio-menu > summary', 'Menu');
+            self::assertSelectorNotExists('.studio-sidebar a[href="/studio/a-valider"]');
+        }
     }
 }

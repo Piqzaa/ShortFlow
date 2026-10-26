@@ -1,48 +1,50 @@
-# Vue « À valider »
+# Navigation mobile et étapes dans l’Activité
 
-## Objectif et périmètre
+## Objectif
 
-La page `/studio/a-valider` rassemble les prochaines interventions humaines : regarder une vidéo terminée, préparer la publication d’une version approuvée, compléter/confirmer un brouillon et vérifier une préparation ou un envoi bloqué. Elle est accessible dans la navigation ordinateur et par un lien en haut de page sur mobile. Les six onglets inférieurs restent conservés.
+Conserver six rubriques et rendre leurs accès visibles sur mobile. La proposition initiale d’un onglet « À valider » séparé a été retirée à la demande du propriétaire : les validations restent dans leurs parcours habituels et le suivi global apparaît dans l’Activité existante.
 
-La vue ne valide, ne génère et ne publie rien. Ses liens ouvrent les écrans existants avec leurs contrôles de propriété, récapitulatifs, CSRF et consentements. Aucun appel de fournisseur n’est effectué pour afficher la liste. Le calendrier de production reste un lot suivant.
+Dans Vidéos → Activité, le bloc « Étapes à terminer » est replié à l’arrivée. Il regroupe les vidéos à regarder, les publications à préparer, les brouillons à confirmer et les blocages. Il s’ouvre après un filtre ou une pagination. L’ancienne adresse `/studio/a-valider` redirige vers ce bloc ; elle ne présente plus un écran indépendant.
 
-## Fichiers et rôles
+## Menu partagé
 
-- `src/Service/ValidationQueue.php` : sélection SQL limitée au propriétaire, catégories, compteurs, tri et pagination de vingt éléments. Les blocages passent en premier, puis les vidéos à regarder et les préparations à terminer. Les compteurs ne sont calculés que sur cette page, pas à chaque navigation du studio.
-- `src/Controller/ValidationQueueController.php` : route GET protégée par le contrôle `ROLE_VERIFIED` existant, lecture des filtres/page et réponse privée sans cache.
-- `templates/studio/validation.html.twig` : filtres, liste des interventions, liens vers leurs écrans, créneaux dans leur fuseau enregistré et états vides. Twig échappe titres et noms de séries.
-- `templates/studio/shell.html.twig` : accès et état actif de la navigation. La navigation mobile inférieure conserve ses six entrées.
-- `assets/styles/publication.css` : cartes et filtres adaptatifs, cibles tactiles et accès mobile.
-- `tests/Functional/ValidationQueueTest.php` : classification, isolation, consultation sans effet de bord, sources révisées, déduplication, dates, pagination et accès.
+Le bouton « Menu » apparaît dans l’en-tête mobile commun. Il contient Vidéos, Studio, Séries, Calendrier, Publications, Connexions, Mon compte et Se déconnecter. La barre inférieure à six destinations est conservée. Aucun septième onglet n’est ajouté.
 
-## Flux et règles de sélection
+Le menu utilise `details`/`summary` natifs : ouverture et liens fonctionnent sans JavaScript. Le contrôleur Stimulus `options` déjà présent ferme le menu au clic extérieur ou avec Échap, en restaurant le focus sur le bouton. Le panneau est limité à la hauteur de l’écran et défile si nécessaire. Le montage retrouve lui aussi l’en-tête sur mobile.
 
-Le navigateur demande la page ; Security vérifie la connexion et la confirmation du compte. Le contrôleur appelle le service, qui interroge les états enregistrés dans PostgreSQL. Twig affiche uniquement des liens ; les validations ont ensuite lieu dans les parcours habituels.
+## Fichiers et responsabilités
 
-Les créations ponctuelles et les épisodes de série sont inclus. Une vidéo `ready` non approuvée demande une validation ; une version approuvée sans préparation correspondant à cette source demande une préparation. L’existence d’un ancien brouillon lié à une autre version ne masque pas la nouvelle. Les imports n’imposent pas une nouvelle validation vidéo : leurs brouillons existants apparaissent directement dans les publications à confirmer.
+- `templates/studio/shell.html.twig` : six entrées partagées, bouton Menu mobile, liens de compte et formulaire de déconnexion avec CSRF.
+- `assets/styles/workspace-responsive.css` : affichage mobile du menu, panneau et cibles de 44 px ; navigation ordinateur conservée.
+- `src/Controller/DashboardController.php` : charge le suivi uniquement dans l’Activité. Aucune requête de compteur n’est ajoutée aux autres pages.
+- `src/Service/ValidationQueue.php` : sélection par propriétaire, catégories, déduplication, compteurs et pagination de vingt éléments.
+- `templates/studio/index.html.twig` et `templates/studio/validation.html.twig` : intègrent le bloc dans l’Activité, avec filtres et liens vers les actions existantes.
+- `src/Controller/ValidationQueueController.php` : redirection de l’ancienne adresse.
+- `tests/Functional/ValidationQueueTest.php` : isolation, états, versions, navigation, redirection et maintien de l’ouverture après pagination.
 
-Les brouillons enregistrés restent à compléter et confirmer, même s’ils possèdent une date proposée. Les préparations bloquées, les créneaux dépassés de plus de 120 secondes et les envois incomplets ou partiellement réussis demandent une vérification. Les jobs associés à une préparation ne créent pas une carte supplémentaire par destination. Les anciens envois sans préparation durable restent visibles via leur suivi réseau. Les épisodes en pause sont proposés à la reprise ; les épisodes arrêtés et les préparations au statut annulé sont exclus de la file.
+## Flux et sécurité
 
-Le filtre limite la liste mais garde les compteurs des autres catégories. La pagination est stable à état identique, avec l’identifiant comme départage. Les horaires SQL sont lus en UTC puis affichés dans le fuseau conservé par la préparation.
+Security vérifie le compte connecté et confirmé. L’Activité lit les états existants ; Twig affiche les liens, avec échappement des titres et des noms de séries. Ouvrir le menu ou le suivi ne valide, ne génère et ne publie rien. Les écrans destinataires conservent leurs contrôles de propriétaire, versions, CSRF, coûts fournisseur et confirmations.
 
-## Comment vérifier
+Une version approuvée disparaît des publications à préparer dès qu’un brouillon couvre cette même source. Un ancien brouillon d’une autre version ne masque pas la nouvelle. Les créneaux dépassés de plus de 120 secondes et les publications incomplètes/partielles renvoient vers leur suivi ; les destinations déjà réussies ne sont pas republiées. Les arrêts d’épisodes et préparations annulées sont exclus. Les horaires sont lus en UTC puis affichés dans le fuseau enregistré.
 
-1. Ouvrir « À valider » avec un compte vérifié : seuls ses éléments sont visibles.
-2. Terminer une vidéo puis ouvrir la page : « Regarder et valider » ouvre l’épisode. Après validation de sa version, l’étape devient « Préparer la publication ».
-3. Enregistrer sa préparation : la carte de version validée laisse place au brouillon. Une modification ultérieure de la version approuvée doit réintroduire une préparation pour cette nouvelle source.
-4. Vérifier les textes et confirmer via le parcours habituel. Les éléments effectivement programmés/en cours/réussis quittent la file ; un blocage ou un créneau manqué y apparaît.
-5. Tester les filtres, un compte sans éléments et le mobile/clavier. Aucun essai social ou IA payant n’est requis ; les tests utilisent uniquement `shortflow_test` et des clients simulés.
+## Comment tester
+
+1. Sur mobile, ouvrir Menu depuis chacune des six rubriques et rejoindre une autre rubrique ; vérifier Mon compte et la déconnexion.
+2. Utiliser Tab et Échap ; vérifier aussi l’ouverture et les liens sans JavaScript.
+3. Depuis Vidéos → Activité, développer Étapes à terminer. Filtrer, revenir à Tout et parcourir les pages : les résultats demandés restent ouverts.
+4. Vérifier avec deux propriétaires : chacun voit ses éléments uniquement. Une consultation ne doit créer aucun message d’envoi ni lancer de fournisseur.
 
 ## À comprendre en Symfony
 
-Une page de suivi peut réutiliser les états métiers existants sans nouvelle table ni migration. Le contrôleur coordonne la requête, le service sélectionne les données et Twig présente les actions. Le filtre du propriétaire doit exister dans toutes les branches SQL, y compris les unions entre réseaux. Un compteur est un calcul d’affichage ; il ne constitue pas une autorisation. Les écrans destinataires revérifient toujours l’identité, la version et les consentements avant toute mutation.
+Le shell Twig commun sert toutes les pages : modifier sa navigation évite des menus différents selon l’écran. Stimulus améliore un élément HTML natif, sans devenir indispensable pour l’accès aux rubriques. Un état d’affichage replié ne remplace pas les états métiers ; le service continue à lire les sources existantes. La redirection Symfony conserve les anciens liens sans maintenir un deuxième écran.
 
 ## Vérifications du 27 octobre 2026
 
-- Migrations de `shortflow_test` à jour avant PHPUnit ; aucun changement de schéma dans ce lot. Schéma Doctrine, conteneur Symfony et **101 templates Twig** valides.
-- **71 tests fonctionnels réussis**, couvrant la nouvelle file, la vue d’ensemble, la bibliothèque, le compositeur, la préparation par vidéo, la programmation et les publications d’épisodes. Le premier contrôle élargi a été interrompu sans bilan ; le rejeu avec suivi test par test a terminé avec un code de sortie zéro. La suite globale n’a pas été relancée dans ce lot.
-- Le premier passage des quatre nouveaux tests a trouvé une attente d’ordre trop stricte entre une date métier simulée et l’heure réelle d’un job. La vérification de déduplication compare désormais les ressources présentes, tandis que la stabilité de pagination est vérifiée séparément. Les horaires, la borne de 120 secondes, l’absence d’écriture/envoi et les titres échappés sont contrôlés.
-- **136 tests frontend**, contrôle syntaxique JavaScript et build réussis. Avertissements de build existants sur les polices statiques et la taille du module Three.js.
-- PHPStan sans erreur ; CS-Fixer sans correction sur les 301 fichiers examinés.
-- Revues indépendantes en lecture seule des règles de sélection et de la navigation. Recette sur données synthétiques : quatre catégories, filtrage, clavier, états actifs et six onglets mobiles ; pas de débordement horizontal à 390 × 844 et 320 × 740. Cibles tactiles de 44 px minimum ; console sans erreur JavaScript.
-- Cache local actualisé ; propriétaire de recette supprimé après rendu. Aucune génération payante, publication réelle ou activation de récurrence.
+Les migrations de `shortflow_test` sont à jour ; aucune migration de schéma dans ce lot. **73 tests fonctionnels / 1 070 assertions réussis**, dont navigation des six pages, absence d’onglet supplémentaire, redirection de l’ancienne adresse et maintien de l’ouverture après pagination/retour à Tout. Les parcours bibliothèque, compositeur, programmation et publications d’épisodes restent couverts dans ce passage. La suite globale n’a pas été relancée.
+
+**136 tests frontend**, contrôle syntaxique JavaScript et build réussis ; avertissements statiques/Three.js existants. PHPStan sans erreur ; conteneur, schéma Doctrine et 101 templates Twig valides. CS-Fixer a formaté les imports du contrôleur de l’Activité.
+
+Recette navigateur sur vues réelles rendues avec un propriétaire fictif supprimé après rendu : les six destinations ont été rejointes depuis le menu à 390 px ; contrôles à 320 px, tablette et ordinateur. Pas de débordement horizontal sur les vues examinées. Tab rejoint le premier lien ; Échap ferme et rend le focus au bouton. Le menu et ses liens fonctionnent avec zéro script chargé. Le bloc de suivi est replié à l’arrivée et reste ouvert après les filtres. Revue indépendante du menu et du suivi ; le repli après pagination signalé pendant la revue a été corrigé et testé.
+
+Cache local actualisé et serveur de recette temporaire fermé après vérification. Aucun essai social, appel IA payant ou activation de récurrence.
