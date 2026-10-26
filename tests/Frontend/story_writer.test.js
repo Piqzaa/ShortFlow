@@ -5,7 +5,7 @@ import { runInNewContext } from 'node:vm';
 
 function setup(fetch, document = {}) {
   const source = readFileSync(new URL('../../assets/controllers/story_writer_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Writer');
-  const Writer = runInNewContext(`${source}\nWriter`, { Controller: class {}, AbortController, URLSearchParams, fetch, setTimeout, clearTimeout, setInterval, clearInterval, document });
+  const Writer = runInNewContext(`${source}\nWriter`, { Controller: class {}, Event: class {}, AbortController, URLSearchParams, fetch, setTimeout, clearTimeout, setInterval, clearInterval, document });
   const writer = new Writer();
   writer.urlValue = '/scenario'; writer.tokenValue = 'csrf';
   writer.payload = () => ({ idea: 'Milo chat blanc', model: 'kling', target: '40' });
@@ -15,6 +15,24 @@ function setup(fetch, document = {}) {
   writer.previewTarget = { hidden: true };
   return writer;
 }
+
+test('applying a scenario keeps English directions and saves its French explanation separately', () => {
+  const writer = setup(() => assert.fail('Applying must not request generation'));
+  const prompt = { value: '', focus() {} }, seconds = { value: '' }, description = { value: '' }, title = { value: '' };
+  const row = { querySelector: selector => selector === 'textarea' ? prompt : selector === 'select' ? seconds : selector.includes('sceneDescription') ? description : null };
+  let changed = 0, updated = 0;
+  const form = { querySelector: selector => selector.includes('[title]') ? title : null, dispatchEvent() { changed++; } };
+  const editor = { rows: () => [row], listTarget: { replaceChildren() {}, insertAdjacentHTML() {} }, prototypeTarget: { innerHTML: '' }, update() { updated++; } };
+  writer.element = { querySelector: () => form };
+  writer.application = { getControllerForElementAndIdentifier: () => editor };
+  writer.requestFingerprint = 'original';
+  writer.proposal = { title: 'Milo', shots: [{ description: 'Milo ouvre la boîte.', prompt: 'Milo opens the box in a wide shot.', seconds: 5 }] };
+  writer.apply();
+  assert.equal(prompt.value, 'Milo opens the box in a wide shot.');
+  assert.equal(description.value, 'Milo ouvre la boîte.');
+  assert.equal(updated, 1);
+  assert.equal(changed, 1);
+});
 
 test('changing a subject or a per-shot frame invalidates an earlier story preview', () => {
   const writer = setup(() => assert.fail('No network request expected'));

@@ -7,6 +7,17 @@ use PHPUnit\Framework\TestCase;
 
 final class AiCapabilitiesTest extends TestCase
 {
+    public function testSeedanceUsIsAnExplicitChoiceAndDoesNotRebindExistingPreparations(): void
+    {
+        $catalog = new AiCatalog();
+        self::assertSame('bytedance/seedance-2.5/image-to-video', $catalog->model('seedance-25-image')['endpoint']);
+        self::assertSame('bytedance/seedance-2.5/us/image-to-video', $catalog->model('seedance-25-us-image')['endpoint']);
+        self::assertNotSame($catalog->contract('seedance-25-image'), $catalog->contract('seedance-25-us-image'));
+        self::assertSame(379, $catalog->estimate('seedance-25-us-image', 8));
+        self::assertSame(521, $catalog->estimate('seedance-25-us-image', 11));
+        self::assertSame('image', $catalog->referenceMode('seedance-25-us-image'));
+    }
+
     public function testRolesAreDistinctAndRetirementNeverRebindsAnOldEndpoint(): void
     {
         $catalog = new AiCatalog();

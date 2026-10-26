@@ -13,13 +13,13 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class EpisodePublications
 {
-    public function __construct(private EntityManagerInterface $em, private PublicationDrafts $drafts, private PublicationCalendar $calendar, private PublicationLock $lock, private MultiNetworkPublishing $publishing, private \Symfony\Component\Clock\ClockInterface $clock)
+    public function __construct(private EntityManagerInterface $em, private PublicationDrafts $drafts, private PublicationCalendar $calendar, private PublicationLock $lock, private MultiNetworkPublishing $publishing, private \Symfony\Component\Clock\ClockInterface $clock, private PublicationEditorial $editorial)
     {
     }
 
     public function prepare(User $owner, AiEpisode $episode, int $revision): PublicationDraft
     {
-        return $this->lock->run((int) $owner->getId(), fn (): PublicationDraft => $this->em->getConnection()->transactional(function () use ($owner, $episode, $revision): PublicationDraft {
+        $prepared = $this->lock->run((int) $owner->getId(), fn (): PublicationDraft => $this->em->getConnection()->transactional(function () use ($owner, $episode, $revision): PublicationDraft {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
             $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
             if ($episode->getOwner()->getId() !== $owner->getId() || 'ready' !== $episode->getFlowState() || !$episode->getApprovedVideo()) {
@@ -65,6 +65,11 @@ final class EpisodePublications
 
             return $draft;
         }));
+        if ('draft' === $prepared->getStatus()) {
+            $this->editorial->suggestMissing($owner, $prepared);
+        }
+
+        return $prepared;
     }
 
     /** @param list<AiEpisode> $episodes

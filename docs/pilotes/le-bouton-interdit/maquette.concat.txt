@@ -1,0 +1,7 @@
+file '/app/docs/pilotes/le-bouton-interdit/plan-01-v1.png'
+duration 8
+file '/app/docs/pilotes/le-bouton-interdit/plan-02-v1.png'
+duration 11
+file '/app/docs/pilotes/le-bouton-interdit/plan-03-v1.png'
+duration 11
+file '/app/docs/pilotes/le-bouton-interdit/plan-03-v1.png'

@@ -75,6 +75,24 @@ final class EpisodePublicationsTest extends WebTestCase
         return static::getContainer()->get(EpisodePublications::class);
     }
 
+    public function testAddingANetworkToAnAiEpisodeDefaultsToSyntheticWithoutSending(): void
+    {
+        $draft = $this->service()->prepare($this->owner, $this->episode, $this->episode->getRevision());
+        $this->client->request('GET', '/studio/composer', ['draft' => $draft->getId()]);
+        $crawler = $this->client->followRedirect();
+        $values = $crawler->selectButton('Enregistrer le brouillon')->form()->getPhpValues();
+        $values['publication_composer']['networks'] = ['youtube'];
+        $values['intent'] = 'refresh';
+        $this->client->request('POST', $this->client->getRequest()->getUri(), $values);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[name$="[synthetic]"][checked]');
+        self::assertSelectorExists('input[name$="[title]"]');
+        self::assertSelectorExists('textarea[name$="[description]"]');
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
+    }
+
     public function testPreparationIsDurablePrivateAndIdempotentAndKeepsItsSource(): void
     {
         $url = '/studio/series/episodes/'.$this->episode->getId();

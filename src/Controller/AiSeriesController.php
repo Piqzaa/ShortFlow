@@ -65,6 +65,9 @@ final class AiSeriesController extends AbstractController
     {
         $series = null === $id ? null : ($studio->owned($id, $user) ?? throw $this->createNotFoundException());
         $data = $series ? ['name' => $series->getName(), 'theme' => $series->getTheme(), 'style' => $series->getStyle(), 'characters' => $series->getCharacters(), 'revision' => (string) $series->getRevision()] + $series->getRecipe() : ['model' => 'kling-25', 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'imageFit' => 'crop', 'revision' => '0'];
+        if (!$series && $keys->hasAccess($user, 'fal', 'mcp') && !$keys->hasAccess($user, 'fal', 'api')) {
+            $data['accessMode'] = 'mcp';
+        }
         $data['totalSeconds'] ??= $series ? ($series->getRecipe()['totalSeconds'] ?? 30) : 30;
         // Stored image names never come from a hidden field or the submitted form.
         unset($data['reference'], $data['endReference']);

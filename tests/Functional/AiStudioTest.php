@@ -331,6 +331,44 @@ final class AiStudioTest extends WebTestCase
         self::assertSame(0, $this->submissions);
     }
 
+    public function testSeedanceUsMcpUsesItsPublishedContractWithoutChangingLegacyModels(): void
+    {
+        $job = new AiGeneration($this->owner, 'Pilote chats', 'Deux chats parlent français.', 'seedance-25-us-image', 8, '9:16', 379);
+        $job->attachReference($this->imageUpload());
+        $job->useMcp();
+        $job->bindAccessAccount('synthetic-account');
+        $this->httpScenario = function (string $method, string $url, array $options): MockResponse {
+            self::assertSame('https://mcp.fal.ai/mcp-relay', $url);
+            $body = json_decode($options['body'], true, 64, JSON_THROW_ON_ERROR);
+            if ('initialize' === $body['method']) {
+                return new MockResponse('{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-03-26"}}');
+            }
+            if ('notifications/initialized' === $body['method']) {
+                return new MockResponse('', ['http_code' => 202]);
+            }
+            self::assertSame('submit_job', $body['params']['name']);
+            ++$this->submissions;
+            $args = $body['params']['arguments'];
+            self::assertSame('bytedance/seedance-2.5/us/image-to-video', $args['endpoint_id']);
+            self::assertFalse($args['store_payload']);
+            $input = $args['input'];
+            $schema = json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/seedance-25-us-image-contract.json'), true, 64, JSON_THROW_ON_ERROR);
+            self::assertSame([], array_diff(array_keys($input), array_keys($schema['properties'])));
+            self::assertSame('auto', $input['aspect_ratio']);
+            self::assertSame('8', $input['duration']);
+            self::assertTrue($input['generate_audio']);
+            self::assertSame('H264', $input['codec']);
+            self::assertStringStartsWith('data:image/jpeg;base64,', $input['image_url']);
+            self::assertSame(hash('sha256', 'vydflow-user:'.$this->owner->getId()), $input['end_user_id']);
+
+            return new MockResponse('{"jsonrpc":"2.0","id":2,"result":{"structuredContent":{"request_id":"synthetic-seedance-us"}}}');
+        };
+        $receipt = static::getContainer()->get(FalMcpVideoApi::class)->submit($job, json_encode(['access_token' => 'synthetic-not-a-real-token', 'account_id' => 'synthetic-account'], JSON_THROW_ON_ERROR));
+        self::assertArrayHasKey('mcp_receipt', $receipt);
+        self::assertSame(1, $this->submissions);
+        self::assertSame('bytedance/seedance-2.5/image-to-video', (new AiCatalog())->model('seedance-25-image')['endpoint']);
+    }
+
     public function testMcpImagePayloadKeepsBothConfirmedFramesAndCropping(): void
     {
         $name = $this->imageUpload();
@@ -391,6 +429,7 @@ final class AiStudioTest extends WebTestCase
         $revision = $crawler->filter('#ai-idea-form')->attr('data-idea-save-revision-value');
         $token = $crawler->filter('input[name="ai_idea[_token]"]')->attr('value');
         $payload = ['revision' => $revision, 'editor' => str_repeat('a', 32), 'sequence' => 2, 'ai_idea' => ['_token' => $token, 'prompt' => 'Une idée privée <test>', 'title' => '', 'model' => '', 'seconds' => '', 'ratio' => '9:16', 'accessMode' => 'api']];
+        $payload['ai_idea']['shots'] = [['prompt' => 'Le chat arrive.', 'seconds' => 5, 'imagePrompt' => 'Mon image <privée>']];
         $this->client->request('POST', '/studio/creation/idee', $payload);
         self::assertResponseIsSuccessful();
         self::assertSame($before, $this->em()->getRepository(AiGeneration::class)->count([]));
@@ -401,6 +440,7 @@ final class AiStudioTest extends WebTestCase
         self::assertResponseStatusCodeSame(409);
         $this->client->request('GET', '/studio/creation');
         self::assertSelectorTextContains('#ai_idea_prompt', 'Une idée privée <test>');
+        self::assertSelectorTextContains('#ai_idea_shots_0_imagePrompt', 'Mon image <privée>');
         self::assertSelectorNotExists('[data-controller="unsaved"]');
         $payload['sequence'] = 3;
         $payload['ai_idea']['_token'] = 'forged';
@@ -411,6 +451,10 @@ final class AiStudioTest extends WebTestCase
         $this->client->request('POST', '/studio/creation/idee', $payload);
         self::assertResponseStatusCodeSame(422);
         $payload['ai_idea']['model'] = '';
+        $payload['ai_idea']['shots'][0]['imagePrompt'] = str_repeat('é', 3001);
+        $this->client->request('POST', '/studio/creation/idee', $payload);
+        self::assertResponseStatusCodeSame(422);
+        $payload['ai_idea']['shots'][0]['imagePrompt'] = 'Mon image <privée>';
         $payload['ai_idea']['prompt'] = str_repeat('x', 1501);
         $this->client->request('POST', '/studio/creation/idee', $payload);
         self::assertResponseStatusCodeSame(422);

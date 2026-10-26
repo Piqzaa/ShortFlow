@@ -84,6 +84,28 @@ final class AiSeriesTest extends WebTestCase
         return $this->client->request('GET', '/studio/series/'.$series->getId());
     }
 
+    public function testBrowserConnectionIsSuggestedForNewSeriesWithoutSwitchingExistingBilling(): void
+    {
+        $series = $this->createSeries();
+        $this->em()->persist(new \App\Entity\AiCredential($this->em()->find(User::class, $this->owner->getId()), 'synthetic-unread-credential', 'fal-mcp'));
+        $this->em()->persist(new \App\Entity\AiCredential($this->em()->find(User::class, $this->other->getId()), 'synthetic-other-key', 'fal'));
+        $this->em()->flush();
+
+        $this->client->request('GET', '/studio/series/nouvelle');
+        self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="mcp"][selected]');
+        $this->client->request('GET', '/studio/series/'.$series->getId().'/configuration');
+        self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="api"][selected]');
+        $this->open($series);
+        self::assertSelectorTextContains('.series-recurrence', 'Fal est déjà connecté par navigateur');
+        self::assertSelectorTextContains('.series-recurrence', 'Mon compte Fal connecté par navigateur');
+        self::assertSame('api', $series->getRecipe()['accessMode']);
+        $this->em()->persist(new \App\Entity\AiCredential($this->em()->find(User::class, $this->owner->getId()), 'synthetic-own-key', 'fal'));
+        $this->em()->flush();
+        $this->client->request('GET', '/studio/series/nouvelle');
+        self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="api"][selected]');
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
     public function testDeletionRequiresOwnershipConsentAndFreshCsrfAndKeepsVideosAndScheduledDrafts(): void
     {
         $series = $this->createSeries();
@@ -252,7 +274,7 @@ final class AiSeriesTest extends WebTestCase
         self::assertStringContainsString('&lt;script&gt;', $this->client->getResponse()->getContent());
         $this->client->request('GET', '/studio/series');
         self::assertSelectorTextContains('.series-item', 'Les aventures de Milo');
-        self::assertSelectorTextContains('.series-item small', '30 s finales');
+        self::assertSelectorTextContains('.series-item small', '30 s par épisode');
     }
 
     public function testChosenEpisodeCountAndAddingEpisodesArePrivateAndIdempotent(): void

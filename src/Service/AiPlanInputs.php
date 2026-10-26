@@ -110,11 +110,25 @@ final class AiPlanInputs
     }
 
     /** @param array<string,mixed> $row
-     * @return array{startReference:?string,endReference:?string,referenceFit:string}
+     * @return array{startReference:?string,endReference:?string,referenceFit:string,imagePrompt?:string,sceneDescription?:string}
      */
     public function row(User $owner, array $row, string $defaultFit): array
     {
         $result = ['startReference' => null, 'endReference' => null, 'referenceFit' => $row['referenceFit'] ?? $defaultFit];
+        $description = $row['sceneDescription'] ?? '';
+        if (!is_string($description) || mb_strlen($description) > 300) {
+            throw new \RuntimeException('Le résumé français du plan doit contenir au maximum 300 caractères.');
+        }
+        if ('' !== trim($description)) {
+            $result['sceneDescription'] = trim($description);
+        }
+        $imagePrompt = $row['imagePrompt'] ?? '';
+        if (!is_string($imagePrompt) || mb_strlen($imagePrompt) > 3000) {
+            throw new \RuntimeException('Les consignes de l’image doivent contenir au maximum 3 000 caractères.');
+        }
+        if ('' !== trim($imagePrompt)) {
+            $result['imagePrompt'] = trim($imagePrompt);
+        }
         if (!in_array($result['referenceFit'], ['crop', 'contain'], true)) {
             throw new \RuntimeException('Choisis un cadrage valide pour chaque plan.');
         }

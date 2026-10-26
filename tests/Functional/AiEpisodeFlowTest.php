@@ -211,6 +211,28 @@ final class AiEpisodeFlowTest extends WebTestCase
         return $episode;
     }
 
+    public function testImageInstructionsSurviveSavingAndStaySeparateFromVideoPrompts(): void
+    {
+        $episode = $this->planned(false, 10);
+        $rows = array_map(static fn (AiShot $shot): array => ['prompt' => $shot->getPrompt(), 'seconds' => $shot->getSeconds(), 'imagePrompt' => 'Mon costume <script>privé</script>', 'sceneDescription' => 'Milo ouvre une boîte <privée>.'], $this->flow()->shots($episode));
+        $this->flow()->save($episode, $episode->getRevision(), 'Images de Milo', $rows);
+        $this->em()->clear();
+        $episode = $this->fresh($episode);
+        self::assertSame('Mon costume <script>privé</script>', $this->flow()->shots($episode)[0]->getInputs()['imagePrompt']);
+        self::assertSame('Milo ouvre une boîte <privée>.', $this->flow()->shots($episode)[0]->getInputs()['sceneDescription']);
+        $quote = $this->flow()->quote($episode);
+        self::assertArrayNotHasKey('imagePrompt', $quote['references'][0]);
+        self::assertArrayNotHasKey('sceneDescription', $quote['references'][0]);
+        self::assertStringNotContainsString('boîte', $quote['references'][0]['prompt']);
+        self::assertStringNotContainsString('Mon costume', $quote['references'][0]['prompt']);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('textarea[name="ai_idea[shots][0][imagePrompt]"]', 'Mon costume <script>privé</script>');
+        self::assertSelectorTextContains('[data-shot-description-text]', 'Milo ouvre une boîte <privée>.');
+        self::assertStringContainsString('&lt;script&gt;privé&lt;/script&gt;', $this->client->getResponse()->getContent());
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testPlannerSupportsThirtyToSixtySecondsWithoutGenerationOrInventedScenes(): void
     {
         foreach ([30, 45, 60] as $duration) {

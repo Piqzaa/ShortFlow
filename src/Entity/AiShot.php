@@ -25,17 +25,17 @@ class AiShot
     private array $previousGenerations = [];
     #[ORM\Column(length: 52, nullable: true)]
     private ?string $endAnchor = null;
-    /** @var array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string,confirmedPrompt?:string} */
+    /** @var array{startReference?:?string,endReference?:?string,referenceFit?:string,imagePrompt?:string,sceneDescription?:string,repairPrompt?:string,confirmedPrompt?:string} */
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $inputs = [];
 
-    /** @return array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string,confirmedPrompt?:string} */
+    /** @return array{startReference?:?string,endReference?:?string,referenceFit?:string,imagePrompt?:string,sceneDescription?:string,repairPrompt?:string,confirmedPrompt?:string} */
     public function getInputs(): array
     {
         return $this->inputs;
     }
 
-    /** @param array{startReference?:?string,endReference?:?string,referenceFit?:string,repairPrompt?:string,confirmedPrompt?:string} $inputs */
+    /** @param array{startReference?:?string,endReference?:?string,referenceFit?:string,imagePrompt?:string,sceneDescription?:string,repairPrompt?:string,confirmedPrompt?:string} $inputs */
     public function configureInputs(array $inputs): void
     {
         if ('draft' !== $this->episode->getFlowState()) {

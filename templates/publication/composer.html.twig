@@ -10,6 +10,7 @@
 {% include 'publication/_batch_issues.html.twig' %}
 <section class="composer-section"><h2><span>02</span> Tes textes et réglages</h2>{{ form_row(form.settings.draft_key) }}<details class="composer-draft-title"><summary>Nommer ce brouillon</summary>{{ form_row(form.settings.draft_title) }}</details>
 {% include 'publication/_editorial.html.twig' %}
+<p class="library-note">YouTube utilise un titre et une description ; Instagram et TikTok utilisent une légende. Ajoute tes hashtags dans la description ou la légende, puis relis les textes avant confirmation.</p>
 {% if not selectedNetworks %}<p class="composer-placeholder">Choisis un réseau pour préparer ses textes. Tu peux enregistrer un brouillon avant de connecter tes comptes.</p>{% endif %}
 {% for video in videos %}{% if videos|length > 1 %}<h3 class="composer-video-title">{{ video.title }}</h3>{% endif %}{% for network in selectedNetworks %}{% set row = attribute(form.settings,network).videos[video.id] %}<fieldset class="composer-network-fields"><legend>{{ networkLabels[network] }}</legend>{{ form_errors(row) }}
 {% if network == 'youtube' %}{{ form_row(row.title) }}{{ form_row(row.description) }}<div class="composer-field-grid">{{ form_row(row.privacy) }}{{ form_row(row.audience) }}</div><details><summary>Déclaration de contenu</summary>{{ form_row(row.synthetic) }}</details>

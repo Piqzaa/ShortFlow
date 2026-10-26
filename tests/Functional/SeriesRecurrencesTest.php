@@ -255,7 +255,7 @@ final class SeriesRecurrencesTest extends WebTestCase
         $url = '/studio/series/'.$this->series->getId();
         $crawler = $this->client->request('GET', $url);
         self::assertResponseIsSuccessful();
-        $form = $crawler->selectButton('Confirmer les coûts et activer →')->form();
+        $form = $crawler->selectButton('Confirmer les coûts et activer la préparation →')->form();
         $values = $form->getPhpValues();
         $values['series_recurrence']['networks'] = ['youtube'];
         $this->client->request('POST', $url, $values);

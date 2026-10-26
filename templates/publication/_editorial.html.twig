@@ -3,6 +3,7 @@
 <section class="story-context" aria-labelledby="editorial-title" data-controller="publication-writer"{% if pending %} data-publication-writer-url-value="{{ path('app_publication_editorial_status',{draft:editorialDraft.id,id:job.id}) }}"{% endif %}>
 <h3 id="editorial-title">Des textes adaptés à chaque réseau</h3>
 <p class="library-note">Le moteur local propose des textes à partir des scènes et de tes indications. Il ne regarde pas la vidéo. Rien n’est appliqué ou publié automatiquement.</p>
+{% if not sourceEpisode.standalone %}<p class="library-note">Si tu laisses les textes de l’épisode vides ou avec leur valeur initiale, leur proposition démarre lors de l’enregistrement avec les réseaux choisis. Relis les titres, descriptions ou légendes et hashtags proposés, puis applique les champs voulus. Si le moteur est occupé, utilise le bouton ci-dessous pour réessayer.</p>{% endif %}
 {% if not sourceEpisode.standalone %}<a class="account-secondary" href="{{ path('app_series_editorial',{id:sourceEpisode.series.id}) }}">Configurer la voix et les hashtags de cette série ↗</a>{% endif %}
 {% if editorial.notice %}<p class="account-notice" role="status">{{ editorial.notice }}</p>{% endif %}
 {% if editorial.review %}<p class="account-notice" role="status">Les textes appliqués sont à relire : la version ou le profil a changé. Tes textes sont conservés.</p>{% endif %}

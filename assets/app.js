@@ -89,6 +89,8 @@ import SubjectListController from './controllers/subject_list_controller.js';
 import SubjectUploadController from './controllers/subject_upload_controller.js';
 import PublicationWriterController from './controllers/publication_writer_controller.js';
 app.register('reference-picker', ReferencePickerController);
+import ImagePreparationController from './controllers/image_preparation_controller.js';
+app.register('image-preparation', ImagePreparationController);
 app.register('subject-list', SubjectListController);
 app.register('subject-upload', SubjectUploadController);
 app.register('publication-writer', PublicationWriterController);

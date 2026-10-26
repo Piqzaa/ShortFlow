@@ -45,7 +45,11 @@ final class SeriesRecurrences
             $this->catalog->validate($recipe['model'], $duration, $recipe['ratio']);
         }
         if (!$this->keys->hasAccess($series->getOwner(), $model['provider'], $recipe['accessMode'])) {
-            throw new \RuntimeException('Connecte l’accès BYOK de la série pour préparer sa récurrence.');
+            if ('fal' === $model['provider'] && 'api' === $recipe['accessMode'] && $this->keys->hasAccess($series->getOwner(), 'fal', 'mcp')) {
+                throw new \RuntimeException('Fal est déjà connecté par navigateur, mais cette série utilise « Ma clé API ». Dans « Configurer la série », choisis « Mon compte Fal connecté par navigateur », puis enregistre.');
+            }
+            $connection = 'mcp' === $recipe['accessMode'] ? 'le compte Fal par navigateur' : 'la clé API '.$this->catalog->provider($model['provider']);
+            throw new \RuntimeException('Pour configurer la préparation automatique, connecte '.$connection.'. Vérifie « Connexion au fournisseur vidéo » dans « Configurer la série ».');
         }
         $identity = $this->keys->identity($series->getOwner(), $model['provider'], $recipe['accessMode']);
         foreach ([$recipe['reference'], $recipe['endReference']] as $reference) {
@@ -73,7 +77,7 @@ final class SeriesRecurrences
                 throw new \RuntimeException('La récurrence a changé. Recharge avant de confirmer.');
             }
             if (!$this->writer->available() || !$this->generations->enabled()) {
-                throw new \RuntimeException('Active le rédacteur local et la génération BYOK avant d’activer la récurrence.');
+                throw new \RuntimeException('La préparation automatique est indisponible : la rédaction locale et la génération vidéo doivent être activées dans cette installation.');
             }
             $preview = $this->preview($series);
             if (!hash_equals($preview['hash'], $data['quote'] ?? '') || empty($data['consent'])) {
@@ -206,7 +210,7 @@ final class SeriesRecurrences
             $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
             try {
                 if (!hash_equals($settings['hash'], $this->preview($series)['hash'])) {
-                    throw new \RuntimeException('Le thème, les références, le modèle, le tarif ou le compte BYOK ont changé. Vérifie et confirme à nouveau la récurrence.');
+                    throw new \RuntimeException('Le thème, les références, le modèle, le tarif ou le compte fournisseur ont changé. Vérifie et confirme à nouveau la récurrence.');
                 }
             } catch (\RuntimeException $error) {
                 $recurrence->pause($error->getMessage());
@@ -269,9 +273,13 @@ final class SeriesRecurrences
                     throw new \RuntimeException('La préparation a été suspendue, modifiée ou son créneau est dépassé. Aucun lancement payant automatique.');
                 }
                 if (!hash_equals($settings['hash'], $this->preview($series)['hash'])) {
-                    throw new \RuntimeException('Les paramètres ou l’accès BYOK ont changé pendant la rédaction. Confirme à nouveau la récurrence.');
+                    throw new \RuntimeException('Les paramètres ou la connexion au fournisseur ont changé pendant la rédaction. Confirme à nouveau la récurrence.');
                 }
                 $recipe = $settings['recipe'];
+                foreach ($story['shots'] as &$shot) {
+                    $shot['sceneDescription'] = $shot['description'];
+                }
+                unset($shot);
                 $this->flow->prepare($series->getOwner(), $recipe + ['source' => $this->catalog->referenceMode($recipe['model']), 'target' => array_sum($settings['durations']), 'shots' => $story['shots'], 'prompt' => $series->initialPrompt(), 'title' => $story['title'], 'continuity' => $settings['continuity'], 'mute' => false, 'useEnd' => (bool) $recipe['endReference'], 'revision' => 1], $episode);
                 $occurrence->story($story['summary']);
                 if ($story['warnings']) {

@@ -1,5 +1,5 @@
 <?php
-// Run inside the PHP container: php scripts/check.php
+// Run inside edit-worker for the full suite, including the offline speech engine.
 // Composer and PHPUnit must inherit test defaults, never the dev provider configuration.
 putenv('APP_ENV=test');
 $commands = [

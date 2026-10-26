@@ -95,6 +95,72 @@ final class PublicationEditorialTest extends WebTestCase
         return $job;
     }
 
+    public function testMissingSeriesTextsQueueOneProposalWithoutApplyingOrPublishing(): void
+    {
+        $video = $this->draft->videoIds()[0];
+        $content = $this->draft->content();
+        $content['youtube']['videos'][$video]['description'] = '';
+        $this->drafts()->save($this->owner, [$video], $this->draft->getNetworks(), $content, [], 'Brouillon', $this->draft->getId(), $this->draft->getRevision());
+        $job = $this->editorial()->suggestMissing($this->owner, $this->draft);
+        self::assertNotNull($job);
+        self::assertSame('queued', $job->getStatus());
+        self::assertNull($this->editorial()->suggestMissing($this->owner, $this->draft));
+        self::assertSame(0, $this->calls);
+        $this->jobs()->process($job->getId());
+        self::assertSame('ready', $job->getStatus(), $job->getError() ?? '');
+        self::assertStringContainsString('#Milo', $job->getResult()['texts']['youtube']['description']);
+        self::assertSame('', $this->draft->content()['youtube']['videos'][$video]['description'] ?? '');
+        self::assertSame('Mon titre', $this->draft->content()['youtube']['videos'][$video]['title']);
+        self::assertSame('draft', $this->draft->getStatus());
+        self::assertNull($this->draft->getSubmissionKey());
+        self::assertSame(1, $this->calls);
+    }
+
+    public function testOldFrozenDraftRemainsUsableWhenAutomaticSuggestionCannotUseItsSource(): void
+    {
+        $this->episode->flow('draft');
+        $this->em->flush();
+        self::assertNull($this->editorial()->suggestMissing($this->owner, $this->draft));
+        self::assertSame('Mon titre', $this->draft->content()['youtube']['videos'][$this->draft->videoIds()[0]]['title']);
+        self::assertNull($this->jobs()->latest($this->owner, $this->draft->getId(), 'editorial'));
+        self::assertSame(0, $this->calls);
+    }
+
+    public function testAutomaticSuggestionPreservesWrittenAndDeliberatelyClearedTexts(): void
+    {
+        self::assertNull($this->editorial()->suggestMissing($this->owner, $this->draft));
+        $job = $this->ready();
+        $content = $this->draft->content();
+        $content['youtube']['videos'][$this->draft->videoIds()[0]]['description'] = '';
+        $this->drafts()->save($this->owner, $this->draft->videoIds(), $this->draft->getNetworks(), $content, [], 'Brouillon', $this->draft->getId(), $this->draft->getRevision());
+        $this->series->configureEditorial(['language' => 'fr', 'tone' => 'Doux']);
+        $this->em->flush();
+        self::assertNull($this->editorial()->suggestMissing($this->owner, $this->draft));
+        self::assertSame($job, $this->jobs()->latest($this->owner, $this->draft->getId(), 'editorial'));
+        self::assertSame('human', $this->editorial()->fields($this->draft)['youtube.description']['origin']);
+    }
+
+    public function testSavingAnEmptyDescriptionInComposerAutomaticallyStartsTheProposal(): void
+    {
+        $this->client->request('GET', '/studio/composer', ['draft' => $this->draft->getId()]);
+        $crawler = $this->client->followRedirect();
+        $url = $this->client->getRequest()->getUri();
+        $values = $crawler->selectButton('Enregistrer le brouillon')->form()->getPhpValues();
+        $video = $this->draft->videoIds()[0];
+        $values['publication_composer']['settings']['youtube']['videos'][$video]['description'] = '';
+        $values['intent'] = 'save';
+        $this->client->request('POST', $url, $values);
+        self::assertResponseRedirects($url, 303);
+        $draft = $this->em->find(PublicationDraft::class, $this->draft->getId());
+        $job = $this->jobs()->latest($draft->getOwner(), $draft->getId(), 'editorial');
+        self::assertNotNull($job);
+        self::assertSame('queued', $job->getStatus());
+        self::assertSame('', $draft->content()['youtube']['videos'][$video]['description'] ?? '');
+        self::assertSame('draft', $draft->getStatus());
+        self::assertNull($draft->getSubmissionKey());
+        self::assertSame(0, $this->calls);
+    }
+
     public function testEditorialJobsAreIsolatedAndApplyingOneFieldKeepsSettingsAndOtherTexts(): void
     {
         $job = $this->editorial()->request($this->owner, $this->draft, 'Milo ouvre la boîte.');
@@ -110,7 +176,7 @@ final class PublicationEditorialTest extends WebTestCase
         $this->editorial()->apply($this->owner, $this->draft, $job->getId(), ['youtube.description']);
         $content = $this->draft->content();
         self::assertSame('Mon titre', $content['youtube']['videos'][$video]['title']);
-        self::assertStringContainsString('#Milo', $content['youtube']['videos'][$video]['description']);
+        self::assertStringContainsString('#Milo', $content['youtube']['videos'][$video]['description'] ?? '');
         self::assertSame('public', $content['youtube']['videos'][$video]['privacy']);
         self::assertSame('yes', $content['youtube']['videos'][$video]['audience']);
         self::assertSame('Ma légende TikTok.', $content['tiktok']['videos'][$video]['caption']);
@@ -135,9 +201,9 @@ final class PublicationEditorialTest extends WebTestCase
         } catch (PublicationException $error) {
             self::assertStringContainsString('changé depuis', $error->getMessage());
         }
-        self::assertSame('Mon texte changé pendant l’attente.', $this->draft->content()['youtube']['videos'][$video]['description']);
+        self::assertSame('Mon texte changé pendant l’attente.', $this->draft->content()['youtube']['videos'][$video]['description'] ?? '');
         $this->editorial()->apply($this->owner, $this->draft, $job->getId(), ['youtube.description'], true);
-        self::assertStringContainsString('#Milo', $this->draft->content()['youtube']['videos'][$video]['description']);
+        self::assertStringContainsString('#Milo', $this->draft->content()['youtube']['videos'][$video]['description'] ?? '');
         $content = $this->draft->content();
         $content['youtube']['videos'][$video]['description'] = '';
         $this->drafts()->save($this->owner, $this->draft->videoIds(), $this->draft->getNetworks(), $content, [], $this->draft->getTitle(), $this->draft->getId(), $this->draft->getRevision());
@@ -216,7 +282,7 @@ final class PublicationEditorialTest extends WebTestCase
         self::assertResponseStatusCodeSame(303);
         $draft = $this->em->find(PublicationDraft::class, $draft->getId());
         self::assertSame('Encore mon titre humain', $draft->content()['youtube']['videos'][$video]['title']);
-        self::assertStringContainsString('#Milo', $draft->content()['youtube']['videos'][$video]['description']);
+        self::assertStringContainsString('#Milo', $draft->content()['youtube']['videos'][$video]['description'] ?? '');
         self::assertSame('draft', $draft->getStatus());
         self::assertNull($draft->getSubmissionKey());
         self::assertSame(1, $this->calls);

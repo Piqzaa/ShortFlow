@@ -1,5 +1,9 @@
 # VydFlow — bêta, studio IA et publication
 
+Navigation et textes, 26 octobre : diagnostic du debug local, résumés français des plans avec prompts techniques anglais conservés, et proposition supervisée des textes manquants des séries lors de leur préparation de publication. [Parcours et fonctionnement Symfony](docs/navigation-plans-textes-publication.md).
+
+Préparation des images, 26 octobre : chaque plan du Studio et des épisodes dispose de consignes modifiables à proposer et copier dans un outil d’images externe, puis d’un import privé existant. Sauvegarde avec les plans, protection des textes personnels et aucune génération d’image automatique. [Guide et vérifications](docs/preparation-images.md).
+
 Récurrence supervisée : autorisation bornée, histoire/clips/assemblage préparés avant le créneau, validation avant publication. [Parcours et fonctionnement Symfony](docs/recurrence-supervisee.md).
 
 Épisodes et calendrier : préparation liée à la version validée, suivi des réseaux depuis la série ; rédacteur local avec erreurs explicites. [Parcours, composants et tests](docs/series-publications-redacteur.md).
@@ -142,7 +146,7 @@ Publication multi-réseaux : sélectionner les vidéos, choisir une ou plusieurs
 Lot local du 18 octobre : **Brouillons** sauvegardés en base, même incomplets et sans compte social ; **Calendrier** mensuel/agenda mobile, date commune au lot, fuseau IANA, programmation ponctuelle confirmée et annulation avant départ. Le PC et le worker doivent fonctionner ; au-delà de deux minutes de retard, il faut reprogrammer. Aucun nouvel essai social réel ajouté. Parcours, composants Symfony et tests : [docs/calendrier.md](docs/calendrier.md).
 
 ```sh
-docker compose exec php php scripts/check.php
+docker compose exec -T -e APP_ENV=test -e APP_DEBUG=1 edit-worker php scripts/check.php
 npm run check
 npm run test:ui
 npm run build
@@ -152,6 +156,8 @@ npm audit
 
 Sans Node local, utiliser docker compose --profile tools run --rm node pour le build et docker compose --profile tools run --rm node npm run check après installation des paquets dans le volume.
 Le script PHP crée shortflow_test si nécessaire, applique les migrations, valide les schémas dev/test puis lance lints YAML/Twig/conteneur, PHPStan, PHP-CS-Fixer et PHPUnit. PHPUnit nettoie uniquement les tables nécessaires dans shortflow_test, après vérification de son nom ; ne jamais le pointer sur une base réelle. composer check seul suppose la base test prête. Les compteurs de test sont réinitialisés par cache:clear --env=test.
+
+La suite complète utilise `edit-worker`, qui contient aussi le moteur Whisper local. Dans le conteneur `php`, le test réel de transcription échoue faute de ce moteur ; cela ne vérifie pas le fonctionnement du worker de montage. L’environnement `test` est explicite pour ne pas reprendre les réglages `dev` du worker.
 
 Pour une nouvelle modification de schéma : doctrine:migrations:diff dans le conteneur, relire le SQL, puis migrations:migrate. Ne pas utiliser schema:update --force pour gérer les évolutions.
 

@@ -573,7 +573,7 @@ final class AiEpisodeFlow
             $this->catalog->validateReferences($recipe['model'], $recipe['reference'], $recipe['endReference']);
         }
         if (!$this->keys->hasAccess($episode->getOwner(), $model['provider'], $recipe['accessMode'])) {
-            throw new \RuntimeException('Connecte l’accès BYOK choisi avant de continuer.');
+            throw new \RuntimeException('Connecte le compte fournisseur choisi avant de continuer.');
         }
         if (new \DateTimeImmutable($model['checked'] ?? AiCatalog::CHECKED) < new \DateTimeImmutable('-14 days')) {
             throw new \RuntimeException('Les tarifs de ce modèle doivent être revérifiés avant de lancer.');

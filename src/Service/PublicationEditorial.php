@@ -76,6 +76,42 @@ final class PublicationEditorial
         });
     }
 
+    /** Propose missing series texts once per source/profile/network version, without applying them. */
+    public function suggestMissing(User $owner, PublicationDraft $draft): ?StoryProposal
+    {
+        $episode = $draft->getEpisode();
+        if (!$episode || $episode->isStandalone() || !$draft->getNetworks() || !$this->writer->available()) {
+            return null;
+        }
+        try {
+            $snapshot = $this->snapshot($draft);
+        } catch (PublicationException) {
+            // An older draft keeps its frozen video and may still be edited or published.
+            return null;
+        }
+        $latest = $this->jobs->latest($owner, (int) $draft->getId(), 'editorial');
+        if ($latest && hash_equals($latest->getFingerprint(), $snapshot['hash'])) {
+            return null;
+        }
+        $defaults = [$episode->getTitle(), $episode->getApprovedVideo()->getTitle()];
+        $occurrence = $this->em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode]);
+        if ($occurrence?->getSummary()) {
+            $defaults[] = $occurrence->getSummary();
+        }
+        foreach ($this->fields($draft) as $field) {
+            if ('human' !== $field['origin'] && ('empty' === $field['origin'] || ('existing' === $field['origin'] && in_array($field['value'], $defaults, true)))) {
+                try {
+                    return $this->request($owner, $draft, $draft->getEditorial()['brief'] ?? '');
+                } catch (\RuntimeException) {
+                    // Another local writing task or its limiter must not prevent saving the draft.
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
     /** @return array<string,array{value:string,origin:string,network:string,field:string}> */
     public function fields(PublicationDraft $draft): array
     {

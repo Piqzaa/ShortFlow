@@ -65,8 +65,8 @@ export default class extends Controller {
     if (!this.editor || !this.model) return;
     const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds);
     if (!proposal.parts) { this.refresh(); return; }
-    const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
-    if (inputs.length !== proposal.parts.length && inputs.some(row=>row.startReference || row.endReference)) { this.noticeTarget.textContent = 'Déplace ou retire les cadres avant de changer le nombre de plans. Les scènes restent conservées.'; return; }
+    const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt','sceneDescription'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
+    if (inputs.length !== proposal.parts.length && inputs.some(row=>row.startReference || row.endReference || row.imagePrompt?.trim())) { this.noticeTarget.textContent = 'Déplace ou retire les cadres et les consignes d’images avant de changer le nombre de plans. Tes textes restent conservés.'; return; }
     const prompts = this.editor.rows().map(row => row.querySelector('textarea').value);
     this.editor.listTarget.replaceChildren();
     proposal.parts.forEach((seconds, index) => {

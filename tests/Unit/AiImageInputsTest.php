@@ -142,6 +142,7 @@ final class AiImageInputsTest extends TestCase
             if ('fal' === $model['provider']) {
                 self::assertSame('https://queue.fal.run/'.$model['endpoint'], $url);
                 $schemas = json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/fal-image-contracts.json'), true, 64, JSON_THROW_ON_ERROR);
+                $schemas['bytedance/seedance-2.5/us/image-to-video'] = json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/seedance-25-us-image-contract.json'), true, 64, JSON_THROW_ON_ERROR);
                 $schema = $schemas[$model['endpoint']];
                 foreach ($schema['required'] as $required) {
                     self::assertArrayHasKey($required, $body);
@@ -240,5 +241,16 @@ final class AiImageInputsTest extends TestCase
         self::assertSame(36, $catalog->estimate('grok-image-720', 5));
         self::assertSame(126, $catalog->estimate('grok-15-image-1080p', 5));
         self::assertSame(180, $catalog->estimate('ltx-25-fast-4k-image', 6));
+    }
+
+    public function testImageInstructionsAreBoundedDraftMetadata(): void
+    {
+        $inputs = new AiPlanInputs(new AiCatalog(), $this->storage);
+        $row = $inputs->row($this->owner, ['imagePrompt' => '  Mon costume précis <image>  '], 'contain');
+        self::assertSame('Mon costume précis <image>', $row['imagePrompt']);
+        self::assertSame('contain', $row['referenceFit']);
+        self::assertArrayNotHasKey('imagePrompt', $inputs->row($this->owner, [], 'crop'));
+        $this->expectException(\RuntimeException::class);
+        $inputs->row($this->owner, ['imagePrompt' => str_repeat('é', 3001)], 'crop');
     }
 }

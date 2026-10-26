@@ -34,6 +34,12 @@ export default class extends Controller {
     const rows = this.rows();
     let seconds = 0, cents = 0;
     rows.forEach((row, index) => {
+      const description = row.querySelector('[name$="[sceneDescription]"]')?.value || '';
+      const descriptionPanel = row.querySelector('[data-shot-description]');
+      if (descriptionPanel) {
+        descriptionPanel.hidden = !description.trim();
+        descriptionPanel.querySelector('[data-shot-description-text]').textContent = description;
+      }
       row.querySelector('[data-shot-heading]').textContent = `Plan ${index + 1}`;
       row.querySelectorAll('[name], [id], label[for]').forEach(element => {
         for (const attr of ['name', 'id', 'for']) {

@@ -1,0 +1,2 @@
+{{ form_widget(shotForm.sceneDescription) }}
+<div class="library-note" data-shot-description{% if not shotForm.sceneDescription.vars.value %} hidden{% endif %}><strong>Résumé du scénario en français</strong><p data-shot-description-text>{{ shotForm.sceneDescription.vars.value }}</p><small>Ce résumé accompagne le scénario proposé. Si tu modifies le prompt ci-dessous, vérifie qu’il décrit toujours ton intention.</small></div>

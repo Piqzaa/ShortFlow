@@ -122,3 +122,23 @@ docker compose up -d --no-deps --force-recreate worker story-worker background-w
 Si les images ou dépendances du poste sont anciennes, suivre aussi les étapes de construction et d'installation du README. Le moteur réel de sous-titres exige l'image `vydflow-edit` ; le rédacteur local exige Ollama et `qwen3:8b` sur ce PC. Ne pas activer de série pour vérifier l'installation.
 
 Git transfère le code et ce suivi, pas `.env.local`, la base PostgreSQL, les médias privés, les connexions OAuth ni les modèles Ollama. Ces éléments restent propres à chaque poste ; ne pas remplacer une base existante ni copier de secrets dans Git. Sans copie privée des données, les vidéos de l'autre PC ne seront pas disponibles pour la recette. Après mise à jour, recharger le navigateur avec Ctrl+F5.
+## Complément du 26 octobre — validation globale et retours utilisateur
+
+Les libellés BYOK, les images en mode texte et la découverte de la préparation récurrente sont clarifiés dans [le suivi UX](clarification-studio-series.md). Un décalage entre une série configurée avec clé API et une connexion Fal par navigateur est maintenant expliqué explicitement. Les nouvelles séries proposent la connexion navigateur lorsqu’elle est la seule connexion Fal du propriétaire ; les choix existants ne changent pas silencieusement. Revue croisée finale sans blocage.
+
+- Suite complète lancée dans `php` : **565 tests, 6 838 assertions**, en 33 min 30 s, avec deux échecs et une erreur. Deux concernent des tests chargés avant l’adaptation des nouveaux libellés (« s par épisode » et bouton de récurrence). Le troisième est le test réel de transcription, dont le moteur Whisper est absent de ce conteneur. Les deux régressions de l’audit précédent n’apparaissent plus dans les résultats.
+- Rejeu final des deux cas de libellés et du nouveau cas Fal : **3 tests, 42 assertions réussis**. La première version du nouveau test utilisait des utilisateurs Doctrine détachés ; la fixture est corrigée en rechargeant les utilisateurs gérés. Le cas Fal vérifie aussi l’isolation et la conservation du mode existant lorsque les deux connexions sont disponibles.
+- Test réel de transcription rejoué dans `edit-worker`, avec environnement `test` explicite : **1 test, 6 assertions réussis**. Le README indique désormais ce conteneur pour la suite complète. Aucun défaut du moteur de montage n’est établi par l’échec dans `php`.
+- La suite complète n’a pas été relancée après ces ajustements ; ne pas présenter le premier lancement comme intégralement réussi. Journaux ignorés : `artifacts/validation-20261026.log`, `validation-20261026-final-replay.log`, `validation-20261026-fal.log` et `validation-20261026-speech.log`.
+- PHPStan sans erreur, CS-Fixer sans correction, YAML/conteneur et schémas dev/test valides. Dernier lint Twig après le changement de connexion : **98 templates valides**. `npm run check`, **128 tests frontend** et `npm run build` réussis ; avertissements de build statiques/Three.js existants. `git diff --check` réussi.
+- La tentative de contrôle visuel sur Chrome s’est arrêtée : l’outil ne pouvait pas déterminer l’URL courante avec assez de certitude. Aucune nouvelle recette visuelle desktop/mobile n’est donc revendiquée pour ces libellés.
+
+Aucun essai vidéo payant, publication, activation de série réelle ou push. Recherche complémentaire sur les vidéos parlantes et les danses dans [qualite-video-ia-recherche.md](qualite-video-ia-recherche.md) ; les intégrations proposées restent des suites à cadrer.
+
+## Préparation des images — 26 octobre
+
+Parcours commun intégré : consignes d’image par plan, proposition locale sans API, remplacement humain explicite, copie et import privé existant. Conservation en brouillon et lors de la redistribution compatible ; aucune transmission de ces consignes au modèle vidéo. Revue entre agents et contrôle navigateur synthétique desktop/mobile réalisés. Tests ciblés : 3 tests PHP / 28 assertions et 135 tests frontend réussis ; contrôles statiques et build réussis. Détails, fichiers et pédagogie Symfony dans [preparation-images.md](preparation-images.md). Aucun nouvel essai payant ni activation réelle.
+
+## Navigation et textes — 26 octobre
+
+Debug local désactivé après mesure, résumés français persistés avec les prompts anglais conservés, parcours des imports clarifié et propositions éditoriales manquantes déclenchées pour les séries. Revue entre agents, protections des anciens brouillons maintenues. Dernier rejeu : 16 tests PHP / 155 assertions et 136 tests frontend réussis ; contrôles statiques et recette visuelle desktop/mobile réussis. [Mesures, limites et fonctionnement](navigation-plans-textes-publication.md). Aucun essai payant ni envoi réel.

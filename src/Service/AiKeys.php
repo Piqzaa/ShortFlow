@@ -77,7 +77,7 @@ final class AiKeys
     {
         $credential = 'mcp' === $mode ? $this->falOAuth->connection($owner) : $this->connection($owner, $provider);
         if (!$credential) {
-            throw new \RuntimeException('Reconnecte l’accès BYOK de la série.');
+            throw new \RuntimeException('Reconnecte le compte fournisseur utilisé par cette série.');
         }
         $this->em->refresh($credential);
 

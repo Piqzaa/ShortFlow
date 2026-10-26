@@ -150,12 +150,13 @@ final class PublicationComposerController extends AbstractController
             $accountChanged = $accountChanged || ($accounts[$network] ?? null) !== $destinations[$network]['account'];
         }
         $settings = array_intersect_key($state['content'], array_flip($selected));
+        $synthetic = null !== $stored?->getEpisode();
         foreach ($selected as $network) {
             foreach ($context['videos'] as $video) {
                 $settings[$network]['videos'][$video->getId()] ??= match ($network) {
-                    'youtube' => ['title' => mb_substr(str_replace(['<', '>'], '', $video->getTitle()), 0, 100), 'description' => '', 'privacy' => 'public', 'audience' => 'yes', 'synthetic' => false],
-                    'instagram' => ['caption' => $video->getTitle(), 'shareToFeed' => true, 'synthetic' => false],
-                    'tiktok' => ['caption' => $video->getTitle(), 'privacy' => null, 'comment' => false, 'duet' => false, 'stitch' => false, 'disclosure' => false, 'ownBrand' => false, 'partnerBrand' => false, 'synthetic' => false],
+                    'youtube' => ['title' => mb_substr(str_replace(['<', '>'], '', $video->getTitle()), 0, 100), 'description' => '', 'privacy' => 'public', 'audience' => 'yes', 'synthetic' => $synthetic],
+                    'instagram' => ['caption' => $video->getTitle(), 'shareToFeed' => true, 'synthetic' => $synthetic],
+                    'tiktok' => ['caption' => $video->getTitle(), 'privacy' => null, 'comment' => false, 'duet' => false, 'stitch' => false, 'disclosure' => false, 'ownBrand' => false, 'partnerBrand' => false, 'synthetic' => $synthetic],
                     default => throw $this->createNotFoundException(),
                 };
             }
@@ -217,6 +218,13 @@ final class PublicationComposerController extends AbstractController
                     $drafts->plan($user, (int) $stored->getId(), $stored->getRevision(), $local, $next['timezone']);
                     $next['persistentRevision'] = $stored->getRevision();
                     $this->save($request, $key, $next);
+                    if (null === $editSource && $editorial->suggestMissing($user, $stored)) {
+                        $next['revision'] = bin2hex(random_bytes(16));
+                        $this->save($request, $key, $next);
+                        $this->addFlash('success', 'Les textes manquants de cet épisode sont en préparation. Relis la proposition et choisis les champs à appliquer avant de confirmer la publication.');
+
+                        return $this->redirectToRoute('app_composer', ['key' => $key], 303);
+                    }
                     if (null !== $editSource) {
                         $next['revision'] = bin2hex(random_bytes(16));
                         $this->save($request, $key, $next);

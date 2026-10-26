@@ -130,10 +130,10 @@ final class AiStudioController extends AbstractController
                             $data['continuity'] = 'single';
                         }
                         $old = array_values($data['shots']);
-                        if (count($old) !== count($durations) && array_filter($old, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']))) {
-                            throw new \RuntimeException('Déplace ou retire les cadres des plans avant de changer automatiquement leur nombre. Tes scènes et images restent conservées.');
+                        if (count($old) !== count($durations) && array_filter($old, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? ''))) {
+                            throw new \RuntimeException('Déplace ou retire les cadres et les consignes d’images avant de changer automatiquement le nombre de plans. Tes textes et images restent conservés.');
                         }
-                        $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds] + array_intersect_key($old[$i] ?? [], array_flip(['startReference', 'endReference', 'referenceFit'])), $durations, array_keys($durations));
+                        $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds] + array_intersect_key($old[$i] ?? [], array_flip(['startReference', 'endReference', 'referenceFit', 'imagePrompt', 'sceneDescription'])), $durations, array_keys($durations));
                         if (count($old) > count($durations)) {
                             $last = count($durations) - 1;
                             $data['shots'][$last]['prompt'] .= "\n".implode("\n", array_column(array_slice($old, count($durations)), 'prompt'));
