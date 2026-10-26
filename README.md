@@ -190,6 +190,8 @@ Pour une nouvelle modification de schéma : doctrine:migrations:diff dans le con
 Un controller coordonne une requête ; un service porte un comportement réutilisable ; une entité décrit les données persistées ; une migration versionne le schéma ; Twig représente la page. Cette séparation reste volontairement simple.
 
 ## Limites avant production
+Vue de supervision : [À valider](docs/a-valider.md), accessible dans le studio, regroupe les vidéos et préparations en attente d’une intervention humaine, avec filtres et reprise des parcours existants.
+
 Comptes sociaux multiples : ajout et reconnexion par identité, choix du compte destinataire dans les préparations, dates distinctes par vidéo sélectionnée et comptes figés dans les séries. Voir [le guide multi-comptes](docs/comptes-sociaux-multiples.md) et [la préparation par vidéo](docs/publications-par-video.md).
 
 Le serveur PHP intégré et le debug sont locaux. Ne pas publier cette configuration. La confidentialité doit être finalisée (exploitant, contact, conservation) avant collecte publique. Aucun email de liste d’attente ni double opt-in de celle-ci ; les emails de compte restent dans Mailpit local. Le limiteur local est destiné à une instance et ne remplace pas une protection réseau de production. La landing inclut quatre montages de démonstration originaux, six visuels et six écrans narratifs : voir docs/landing-experience.md. Les licences des polices libres sont fournies dans node_modules/@fontsource ; aucun média de tiers utilisé.
