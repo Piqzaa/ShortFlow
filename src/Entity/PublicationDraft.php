@@ -8,10 +8,26 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PublicationDraftRepository::class)]
+#[ORM\UniqueConstraint(name: 'publication_preparation_key', columns: ['preparation_key'])]
 #[ORM\Index(name: 'draft_owner_date', columns: ['owner_id', 'scheduled_at'])]
 #[ORM\Index(name: 'idx_draft_episode', columns: ['episode_id'])]
 class PublicationDraft
 {
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $preparationKey = null;
+
+    public function getPreparationKey(): ?string
+    {
+        return $this->preparationKey;
+    }
+
+    public function identifyPreparation(string $key): void
+    {
+        if ($this->preparationKey || !preg_match('/^[a-f0-9]{64}$/D', $key)) {
+            throw new \LogicException('Invalid preparation identity.');
+        }
+        $this->preparationKey = $key;
+    }
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(onDelete: 'SET NULL')]

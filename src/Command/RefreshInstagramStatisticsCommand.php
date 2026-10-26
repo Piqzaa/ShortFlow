@@ -54,7 +54,7 @@ final class RefreshInstagramStatisticsCommand extends Command
                 $output->writeln($queued ? 'Relevé mis en file.' : 'Une demande récente existe déjà.');
             }
             if ($input->getOption('link')) {
-                $connection = $this->em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $job->getOwner()]);
+                $connection = $this->em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $job->getOwner(), 'instagramId' => $job->getInstagramId()]);
                 if ($connection && $connection->getInstagramId() === $job->getInstagramId()) {
                     $output->writeln($this->api->permalink($connection, $job->getRemoteId()));
                 }

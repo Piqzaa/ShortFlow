@@ -14,18 +14,20 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class InstagramPublishing
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private InstagramApi $api, private InstagramMediaLink $links, private PublicationVideoCheck $videoCheck)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private InstagramApi $api, private InstagramMediaLink $links, private PublicationVideoCheck $videoCheck, private SocialAccounts $accounts)
     {
     }
 
-    public function connection(User $owner): ?InstagramConnection
+    public function connection(User $owner, ?string $identity = null): ?InstagramConnection
     {
-        return $this->em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $owner]);
+        $connection = $this->accounts->find($owner, 'instagram', $identity);
+
+        return $connection instanceof InstagramConnection ? $connection : null;
     }
 
-    public function ready(User $owner): bool
+    public function ready(User $owner, ?string $identity = null): bool
     {
-        $connection = $this->connection($owner);
+        $connection = $this->connection($owner, $identity);
 
         return $this->api->isReady() && $this->links->isReady() && $connection && !$connection->isExpired();
     }
@@ -44,11 +46,11 @@ final class InstagramPublishing
                 if ($this->em->getRepository(InstagramPublication::class)->count(['owner' => $owner, 'submissionKey' => $key])) {
                     return;
                 }
-                $connection = $this->connection($owner);
+                $connection = $this->connection($owner, $expectedAccount);
                 if ($connection) {
                     $this->em->refresh($connection);
                 }
-                if (!$this->ready($owner) || !$connection || $expectedAccount !== $connection->getInstagramId()) {
+                if (!$this->ready($owner, $expectedAccount) || !$connection || $expectedAccount !== $connection->getInstagramId()) {
                     throw new PublicationException('Reconnecte le compte destinataire et recharge la préparation.');
                 }
                 if (!$ids || count($ids) > 20 || $this->em->getRepository(InstagramPublication::class)->count(['owner' => $owner, 'status' => InstagramPublication::ACTIVE]) + count($ids) > 100) {
@@ -76,7 +78,7 @@ final class InstagramPublishing
                 if ('paused' !== $job->getStatus() && !('review' === $job->getStatus() && $job->getContainerId() && $job->isPublishAttempted())) {
                     return;
                 }
-                if (!$this->ready($job->getOwner()) || $this->connection($job->getOwner())?->getInstagramId() !== $job->getInstagramId()) {
+                if (!$this->ready($job->getOwner(), $job->getInstagramId()) || $this->connection($job->getOwner(), $job->getInstagramId())?->getInstagramId() !== $job->getInstagramId()) {
                     throw new PublicationException('Reconnecte le compte destinataire avant de reprendre.');
                 }
                 $job->resume();

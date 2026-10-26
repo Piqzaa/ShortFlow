@@ -1,5 +1,7 @@
 # VydFlow — bêta, studio IA et publication
 
+Sélection de vidéos, 26 octobre : réseaux et créneau propres à chaque vidéo, brouillons indépendants dédupliqués et confirmation individuelle conservée. Migration additive `Version20261026190000`. [Guide Symfony et vérifications](docs/publications-par-video.md). [Audit produit et comptes multiples](docs/audit-produit-concurrence-20261026.md).
+
 Navigation et textes, 26 octobre : diagnostic du debug local, résumés français des plans avec prompts techniques anglais conservés, et proposition supervisée des textes manquants des séries lors de leur préparation de publication. [Parcours et fonctionnement Symfony](docs/navigation-plans-textes-publication.md).
 
 Préparation des images, 26 octobre : chaque plan du Studio et des épisodes dispose de consignes modifiables à proposer et copier dans un outil d’images externe, puis d’un import privé existant. Sauvegarde avec les plans, protection des textes personnels et aucune génération d’image automatique. [Guide et vérifications](docs/preparation-images.md).
@@ -188,6 +190,8 @@ Pour une nouvelle modification de schéma : doctrine:migrations:diff dans le con
 Un controller coordonne une requête ; un service porte un comportement réutilisable ; une entité décrit les données persistées ; une migration versionne le schéma ; Twig représente la page. Cette séparation reste volontairement simple.
 
 ## Limites avant production
+Comptes sociaux multiples : ajout et reconnexion par identité, choix du compte destinataire dans les préparations, dates distinctes par vidéo sélectionnée et comptes figés dans les séries. Voir [le guide multi-comptes](docs/comptes-sociaux-multiples.md) et [la préparation par vidéo](docs/publications-par-video.md).
+
 Le serveur PHP intégré et le debug sont locaux. Ne pas publier cette configuration. La confidentialité doit être finalisée (exploitant, contact, conservation) avant collecte publique. Aucun email de liste d’attente ni double opt-in de celle-ci ; les emails de compte restent dans Mailpit local. Le limiteur local est destiné à une instance et ne remplace pas une protection réseau de production. La landing inclut quatre montages de démonstration originaux, six visuels et six écrans narratifs : voir docs/landing-experience.md. Les licences des polices libres sont fournies dans node_modules/@fontsource ; aucun média de tiers utilisé.
 
 Publication YouTube, Instagram Reels et TikTok implémentée avec traitement asynchrone et tests HTTP simulés : [YouTube](docs/youtube.md), [Instagram](docs/instagram-publication.md), [TikTok](docs/tiktok.md). Des essais réels ont réussi sur les comptes du propriétaire ; TikTok reste en Sandbox. Ces essais ne valident pas l'accès commercial pour tous les utilisateurs. Calendrier, IA BYOK et montage sont intégrés ; séries et abonnement restent à construire. La roadmap de référence est [docs/roadmap.md](docs/roadmap.md) ; l'ancien prompt V1 est archivé. Les générations sont payées directement au fournisseur, sans wallet VydFlow. Les accès et essais supplémentaires restent séparément autorisés.

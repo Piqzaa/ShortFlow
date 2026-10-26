@@ -32,11 +32,11 @@ final class PublishInstagramHandler
             if (!in_array($job->getStatus(), ['queued', 'processing', 'publishing'], true)) {
                 return;
             }
-            $connection = $this->publishing->connection($job->getOwner());
+            $connection = $this->publishing->connection($job->getOwner(), $job->getInstagramId());
             if ($connection) {
                 $this->em->refresh($connection);
             }
-            if (!$this->publishing->ready($job->getOwner()) || !$connection || $connection->getInstagramId() !== $job->getInstagramId()) {
+            if (!$this->publishing->ready($job->getOwner(), $job->getInstagramId()) || !$connection || $connection->getInstagramId() !== $job->getInstagramId()) {
                 $job->change('paused', 'Reconnecte le compte Instagram destinataire avant de reprendre.');
                 $this->em->flush();
 

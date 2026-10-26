@@ -19,11 +19,11 @@ final class MultiNetworkPublishing
     }
 
     /** @return array<string, array<string, mixed>> */
-    public function destinations(User $owner): array
+    public function destinations(User $owner, array $accounts = []): array
     {
-        $youtube = $this->youtube->connection($owner);
-        $instagram = $this->instagram->connection($owner);
-        $tiktok = $this->tiktok->connection($owner);
+        $youtube = $this->youtube->connection($owner, $accounts['youtube'] ?? null);
+        $instagram = $this->instagram->connection($owner, $accounts['instagram'] ?? null);
+        $tiktok = $this->tiktok->connection($owner, $accounts['tiktok'] ?? null);
         foreach ([$youtube, $instagram, $tiktok] as $connection) {
             if ($connection) {
                 // Recheck identities after taking the owner lock, including cached ORM objects.
@@ -33,21 +33,21 @@ final class MultiNetworkPublishing
 
         return [
             'youtube' => ['label' => self::LABELS['youtube'], 'account' => $youtube?->getChannelId(), 'name' => $youtube?->getChannelTitle(), 'ready' => $this->youtubeApi->isReady() && null !== $youtube],
-            'instagram' => ['label' => self::LABELS['instagram'], 'account' => $instagram?->getInstagramId(), 'name' => $instagram ? '@'.$instagram->getUsername() : null, 'ready' => $this->instagram->ready($owner)],
-            'tiktok' => ['label' => self::LABELS['tiktok'], 'account' => $tiktok?->getOpenId(), 'name' => $tiktok?->getDisplayName(), 'ready' => $this->tiktok->ready($owner)],
+            'instagram' => ['label' => self::LABELS['instagram'], 'account' => $instagram?->getInstagramId(), 'name' => $instagram ? '@'.$instagram->getUsername() : null, 'ready' => $this->instagram->ready($owner, $accounts['instagram'] ?? null)],
+            'tiktok' => ['label' => self::LABELS['tiktok'], 'account' => $tiktok?->getOpenId(), 'name' => $tiktok?->getDisplayName(), 'ready' => $this->tiktok->ready($owner, $accounts['tiktok'] ?? null)],
         ];
     }
 
     /** @param list<int> $ids @param list<string> $networks @param array<string, ?string> $accounts @param array<string, array<string, mixed>> $content @return array<string, mixed> */
     public function context(User $owner, array $ids, array $networks, array $accounts, array $content = []): array
     {
-        $destinations = $this->destinations($owner);
+        $destinations = $this->destinations($owner, $accounts);
         $selected = [];
         $issues = [];
         $creator = [];
         foreach ($networks as $network) {
             if (!$destinations[$network]['ready']) {
-                $issues[$network][] = 'tiktok' === $network ? $this->tiktok->readinessIssue($owner) : 'Connecte le compte et active l’envoi depuis la page Réseaux avant de publier.';
+                $issues[$network][] = 'tiktok' === $network ? $this->tiktok->readinessIssue($owner, $accounts['tiktok'] ?? null) : 'Choisis un compte connecté et disponible dans les destinations avant de publier.';
             }
             if (($accounts[$network] ?? null) !== $destinations[$network]['account']) {
                 $issues[$network][] = 'Le compte destinataire a changé. Reviens au choix des réseaux pour le vérifier.';
@@ -55,7 +55,7 @@ final class MultiNetworkPublishing
         }
         if (in_array('tiktok', $networks, true) && $destinations['tiktok']['ready'] && !isset($issues['tiktok'])) {
             try {
-                $connection = $this->tiktok->connection($owner);
+                $connection = $this->tiktok->connection($owner, $accounts['tiktok'] ?? null);
                 if ($connection) {
                     $creator = $this->tiktokApi->creator($connection);
                     $destinations['tiktok']['name'] = $creator['creator_nickname'];

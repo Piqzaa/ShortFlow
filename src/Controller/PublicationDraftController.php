@@ -124,7 +124,7 @@ final class PublicationDraftController extends AbstractController
         foreach ($draft->getItems() as $item) {
             $viewVideos[] = ['id' => $item->getVideoId(), 'title' => $item->getTitle(), 'source' => $item->getSource()];
         }
-        $destinations = $publishing->destinations($user);
+        $destinations = $publishing->destinations($user, $draft->getAccounts());
         foreach ($destinations as $network => &$destination) {
             if (($draft->getAccounts()[$network] ?? null) !== $destination['account']) {
                 $destination['name'] = 'Compte à revérifier';

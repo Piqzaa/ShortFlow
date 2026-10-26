@@ -37,8 +37,11 @@ final class PublicationController extends AbstractController
     }
 
     #[Route('/youtube/preparer', name: 'app_youtube_prepare', methods: ['GET', 'POST'])]
-    public function prepare(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, YouTubePublishing $publishing, YouTubeApi $api, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function prepare(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, YouTubePublishing $publishing, YouTubeApi $api, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, \App\Service\SocialAccounts $social): Response
     {
+        if ($request->isMethod('GET') && count($social->all($user, 'youtube')) > 1) {
+            return $this->redirectToRoute('app_composer_start', ['videos' => $request->query->all('videos')], 303);
+        }
         if ($request->isMethod('GET')) {
             $values = $request->query->all('videos');
             $ids = [];
@@ -70,7 +73,7 @@ final class PublicationController extends AbstractController
             $selected[] = $video;
             $data['videos'][$id] = ['title' => mb_substr(str_replace(['<', '>'], '', $video->getTitle()), 0, 100), 'description' => '', 'privacy' => 'public', 'audience' => 'yes'];
         }
-        $connection = $publishing->connection($user);
+        $connection = $publishing->connection($user, $draft['channel']);
         $ready = $api->isReady() && null !== $connection;
         $issues = [];
         foreach ($selected as $video) {

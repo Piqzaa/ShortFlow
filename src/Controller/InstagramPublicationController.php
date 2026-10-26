@@ -28,7 +28,7 @@ final class InstagramPublicationController extends AbstractController
     {
         $job = $em->getRepository(InstagramPublication::class)->findOneBy(['id' => $id, 'owner' => $user]) ?? throw $this->createNotFoundException();
         try {
-            $connection = $em->getRepository(\App\Entity\InstagramConnection::class)->findOneBy(['owner' => $user]);
+            $connection = $em->getRepository(\App\Entity\InstagramConnection::class)->findOneBy(['owner' => $user, 'instagramId' => $job->getInstagramId()]);
             if ('published' !== $job->getStatus() || !$job->getRemoteId() || !$connection || $connection->getInstagramId() !== $job->getInstagramId() || !$limiter->create('instagram-link-'.$user->getId())->consume()->isAccepted()) {
                 throw new PublicationException('Le lien Instagram est indisponible. Vérifie le compte connecté.');
             }
@@ -46,8 +46,11 @@ final class InstagramPublicationController extends AbstractController
     }
 
     #[Route('/preparer', name: 'app_instagram_prepare', methods: ['GET', 'POST'])]
-    public function prepare(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, InstagramPublishing $publishing, InstagramMediaLink $links, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function prepare(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, InstagramPublishing $publishing, InstagramMediaLink $links, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, \App\Service\SocialAccounts $social): Response
     {
+        if ($request->isMethod('GET') && count($social->all($user, 'instagram')) > 1) {
+            return $this->redirectToRoute('app_composer_start', ['videos' => $request->query->all('videos')], 303);
+        }
         if ($request->isMethod('GET')) {
             $ids = [];
             foreach ($request->query->all('videos') as $id) {
@@ -84,12 +87,12 @@ final class InstagramPublicationController extends AbstractController
                 $issues[$id] = $error->getMessage();
             }
         }
-        $ready = $publishing->ready($user) && !$issues;
+        $ready = $publishing->ready($user, $draft['account']) && !$issues;
         $form = $this->createForm(InstagramPublishType::class, $data, ['videos' => $selected, 'draft_key' => $draft['key']])->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             if (!$ready) {
                 $form->addError(new FormError('Vérifie la connexion Instagram, la disponibilité de l’envoi et le format des vidéos.'));
-            } elseif ($draft['account'] !== $publishing->connection($user)?->getInstagramId()) {
+            } elseif ($draft['account'] !== $publishing->connection($user, $draft['account'])?->getInstagramId()) {
                 $form->addError(new FormError('Le compte a changé. Recharge la préparation.'));
             } elseif (!$limiter->create('publish-'.$user->getId())->consume()->isAccepted()) {
                 $form->addError(new FormError('Trop de publications rapprochées. Réessaie dans 15 minutes.'));
@@ -106,7 +109,7 @@ final class InstagramPublicationController extends AbstractController
             }
         }
 
-        return $this->render('publication/instagram_prepare.html.twig', ['form' => $form, 'videos' => $selected, 'ids' => $draft['ids'], 'connection' => $publishing->connection($user), 'ready' => $ready, 'mediaReady' => $links->isReady(), 'issues' => $issues], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'same-origin']));
+        return $this->render('publication/instagram_prepare.html.twig', ['form' => $form, 'videos' => $selected, 'ids' => $draft['ids'], 'connection' => $publishing->connection($user, $draft['account']), 'ready' => $ready, 'mediaReady' => $links->isReady(), 'issues' => $issues], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'same-origin']));
     }
 
     #[Route('/{id}/{action}', name: 'app_instagram_job_action', requirements: ['id' => '\d+', 'action' => 'reprendre|arreter'], methods: ['POST'])]

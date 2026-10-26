@@ -41,11 +41,11 @@ final class PublishTikTokHandler
 
                 return;
             }
-            $connection = $this->publishing->connection($job->getOwner());
+            $connection = $this->publishing->connection($job->getOwner(), $job->getOpenId());
             if ($connection) {
                 $this->em->refresh($connection);
             }
-            if (!$this->publishing->ready($job->getOwner()) || !$connection || $connection->getOpenId() !== $job->getOpenId()) {
+            if (!$this->publishing->ready($job->getOwner(), $job->getOpenId()) || !$connection || $connection->getOpenId() !== $job->getOpenId()) {
                 $job->change('paused', 'Reconnecte le compte TikTok destinataire avant de reprendre.');
                 $this->em->flush();
 

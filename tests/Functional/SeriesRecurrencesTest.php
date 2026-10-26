@@ -314,7 +314,7 @@ final class SeriesRecurrencesTest extends WebTestCase
         $draft = static::getContainer()->get(EpisodePublications::class)->prepare($this->owner, $episode, $episode->getRevision());
         self::assertSame('draft', $draft->getStatus());
         self::assertSame(['youtube', 'tiktok'], $draft->getNetworks());
-        self::assertSame($o->getScheduledAt(), $draft->getScheduledAt());
+        self::assertSame($o->getScheduledAt()->format(DATE_ATOM), $draft->getScheduledAt()->format(DATE_ATOM));
         self::assertSame('2026-10-27T18:00', $draft->getLocalTime());
         self::assertNull($draft->getSubmissionKey());
         self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM youtube_publication'));

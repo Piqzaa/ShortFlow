@@ -6,11 +6,12 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'youtube_connection')]
+#[ORM\UniqueConstraint(name: 'youtube_owner_identity', columns: ['owner_id', 'channel_id'])]
 class YouTubeConnection
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
-    #[ORM\OneToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $owner;
     #[ORM\Column(length: 64)]
     private string $channelId;
@@ -71,5 +72,12 @@ class YouTubeConnection
     {
         $this->accessToken = $encryptedToken;
         $this->expiresAt = new \DateTimeImmutable('+'.max(1, min(86400, $seconds)).' seconds');
+    }
+
+    public function reconnect(string $title, string $access, string $refresh, int $expires): void
+    {
+        $this->channelTitle = $title;
+        $this->refreshToken = $refresh;
+        $this->updateAccess($access, $expires);
     }
 }

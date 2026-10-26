@@ -78,22 +78,25 @@ final class PublicationStatistics
                 }
                 $remoteId = $job->getRemoteId();
                 if ($job instanceof YouTubePublication) {
-                    $connection = $this->em->getRepository(YouTubeConnection::class)->findOneBy(['owner' => $job->getOwner()]);
+                    $connection = $this->em->getRepository(YouTubeConnection::class)->findOneBy(['owner' => $job->getOwner(), 'channelId' => $job->getChannelId()]);
                     if (!$connection || $connection->getChannelId() !== $job->getChannelId()) {
                         throw new \RuntimeException();
                     }
+                    $this->em->refresh($connection);
                     $values = $this->youtube->statistics($connection, $remoteId);
                 } elseif ($job instanceof InstagramPublication) {
-                    $connection = $this->em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $job->getOwner()]);
+                    $connection = $this->em->getRepository(InstagramConnection::class)->findOneBy(['owner' => $job->getOwner(), 'instagramId' => $job->getInstagramId()]);
                     if (!$connection || $connection->getInstagramId() !== $job->getInstagramId()) {
                         throw new \RuntimeException();
                     }
+                    $this->em->refresh($connection);
                     $values = $this->instagram->statistics($connection, $remoteId);
                 } else {
-                    $connection = $this->em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $job->getOwner()]);
+                    $connection = $this->em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $job->getOwner(), 'openId' => $job->getOpenId()]);
                     if (!$connection || $connection->getOpenId() !== $job->getOpenId()) {
                         throw new \RuntimeException();
                     }
+                    $this->em->refresh($connection);
                     $values = $this->tiktok->statistics($connection, $remoteId);
                 }
                 $snapshot->record(['views' => $this->counter($values['views'] ?? null), 'likes' => $this->counter($values['likes'] ?? null), 'comments' => $this->counter($values['comments'] ?? null)]);

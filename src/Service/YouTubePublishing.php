@@ -14,13 +14,15 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class YouTubePublishing
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private YouTubeApi $api, private PublicationVideoCheck $videoCheck)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private YouTubeApi $api, private PublicationVideoCheck $videoCheck, private SocialAccounts $accounts)
     {
     }
 
-    public function connection(User $owner): ?YouTubeConnection
+    public function connection(User $owner, ?string $identity = null): ?YouTubeConnection
     {
-        return $this->em->getRepository(YouTubeConnection::class)->findOneBy(['owner' => $owner]);
+        $connection = $this->accounts->find($owner, 'youtube', $identity);
+
+        return $connection instanceof YouTubeConnection ? $connection : null;
     }
 
     public function validateVideo(VideoAsset $video): void
@@ -40,7 +42,8 @@ final class YouTubePublishing
                 if ($this->em->getRepository(YouTubePublication::class)->count(['owner' => $owner, 'submissionKey' => $key]) > 0) {
                     return;
                 }
-                $connection = $this->connection($owner) ?? throw new PublicationException('Connecte ta chaîne YouTube avant de publier.');
+                $connection = $this->connection($owner, $expectedChannel) ?? throw new PublicationException('Connecte ta chaîne YouTube avant de publier.');
+                $this->em->refresh($connection);
                 if ($connection->getChannelId() !== $expectedChannel) {
                     throw new PublicationException('La chaîne a changé. Recharge la préparation avant de confirmer.');
                 }
@@ -69,7 +72,10 @@ final class YouTubePublishing
                 if ('paused' !== $job->getStatus() && !('review' === $job->getStatus() && $job->getRemoteId())) {
                     return;
                 }
-                $connection = $this->connection($job->getOwner());
+                $connection = $this->connection($job->getOwner(), $job->getChannelId());
+                if ($connection) {
+                    $this->em->refresh($connection);
+                }
                 if (!$this->api->isReady() || !$connection || $connection->getChannelId() !== $job->getChannelId()) {
                     throw new PublicationException('Reconnecte la chaîne destinataire avant de reprendre.');
                 }

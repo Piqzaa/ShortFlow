@@ -8,6 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'series_occurrence_slot', columns: ['recurrence_id', 'scheduled_at'])]
 class SeriesOccurrence
 {
+    /** @var array<string,?string> */
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $accounts = [];
+
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -36,13 +40,14 @@ class SeriesOccurrence
     #[ORM\Column]
     private bool $automatic = true;
 
-    /** @param list<string> $networks */
-    public function __construct(SeriesRecurrence $recurrence, \DateTimeImmutable $scheduledAt, string $timezone, array $networks, \DateTimeImmutable $now, ?AiEpisode $episode = null)
+    /** @param list<string> $networks @param array<string,?string> $accounts */
+    public function __construct(SeriesRecurrence $recurrence, \DateTimeImmutable $scheduledAt, string $timezone, array $networks, \DateTimeImmutable $now, ?AiEpisode $episode = null, array $accounts = [])
     {
         $this->recurrence = $recurrence;
         $this->scheduledAt = $scheduledAt;
         $this->timezone = $timezone;
         $this->networks = $networks;
+        $this->accounts = $accounts;
         $this->createdAt = $now;
         $this->episode = $episode;
         $this->authorizationRevision = $recurrence->getRevision();
@@ -82,6 +87,12 @@ class SeriesOccurrence
     public function getNetworks(): array
     {
         return $this->networks;
+    }
+
+    /** @return array<string,?string> */
+    public function getAccounts(): array
+    {
+        return $this->accounts;
     }
 
     public function getStatus(): string

@@ -34,6 +34,12 @@ final class DashboardController extends AbstractController
             'YouTube' => !$youtube->isReady() ? 'À configurer' : ($youtubeConnection ? 'Connecté' : 'À connecter'),
             'Instagram' => !$instagram->isReady() ? 'À configurer' : ($instagramConnection ? ($instagramConnection->isExpired() ? 'À reconnecter' : ($instagramConnection->isExpiring() ? 'À renouveler' : 'Connecté')) : 'À connecter'),
         ];
+        foreach (['YouTube' => YouTubeConnection::class, 'Instagram' => InstagramConnection::class, 'TikTok' => TikTokConnection::class] as $label => $entity) {
+            $registered = $em->getRepository($entity)->count(['owner' => $user]);
+            if ($registered > 1) {
+                $networks[$label] = $registered.' comptes enregistrés';
+            }
+        }
         $counts = $publications->counts($user);
         $preparations = $drafts->dashboard($user, $clock->now());
         $response = $this->render('studio/index.html.twig', ['videos' => $recent, 'usage' => $videos->usage($user), 'publishedPlatforms' => $videos->publishedPlatforms($user, $recent), 'counts' => $counts, 'attention' => $counts['attention'] ? $publications->page($user, state: 'attention', limit: 3)['items'] : [], 'active' => $counts['active'] ? $publications->page($user, state: 'active', limit: 3)['items'] : [], 'networks' => $networks, 'preparations' => $preparations, 'preparationStates' => $calendar->states(array_merge($preparations['upcoming'], $preparations['problems'])), 'preparationLabels' => PublicationCalendar::LABELS]);

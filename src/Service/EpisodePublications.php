@@ -13,7 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class EpisodePublications
 {
-    public function __construct(private EntityManagerInterface $em, private PublicationDrafts $drafts, private PublicationCalendar $calendar, private PublicationLock $lock, private MultiNetworkPublishing $publishing, private \Symfony\Component\Clock\ClockInterface $clock, private PublicationEditorial $editorial)
+    public function __construct(private EntityManagerInterface $em, private PublicationDrafts $drafts, private PublicationCalendar $calendar, private PublicationLock $lock, private \Symfony\Component\Clock\ClockInterface $clock, private PublicationEditorial $editorial)
     {
     }
 
@@ -43,9 +43,10 @@ final class EpisodePublications
             $networks = $occurrence?->getNetworks() ?? [];
             $content = [];
             $accounts = [];
-            $destinations = $networks ? $this->publishing->destinations($owner) : [];
+            $snapshot = $occurrence?->getAccounts() ?? [];
             foreach ($networks as $network) {
-                $accounts[$network] = $destinations[$network]['account'];
+                // A legacy occurrence without a snapshot requires a human choice, never a current-account fallback.
+                $accounts[$network] = $snapshot[$network] ?? null;
                 $content[$network]['videos'][$video->getId()] = match ($network) {
                     'youtube' => ['title' => mb_substr($episode->getTitle(), 0, 100), 'description' => $occurrence->getSummary() ?? '', 'privacy' => 'public', 'audience' => 'yes', 'synthetic' => true],
                     'instagram' => ['caption' => $occurrence->getSummary() ?: $episode->getTitle(), 'shareToFeed' => true, 'synthetic' => true],

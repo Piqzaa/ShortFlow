@@ -176,7 +176,7 @@ final class InstagramConnectionTest extends WebTestCase
             $this->client->request('GET', '/studio/connexions/instagram/retour', ['state' => $state, 'code' => 'test-code']);
             self::assertResponseRedirects('/studio/connexions', 303);
             $this->client->followRedirect();
-            self::assertSelectorTextContains('#youtube-title + p', 'Chaîne conservée');
+            self::assertSelectorTextContains('[aria-labelledby="youtube-title"]', 'Chaîne conservée');
             self::assertSelectorExists('form[action="/studio/connexions/youtube/deconnecter"]');
             self::assertStringNotContainsString('private-provider-message', $this->client->getResponse()->getContent());
             $db = static::getContainer()->get(Connection::class);
@@ -197,7 +197,7 @@ final class InstagramConnectionTest extends WebTestCase
         static::getContainer()->set('instagram.http', $http);
         static::getContainer()->set('youtube.http', $http);
         $this->client->loginUser($this->alice);
-        foreach (['Instagram' => 'Connecter Instagram ↗', 'YouTube' => 'Changer / reconnecter ↗'] as $network => $button) {
+        foreach (['Instagram' => 'Connecter Instagram ↗', 'YouTube' => 'Reconnecter YouTube ↗'] as $network => $button) {
             $crawler = $this->client->request('GET', 'https://localhost/studio/connexions');
             self::assertResponseIsSuccessful();
             $this->client->submit($crawler->selectButton($button)->form());
@@ -205,7 +205,7 @@ final class InstagramConnectionTest extends WebTestCase
             self::assertFalse($this->client->getRequest()->getSession()->has(strtolower($network).'_oauth'));
             $this->client->followRedirect();
             self::assertSelectorTextContains('.account-notice.error', 'La connexion et son retour doivent utiliser la même adresse');
-            self::assertSelectorTextContains('#youtube-title + p', 'Chaîne conservée');
+            self::assertSelectorTextContains('[aria-labelledby="youtube-title"]', 'Chaîne conservée');
             self::assertSame(1, $this->em()->getRepository(YouTubeConnection::class)->count([]));
         }
         self::assertSame(0, $http->getRequestsCount());

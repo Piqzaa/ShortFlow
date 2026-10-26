@@ -10,12 +10,14 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final class SeriesRecurrenceType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $builder->add('accounts', SocialAccountsType::class, ['choices_by_network' => $options['account_choices']]);
         $builder->add('weekday', ChoiceType::class, ['label' => 'Jour de publication visé', 'choices' => ['Lundi' => 1, 'Mardi' => 2, 'Mercredi' => 3, 'Jeudi' => 4, 'Vendredi' => 5, 'Samedi' => 6, 'Dimanche' => 7], 'placeholder' => false])
             ->add('hour', TextType::class, ['label' => 'Heure visée', 'attr' => ['placeholder' => '18:00', 'maxlength' => 5, 'pattern' => '(?:[01][0-9]|2[0-3]):[0-5][0-9]'], 'constraints' => [new Assert\NotBlank(), new Assert\Regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/D')]])
             ->add('timezone', ChoiceType::class, ['label' => 'Fuseau horaire', 'choices' => array_combine(\DateTimeZone::listIdentifiers(), \DateTimeZone::listIdentifiers()), 'preferred_choices' => ['Europe/Paris', 'UTC', 'America/Toronto']])
@@ -26,5 +28,10 @@ final class SeriesRecurrenceType extends AbstractType
             ->add('revision', HiddenType::class, ['constraints' => [new Assert\Regex('/^\d+$/D')]])
             ->add('quote', HiddenType::class, ['constraints' => [new Assert\Regex('/^[a-f0-9]{64}$/D')]])
             ->add('consent', CheckboxType::class, ['label' => 'J’autorise ces générations automatiques au coût fournisseur estimé affiché, jusqu’au nombre d’épisodes indiqué. Chaque vidéo attendra ma validation avant publication.', 'constraints' => [new Assert\IsTrue()]]);
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefault('account_choices', []);
     }
 }

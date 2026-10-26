@@ -59,7 +59,7 @@ final class MultiNetworkPublicationController extends AbstractController
     }
 
     #[Route('/preparation/{key}', name: 'app_publication_batch', requirements: ['key' => '[a-f0-9]{64}'], methods: ['GET', 'POST'])]
-    public function networks(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts): Response
+    public function networks(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts, \App\Service\SocialAccounts $social): Response
     {
         $draft = $this->draft($request, $user, $key);
         if ($draft['completed']) {
@@ -67,16 +67,27 @@ final class MultiNetworkPublicationController extends AbstractController
         }
         $context = $this->context($publishing, $user, $draft);
         $saving = $request->isMethod('POST') && $request->request->has('save_draft');
-        $form = $this->createFormBuilder(['networks' => $draft['networks']], ['csrf_token_id' => 'batch_networks_'.$key])
+        $choices = $social->choices($user);
+        foreach ($draft['accounts'] as $network => $identity) {
+            if ($identity && !in_array($identity, $choices[$network], true)) {
+                $choices[$network]['Compte enregistré indisponible · '.$identity] = $identity;
+            }
+        }
+        $form = $this->createFormBuilder(['networks' => $draft['networks'], 'accounts' => $draft['accounts'] + $social->defaults($user)], ['csrf_token_id' => 'batch_networks_'.$key])
+            ->add('accounts', \App\Form\SocialAccountsType::class, ['choices_by_network' => $choices])
             ->add('networks', ChoiceType::class, ['label' => 'Destinations', 'choices' => array_flip(MultiNetworkPublishing::LABELS), 'multiple' => true, 'expanded' => true, 'constraints' => [new Assert\Count(min: $saving ? 0 : 1, max: 3, minMessage: 'Choisis au moins un réseau.')]])->getForm()->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $draft['networks'] = $form->getData()['networks'];
+            try {
+                $draft['accounts'] = $social->select($user, $draft['networks'], $form->getData()['accounts']);
+            } catch (PublicationException $error) {
+                $form->addError(new FormError($error->getMessage()));
+
+                return $this->page('publication/batch_networks.html.twig', $context + ['form' => $form, 'key' => $key, 'step' => 1], 422);
+            }
             if (in_array('tiktok', $draft['networks'], true) && count($draft['ids']) > 5) {
                 $form->addError(new FormError('Pour inclure TikTok, sélectionne au maximum 5 vidéos. Tu peux aussi continuer sans TikTok.'));
             } else {
-                foreach ($draft['networks'] as $network) {
-                    $draft['accounts'][$network] = $context['destinations'][$network]['account'];
-                }
                 $draft['revision'] = bin2hex(random_bytes(16));
                 unset($draft['reviewKey']);
                 $this->save($request, $key, $draft);

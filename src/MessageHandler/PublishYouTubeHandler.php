@@ -51,7 +51,10 @@ final class PublishYouTubeHandler
 
     private function step(YouTubePublication $job): void
     {
-        $connection = $this->publishing->connection($job->getOwner());
+        $connection = $this->publishing->connection($job->getOwner(), $job->getChannelId());
+        if ($connection) {
+            $this->em->refresh($connection);
+        }
         if (!$connection || $connection->getChannelId() !== $job->getChannelId()) {
             $job->change('paused', 'Reconnecte la chaîne destinataire pour reprendre cet envoi.');
 

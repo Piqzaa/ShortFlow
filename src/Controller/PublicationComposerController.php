@@ -78,12 +78,13 @@ final class PublicationComposerController extends AbstractController
             $videos->owned($id, $user) ?? throw $this->createNotFoundException();
         }
         $key = bin2hex(random_bytes(24));
+        $individual = count($ids) > 1 && !$stored && !$retryNetwork;
         $state = ['owner' => $user->getId(), 'ids' => $ids, 'networks' => $stored?->getNetworks() ?? [], 'accounts' => $stored?->getAccounts() ?? [], 'content' => $stored?->content() ?? [], 'title' => $stored?->getTitle() ?? '', 'revision' => bin2hex(random_bytes(16)), 'expires' => time() + 3600, 'persistentId' => $stored?->getId(), 'persistentRevision' => $stored?->getRevision(), 'mode' => ($stored?->getScheduledAt() || $date) ? 'scheduled' : 'immediate', 'local' => $stored?->getLocalTime() ?? ($date ? $date.'T12:00' : null), 'timezone' => $stored?->getTimezone() ?? $zone];
         if ($retryNetwork) {
             $state['content'] = $retryContent;
             $state['networks'] = [$retryNetwork];
-            // Recheck the current destination instead of copying the old account identity.
-            $state['accounts'] = [$retryNetwork => $publishing->destinations($user)[$retryNetwork]['account']];
+            // Keep the original identity; an unavailable account requires an explicit new choice.
+            $state['accounts'] = [$retryNetwork => $preparation['account']];
         }
         $states = $request->getSession()->get('composer_workspaces', []);
         foreach ($states as $oldKey => $old) {
@@ -91,14 +92,20 @@ final class PublicationComposerController extends AbstractController
                 unset($states[$oldKey]);
             }
         }
+        $state['individual'] = $individual;
+        $selection = $request->query->getString('selection');
+        $parent = $states[$selection] ?? null;
+        if ($stored && is_array($parent) && ($parent['individual'] ?? false) && $parent['owner'] === $user->getId() && in_array($stored->getId(), $parent['preparedDrafts'] ?? [], true)) {
+            $state['selectionKey'] = $selection;
+        }
         $states[$key] = $state;
         $request->getSession()->set('composer_workspaces', array_slice($states, -10, null, true));
 
-        return $this->redirectToRoute('app_composer', ['key' => $key], 303);
+        return $this->redirectToRoute($individual ? 'app_publication_selection' : 'app_composer', ['key' => $key], 303);
     }
 
     #[Route('/studio/composer/{key}', name: 'app_composer', requirements: ['key' => '[a-f0-9]{48}'], methods: ['GET', 'POST'])]
-    public function compose(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts, PublicationDraftRepository $repository, \App\Service\VideoEdits $edits, PublicationEditorial $editorial): Response
+    public function compose(string $key, Request $request, #[CurrentUser] User $user, MultiNetworkPublishing $publishing, PublicationDrafts $drafts, PublicationDraftRepository $repository, \App\Service\VideoEdits $edits, PublicationEditorial $editorial, \App\Service\SocialAccounts $social): Response
     {
         $state = $request->getSession()->get('composer_workspaces', [])[$key] ?? null;
         if (!is_array($state) || $state['owner'] !== $user->getId()) {
@@ -106,6 +113,9 @@ final class PublicationComposerController extends AbstractController
         }
         if ($state['expires'] < time()) {
             throw new GoneHttpException('Cette préparation a expiré. Rouvre le brouillon ou choisis à nouveau tes vidéos.');
+        }
+        if ($state['individual'] ?? false) {
+            return $this->redirectToRoute('app_publication_selection', ['key' => $key], 303);
         }
         $stored = null;
         if ($state['persistentId']) {
@@ -130,10 +140,19 @@ final class PublicationComposerController extends AbstractController
             $selected = is_array($values) ? array_values(array_unique(array_intersect(array_filter($values, 'is_string'), array_keys(MultiNetworkPublishing::LABELS)))) : [];
         }
         $destinations = $publishing->destinations($user);
+        $accountChoices = $social->choices($user);
         $accounts = $state['accounts'];
         foreach ($selected as $network) {
-            if ('refresh' === $intent || !in_array($network, $state['networks'], true)) {
+            if (!array_key_exists($network, $accounts)) {
                 $accounts[$network] = $destinations[$network]['account'];
+            }
+            $submittedAccount = $submitted['accounts'][$network] ?? null;
+            if (is_string($submittedAccount) && ('' === $submittedAccount || in_array($submittedAccount, $accountChoices[$network], true))) {
+                $accounts[$network] = $submittedAccount ?: null;
+            }
+            $previousAccount = $state['accounts'][$network] ?? null;
+            if ($previousAccount && !in_array($previousAccount, $accountChoices[$network], true)) {
+                $accountChoices[$network]['Compte enregistré indisponible · '.$previousAccount] = $previousAccount;
             }
         }
         try {
@@ -145,6 +164,7 @@ final class PublicationComposerController extends AbstractController
                 ? $this->redirectToRoute('app_draft_sources', ['id' => $state['persistentId']], 303)
                 : $this->redirectToRoute('app_dashboard', ['choose' => 1], 303);
         }
+        $destinations = $context['destinations'];
         $accountChanged = false;
         foreach ($selected as $network) {
             $accountChanged = $accountChanged || ($accounts[$network] ?? null) !== $destinations[$network]['account'];
@@ -161,9 +181,10 @@ final class PublicationComposerController extends AbstractController
                 };
             }
         }
-        $form = $this->createForm(PublicationComposerType::class, ['networks' => $selected, 'settings' => $settings, 'mode' => $state['mode'], 'local' => $state['local'], 'timezone' => $state['timezone']], ['videos' => $context['videos'], 'networks' => $selected, 'creator' => $context['creator'], 'revision' => $state['revision'], 'draft_title' => $state['title'], 'partial' => $partial, 'csrf_token_id' => 'composer_'.$key]);
+        $form = $this->createForm(PublicationComposerType::class, ['accounts' => array_intersect_key($accounts, array_flip($selected)), 'networks' => $selected, 'settings' => $settings, 'mode' => $state['mode'], 'local' => $state['local'], 'timezone' => $state['timezone']], ['videos' => $context['videos'], 'networks' => $selected, 'creator' => $context['creator'], 'revision' => $state['revision'], 'draft_title' => $state['title'], 'account_choices' => $accountChoices, 'partial' => $partial, 'csrf_token_id' => 'composer_'.$key]);
         $rawSettings = [];
         if ($submitted) {
+            $submitted['accounts'] = array_intersect_key(is_array($submitted['accounts'] ?? null) ? $submitted['accounts'] : [], array_flip($selected));
             $rawSettings = is_array($submitted['settings'] ?? null) ? $submitted['settings'] : [];
             $submitted['settings'] = array_intersect_key($rawSettings, array_flip(array_merge($selected, ['draft_key', 'draft_title'])));
             foreach ($selected as $network) {

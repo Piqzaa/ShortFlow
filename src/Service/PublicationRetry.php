@@ -15,7 +15,7 @@ final class PublicationRetry
     {
     }
 
-    /** @return array{video: VideoAsset, content: array<string, mixed>} */
+    /** @return array{video: VideoAsset, content: array<string, mixed>, account:string} */
     public function preparation(User $owner, string $network, int $id): array
     {
         $entity = match ($network) {
@@ -42,6 +42,12 @@ final class PublicationRetry
             $row = ['caption' => $options['title'], 'privacy' => null, 'comment' => !$options['disable_comment'], 'duet' => !$options['disable_duet'], 'stitch' => !$options['disable_stitch'], 'disclosure' => $options['brand_organic_toggle'] || $options['brand_content_toggle'], 'ownBrand' => $options['brand_organic_toggle'], 'partnerBrand' => $options['brand_content_toggle'], 'synthetic' => $options['is_aigc']];
         }
 
-        return ['video' => $video, 'content' => [$network => ['videos' => [$video->getId() => $row]]]];
+        $account = match (true) {
+            $job instanceof YouTubePublication => $job->getChannelId(),
+            $job instanceof InstagramPublication => $job->getInstagramId(),
+            $job instanceof TikTokPublication => $job->getOpenId(),
+        };
+
+        return ['video' => $video, 'content' => [$network => ['videos' => [$video->getId() => $row]]], 'account' => $account];
     }
 }

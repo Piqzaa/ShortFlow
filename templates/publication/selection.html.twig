@@ -1,0 +1,22 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Organiser mes publications — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary" href="{{ path('app_dashboard') }}">← Mes vidéos</a>
+<div class="workspace-heading"><div><span class="eyebrow">UNE VIDÉO, SON PROPRE PROGRAMME</span><h1>À chacune son moment.</h1><p>Choisis les réseaux et le créneau de chaque vidéo de ta sélection.</p></div></div>
+{% if prepared %}
+<div class="account-notice" role="status">{{ prepared|length }} brouillons indépendants sont enregistrés. Termine les textes et confirme chaque vidéo pour lancer son envoi ou activer sa programmation.</div>
+<div class="publication-selection-list">
+{% for draft in prepared %}<article class="composer-section publication-selection-result"><h2>{{ loop.index }}. {{ draft.title }}</h2><p>{% for network in draft.networks %}{{ networkLabels[network] }}{{ not loop.last ? ' · ' : '' }}{% endfor %}</p><p>{% if draft.scheduledAt %}{{ draft.scheduledAt|date('d/m/Y à H:i',draft.timezone) }} · {{ draft.timezone }}{% else %}Maintenant, après confirmation{% endif %}</p><p class="library-note">{{ labels[states[draft.id]] }}</p>{% if draft.status == 'draft' %}<a class="button" href="{{ path('app_composer_start',{draft:draft.id,selection:key}) }}">Textes et confirmation →</a>{% else %}<a class="account-secondary" href="{{ path('app_draft',{id:draft.id}) }}">Voir le suivi →</a>{% endif %}</article>{% endfor %}
+</div><p class="library-note">Ces préparations restent disponibles dans Vidéos → Brouillons et, lorsqu’une date est choisie, dans le calendrier. Une date de brouillon n’est pas une programmation activée.</p><a class="account-secondary" href="{{ path('app_calendar') }}">Ouvrir le calendrier ↗</a>
+{% else %}
+<p class="library-note">Tu peux publier la première maintenant sur YouTube et Instagram, programmer la suivante sur TikTok, puis la troisième sur les trois réseaux. L’enregistrement ci-dessous prépare les brouillons ; aucun envoi ne démarre.</p>
+{{ form_start(form,{attr:{class:'account-form publication-selection-form','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}{{ form_errors(form) }}{{ form_row(form.revision) }}{{ form_errors(form.plans) }}
+<div class="publication-selection-list">
+{% for video in videos %}{% set row = attribute(form.plans,video.id) %}
+<section class="composer-section publication-selection-row" aria-labelledby="selection-video-{{ video.id }}" data-controller="composer">
+<div class="publication-selection-preview"><video controls playsinline preload="none" src="{{ path('app_video_stream',{id:video.id}) }}" aria-label="Aperçu de {{ video.title }}"></video><h2 id="selection-video-{{ video.id }}">{{ loop.index }}. {{ video.title }}</h2><p class="library-note">{{ video.duration|number_format(1,',',' ') }} s · {{ video.width }} × {{ video.height }}</p></div>
+<div class="publication-selection-settings">{{ form_errors(row) }}<fieldset><legend>Réseaux de cette vidéo</legend><div class="composer-network-choices">{% for choice in row.networks %}<label>{{ form_widget(choice) }}<span>{{ choice.vars.label }}</span></label>{% endfor %}</div>{{ form_errors(row.networks) }}</fieldset>{{ form_row(row.accounts) }}<fieldset data-action="change->composer#timing"><legend>Quand publier cette vidéo ?</legend><div class="composer-network-choices">{% for choice in row.mode %}<label>{{ form_widget(choice) }}<span>{{ choice.vars.label }}</span></label>{% endfor %}</div>{{ form_errors(row.mode) }}</fieldset><div data-composer-target="date">{{ form_row(row.local) }}{{ form_row(row.timezone) }}<p class="library-note">Entre deux minutes et 90 jours dans le futur. Le fuseau de cette vidéo est conservé avec son créneau.</p></div><noscript><p class="library-note">Laisse la date vide si tu choisis « Maintenant ». Elle sera ignorée par le serveur.</p></noscript></div>
+</section>{% endfor %}
+</div><button class="button" type="submit">Enregistrer mes préparations →</button><p class="library-note">Les textes et réglages de chaque réseau se complètent ensuite dans le brouillon de la vidéo. Chaque envoi demande ta confirmation.</p>{{ form_end(form) }}
+{% endif %}
+{% endblock %}

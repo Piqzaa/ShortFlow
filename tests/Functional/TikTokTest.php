@@ -130,7 +130,7 @@ final class TikTokTest extends WebTestCase
 
     public function testProfileLinkUsesCurrentUsernameAndNeverDisplayName(): void
     {
-        $this->connection();
+        $connection = $this->connection();
         static::getContainer()->set('tiktok.http', new MockHttpClient(function (string $method, string $url): MockResponse {
             self::assertSame('POST', $method);
             self::assertSame('https://open.tiktokapis.com/v2/post/publish/creator_info/query/', $url);
@@ -139,7 +139,7 @@ final class TikTokTest extends WebTestCase
         }));
         $this->client->loginUser($this->owner);
         $this->client->request('GET', '/studio/connexions');
-        self::assertSelectorExists('a[href="/studio/connexions/tiktok/profil"][rel="noopener noreferrer"]');
+        self::assertSelectorExists('a[href="/studio/connexions/tiktok/profil?account='.rawurlencode($connection->getOpenId()).'"][rel="noopener noreferrer"]');
         self::assertSelectorTextSame('title', 'Mes connexions — VydFlow');
         self::assertSelectorCount(1, '#ai-connections-title');
         $this->client->request('GET', '/studio/connexions/tiktok/profil');

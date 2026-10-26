@@ -445,7 +445,7 @@ final class YouTubePublicationTest extends WebTestCase
         static::getContainer()->set('youtube.http', new MockHttpClient(function (): never { self::fail('No request should reach Google'); }));
         $this->client->loginUser($this->alice);
         $crawler = $this->client->request('GET', '/studio/connexions');
-        $this->client->submit($crawler->selectButton('Changer / reconnecter ↗')->form());
+        $this->client->submit($crawler->selectButton('Reconnecter YouTube ↗')->form());
         $this->client->request('GET', '/studio/connexions/youtube/retour', ['state' => 'wrong-state', 'code' => 'do-not-exchange']);
         self::assertResponseRedirects('/studio/connexions', 303);
         $crawler = $this->client->followRedirect();

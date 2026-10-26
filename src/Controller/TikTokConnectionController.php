@@ -20,7 +20,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route('/studio/connexions/tiktok')]
 final class TikTokConnectionController extends AbstractController
 {
-    public function __construct(private EntityManagerInterface $em, private TikTokApi $api, private PublicationLock $lock, #[Autowire(service: 'tiktok.vault')] private TokenVault $vault)
+    public function __construct(private EntityManagerInterface $em, private TikTokApi $api, private PublicationLock $lock, #[Autowire(service: 'tiktok.vault')] private TokenVault $vault, private \App\Service\SocialAccounts $accounts)
     {
     }
 
@@ -36,9 +36,13 @@ final class TikTokConnectionController extends AbstractController
             return $this->back();
         }
         try {
+            $target = $request->request->getString('account') ?: null;
+            if ($target && !$this->accounts->find($user, 'tiktok', $target)) {
+                throw new PublicationException('Ce compte est indisponible.');
+            }
             $state = bin2hex(random_bytes(32));
             $url = $this->api->authorizationUrl($state);
-            $request->getSession()->set('tiktok_oauth', ['state' => $state, 'user' => $user->getId(), 'expires' => time() + 600]);
+            $request->getSession()->set('tiktok_oauth', ['state' => $state, 'user' => $user->getId(), 'expires' => time() + 600, 'target' => $target]);
             $response = $this->redirect($url, 303);
             $response->headers->set('Cache-Control', 'private, no-store');
             $response->headers->set('Referrer-Policy', 'no-referrer');
@@ -61,12 +65,19 @@ final class TikTokConnectionController extends AbstractController
             $this->addFlash('error', 'La connexion TikTok a été annulée.');
         } else {
             try {
-                $this->lock->run((int) $user->getId(), function () use ($request, $user): void {
+                $this->lock->run((int) $user->getId(), function () use ($request, $user, $flow): void {
                     $data = $this->api->connect($request->query->getString('code'));
+                    $target = $flow['target'] ?? null;
+                    if ($target && $target !== $data['openId']) {
+                        throw new PublicationException('Le fournisseur a renvoyé un autre compte. Reconnecte le compte choisi ou utilise « Ajouter un compte ».');
+                    }
                     $access = $this->vault->encrypt($data['access']);
                     $refresh = $this->vault->encrypt($data['refresh']);
-                    $this->em->wrapInTransaction(function () use ($user, $data, $access, $refresh): void {
-                        $connection = $this->em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $user]);
+                    $connection = $this->em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $user, 'openId' => $data['openId']]);
+                    if ($target && !$connection) {
+                        throw new PublicationException('Ce compte a été retiré. Recommence son ajout.');
+                    }
+                    $this->em->wrapInTransaction(function () use ($user, $data, $access, $refresh, $connection): void {
                         if ($connection) {
                             $connection->reconnect($data['openId'], $data['name'], $access, $refresh, $data['expires'], $data['refreshExpires']);
                         } else {
@@ -75,6 +86,8 @@ final class TikTokConnectionController extends AbstractController
                     });
                 });
                 $this->addFlash('success', 'Ton compte TikTok est connecté.');
+            } catch (PublicationException $error) {
+                $this->addFlash('error', $error->getMessage());
             } catch (\Throwable) {
                 $this->addFlash('error', 'La connexion TikTok n’a pas abouti. Vérifie les autorisations puis réessaie.');
             }
@@ -84,10 +97,10 @@ final class TikTokConnectionController extends AbstractController
     }
 
     #[Route('/profil', name: 'app_tiktok_profile', methods: ['GET'])]
-    public function profile(#[CurrentUser] User $user, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function profile(Request $request, #[CurrentUser] User $user, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
-        $connection = $this->em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $user]);
-        if (!$connection) {
+        $connection = $this->accounts->find($user, 'tiktok', $request->query->getString('account') ?: null);
+        if (!$connection instanceof TikTokConnection) {
             $this->addFlash('error', 'Connecte ton compte TikTok pour ouvrir son profil.');
 
             return $this->back();
@@ -116,17 +129,18 @@ final class TikTokConnectionController extends AbstractController
         }
         try {
             $revoked = true;
-            $this->lock->run((int) $user->getId(), function () use ($user, &$revoked): void {
-                $connection = $this->em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $user]);
-                if ($connection) {
-                    try {
-                        $this->api->revoke($connection);
-                    } catch (\Throwable) {
-                        $revoked = false;
-                    }
-                    $this->em->remove($connection);
-                    $this->em->flush();
+            $this->lock->run((int) $user->getId(), function () use ($user, $request, &$revoked): void {
+                $connection = $this->accounts->find($user, 'tiktok', $request->request->getString('account') ?: null);
+                if (!$connection instanceof TikTokConnection) {
+                    throw new PublicationException('Choisis le compte à déconnecter.');
                 }
+                try {
+                    $this->api->revoke($connection);
+                } catch (\Throwable) {
+                    $revoked = false;
+                }
+                $this->em->remove($connection);
+                $this->em->flush();
             });
             $request->getSession()->remove('tiktok_oauth');
             $this->addFlash('success', $revoked ? 'Compte TikTok déconnecté et autorisation révoquée.' : 'Compte retiré de VydFlow. Retire aussi l’autorisation dans les réglages TikTok.');

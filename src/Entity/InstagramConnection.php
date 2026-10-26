@@ -6,11 +6,12 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'instagram_connection')]
+#[ORM\UniqueConstraint(name: 'instagram_owner_identity', columns: ['owner_id', 'instagram_id'])]
 class InstagramConnection
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
-    #[ORM\OneToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $owner;
     #[ORM\Column(length: 64)]
     private string $instagramId;

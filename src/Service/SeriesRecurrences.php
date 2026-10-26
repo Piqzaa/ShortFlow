@@ -18,7 +18,7 @@ final class SeriesRecurrences
 {
     private const WRITING_TIMEOUT_SECONDS = 600;
 
-    public function __construct(private EntityManagerInterface $em, private AiEpisodeFlow $flow, private AiCatalog $catalog, private AiKeys $keys, private AiReferenceStorage $references, private AiGenerations $generations, private LocalStoryWriter $writer, private WeeklySeriesTime $time, private ClockInterface $clock, private MessageBusInterface $bus)
+    public function __construct(private EntityManagerInterface $em, private AiEpisodeFlow $flow, private AiCatalog $catalog, private AiKeys $keys, private AiReferenceStorage $references, private AiGenerations $generations, private LocalStoryWriter $writer, private WeeklySeriesTime $time, private ClockInterface $clock, private MessageBusInterface $bus, private SocialAccounts $accounts)
     {
     }
 
@@ -102,6 +102,7 @@ final class SeriesRecurrences
             $recurrence ??= new SeriesRecurrence($series);
             $this->pauseEpisodes($recurrence);
             $settings = array_intersect_key($data, array_flip(['weekday', 'hour', 'timezone', 'networks', 'limit', 'tone', 'continuity'])) + $preview;
+            $settings['accounts'] = $this->accounts->select($series->getOwner(), $data['networks'], $data['accounts'] ?? []);
             $recurrence->activate($settings, $next, $this->clock->now());
             $this->em->persist($recurrence);
             $this->em->flush();
@@ -225,7 +226,7 @@ final class SeriesRecurrences
                 $episode = new AiEpisode($series, $number);
                 $this->em->persist($episode);
             }
-            $occurrence = new SeriesOccurrence($recurrence, $at, $settings['timezone'], $settings['networks'], $this->clock->now(), $episode);
+            $occurrence = new SeriesOccurrence($recurrence, $at, $settings['timezone'], $settings['networks'], $this->clock->now(), $episode, $settings['accounts'] ?? []);
             if (!$episode) {
                 $occurrence->fail('Créneau trop proche ou dépassé. Aucune génération lancée pour ce créneau.');
             }

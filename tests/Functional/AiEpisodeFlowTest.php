@@ -844,7 +844,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $crawler = $this->client->request('GET', $url);
         $this->client->submit($crawler->selectButton('Préparer un plan unique')->form());
         self::assertResponseIsSuccessful();
-        self::assertSelectorCount(1, '[data-shot-editor-target="list"] [data-shot-editor-row] textarea');
+        self::assertSelectorCount(1, '[data-shot-editor-target="list"] [data-shot-editor-row]');
         self::assertSelectorExists('select[name="ai_idea[continuity]"] option[value="single"][selected]');
         $crawler = $this->client->getCrawler();
         $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form());

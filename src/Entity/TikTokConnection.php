@@ -6,11 +6,12 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'tiktok_connection')]
+#[ORM\UniqueConstraint(name: 'tiktok_owner_identity', columns: ['owner_id', 'open_id'])]
 class TikTokConnection
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
-    #[ORM\OneToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $owner;
     #[ORM\Column(length: 128)]
     private string $openId;

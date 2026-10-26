@@ -15,23 +15,25 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class TikTokPublishing
 {
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private TikTokApi $api, private TikTokMediaLink $links, private PublicationVideoCheck $videoCheck)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private MessageBusInterface $bus, private PublicationLock $lock, private TikTokApi $api, private TikTokMediaLink $links, private PublicationVideoCheck $videoCheck, private SocialAccounts $accounts)
     {
     }
 
-    public function connection(User $owner): ?TikTokConnection
+    public function connection(User $owner, ?string $identity = null): ?TikTokConnection
     {
-        return $this->em->getRepository(TikTokConnection::class)->findOneBy(['owner' => $owner]);
+        $connection = $this->accounts->find($owner, 'tiktok', $identity);
+
+        return $connection instanceof TikTokConnection ? $connection : null;
     }
 
-    public function ready(User $owner): bool
+    public function ready(User $owner, ?string $identity = null): bool
     {
-        return null === $this->readinessIssue($owner);
+        return null === $this->readinessIssue($owner, $identity);
     }
 
-    public function readinessIssue(User $owner): ?string
+    public function readinessIssue(User $owner, ?string $identity = null): ?string
     {
-        $connection = $this->connection($owner);
+        $connection = $this->connection($owner, $identity);
         if (!$connection) {
             return 'Connecte ton compte TikTok depuis la page Connexions avant de publier.';
         }
@@ -89,11 +91,11 @@ final class TikTokPublishing
                 if ($this->em->getRepository(TikTokPublication::class)->count(['owner' => $owner, 'submissionKey' => $key])) {
                     return;
                 }
-                $connection = $this->connection($owner);
+                $connection = $this->connection($owner, $expectedAccount);
                 if ($connection) {
                     $this->em->refresh($connection);
                 }
-                if (!$this->ready($owner) || !$connection || $connection->getOpenId() !== $expectedAccount) {
+                if (!$this->ready($owner, $expectedAccount) || !$connection || $connection->getOpenId() !== $expectedAccount) {
                     throw new PublicationException('Reconnecte TikTok et recharge la préparation.');
                 }
                 if (!$ids || count($ids) > 5 || count(array_unique($ids)) !== count($ids) || $this->em->getRepository(TikTokPublication::class)->count(['owner' => $owner, 'status' => TikTokPublication::ACTIVE]) + count($ids) > 100) {
@@ -121,7 +123,7 @@ final class TikTokPublishing
                 if ('paused' !== $job->getStatus() && !('review' === $job->getStatus() && $job->getPublishId())) {
                     return;
                 }
-                if (!$this->ready($job->getOwner()) || $this->connection($job->getOwner())?->getOpenId() !== $job->getOpenId()) {
+                if (!$this->ready($job->getOwner(), $job->getOpenId()) || $this->connection($job->getOwner(), $job->getOpenId())?->getOpenId() !== $job->getOpenId()) {
                     throw new PublicationException('Reconnecte le compte TikTok destinataire.');
                 }
                 if ($job->isInitAttempted() && !$job->getPublishId()) {

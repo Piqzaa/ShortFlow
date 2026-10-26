@@ -139,7 +139,7 @@ final class AiSeriesController extends AbstractController
     }
 
     #[Route('/studio/series/{id}', name: 'app_series_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EntityManagerInterface $em, \App\Service\SeriesRecurrences $recurrences, EpisodePublications $publications, \App\Service\EpisodeCovers $covers): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EntityManagerInterface $em, \App\Service\SeriesRecurrences $recurrences, EpisodePublications $publications, \App\Service\EpisodeCovers $covers, \App\Service\SocialAccounts $social): Response
     {
         $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
         $episodes = $studio->episodes($series);
@@ -153,8 +153,15 @@ final class AiSeriesController extends AbstractController
             $recurrenceError = $error->getMessage();
         }
         $settings = $recurrence?->getSettings() ?? [];
-        $data = array_intersect_key($settings, array_flip(['weekday', 'hour', 'timezone', 'networks', 'limit', 'tone', 'continuity'])) + ['weekday' => 2, 'hour' => '18:00', 'timezone' => $user->getTimezone(), 'networks' => [], 'limit' => 4, 'tone' => 'auto', 'continuity' => 'independent'];
-        $recurrenceForm = $this->createForm(\App\Form\SeriesRecurrenceType::class, $data + ['revision' => (string) ($recurrence?->getRevision() ?? 0), 'quote' => $recurrencePreview['hash'] ?? str_repeat('0', 64), 'consent' => false], ['csrf_token_id' => 'recurrence_'.$id]);
+        $accountChoices = $social->choices($user);
+        $settings['accounts'] ??= $social->defaults($user);
+        foreach ($settings['accounts'] as $network => $identity) {
+            if ($identity && !in_array($identity, $accountChoices[$network] ?? [], true)) {
+                $accountChoices[$network]['Compte enregistré indisponible · '.$identity] = $identity;
+            }
+        }
+        $data = array_intersect_key($settings, array_flip(['weekday', 'hour', 'timezone', 'networks', 'accounts', 'limit', 'tone', 'continuity'])) + ['weekday' => 2, 'hour' => '18:00', 'timezone' => $user->getTimezone(), 'networks' => [], 'limit' => 4, 'tone' => 'auto', 'continuity' => 'independent'];
+        $recurrenceForm = $this->createForm(\App\Form\SeriesRecurrenceType::class, $data + ['revision' => (string) ($recurrence?->getRevision() ?? 0), 'quote' => $recurrencePreview['hash'] ?? str_repeat('0', 64), 'consent' => false], ['csrf_token_id' => 'recurrence_'.$id, 'account_choices' => $accountChoices]);
         if ($recurrencePreview) {
             $recurrenceForm->handleRequest($request);
             if ($recurrenceForm->isSubmitted()) {
