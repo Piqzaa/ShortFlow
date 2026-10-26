@@ -90,3 +90,35 @@ Limites : cette recette vérifie le parcours et les contrats simulés, pas la fi
 - Les quatre workers sont remis en route, l’application locale répond en HTTP 200 et le conteneur temporaire de recette a été supprimé. Aucun essai vidéo payant, envoi social, activation de récurrence réelle ni push réalisé.
 
 Suite recommandée : parcourir manuellement une préparation réelle sans confirmer le coût, puis tester la rédaction locale de textes depuis une vidéo validée existante. Un essai vidéo fournisseur reste une étape distincte à autoriser avec modèle, durée et coût choisis. Une notification d’approche de date et un profil de montage plus riche restent des améliorations possibles ; les états et actions suivantes sont disponibles dans l’interface.
+
+## Remise à niveau du poste — 26 octobre 2026
+
+Deux erreurs 500 ont révélé un décalage entre le code et l'environnement local : extension Twig `build_asset` absente du cache compilé, puis colonne `publication_draft.editorial` absente de la base. Le bilan historique ci-dessus ne décrivait donc pas l'état effectivement retrouvé sur ce poste. Reconstruction du cache dev sans debug, puis application des migrations additives `Version20261024180500` et `Version20261025190000`, après lecture de leur SQL : aucune suppression de données. Les schémas dev et test sont maintenant synchronisés ; la lecture de la colonne éditoriale réussit. Accueil et connexion répondent en HTTP 200 ; le studio sans session redirige vers la connexion. Le parcours connecté reste à vérifier dans le navigateur du propriétaire.
+
+En Symfony, le cache compilé enregistre les services et extensions Twig ; les migrations font évoluer séparément les tables PostgreSQL. Actualiser le code ne suffit donc pas : suivre la procédure « Après un git pull » du README pour mettre à jour base, cache et assets.
+
+Contrôles sur ce poste : 19 fichiers YAML et 98 templates Twig valides, conteneur valide, PHPStan sans erreur et CS-Fixer sans correction sur 288 fichiers. `npm run check`, `npm run test:ui` et `npm run build` réussis ; avertissements existants sur les chemins statiques et le chunk Three.js conservés.
+
+La première suite PHP complète, dans une copie temporaire du code sur disque Linux, exécute 565 tests / 6 848 assertions avec un échec : le test réel du transcripteur demande le moteur Python présent uniquement dans l'image de montage. La suite est ensuite relancée dans cette image avec le script de transcription. Les copies temporaires excluent les secrets et médias privés ; toutes les données fonctionnelles des tests restent dans `shortflow_test`. Les deux tentatives initiales depuis le montage Windows ont été interrompues pour lenteur et ne constituent pas des suites réussies.
+
+Résultat final dans l'image de montage : **565 tests, 6 851 assertions, tous réussis**, en 2 min 28 s, avec `APP_ENV=test` et `APP_DEBUG=0`. Cette relance complète lève la réserve du bilan historique sur l'absence de rejeu intégral après corrections. Aucun essai vidéo payant, envoi social ni activation de récurrence effectué.
+
+## Reprise sur un autre PC
+
+Les cinq lots de cet audit sont livrés. Prochaine étape : recette manuelle d'une préparation Studio/Série jusqu'au récapitulatif, sans confirmer le coût vidéo, puis évaluation des propositions de textes locales sur une vidéo déjà validée. Aucun nouveau développement autonome ou essai payant n'est engagé par cette reprise.
+
+Après récupération du code, suivre la procédure du README, hors traitement actif. En particulier, appliquer les migrations et reconstruire le cache avant de rouvrir le studio :
+
+```sh
+git pull --ff-only
+docker compose stop worker story-worker background-worker edit-worker
+docker compose up -d database mailpit php
+docker compose exec -T php composer db:sync
+docker compose --profile tools run --rm --no-deps node
+docker compose exec -T php php bin/console cache:clear --env=dev --no-debug
+docker compose up -d --no-deps --force-recreate worker story-worker background-worker edit-worker
+```
+
+Si les images ou dépendances du poste sont anciennes, suivre aussi les étapes de construction et d'installation du README. Le moteur réel de sous-titres exige l'image `vydflow-edit` ; le rédacteur local exige Ollama et `qwen3:8b` sur ce PC. Ne pas activer de série pour vérifier l'installation.
+
+Git transfère le code et ce suivi, pas `.env.local`, la base PostgreSQL, les médias privés, les connexions OAuth ni les modèles Ollama. Ces éléments restent propres à chaque poste ; ne pas remplacer une base existante ni copier de secrets dans Git. Sans copie privée des données, les vidéos de l'autre PC ne seront pas disponibles pour la recette. Après mise à jour, recharger le navigateur avec Ctrl+F5.
