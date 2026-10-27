@@ -1,6 +1,8 @@
 # VydFlow — bêta, studio IA et publication
 
-**Reprise du projet : lire [la roadmap active et son avancement](docs/roadmap.md).** **Grand lot R1 terminé**, revue globale backend/interface sans blocage identifié. Contrôles finaux : **667 tests PHP / 8 044 assertions** et **152 tests frontend** réussis ; concurrence PostgreSQL, interruptions SIGKILL et reprise vérifiées sans API réelle. [Analyse de clôture R1 et limites](docs/r1-revue-cloture.md). **Prochain point : R2.1**, cas de non-régression de qualité des scénarios/textes, non commencé. Chaque grand R doit désormais se terminer par une revue globale ; les défauts précis de landing mobile sont suivis en R5.1/R5.2 et R6.1.
+**Reprise du projet : lire [la roadmap active et son avancement](docs/roadmap.md).** **R2 en cours : R2.1 terminé en phase rouge**, 15 cas / 90 assertions, quatre échecs attendus et onze réussites ; 17 tests voisins réussis. Aucun correctif applicatif R2 encore livré ; la suite par défaut inclut les reproductions et n'est pas verte. **Prochain point : R2.2**, contrat des scènes parlantes avant coût. [Preuves et commandes R2](docs/r2-qualite-redacteur.md).
+
+**Grand lot R1 terminé et revu**, dernier socle complet vert : 667 tests PHP / 8 044 assertions et 152 frontend, commit `abda42e`. [Analyse de clôture et limites](docs/r1-revue-cloture.md). Chaque grand R doit se terminer par une revue globale ; les défauts précis de landing mobile sont suivis en R5.1/R5.2 et R6.1.
 
 Migration additive R1.2 `Version20261027160000` déjà appliquée sur ce poste en test/dev ; aucune migration supplémentaire R1.3–R1.5. Actualiser migrations/cache/worker et reconstruire les assets sur un autre PC hors traitement actif. [Preuves et commandes R1](docs/r1-redacteur-attente.md). [Audit global et annexes](docs/audit-global-20261027.md). Les anciens plans sont conservés dans [l'archive historique](docs/roadmap-historique-20261027.md).
 

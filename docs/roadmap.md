@@ -1,13 +1,13 @@
 # VydFlow — feuille de route active jusqu'au déploiement
 
-Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorités et de l'avancement. Il remplace les ordres de travail et hypothèses commerciales des anciennes roadmaps, conservés dans [l'archive historique](roadmap-historique-20261027.md). Les consignes de sécurité et autorisations restent applicables.
+Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorités et de l'avancement. Il remplace les ordres de travail et hypothèses commerciales des anciennes roadmaps, conservés dans [l'archive historique](roadmap-historique-20261027.md). Les consignes de sécurité et autorisations restent applicables.
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** **R1 terminé**, R1.1–R1.5 cochés ; revue globale de sortie sans blocage identifié. R2 pas encore commencé.
-- **Dernière validation applicative :** R1.5, suite complète **667 tests / 8 044 assertions** et **152 tests frontend** réussis ; tests R1.4 dans `818261c`, clôture à retrouver via `git log --oneline --grep="docs: close R1 writing reliability review"`. La référence `d3e4700` reste le socle historique d'avant R1.
-- **Prochaine tâche exacte : `R2.1`**, cas de non-régression des défauts capturés de qualité narrative/éditoriale ; voir [la revue de clôture R1](r1-revue-cloture.md).
-- **Validation actuelle :** reproduction verte, concurrence PostgreSQL/SIGKILL simulée et reprise vérifiées ; revue backend et interface sans blocage, limites transférées en R8. Migration `Version20261027160000` de R1.2 appliquée en test/dev ; aucune migration supplémentaire R1.3–R1.5. Recette desktop/mobile R1.3 conservée, frontend inchangé et tests rejoués.
+- **Phase actuelle :** **R2 en cours, R2.1 terminé en phase rouge** : 15 cas / 90 assertions, 11 réussites et quatre échecs attendus. Aucun correctif applicatif R2 encore livré ; suite par défaut désormais rouge, sans exclusion. R1 reste terminé et revu.
+- **Dernière suite complète verte :** R1.5, **667 tests / 8 044 assertions** et **152 tests frontend**, clôture `abda42e`. Ce résultat historique ne valide pas les nouveaux tests rouges R2.1. La référence `d3e4700` reste le socle d'avant R1.
+- **Prochaine tâche exacte : `R2.2`**, contrat des scènes parlantes et capacité du chemin vidéo avant coût ; voir [le suivi R2 et les reproductions](r2-qualite-redacteur.md). Langue/citations ensuite R2.3, packs R2.4 et contexte R2.5.
+- **Validation actuelle :** quatre défauts reproduits sans inférence réelle ; 17 tests voisins / 60 assertions réussis, PHPStan/style ciblés réussis et revue de provenance. Aucun code d'application, asset, template ou schéma modifié ; aucune nouvelle suite complète/build/recette navigateur. Migration R1.2 `Version20261027160000` inchangée.
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
 - **Publications Free confirmées :** cinq par mois ; une vidéo diffusée sur plusieurs réseaux dans la même publication compte une seule fois. L'ancienne recommandation de décompte par destinataire est écartée.
@@ -15,7 +15,7 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 - **Décisions en attente :** quotas précis de l'essai Studio, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
-Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Les autres lots restent suivis dans l'ordre, R2.1 en premier. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
+Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Sa demande de suite du 28 octobre a démarré R2.1 ; R2.2 est le prochain point. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
 
 ## Règles de suivi à respecter
 
@@ -37,7 +37,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | --- | --- | --- | --- |
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
 | R1 | Attente, exécution et reprise du rédacteur | Terminé, revue globale et contrôles validés | Attente/exécution distinctes, traitements bornés, reprise sans double appel |
-| R2 | Qualité des scénarios, dialogues et textes | À faire | Corpus rejoué, écarts signalés, textes humains préservés |
+| R2 | Qualité des scénarios, dialogues et textes | En cours : R2.1 reproduit quatre défauts, R2.2 suivant | Corpus rejoué, écarts signalés, textes humains préservés |
 | R3 | Studio/Séries plus simples et compacts | À faire | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
 | R5 | Responsive, accessibilité et finitions | À faire | Matrice d'écrans/états vérifiée, défauts bloquants corrigés |
@@ -75,7 +75,7 @@ Sortie : attente valide traitée comme telle, exécution bloquée bornée, tests
 
 Dépendance : R1. Preuves : [rapport qualité](audit-global-20261027-qualite.md) et corpus versionné.
 
-- [ ] **R2.1** Transformer les défauts capturés en cas de non-régression : répliques perdues, prompts français non signalés, hashtags intégrés au texte, contexte inventé depuis un titre pauvre. Garder séparés les contrôles de structure et de sens.
+- [x] **R2.1** Transformer les défauts capturés en cas de non-régression : répliques perdues, prompts français non signalés, hashtags intégrés au texte, contexte inventé depuis un titre pauvre. Garder séparés les contrôles de structure et de sens. [15 cas, quatre rouges attendus, aucun correctif applicatif](r2-qualite-redacteur.md).
 - [ ] **R2.2** Définir le contrat des scènes parlantes : locuteur, réplique exacte, langue et capacité réelle du chemin vidéo. Tant que le contrat n'est pas porté, l'indiquer avant coût ; ne pas promettre de voix/lipsync depuis le seul indicateur audio.
 - [ ] **R2.3** Corriger les consignes/validations de langue et fidélité ; accepter un prompt anglais contenant intentionnellement une citation française. Éviter les traits inventés et les actions contradictoires ; conserver une alerte honnête quand le contrôle ne peut pas conclure.
 - [ ] **R2.4** Fiabiliser les packs sociaux complets et leur diagnostic. Garder la séparation des hashtags et les limites des réseaux ; ne pas désactiver le validateur pour accepter une mauvaise sortie.
@@ -322,6 +322,15 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - Limites affectées explicitement à R8.2/R8.6/R8.8 : capacité réelle, topologie/mutex local, récurrences hors admission, commande/listeners opérationnels et surveillance. La correction locale ne promet ni débit commercial ni coordination multi-hôtes.
 - **Grand R1 terminé, huit tâches sur 76 cochées.** Commit de clôture à retrouver via `git log --oneline --grep="docs: close R1 writing reliability review"` ; R1.4 dans `818261c`. Aucun push, essai vidéo payant, envoi social, activation réelle ou déploiement.
 - **Prochaine tâche exacte : R2.1**, non commencée. Aucune intervention manuelle requise pour clôturer R1 ; solliciter le propriétaire quand une future validation réelle le nécessite.
+
+### 28 octobre 2026 — R2.1 terminé, reproduction des défauts de qualité
+
+- Nouveau `WriterQualityRegressionTest` sur le corpus historique intact : **15 cas / 90 assertions, 11 réussites et quatre échecs attendus**. Rouges : prompts français non signalés, paroles perdues, citation française dense faussement signalée, faits inventés depuis un titre pauvre. Pas de changement du rédacteur dans cette étape.
+- Diagnostic hashtags réellement brut rejoué et refus toujours correct, sans retry. Cas minimal reconstruit explicitement depuis le résultat normalisé, roundtrip exact ; conformité de structure distincte du sens. Oracle neutre borné à cette fixture ; il ne constitue pas un détecteur universel d'invention.
+- 17 tests voisins / 60 assertions réussis ; PHPStan, style ciblés et diff propres. `shortflow_test` vérifiée et migrations déjà à jour ; aucune suite DB concurrente. Pas de suite complète, build ou nouvelle recette navigateur ; dernier socle entièrement vert R1 dans `abda42e`.
+- Revue indépendante de provenance/contrats ; garde contre packs vides et alerte de dialogue universelle ajoutées. [Preuves, pédagogie, limites et commandes](r2-qualite-redacteur.md). Le grand R2 n'est pas terminé et aura sa revue globale en R2.7.
+- Commit local à retrouver avec `git log --oneline --grep="test: reproduce captured writer quality failures"`, aucun push. Aucun modèle ou fournisseur appelé réellement, aucune génération payante/sociale, activation ou modification des données du développeur. Neuf tâches sur 76 cochées.
+- **Prochaine tâche exacte : R2.2.** Les rouges de langue/citations se corrigent en R2.3, le contexte en R2.5 ; ne pas masquer les échecs dans l'intervalle. Aucune intervention manuelle nécessaire pour ces reproductions.
 
 ### Modèle à recopier à chaque fin de lot ou interruption
 

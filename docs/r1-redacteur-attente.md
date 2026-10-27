@@ -2,7 +2,7 @@
 
 ## État courant — R1 terminé, 27 octobre 2026
 
-**R1.1 à R1.5 sont terminés.** [La revue globale de clôture](r1-revue-cloture.md) confronte chaque tâche à ses preuves, consigne les relectures indépendantes backend/interface et les limites à reprendre en R8. Aucun blocage restant identifié dans le périmètre R1. **Prochain point exact : R2.1**, pas encore commencé.
+**R1.1 à R1.5 sont terminés.** [La revue globale de clôture](r1-revue-cloture.md) confronte chaque tâche à ses preuves, consigne les relectures indépendantes backend/interface et les limites à reprendre en R8. Aucun blocage restant identifié dans le périmètre R1. Pour la suite courante, lire [le repère de la roadmap](roadmap.md) : [R2.1 a commencé le 28 octobre](r2-qualite-redacteur.md), sans rouvrir R1.
 
 Contrôles finaux : **667 tests PHP / 8 044 assertions** et **152 tests frontend**, tous réussis. Les 14 tests concurrents / 236 assertions ont passé le contrôle final, deux répétitions puis la suite complète. PHPStan applicatif et tests R1.4, CS-Fixer, lints Symfony, schéma test, vérification JS et build réussis. L'avertissement Vite de taille Three.js reste connu. Aucune nouvelle recette navigateur après R1.3 : interface inchangée, tests frontend rejoués.
 
