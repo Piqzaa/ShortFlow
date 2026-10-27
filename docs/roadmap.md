@@ -4,10 +4,10 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** lot R1 en cours ; R1.1 terminé (reproduction automatisée), moteur non corrigé.
-- **Dernier état applicatif validé :** `d3e4700` (performance et recette), sur `master` au moment du cadrage.
-- **Prochaine tâche exacte : `R1.2`**, séparer attente et exécution du rédacteur ; voir [le suivi R1](r1-redacteur-attente.md).
-- **Validation actuelle :** nouveau test volontairement rouge, 12 cas / 98 assertions dont six échecs reproduisant le défaut ; ne pas annoncer la suite complète verte ni le lot R1 livré. Les 17 tests voisins passent.
+- **Phase actuelle :** lot R1 en cours ; R1.1 et R1.2 terminés, attente/exécution séparées. R1.3–R1.5 restent à faire.
+- **Dernière validation applicative :** R1.2, suite complète 651 tests / 7 766 assertions réussis ; commit à retrouver via `git log --oneline --grep="fix: separate story queue and execution deadlines"`. La référence `d3e4700` reste le socle historique d'avant R1.
+- **Prochaine tâche exacte : `R1.3`**, lisibilité des états et reprise dans l'interface ; voir [le suivi R1](r1-redacteur-attente.md).
+- **Validation actuelle :** les douze cas de reproduction sont verts ; 21 tests temporels et le rejeu final de 34 tests de cycle passent. Migration `Version20261027160000` appliquée en test/dev ; lot R1 pas encore livré entièrement.
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
 - **Publications Free confirmées :** cinq par mois ; une vidéo diffusée sur plusieurs réseaux dans la même publication compte une seule fois. L'ancienne recommandation de décompte par destinataire est écartée.
@@ -15,7 +15,7 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 - **Décisions en attente :** quotas précis de l'essai Studio, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
-Le propriétaire a autorisé le démarrage de R1.1 le 27 octobre ; la reproduction automatisée est maintenant terminée. Les autres points restent suivis un par un. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
+Le propriétaire a autorisé le démarrage de R1.1 puis sa suite le 27 octobre ; R1.2 est maintenant terminé. Les autres points restent suivis un par un. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
 
 ## Règles de suivi à respecter
 
@@ -35,7 +35,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | Lot | Objectif | État | Porte avant le suivant |
 | --- | --- | --- | --- |
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
-| R1 | Attente, exécution et reprise du rédacteur | En cours : R1.1 terminé, R1.2 à faire | Une attente valide n'est plus confondue avec une exécution bloquée |
+| R1 | Attente, exécution et reprise du rédacteur | En cours : R1.1/R1.2 terminés, R1.3 à faire | Une attente valide n'est plus confondue avec une exécution bloquée |
 | R2 | Qualité des scénarios, dialogues et textes | À faire | Corpus rejoué, écarts signalés, textes humains préservés |
 | R3 | Studio/Séries plus simples et compacts | À faire | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
@@ -63,7 +63,7 @@ Référence de tests applicatifs déjà exécutés avant ce cadrage : **617 test
 Dépendance : R0. Preuve : [T4 de l'audit technique](audit-global-20261027-technique.md), `StoryProposals::expire()`.
 
 - [x] **R1.1** Ajouter une reproduction automatisée déterministe de la demande `queued` de plus de dix minutes, sans inférence ni appel externe. Distinguer explicitement le résultat actuel incorrect du comportement attendu. [Preuve : 12 cas, six échecs attendus, moteur inchangé](r1-redacteur-attente.md).
-- [ ] **R1.2** Séparer temps en file et temps d'exécution/phase ; définir admission et délais explicites. Préserver reprise, nouvelle demande et protection contre un ancien résultat qui écraserait le nouveau.
+- [x] **R1.2** Séparer temps en file et temps d'exécution/phase ; définir admission et délais explicites. Préserver reprise, nouvelle demande et protection contre un ancien résultat qui écraserait le nouveau. [Horloge, délais, admission, migration et preuves](r1-redacteur-attente.md).
 - [ ] **R1.3** Afficher des états compréhensibles : en attente, rédaction, préparation des plans/textes, résultat ou erreur ; permettre de quitter puis retrouver le travail.
 - [ ] **R1.4** Vérifier plusieurs propriétaires, travail retardé, résultat tardif, worker interrompu et reprise ; aucun double lancement ni génération vidéo déclenchée pour réparer un texte.
 - [ ] **R1.5** Revue ciblée, contrôles adaptés, documentation Symfony et commit de fin de lot ; actualiser le repère de reprise.
@@ -278,6 +278,16 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - Bilan pédagogique, limites et commandes : [suivi R1](r1-redacteur-attente.md). Pas de suite complète relancée ; le nouveau test rouge fait échouer la suite par défaut tant que la correction n'est pas faite.
 - Point de contrôle local de tests et documentation, **pas fin du lot R1**. Aucun push. Retrouver le commit avec `git log --all --oneline --grep="test: reproduce premature story queue expiry"`.
 - **Prochaine tâche exacte : R1.2.** Aucun correctif applicatif commencé ; aucun essai manuel ni crédit fournisseur requis pour cette étape.
+
+### 27 octobre 2026 — R1.2 terminé, correctif temporel
+
+- Horloge injectée ; démarrage et début de phase persistés séparément. Attente maximum 1 h, phase 210 s, exécution totale 420 s, sans renouveler le délai à phase identique.
+- Admission `StoryProposals` bornée à dix travaux encore valides et un par propriétaire ; réutilisation d'une demande identique, sérialisation PostgreSQL et exclusion des périmées. Les préparations récurrentes directes restent hors de ce comptage, sans promesse de débit.
+- Réponses tardives ou devenues anciennes rejetées sous contrôle d'état avant sauvegarde ; pas de transaction pendant l'inférence, pas de nouvel appel vidéo ou renvoi automatique.
+- Migration additive `Version20261027160000` appliquée en test/dev, schémas synchronisés, cache dev/worker de rédaction actualisés hors exécution réelle, HTTP local 200.
+- Résultats : 21 tests temporels / 171 assertions ; 44 ciblés / 455 assertions ; suite complète Linux 651 / 7 766 ; dernier rejeu des tests finaux 34 / 296. Tous réussis. PHPStan, style, YAML/Twig/conteneur et schéma test réussis. Pas de nouveau build/contrôle visuel, les assets/templates ne changent pas.
+- Revue indépendante sans blocage ; vraie concurrence multi-processus et contrôle complet de reprise encore à faire en R1.4. Bilan pédagogique et limites dans [le suivi R1](r1-redacteur-attente.md).
+- Commit local à retrouver avec `git log --oneline --grep="fix: separate story queue and execution deadlines"` ; aucun push. **Prochaine tâche exacte : R1.3.** Aucun crédit IA ni test social requis.
 
 ### Modèle à recopier à chaque fin de lot ou interruption
 

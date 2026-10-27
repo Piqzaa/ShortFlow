@@ -148,6 +148,7 @@ final class AiStoryProposalTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $expired = new \App\Entity\StoryProposal($em->getReference(User::class, $user->getId()), 0, 'expired', []);
         (new \ReflectionProperty($expired, 'createdAt'))->setValue($expired, new \DateTimeImmutable('-11 minutes'));
+        $expired->phase('story', new \DateTimeImmutable('-11 minutes'));
         $em->persist($expired);
         $em->flush();
         $client->request('GET', '/studio/creation/scenario/'.$expired->getId());

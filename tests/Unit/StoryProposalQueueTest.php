@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -36,10 +37,8 @@ final class StoryProposalQueueTest extends TestCase
         $input = 'story' === $kind
             ? ['idea' => 'Un chat blanc se couche sur un coussin.', 'durations' => [5], 'continuity' => 'independent', 'tone' => 'calme', 'context' => []]
             : ['source' => ['title' => 'Le chat et le coussin'], 'profile' => ['language' => 'fr'], 'networks' => ['youtube'], 'baseline' => []];
-        $job = new StoryProposal($owner, 42, 'unchanged-preparation', $input, $kind);
-        // R1.1: backdate the fixture, without sleeping or changing the production clock.
-        // R1.2 must make the distinction between waiting age and execution age explicit.
-        (new \ReflectionProperty($job, 'createdAt'))->setValue($job, new \DateTimeImmutable('-'.$minutes.' minutes'));
+        $clock = new MockClock('2026-10-27T12:00:00Z');
+        $job = new StoryProposal($owner, 42, 'unchanged-preparation', $input, $kind, $clock->now()->modify('-'.$minutes.' minutes'));
         self::assertSame('queued', $job->getStatus());
 
         $repository = $this->createStub(EntityRepository::class);
@@ -71,7 +70,7 @@ final class StoryProposalQueueTest extends TestCase
 
             return new MockResponse(json_encode(['done' => true, 'done_reason' => 'stop', 'message' => ['content' => json_encode($result, JSON_THROW_ON_ERROR)]], JSON_THROW_ON_ERROR));
         });
-        $service = new StoryProposals($em, $bus, new LocalStoryWriter($http, true, 'http://localhost:11434', 'synthetic'));
+        $service = new StoryProposals($em, $bus, new LocalStoryWriter($http, true, 'http://localhost:11434', 'synthetic'), $clock);
 
         if ('process' === $operation) {
             $service->process($job->getId());
@@ -97,5 +96,70 @@ final class StoryProposalQueueTest extends TestCase
             self::assertNotNull($job->getResult());
             self::assertSame('story' === $kind ? 'Un moment calme' : 'Le chat et le coussin', 'story' === $kind ? $job->getResult()['title'] : $job->getResult()['texts']['youtube']['title']);
         }
+    }
+
+    /** @return iterable<string, array{string, int, ?int, ?int, string}> */
+    public static function deadlineCases(): iterable
+    {
+        yield 'queue before one hour' => ['queued', 3599, null, null, 'queued'];
+        yield 'queue at one hour' => ['queued', 3600, null, null, 'failed'];
+        yield 'long queue then recent execution' => ['story', 1800, 1, 1, 'story'];
+        yield 'phase before deadline' => ['shots', 1800, 400, 209, 'shots'];
+        yield 'phase at deadline' => ['shots', 1800, 400, 210, 'failed'];
+        yield 'execution before deadline despite recent phase' => ['shots', 1800, 419, 1, 'shots'];
+        yield 'execution at deadline despite recent phase' => ['shots', 1800, 420, 1, 'failed'];
+        yield 'legacy execution without timestamps' => ['story', 660, null, null, 'failed'];
+    }
+
+    #[DataProvider('deadlineCases')]
+    public function testQueuePhaseAndExecutionHaveSeparateDeadlines(string $phase, int $createdAge, ?int $startAge, ?int $phaseAge, string $expected): void
+    {
+        $clock = new MockClock('2026-10-27T12:00:00Z');
+        $job = new StoryProposal(new User('deadlines@example.test'), 1, 'fingerprint', [], 'story', $clock->now()->modify('-'.$createdAge.' seconds'));
+        if ('queued' !== $phase) {
+            $job->phase($phase, $clock->now());
+            (new \ReflectionProperty($job, 'startedAt'))->setValue($job, null === $startAge ? null : $clock->now()->modify('-'.$startAge.' seconds'));
+            (new \ReflectionProperty($job, 'phaseStartedAt'))->setValue($job, null === $phaseAge ? null : $clock->now()->modify('-'.$phaseAge.' seconds'));
+        }
+
+        $this->readingService($job, $clock)->owned($job->getOwner(), $job->getId());
+
+        self::assertSame($expected, $job->getStatus());
+        if ('failed' === $expected) {
+            self::assertStringContainsString('queued' === $phase ? 'démarrer' : 'exécution', $job->getError());
+        } else {
+            self::assertNull($job->getError());
+        }
+    }
+
+    public function testRepeatingAPhaseDoesNotRenewItsDeadline(): void
+    {
+        $clock = new MockClock('2026-10-27T12:00:00Z');
+        $job = new StoryProposal(new User('phase@example.test'), 1, 'fingerprint', [], 'story', $clock->now());
+        $job->phase('story', $clock->now());
+        $started = $job->getStartedAt();
+        $clock->sleep(209);
+        $job->phase('story', $clock->now());
+        self::assertSame($started, $job->getPhaseStartedAt());
+        self::assertSame($started, $job->getStartedAt());
+        $clock->sleep(1);
+
+        $this->readingService($job, $clock)->owned($job->getOwner(), $job->getId());
+
+        self::assertSame('failed', $job->getStatus());
+    }
+
+    private function readingService(StoryProposal $job, MockClock $clock): StoryProposals
+    {
+        $repository = $this->createStub(EntityRepository::class);
+        $repository->method('findOneBy')->willReturn($job);
+        $connection = $this->createStub(Connection::class);
+        $connection->method('transactional')->willReturnCallback(static fn (callable $work): mixed => $work());
+        $em = $this->createStub(EntityManagerInterface::class);
+        $em->method('getRepository')->willReturn($repository);
+        $em->method('getConnection')->willReturn($connection);
+        $http = new MockHttpClient(static function (): never { throw new \LogicException('No inference during deadline checks.'); });
+
+        return new StoryProposals($em, $this->createStub(MessageBusInterface::class), new LocalStoryWriter($http, false, 'http://localhost:11434', 'synthetic'), $clock);
     }
 }

@@ -1,5 +1,78 @@
 # R1 — Fiabilité du rédacteur : suivi du lot
 
+## État courant — R1.2 terminé, 27 octobre 2026
+
+**Le défaut reproduit en R1.1 est corrigé.** Les paragraphes R1.1 plus bas conservent la phase rouge historique ; ils ne décrivent plus l'état courant. Suite complète : 651 tests / 7 766 assertions réussis. Prochain point : **R1.3**, lisibilité des états et reprise dans l'interface. Le lot R1 reste en cours ; la vérification multi-processus et le bilan global R1.4/R1.5 ne sont pas cochés.
+
+### Objectif et règles temporelles
+
+L'âge de création ne sert plus à expirer une exécution qui vient de démarrer. `ClockInterface`, déjà configurée dans Symfony, est injectée dans le service ; les tests utilisent `MockClock` sans attente réelle. Les demandes créées par le service enregistrent cette même heure de référence.
+
+| Limite technique initiale | Règle |
+| --- | --- |
+| Attente de démarrage | 3 600 s, soit une heure depuis la création ; message distinct si le travail n'a jamais pu démarrer |
+| Phase d'exécution | 210 s depuis le début de la phase ; marge par rapport aux 180 s configurées pour un appel texte |
+| Exécution entière | 420 s depuis le premier démarrage ; un changement de phase ne renouvelle pas ce délai |
+| Admission | Une proposition en attente/exécution par propriétaire, dix propositions encore valides au total dans `StoryProposals` |
+
+Ces valeurs sont des garde-fous de départ, **pas des quotas d'abonnement ni une garantie de débit/délai**. Elles restent à confronter à la capacité du poste et de la future cible R8. L'admission couvre les propositions manuelles de scénarios et de textes sociaux. Les préparations récurrentes utilisent également le worker de rédaction mais appellent directement le rédacteur : elles ne sont pas incluses dans ce compteur. Cette limite n'est donc pas une admission universelle de toute la file Messenger.
+
+### Fichiers et responsabilités de R1.2
+
+| Fichier | Rôle |
+| --- | --- |
+| `src/Entity/StoryProposal.php` | Dates de démarrage et de début de phase, nullables pour les anciennes lignes ; répéter une phase ne repousse pas son délai |
+| `src/Service/StoryProposals.php` | Horloge, délais séparés, admission bornée, prise en charge et finalisation sous contrôle d'état |
+| `migrations/Version20261027160000.php` | Deux colonnes nullables et un index d'état/date ; aucune suppression ni réécriture des préparations |
+| `tests/Unit/StoryProposalQueueTest.php` | Les douze cas R1.1 conservés, maintenant à horloge figée, plus limites exactes, longue attente puis démarrage récent et anciennes lignes sans dates d'exécution |
+| `tests/Functional/StoryProposalLifecycleTest.php` | Admission réelle PostgreSQL, reprise d'un message, phases, fin tardive et remplacement de demande avec clients texte simulés |
+| `tests/Functional/AiStoryProposalTest.php` | Ancien cas d'expiration transformé en véritable exécution expirée, au lieu de figer le bug d'une attente de onze minutes |
+
+Flux : création sous verrou du propriétaire → réutilisation d'une demande identique ou contrôle de la place disponible → message Messenger → prise en charge sous verrou court et enregistrement du démarrage → rédaction **hors transaction** → vérification sous verrou avant chaque phase/résultat → sauvegarde seulement si le travail est encore actif, dans ses délais et toujours le plus récent pour ce propriétaire/périmètre/type.
+
+L'admission est sérialisée par un verrou transactionnel PostgreSQL consultatif. Les chemins existants verrouillent d'abord leur propriétaire et leurs propres demandes, puis prennent ce verrou d'admission ; la lecture globale ne verrouille ni n'hydrate les lignes des autres propriétaires. Aucun de ces verrous ne couvre l'inférence. Une demande identique retrouve son identifiant même si la file est devenue pleine ; un nouveau travail en surnombre reçoit une erreur explicite sans nouveau message.
+
+Les propositions périmées sont exclues du comptage d'admission même avant une nouvelle consultation ; elles ne saturent pas définitivement la file. La purge d'un jour est limitée aux travaux terminés/en échec du propriétaire, jamais à une exécution encore active. Les anciennes exécutions sans nouvelles dates utilisent leur création comme repère conservateur : une lecture ne leur accorde pas un nouveau délai.
+
+Un travail expiré/remplacé ne peut plus enregistrer une réussite ou écraser sa notice avec une erreur tardive. Si la première étape arrive trop tard, le contrôle de phase empêche le deuxième appel texte. Cela n'annule pas rétroactivement un calcul déjà transmis au moteur ; aucun nouveau calcul vidéo ni renvoi automatique payant n'est ajouté.
+
+### Vérifications réellement exécutées en R1.2
+
+- Nouveau jeu unitaire : **21 tests / 171 assertions**, tous réussis ; les douze cas rouges R1.1 sont verts.
+- Première recette ciblée scénarios/éditorial/cycle : **44 tests / 455 assertions**, tous réussis.
+- Suite complète dans une copie temporaire Linux, image `edit-worker`, après garde `shortflow_test`, migrations et reconstruction du cache : **651 tests / 7 766 assertions**, tous réussis en 4 min 02 s.
+- Rejeu final après clarification du compteur HTTP du test fonctionnel (compteur natif du client pour la redélivrance) : **34 tests / 296 assertions**, tous réussis. Aucun correctif applicatif n'a changé après la suite complète.
+- PHPStan niveau 5 sur l'application : aucune erreur. Analyse ciblée des nouveaux tests et migration vérifiée ; le fichier fonctionnel final est également sans erreur. CS-Fixer : zéro correction sur les six fichiers concernés.
+- Conteneur Symfony valide, 19 fichiers YAML et 102 templates Twig valides, schéma Doctrine test synchronisé lors de la suite complète.
+- Migration additive appliquée sur **test puis dev**, schéma dev synchronisé. Absence d'exécution réelle vérifiée avant actualisation (`running=0`) ; cache dev reconstruit et seul `story-worker` recréé. Page d'accueil locale : HTTP 200.
+- Revue indépendante du diff : aucun blocage restant. La capture initiale de variables non initialisées a été corrigée avant les recettes ; aucun avertissement n'est laissé comme comportement attendu.
+
+Pas d'Ollama, de génération vidéo payante ou d'envoi social dans les nouveaux tests : les réponses HTTP sont synthétiques et les autres clients refusent tout appel. La suite complète conserve son test de transcription locale hors ligne. Aucun nouveau test visuel ou build frontend pour ce changement backend sans modification des assets/templates ; R1.3 portera le suivi visible.
+
+Les cas PostgreSQL sont des simulations séquentielles des courses avec des réponses retardées : la vraie concurrence multi-processus, la capacité sous charge, l'arrêt brutal d'un consommateur et le scénario de reprise complet restent à vérifier en R1.4/R8. La revue n'est pas une preuve de débit.
+
+Contrôle supplémentaire hors du périmètre PHPStan configuré (`src`) : inclure aussi l'ancien `AiStoryProposalTest.php` signale son ternaire préexistant sur `$suspicious` capturé par référence, ligne 67 (`ternary.alwaysFalse`). Cette ligne n'est pas modifiée par R1.2 et le scénario fonctionnel correspondant passe ; l'alerte est conservée dans `artifacts/r1-2-phpstan-final.log`, sans suppression de règle. La commande finale sur le service, l'entité, les nouveaux tests et la migration passe (`r1-2-phpstan-final-scoped.log`). Ne pas présenter cette extension à l'ancien test comme une analyse sans erreur.
+
+### Reprise et pédagogie Symfony
+
+Sur un autre PC, récupérer le code puis appliquer les migrations additives selon le README, reconstruire le cache et recréer le worker de rédaction hors traitement actif. Ne pas supprimer la base ou les files pour résoudre une différence de schéma. Les colonnes nullables rendent l'évolution compatible avec les propositions déjà enregistrées.
+
+À comprendre : Doctrine conserve les dates de cycle dans PostgreSQL ; l'horloge injectée permet de faire avancer ces dates dans les tests sans attendre. Un verrou de ligne sert à décider et écrire un état brièvement ; il doit être relâché pendant l'appel lent. La finalisation recontrôle la base car l'objet PHP peut être devenu obsolète entre-temps. Les tests vérifient aussi cette absence de transaction pendant les réponses HTTP simulées.
+
+Reproduire les tests avec les commandes R1.1 ci-dessous : la première est désormais verte. Pour le cycle fonctionnel, sur `shortflow_test` migrée exclusivement :
+
+```sh
+docker compose exec -T -e APP_ENV=test -e APP_DEBUG=0 php php bin/phpunit --filter 'StoryProposalQueueTest|StoryProposalLifecycleTest'
+```
+
+Les journaux locaux ignorés `artifacts/r1-2-full.log` et `r1-2-final-focused.log` conservent les sorties. Ce bilan et les tests versionnés permettent la reprise sans ces fichiers.
+
+**Prochain point R1.3 :** rendre les états d'attente, rédaction, préparation des plans/textes et erreur clairs, puis vérifier quitter/retrouver la page. Aucun essai payant n'est nécessaire pour cette suite.
+
+---
+
+## Historique de la phase rouge
+
 ## R1.1 terminé — reproduction, 27 octobre 2026
 
 Objectif : prouver automatiquement qu'une demande encore en attente peut être déclarée expirée avant son premier traitement. Cette étape ajoute le test du comportement attendu ; **elle ne corrige pas le moteur**. Les six échecs décrits ci-dessous sont attendus et restent présents jusqu'à R1.2. Le lot R1 est en cours, pas livré ; ce point de contrôle n'est pas une version entièrement verte.

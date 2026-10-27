@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Index(name: 'story_owner_scope', columns: ['owner_id', 'scope', 'created_at'])]
 #[ORM\Index(name: 'editorial_owner_scope', columns: ['owner_id', 'kind', 'scope', 'created_at'])]
+#[ORM\Index(name: 'story_pending_age', columns: ['status', 'created_at'])]
 class StoryProposal
 {
     #[ORM\Id, ORM\Column(length: 32)]
@@ -31,9 +32,13 @@ class StoryProposal
     private ?string $error = null;
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $startedAt = null;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $phaseStartedAt = null;
 
     /** @param array<string,mixed> $input */
-    public function __construct(User $owner, int $scope, string $fingerprint, array $input, string $kind = 'story')
+    public function __construct(User $owner, int $scope, string $fingerprint, array $input, string $kind = 'story', ?\DateTimeImmutable $createdAt = null)
     {
         // Keep latest deterministic when several jobs share a database timestamp second.
         $this->id = sprintf('%014x', (int) (microtime(true) * 1000000)).bin2hex(random_bytes(9));
@@ -45,7 +50,7 @@ class StoryProposal
             throw new \InvalidArgumentException('Type de rédaction indisponible.');
         }
         $this->kind = $kind;
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
     }
 
     public function getId(): string
@@ -88,6 +93,16 @@ class StoryProposal
         return $this->createdAt;
     }
 
+    public function getStartedAt(): ?\DateTimeImmutable
+    {
+        return $this->startedAt;
+    }
+
+    public function getPhaseStartedAt(): ?\DateTimeImmutable
+    {
+        return $this->phaseStartedAt;
+    }
+
     /** @return array<string,mixed> */
     public function getInput(): array
     {
@@ -100,8 +115,13 @@ class StoryProposal
         return $this->result;
     }
 
-    public function phase(string $phase): void
+    public function phase(string $phase, ?\DateTimeImmutable $now = null): void
     {
+        $now ??= new \DateTimeImmutable();
+        $this->startedAt ??= $now;
+        if ($this->status !== $phase || null === $this->phaseStartedAt) {
+            $this->phaseStartedAt = $now;
+        }
         $this->status = $phase;
     }
 
