@@ -1,0 +1,101 @@
+<?php
+
+namespace App\Tests\Unit;
+
+use App\Entity\StoryProposal;
+use App\Entity\User;
+use App\Service\LocalStoryWriter;
+use App\Service\StoryProposals;
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Component\Messenger\MessageBusInterface;
+
+final class StoryProposalQueueTest extends TestCase
+{
+    /** @return iterable<string, array{int, string, string}> */
+    public static function waitingCases(): iterable
+    {
+        foreach ([0, 11] as $minutes) {
+            foreach (['story', 'editorial'] as $kind) {
+                foreach (['owned', 'latest', 'process'] as $operation) {
+                    yield $kind.' '.$operation.' after '.$minutes.' minutes' => [$minutes, $kind, $operation];
+                }
+            }
+        }
+    }
+
+    #[DataProvider('waitingCases')]
+    public function testWaitingDoesNotExpireAProposalBeforeItsWorkerStarts(int $minutes, string $kind, string $operation): void
+    {
+        $owner = new User('queue-regression@example.test');
+        $input = 'story' === $kind
+            ? ['idea' => 'Un chat blanc se couche sur un coussin.', 'durations' => [5], 'continuity' => 'independent', 'tone' => 'calme', 'context' => []]
+            : ['source' => ['title' => 'Le chat et le coussin'], 'profile' => ['language' => 'fr'], 'networks' => ['youtube'], 'baseline' => []];
+        $job = new StoryProposal($owner, 42, 'unchanged-preparation', $input, $kind);
+        // R1.1: backdate the fixture, without sleeping or changing the production clock.
+        // R1.2 must make the distinction between waiting age and execution age explicit.
+        (new \ReflectionProperty($job, 'createdAt'))->setValue($job, new \DateTimeImmutable('-'.$minutes.' minutes'));
+        self::assertSame('queued', $job->getStatus());
+
+        $repository = $this->createStub(EntityRepository::class);
+        $repository->method('find')->willReturn($job);
+        $repository->method('findOneBy')->willReturnCallback(static function (array $criteria) use ($owner, $job, $kind): StoryProposal {
+            self::assertSame($owner, $criteria['owner']);
+            self::assertSame($kind, $criteria['kind']);
+
+            return $job;
+        });
+        $connection = $this->createStub(Connection::class);
+        $connection->method('transactional')->willReturnCallback(static fn (callable $work): mixed => $work());
+        $em = $this->createStub(EntityManagerInterface::class);
+        $em->method('getRepository')->willReturn($repository);
+        $em->method('getConnection')->willReturn($connection);
+        $bus = $this->createMock(MessageBusInterface::class);
+        $bus->expects(self::never())->method('dispatch');
+
+        $calls = 0;
+        $http = new MockHttpClient(static function (string $method, string $url) use (&$calls, $kind): MockResponse {
+            ++$calls;
+            self::assertSame('POST', $method);
+            self::assertSame('http://localhost:11434/api/chat', $url);
+            $result = 'editorial' === $kind
+                ? ['youtube' => ['title' => 'Le chat et le coussin', 'description' => 'Un chat blanc se couche sur un coussin.', 'hashtags' => []]]
+                : (1 === $calls
+                    ? ['title' => 'Un moment calme', 'summary' => 'Le chat se couche sur le coussin.', 'identity' => 'Un chat blanc.', 'beats' => ['Le chat blanc se couche sur un coussin.']]
+                    : ['identity' => 'A white cat.', 'shots' => [['seconds' => 5, 'prompt' => 'The white cat slowly lies down on a cushion in one continuous take.']]]);
+
+            return new MockResponse(json_encode(['done' => true, 'done_reason' => 'stop', 'message' => ['content' => json_encode($result, JSON_THROW_ON_ERROR)]], JSON_THROW_ON_ERROR));
+        });
+        $service = new StoryProposals($em, $bus, new LocalStoryWriter($http, true, 'http://localhost:11434', 'synthetic'));
+
+        if ('process' === $operation) {
+            $service->process($job->getId());
+        } else {
+            $found = 'owned' === $operation
+                ? $service->owned($owner, $job->getId(), $kind)
+                : $service->latest($owner, 42, $kind);
+            self::assertSame($job, $found);
+        }
+
+        self::assertSame('unchanged-preparation', $job->getFingerprint());
+        self::assertSame('process' === $operation ? 'ready' : 'queued', $job->getStatus(), sprintf(
+            'R1.1: %s/%s after %d minutes waiting must not fail before execution (observed status: %s, simulated text requests: %d).',
+            $kind, $operation, $minutes, $job->getStatus(), $calls,
+        ));
+        self::assertNull($job->getError());
+        self::assertSame('process' === $operation ? ('story' === $kind ? 2 : 1) : 0, $calls);
+        if ('process' !== $operation) {
+            self::assertSame($input, $job->getInput());
+            self::assertNull($job->getResult());
+        } else {
+            self::assertSame([], $job->getInput());
+            self::assertNotNull($job->getResult());
+            self::assertSame('story' === $kind ? 'Un moment calme' : 'Le chat et le coussin', 'story' === $kind ? $job->getResult()['title'] : $job->getResult()['texts']['youtube']['title']);
+        }
+    }
+}

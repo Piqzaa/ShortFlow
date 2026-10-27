@@ -1,6 +1,6 @@
 # VydFlow — bêta, studio IA et publication
 
-**Reprise du projet : lire [la roadmap active et son avancement](docs/roadmap.md).** Elle fixe les lots jusqu'au déploiement, les critères de validation, les propositions Free/Creator/Pro et le prochain point exact : **R1.1 — reproduire l'expiration prématurée d'une rédaction en attente**. Aucun de ces nouveaux lots n'est encore commencé. [Audit global et annexes](docs/audit-global-20261027.md). Les anciens plans sont conservés dans [l'archive historique](docs/roadmap-historique-20261027.md).
+**Reprise du projet : lire [la roadmap active et son avancement](docs/roadmap.md).** Lot R1 en cours : **R1.1 terminé, reproduction volontairement rouge** (six échecs sur douze cas, moteur inchangé). Prochain point : **R1.2 — distinguer attente et exécution du rédacteur**. [Preuves et commandes R1](docs/r1-redacteur-attente.md). Ne pas annoncer la suite complète verte avant correction. [Audit global et annexes](docs/audit-global-20261027.md). Les anciens plans sont conservés dans [l'archive historique](docs/roadmap-historique-20261027.md).
 
 Navigation et recette, 27 octobre : lectures groupées des états de publication, indications de connexion IA en une lecture, quatre projets récents et autoloader optimisé. Parcours import → programmation → publication simulée vérifié. [Mesures locales, composants et guide Symfony](docs/performance-recette-v1.md).
 
