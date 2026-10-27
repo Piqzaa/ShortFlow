@@ -1,0 +1,105 @@
+# Archive historique — remplacée le 27 octobre 2026
+
+Ce document conserve les anciennes décisions et livraisons. La feuille de route active et son avancement sont exclusivement dans [roadmap.md](roadmap.md). Les priorités, offres et prochaines actions ci-dessous sont historiques.
+
+---
+
+# Roadmap V1 — vision de lancement validée le 15 octobre 2026
+
+## État courant — 24 octobre 2026
+
+**Fiabilité du rédacteur renforcée et évaluée localement** : consignes par format, identité commune des prompts, alertes de relecture et pause de la récurrence avant génération pour les propositions signalées. Dix sujets et deux répétitions réels avec Qwen3 8B, puis correction ciblée du clip unique. Langue améliorée sur cet échantillon ; erreurs de fond et chutes encore insuffisantes pour valider l'autonomie éditoriale. [Résultats, contrôles et pédagogie](redacteur-local-fiabilite.md).
+
+**Récurrence supervisée livrée localement** : créneau hebdomadaire, préparation la veille, mémoire de résumés, génération et assemblage existants, autorisation BYOK bornée, pause et contrôle avant chaque nouveau POST payant. Validation et confirmation de publication restent manuelles. Aucune série réelle activée pendant le développement. [Guide](recurrence-supervisee.md).
+
+**Lien épisode → programmation livré localement** : brouillon durable par version validée, source conservée, date/fuseau et états distincts des réseaux dans la série, préparateur/calendrier réutilisés. Diagnostic du rédacteur et délai local corrigés ; qualité narrative encore à valider. [Guide](series-publications-redacteur.md).
+
+**Corrections studio/séries livrées localement** : rédaction en file dédiée, étapes visibles et reprise après navigation ; clips uniques sans choix d’enchaînement, prolongement sélectionnable avec correction guidée ; nombre initial d’épisodes configurable et ajout d’épisodes, sans faux scénarios copiés. Le lot supervisé est désormais livré ; la publication autonome reste à construire. [Guide et chaîne cible](corrections-studio-series-recurrence.md).
+
+**Préparation commune studio/séries simplifiée** : idée, durée finale, modèle, références et plans sur un écran ; options de raccord guidées. Rédaction locale sur demande intégrée en pilote supervisé : aperçu français, prompts vidéo, application volontaire ; qualité à évaluer avant autonomie. [Guide du pilote](scenario-local-supervise.md). [Résultats et pédagogie](preparation-unifiee-essai-local.md).
+
+**Vidéos à plans livrées localement dans le studio et les séries** : durée totale choisie jusqu’à 60 secondes, 1 à 8 scènes manuelles réordonnables, conversion des épisodes à confirmer et son conservé par défaut, coût total confirmé, génération dans l’ordre avec raccords image compatibles, assemblage automatique, validation de la version finale et lien vers la préparation/programmation existante. Pause, arrêt et nouvelle génération ciblée avec consentement. Guide : [episodes-multiplans.md](episodes-multiplans.md). Ce lot ne lance pas encore plusieurs épisodes ensemble et ne relie pas leurs publications à un suivi par réseau dans la série.
+
+**Premier lot Séries livré localement** : configuration privée enregistrée, trois épisodes initiaux, prompts modifiables, images communes selon le modèle et accès BYOK existants. Préparation individuelle liée au moteur IA actuel, coût confirmé séparément, états réels par génération. Aucun lancement automatique. Voir [series-mvp.md](series-mvp.md).
+
+Lot enregistré dans le commit local `8531512`. Rapport de suite, périmètre du prochain lot et critères avant commercialisation : [prochaines-etapes-series.md](prochaines-etapes-series.md).
+
+Prochaines étapes par valeur utilisateur et complexité :
+
+| Priorité | Lot | Valeur utilisateur | Complexité |
+| --- | --- | --- | --- |
+| Livré | Relier chaque épisode validé à sa programmation et au suivi des destinations existants | Parcours série → publication sans ressaisie | — |
+| Livré | Récurrence supervisée, production en avance et consentement de génération borné | Préparer chaque semaine la suite depuis le thème et les personnages | — |
+| 1 | Qualité narrative évaluée, puis publication entièrement automatique explicitement autorisée | Valider l’autonomie éditoriale et fermer le parcours de publication | Élevée |
+| 2 | Limites de bibliothèque par offre et facturation après validation des offres | Commercialiser deux offres simples | Moyenne |
+
+Les outils de montage existants restent utilisables sur chaque résultat. Le lancement groupé d’un lot fini peut réutiliser l’orchestration du deuxième lot. La priorité exprimée est désormais la série récurrente ; sa mémoire narrative durable et la qualité du rédacteur doivent être validées avant le mode autonome. Ces étapes constituent une recommandation ; leur développement se fait lot par lot. Voir la chaîne cible et les critères dans le guide des corrections du 24 octobre.
+
+Recentrage validé : fiabilité des publications, puis séries enregistrées avec épisodes préparés à l'avance, génération d'un lot fini, validation manuelle et programmation par épisode. Le lot supervisé ci-dessus ajoute la récurrence et une mémoire narrative bornée ; la publication autonome reste à valider. Le lot de fiabilisation ajoute les contrôles vidéo communs, la visibilité YouTube effective, des reprises par destination et une file IA/statistiques séparée. Voir [fiabilite-publication.md](fiabilite-publication.md). Gratuit et Creator à 9,99 €/mois restent des hypothèses, sans troisième offre ; quotas par offre et facturation dans leur lot, aucune modification des limites de stockage actuelles.
+
+Le studio IA, l’image vers vidéo et le suivi sont intégrés à la bêta ; catalogue de 54 configurations, essais manuels activés localement et premier essai image réussi confirmé par le propriétaire. Lot de simplification : trois choix Fal, connexion guidée, textes de disponibilité actualisés et recherche privée dans les vidéos. Le catalogue complet reste accessible. Voir [le guide](studio-simple-recherche.md). Premier montage guidé commun aux imports et vidéos IA livré : 1–8 clips, coupes, ordre, aperçu et export local MP4 1080p. « Tes créations » retiré du formulaire Studio ; historique conservé. Voir [montage-guide.md](montage-guide.md). Éditeur visuel, sous-titres locaux modifiables et recette simple Reel intégrés : voir [montage-sous-titres.md](montage-sous-titres.md). Le lancement groupé, la publication autonome, les recettes plus avancées et l’abonnement restent à construire ; accès publics des plateformes à valider avant commercialisation. Les états datés ci-dessous conservent l’historique des lots et ne remplacent pas ce point courant.
+
+Lot studio/compte autorisé le 18 octobre, avant TikTok réel : navigation simplifiée, galerie/brouillons, préparation commune sur un écran, compte à onglets avec photo privée et fuseau par défaut. L’espace abonnement reste annoncé à venir, sans traitement de paiement. Voir [studio-compte.md](studio-compte.md).
+
+Historique du 18 octobre, essais réels : connexion OAuth Instagram réussie, puis premier Reel réellement publié après programmation confirmée par le propriétaire. Départ du lot à 16 h 02 heure de Paris, succès enregistré avec identifiant distant, sans échec de transfert. Le tunnel temporaire est ensuite constaté indisponible ; ce dispositif n'est pas un hébergement durable. Aucune activation réelle TikTok ajoutée. Voir `instagram-test-https.md` et `verification.md`.
+
+État du 19 octobre : première publication TikTok réelle réussie en Sandbox et confirmée par le propriétaire, avec une ligne `published` en base. Application non auditée et statistiques réelles TikTok désactivées. Le tunnel temporaire est actif pour ces essais, sans hébergement durable. Voir `tiktok.md`.
+
+Le passage à la V1 est autorisé. Comptes terminés ; lot bibliothèque autorisé le 15 octobre 2026. La landing conserve ses animations et adopte le parcours bêta : inscription → confirmation → connexion → studio/bibliothèque. L’ancienne liste d’attente reste sur /liste-attente, hors parcours principal, sans effacement de données. Décision du propriétaire du 15 octobre : priorité à la publication immédiate multi-réseaux avant l’IA. Cadrage dans docs/publication.md.
+
+1. **Cadrage et comptes — terminé** : inscription, connexion/déconnexion, confirmation obligatoire, récupération et dashboard privé. Emails exclusivement locaux dans Mailpit.
+2. **Bibliothèque privée — terminée** : import contrôlé, stockage hors de public, lecture autorisée avec Range, renommage/suppression et isolation propriétaire. MP4 H.264/AAC ou WebM VP8/VP9/AV1 et Opus/Vorbis, vidéo 8 bits ; 100 Mo/fichier, 3 minutes, 3 840 px par côté, 1 Go et 100 vidéos/compte. ffprobe lit les métadonnées sans transcodage. Liste paginée, dernières vidéos et progression de transfert.
+3. **Publication immédiate multi-réseaux — YouTube, Reels et TikTok testés réellement** : sélection d’une ou plusieurs vidéos, métadonnées adaptées, confirmation, connexion OAuth officielle et suivi par vidéo/destination. Premier envoi TikTok Sandbox confirmé le 19 octobre après connexion OAuth et vérification du préfixe HTTPS ; programmation TikTok à tester ; préparation commune et confirmation multi-réseaux implémentées localement, voir docs/publication-multireseaux.md. Lot TikTok local autorisé le 17 octobre, sans activation réelle implicite. Voir docs/publication.md, docs/youtube.md, docs/instagram-publication.md et docs/tiktok.md.
+   **Complément local autorisé le 17 octobre : aperçu et compteurs de publication** — lecteur privé de la source, vues/j’aime/nombre de commentaires par destination, mise à jour Messenger à la demande et relevé daté. Tests HTTP simulés sur les trois réseaux ; activation réelle distincte, voir docs/statistics.md. Pas d'agrégation trompeuse entre réseaux ni de lecture du texte des commentaires.
+4. **Préparation et calendrier — implémentés localement le 18 octobre** : brouillons privés durables, saisie partielle, fuseaux explicites, programmation ponctuelle confirmée, modification/annulation avant départ, calendrier mensuel et agenda mobile. Messenger réutilise le moteur multi-réseaux, avec recontrôle à l’échéance et blocage des départs manqués. Tests avec horloge contrôlée et API simulées ; aucun essai social réel ajouté. Règles et pédagogie dans [calendrier.md](calendrier.md).
+5. **Studio IA BYOK — premier essai Fal réel réussi le 19 octobre, activation globale désactivée** : choix de plusieurs fournisseurs et modèles dès la conception du parcours, connexions guidées, secrets chiffrés, estimation documentée, génération asynchrone et copie durable dans la bibliothèque. Le propriétaire demande un catalogue large plutôt qu’un modèle imposé. Les intégrations seront livrées et validées progressivement ; aucun modèle simplement découvert ne sera annoncé utilisable. Le fournisseur facture directement l’utilisateur. Aucun essai payant autorisé implicitement. Catalogue local de 21 configurations chez Fal, Replicate et LTX : variantes HD/Full HD/4K, filtres et comparaison des prix à durée commune. Accès Fal par clé ou client OAuth/MCP ; première connexion OAuth Fal réelle validée, génération MCP payante non testée. Recherche/filtres, durées propres au modèle, clés distinctes, confirmation de coût, worker et copie privée ; API simulées en tests. Premier essai Fal réel autorisé réussi : Kling 2.5, 5 secondes verticales, copie privée validée ; estimation 0,35 USD, débit réel non consulté. Catalogue universel, autres modèles et image vers vidéo restent à faire. L’activation payante globale reste désactivée après cet essai unique ; voir docs/ia-premier-essai.md. Voir [studio-ia.md](studio-ia.md).
+6. **Montage automatique guidé** : disponible pour les vidéos importées et générées, avec sous-titres, adaptation verticale et habillage prédéfini. Quelques recettes solides, prévisualisation et choix explicite avant transformation ; conserver la source. Musique/intro/outro selon les recettes retenues et les droits disponibles. Pas d’éditeur vidéo complet au lancement.
+7. **Séries récurrentes** : thème, prompt, fournisseur/modèle BYOK, recette de montage, destinations et créneaux. Préparation en avance, descriptions adaptées, validation activée par défaut ; mode automatique activé explicitement selon les capacités autorisées des plateformes. Pause, limites de générations et plafond de dépense configuré. Vérifier les moyens de respecter ce plafond avec le fournisseur choisi avant activation ; une estimation seule ne garantit pas une limite de facturation.
+8. **Abonnement logiciel et lancement** : Stripe pour VydFlow uniquement, quotas, infrastructure privée adaptée, sauvegardes/restauration, exploitation, suppression de compte et données, confidentialité et documents commerciaux finalisés avant ouverture publique. Aucun prix définitif ni promesse d’IA illimitée.
+
+## Organisation du produit validée le 19 octobre
+
+Vidéos regroupe les sources et résultats ; Studio accueille la création IA et le montage guidé, indépendamment de l’origine de la vidéo. Séries réutilisera le parcours de production avec une fréquence, préparation en avance, limites et validation par défaut. Calendrier montre chaque occurrence ; Publications suit chaque destination ; Connexions rassemble réseaux et clés IA. Première réorganisation Vidéos/Studio implémentée ; montage et séries restent à construire dans leurs lots. Voir [studio-compte.md](studio-compte.md).
+
+## Promesse et parcours de lancement
+
+« Importe ou génère tes vidéos courtes, prépare-les et programme leur publication sur tes réseaux depuis un seul studio. »
+
+La cible du premier lancement commercial inclut la chaîne complète ci-dessus, avec des options limitées et fiables. Cette cible ne signifie pas que ces fonctions sont disponibles aujourd’hui, ni que les lots futurs sont autorisés à être développés immédiatement. Livraison progressive : publication → calendrier → IA BYOK et montage → séries → préparation du lancement. Le lot YouTube est développé localement et documenté dans docs/youtube.md, avec premier transfert réel traité avec succès le 16 octobre et worker Docker automatique ; arrêt pour bilan après ce lot avant Instagram/TikTok/IA.
+
+### Parcours vidéo importée
+
+Importer une ou plusieurs vidéos → montage facultatif → préparation des titres, légendes et descriptions par réseau → prévisualisation/récapitulatif → publication immédiate ou date choisie. Une vidéo déjà finalisée peut passer directement à la préparation/publication. L’aide à la rédaction est facultative ; les textes restent modifiables. Son fournisseur, son coût éventuel et ses conditions seront cadrés dans le lot concerné.
+
+### Parcours vidéo IA et série
+
+Une génération ponctuelle rejoint la bibliothèque et le même parcours que les imports. Une série réutilise une configuration : sujet, consignes, modèle BYOK, montage, destinations et fréquence. VydFlow prépare les vidéos et leurs textes avant le créneau prévu. « Publier chaque lundi à 14 h » désigne l’heure de publication cible, pas le début de génération ; le délai de préparation et la date limite de validation doivent être définis.
+
+Validation activée par défaut : tant qu’une vidéo n’est pas approuvée, sa publication reste bloquée. Si la validation manque ou si la préparation dépasse le créneau, afficher le retard et demander une reprogrammation, sans publier tardivement de façon implicite. Le mode automatique nécessite une activation explicite et des règles compatibles avec chaque destination. Pause d’une série et annulation d’une publication doivent être accessibles ; leur effet sur les traitements déjà engagés sera précisé dans le cadrage technique.
+
+### Calendrier et suivi communs
+
+Le calendrier est le centre de contrôle des vidéos importées, générées et issues des séries. États compréhensibles : en préparation, à valider, programmée, publiée ou en échec, avec détail par étape et destination. Modification des textes, changement de date et annulation avant envoi ; choix explicite du fuseau horaire et comportement des récurrences lors des changements d’heure à cadrer. Un échec doit permettre une reprise sans republier une destination déjà réussie.
+
+TikTok, Instagram Reels et YouTube Shorts sont les destinations visées, sous réserve des accès et capacités réellement validés. Un lancement commun ne garantit pas une apparition à la même seconde sur tous les réseaux. Ne pas annoncer une automatisation ou une intégration disponible avant validation réelle.
+
+## Expérience IA retenue
+
+Accord du 20 octobre : simplifications et ajouts de l'[audit du studio](audit-studio-ia.md) validés. Commencer par le lot « Studio simple et guidé » (choix unifié/favoris, aide aux connexions, résumé de facturation, suivi, réutilisation, historique et récupération/quota), puis image vers vidéo, plusieurs plans/montage et séries dans leurs lots respectifs. La correction préalable de navigation et d'aperçu d'import est documentée dans [performance-import.md](performance-import.md). Cet accord ne lance aucun essai fournisseur payant ni publication réelle automatiquement.
+
+Lot « Studio simple et guidé » implémenté localement le 20 octobre : [parcours et composants](studio-ia-guide.md). Les essais payants restent désactivés ; la prochaine capacité créative est l'image vers vidéo, avant l'assemblage et le montage.
+Connexion fournisseur guidée une fois, conservation de l’idée pendant la configuration, réglages simples, coût estimé avant lancement, vidéo récupérée dans VydFlow. Le propriétaire demande le choix d'accès par clé API ou connexion navigateur/MCP selon les possibilités réellement documentées. L'[inventaire du 19 octobre](fournisseurs-video-ia.md) distingue les MCP OAuth sans clé, les MCP exigeant une clé et les API directes, avec repères de prix et ordre d'intégration proposé. Le lot suivant porte le catalogue local à 21 configurations chez Fal, Replicate et LTX, avec filtres HD/Full HD/4K et comparaison de prix à durée commune. Le client Fal OAuth/MCP est implémenté avec tests simulés ; sa première connexion réelle est validée par le propriétaire ; une génération MCP payante reste à tester séparément. Voir [ia-connexions-hd.md](ia-connexions-hd.md). Pas de solde inventé ni de coût garanti.
+
+L’hybride (recharges vendues par VydFlow + BYOK) est une piste future, pas une fonction autorisée aujourd’hui. Il modifierait les flux économiques et nécessiterait une étude de marge, de fiscalité et des conditions fournisseur. Pas de wallet ou d’architecture de paiement IA anticipée.
+
+Montage guidé, sous-titres et séries récurrentes font désormais partie de la cible du lancement, à développer dans leurs lots. La demande du 19 octobre inclut désormais plusieurs fournisseurs/modèles dans le lot IA. Éditeur vidéo complet, automatisations libres et statistiques avancées restent ultérieurs. Les décisions du présent document remplacent l’ancien prompt de lancement.
+
+20/10/2026 — Premier lot image vers vidéo local : Kling 2.5 Turbo Pro via Fal API/MCP, référence privée, aperçu, récapitulatif et reprise ; tests simulés. Essai fournisseur réel distinct. Prochain lot : montage guidé de plusieurs plans, puis extensions image/modèles et gestion des anciennes références avant ouverture large.
+
+20/10/2026 — Extension image réalisée localement : toutes les familles du catalogue ayant une variante compatible sont couvertes via Fal/Replicate/LTX, avec début/fin et cadrage. Essai réel image toujours à choisir par le propriétaire ; prochaine fonction produit : montage guidé, puis séries. Références : studio-image-video-complet.md.
+
+20 octobre : essai image vers vidéo confirmé réussi par le propriétaire ; suivi visuel par étapes réelles ajouté, sans pourcentage fictif ni nouvel essai payant autonome. Voir [le guide du suivi](suivi-generation-ia.md).
+
+21 octobre — Mini éditeur local : clips importés/IA, séparation au curseur, ordre des fragments, sous-titres locaux facultatifs, piste musicale privée et export asynchrone. Assemblage automatique sans recadrage imposé. Voir [le guide](montage-sous-titres.md). La suite proposée est un épisode multi-plans manuel, puis recettes de séries et récurrence avec mémoire narrative : [cadrage](series-episodes-proposition.md). Aucun job de série ni publication automatique activé.
+
+21 octobre : montage intégré aux vidéos et aux préparations, éditeur partagé et retour explicite après export. Les séries restent un lot ultérieur ; voir `montage-sous-titres.md`.

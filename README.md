@@ -1,5 +1,7 @@
 # VydFlow — bêta, studio IA et publication
 
+**Reprise du projet : lire [la roadmap active et son avancement](docs/roadmap.md).** Elle fixe les lots jusqu'au déploiement, les critères de validation, les propositions Free/Creator/Pro et le prochain point exact : **R1.1 — reproduire l'expiration prématurée d'une rédaction en attente**. Aucun de ces nouveaux lots n'est encore commencé. [Audit global et annexes](docs/audit-global-20261027.md). Les anciens plans sont conservés dans [l'archive historique](docs/roadmap-historique-20261027.md).
+
 Navigation et recette, 27 octobre : lectures groupées des états de publication, indications de connexion IA en une lecture, quatre projets récents et autoloader optimisé. Parcours import → programmation → publication simulée vérifié. [Mesures locales, composants et guide Symfony](docs/performance-recette-v1.md).
 
 Sélection de vidéos, 26 octobre : réseaux et créneau propres à chaque vidéo, brouillons indépendants dédupliqués et confirmation individuelle conservée. Migration additive `Version20261026190000`. [Guide Symfony et vérifications](docs/publications-par-video.md). [Audit produit et comptes multiples](docs/audit-produit-concurrence-20261026.md).

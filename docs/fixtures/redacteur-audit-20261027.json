@@ -1,0 +1,322 @@
+{
+  "purpose": "Échantillons synthétiques pour reproduire les défauts du rédacteur ; aucune donnée personnelle réelle, aucun secret, aucune vidéo.",
+  "date": "2026-10-27",
+  "applicationCommit": "d3e470018dec4812e66851913cc50b6775b53bdc",
+  "model": "qwen3:8b",
+  "cases": [
+    {
+      "input": {
+        "id": "milo",
+        "idea": "Milo mon chat blanc joueur découvre les objets du quotidien.",
+        "durations": [
+          10,
+          15,
+          15
+        ],
+        "continuity": "independent",
+        "tone": "auto",
+        "context": []
+      },
+      "seconds": 145.443,
+      "result": {
+        "title": "Milo découvre les objets",
+        "summary": "Milo, un chat blanc joueur, explore les objets du quotidien avec curiosité et douceur, découvrant les propriétés simples des choses qu’il croise.",
+        "shots": [
+          {
+            "description": "Milo se promène dans un salon et s’approche d’un livre ouvert, le flairant avec son museau.",
+            "prompt": "Milo is a white cat with soft fur and black eyes, moving with natural grace and curiosity. Milo walks through a living room, approaches an open book, and sniffs it with his nose.",
+            "seconds": 10
+          },
+          {
+            "description": "Il saute sur le livre, le fait tomber et le regarde tomber sur le sol, curieux de son mouvement.",
+            "prompt": "Milo is a white cat with soft fur and black eyes, moving with natural grace and curiosity. Milo jumps onto the book, knocks it down, and watches it fall to the floor, fascinated by its movement.",
+            "seconds": 15
+          },
+          {
+            "description": "Milo rampe vers le livre, le renifle puis le laisse tomber à nouveau, comprenant la gravité de l’objet.",
+            "prompt": "Milo is a white cat with soft fur and black eyes, moving with natural grace and curiosity. Milo crawls toward the book, sniffs it, then lets it fall again, understanding the object's weight and fall.",
+            "seconds": 15
+          }
+        ],
+        "warnings": [
+          "Une couleur d’yeux semble ajoutée ou changée. Vérifie l’identité du personnage."
+        ]
+      }
+    },
+    {
+      "input": {
+        "id": "pedagogie",
+        "idea": "Montrer simplement comment rempoter une petite plante verte sur une table, du pot trop petit au pot adapté. Ne pas utiliser de texte ni de dialogue.",
+        "durations": [
+          5,
+          5,
+          5
+        ],
+        "continuity": "independent",
+        "tone": "calme",
+        "context": []
+      },
+      "seconds": 153.525,
+      "result": {
+        "title": "Rempotage d'une plante",
+        "summary": "Une plante verte est transférée d'un pot trop petit vers un pot plus adapté, en respectant le calme et la simplicité du geste.",
+        "shots": [
+          {
+            "description": "La plante est déplacée d’un pot étroit vers un pot plus large, les racines sont dégagées avec précaution.",
+            "prompt": "A green plant, a small stem and roots visible, a narrow pot and a wider pot. No human character. A green plant is carefully moved from a narrow pot to a wider one, roots are gently loosened with precision.",
+            "seconds": 5
+          },
+          {
+            "description": "Les racines sont réparties uniformément dans le nouveau pot, qui est légèrement rempli de terre.",
+            "prompt": "A green plant, a small stem and roots visible, a narrow pot and a wider pot. No human character. The roots are evenly spread in the new pot, which is slightly filled with soil.",
+            "seconds": 5
+          },
+          {
+            "description": "La plante est rempotée, le pot est posé sur une table, la plante est stable et enracinée.",
+            "prompt": "A green plant, a small stem and roots visible, a narrow pot and a wider pot. No human character. The plant is repotted, the pot is placed on a table, the plant is stable and rooted.",
+            "seconds": 5
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "input": {
+        "id": "recette",
+        "idea": "Tutoriel réaliste : préparer une tartine de pain avec du beurre puis de la confiture de fraise. Seules les mains de la personne sont visibles. Montrer le résultat terminé, sans personnage animal ni gag.",
+        "durations": [
+          5,
+          5,
+          5
+        ],
+        "continuity": "independent",
+        "tone": "auto",
+        "context": []
+      },
+      "seconds": 167.051,
+      "result": {
+        "title": "Préparation d'une tartine de pain",
+        "summary": "Un tutoriel détaillé montrant la préparation d'une tartine de pain avec du beurre et de la confiture de fraise, sans personnage ni élément animal, uniquement les mains en action.",
+        "shots": [
+          {
+            "description": "Les mains prennent le pain et le posent sur une surface, puis appliquent du beurre avec un couteau.",
+            "prompt": "Human hands perform precise, realistic actions. Bread, butter, and strawberry jam appear naturally in the frame. Hands pick up the bread and place it on a surface, then use a knife to spread butter smoothly on the bread.",
+            "seconds": 5
+          },
+          {
+            "description": "Les mains prennent la confiture de fraise et la versent sur la tartine déjà beurrée, en maintenant un mouvement fluide.",
+            "prompt": "Human hands perform precise, realistic actions. Bread, butter, and strawberry jam appear naturally in the frame. Hands take the strawberry jam and spread it over the buttered bread with a fluid motion.",
+            "seconds": 5
+          },
+          {
+            "description": "La tartine finie est présentée, les mains reculent pour montrer le résultat complet.",
+            "prompt": "Human hands perform precise, realistic actions. Bread, butter, and strawberry jam appear naturally in the frame. Finished toast is shown, hands step back to reveal the complete result.",
+            "seconds": 5
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "input": {
+        "id": "produit",
+        "idea": "Présenter un mug blanc en céramique sans logo, posé sur une table en bois. Montrer sa forme puis la texture de la céramique et son anse, sans personne ni dialogue.",
+        "durations": [
+          5,
+          5,
+          5
+        ],
+        "continuity": "independent",
+        "tone": "calme",
+        "context": []
+      },
+      "seconds": 171.076,
+      "result": {
+        "title": "Le mug blanc sur la table",
+        "summary": "Un mug en céramique blanc, sans logo, est posé sur une table en bois. On découvre sa forme équilibrée, la texture lisse de la céramique et l'anse courbée qui le rend confortable à tenir.",
+        "shots": [
+          {
+            "description": "Le mug blanc est posé au centre d'une table en bois, sa forme équilibrée visiblement en équilibre.",
+            "prompt": "A white ceramic mug, no logo, placed on a wooden table. Simple and elegant shape, smooth and cool texture, curved handle for easy grip. A white ceramic mug is centered on a wooden table, its balanced shape clearly in equilibrium.",
+            "seconds": 5
+          },
+          {
+            "description": "On effleure la surface de la céramique, révélant sa texture lisse et froide, sans marques ni logo.",
+            "prompt": "A white ceramic mug, no logo, placed on a wooden table. Simple and elegant shape, smooth and cool texture, curved handle for easy grip. The ceramic surface is touched, revealing its smooth and cool texture, free of marks or logo.",
+            "seconds": 5
+          },
+          {
+            "description": "L'anse courbée est mise en évidence, montrant sa douce courbure et sa facilité à tenir.",
+            "prompt": "A white ceramic mug, no logo, placed on a wooden table. Simple and elegant shape, smooth and cool texture, curved handle for easy grip. The curved handle is highlighted, showing its gentle curve and ease of holding.",
+            "seconds": 5
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "input": {
+        "id": "dialogue",
+        "idea": "Deux amis adultes se croisent devant un café. Léa dit en français « Tu as trouvé mon chat ? » puis Hugo répond « Oui, il dort sur ta chaise ! ». Fin : ils regardent le chat roux endormi sur la chaise. Conserver ces deux phrases audibles en français et ces personnages, sans narrateur.",
+        "durations": [
+          5,
+          5,
+          5
+        ],
+        "continuity": "independent",
+        "tone": "auto",
+        "context": {
+          "characters": "Léa porte une veste bleue, Hugo une chemise blanche. Le chat est roux."
+        }
+      },
+      "seconds": 164.391,
+      "result": {
+        "title": "Deux amis retrouvent le chat",
+        "summary": "Léa et Hugo se croisent devant un café. Léa cherche son chat, Hugo lui indique qu'il dort sur sa chaise. Ensemble, ils regardent le chat endormi.",
+        "shots": [
+          {
+            "description": "Léa s'arrête, regarde vers Hugo et dit « Tu as trouvé mon chat ? »",
+            "prompt": "Léa en veste bleue regarde Hugo. Hugo en chemise blanche sourit vers la chaise. Le chat roux dort sur la chaise. Léa s'arrête, regarde vers Hugo, ses lèvres s'ouvrent pour parler, caméra en plan moyen, visage de Léa en premier plan, regard vers Hugo.",
+            "seconds": 5
+          },
+          {
+            "description": "Hugo sourit et montre la chaise en disant « Oui, il dort sur ta chaise ! »",
+            "prompt": "Léa en veste bleue regarde Hugo. Hugo en chemise blanche sourit vers la chaise. Le chat roux dort sur la chaise. Hugo sourit, montre la chaise avec la main droite, visage en plan moyen, caméra centrée sur lui, sourire visible, regard vers la chaise.",
+            "seconds": 5
+          },
+          {
+            "description": "Les deux regardent le chat roux endormi sur la chaise.",
+            "prompt": "Léa en veste bleue regarde Hugo. Hugo en chemise blanche sourit vers la chaise. Le chat roux dort sur la chaise. Les deux regardent le chat roux endormi sur la chaise, caméra en plan moyen, visages de Léa et Hugo tournés vers la chaise, chat en premier plan.",
+            "seconds": 5
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "input": {
+        "id": "danse",
+        "idea": "Un chat blanc réaliste debout danse avec de petits pas latéraux synchronisés sur un rythme joyeux, puis termine immobile avec les pattes en l’air. Garder ce chat et le même salon, sans texte ni dialogue.",
+        "durations": [
+          5,
+          5,
+          5
+        ],
+        "continuity": "linked",
+        "tone": "auto",
+        "context": []
+      },
+      "seconds": 126.272,
+      "result": {
+        "title": "Danse du chat blanc",
+        "summary": "Un chat blanc réaliste danse en petits pas latéraux synchronisés sur un rythme joyeux, puis s'arrête immobile avec les pattes en l'air dans un salon.",
+        "shots": [
+          {
+            "description": "Le chat blanc commence à faire des petits pas latéraux synchronisés en suivant un rythme joyeux.",
+            "prompt": "Realistic white cat, standing upright in a plain living room, no accessories or additional characters. White cat begins small lateral steps in sync with a cheerful rhythm, camera captures the movement from a low angle following the cat's motion.",
+            "seconds": 5
+          },
+          {
+            "description": "Le chat continue la danse, les pattes se déplacent en mesure avec un mouvement fluide et joyeux.",
+            "prompt": "Realistic white cat, standing upright in a plain living room, no accessories or additional characters. Cat continues dancing with smooth, synchronized leg movements, camera maintains low angle tracking the fluid and joyful motion.",
+            "seconds": 5
+          },
+          {
+            "description": "Le chat s'arrête soudainement, les pattes en l'air, immobile dans une position de fin de danse.",
+            "prompt": "Realistic white cat, standing upright in a plain living room, no accessories or additional characters. Cat stops abruptly with legs in the air, remaining motionless in a final dance pose, camera holds steady on the still form.",
+            "seconds": 5
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "input": {
+        "id": "text-produit",
+        "source": {
+          "title": "Mug blanc",
+          "summary": "Un mug blanc en céramique sans logo, sur une table en bois. Gros plan sur l’anse et la texture."
+        }
+      },
+      "seconds": 172.318,
+      "error": "App\\Service\\PublicationException"
+    },
+    {
+      "input": {
+        "id": "text-histoire",
+        "source": {
+          "title": "Milo et la boîte",
+          "summary": "Milo, un chat blanc, trouve une boîte vide, s’y installe puis s’endort."
+        }
+      },
+      "seconds": 172.26,
+      "error": "App\\Service\\PublicationException"
+    },
+    {
+      "input": {
+        "id": "text-import-minimal",
+        "source": {
+          "title": "Vacances 2026"
+        }
+      },
+      "seconds": 495.826,
+      "result": {
+        "youtube": {
+          "title": "Préparation des vacances 2026 : ce que nous prévoyons",
+          "description": "Découvrez ce que nous préparons pour les vacances 2026. Des destinations, des projets et des attentes. Un voyage qui promet d'être inoubliable !\n\n#vacances2026 #voyage #planification #départ"
+        },
+        "instagram": {
+          "caption": "Préparation des vacances 2026 en cours… 🌴✈️ Quelques idées en tête, mais pas encore de plan final. À suivre !\n\n#vacances2026 #voyage #départ"
+        },
+        "tiktok": {
+          "caption": "Préparation des vacances 2026 en cours… 🌴✈️\n\n#vacances2026 #voyage"
+        }
+      }
+    }
+  ],
+  "diagnostic": {
+    "error": "App\\Service\\PublicationException",
+    "message": "Un texte proposé est invalide. Les hashtags doivent rester séparés dans la réponse du rédacteur.",
+    "source": {
+      "title": "Mug blanc",
+      "videoTitle": "Mug blanc",
+      "description": "Un mug blanc en céramique sans logo, sur une table en bois. Présenter sa forme, sa texture et son anse.",
+      "scenes": [
+        "A white ceramic mug rests on a wooden table.",
+        "Close-up of the smooth ceramic surface.",
+        "Show the curved handle."
+      ]
+    },
+    "profile": {
+      "language": "fr",
+      "tone": "Naturel et simple"
+    },
+    "seconds": 76.491,
+    "events": [
+      {
+        "message": "Local editorial writing failed.",
+        "context": {
+          "reason": "invalid"
+        }
+      }
+    ],
+    "monotonic_seconds": 77.555
+  },
+  "diagnosticResponse": {
+    "model": "qwen3:8b",
+    "created_at": "2026-10-27T13:50:44.2586993Z",
+    "message": {
+      "role": "assistant",
+      "content": "{\n  \"youtube\": {\n    \"title\": \"Mug blanc en céramique\",\n    \"description\": \"Découvrez ce mug blanc en céramique sans logo, posé sur une table en bois. Son design sobre et élégant se distingue par sa forme ronde, sa texture lisse et son anse courbée. Un accessoire de table minimaliste et intemporel. #mugblanc #ceramique #décorationtableau #objetdesign #décorationintérieure #mugminimaliste #décojardin #décorationtable #designsobre #objetdecoration #mugen céramique #décorationnaturelle #objetsdesign #mugdesign #décorationcuisine #mugminimal #décojardin #objetsdesign #mugblancen céramique #décorationtable #décorationsimple #mugnaturel #mugdesignsobre #mugpourdécoration #objetsdesignsobre #décorationcuisine #mugen céramique #décorationnaturelle #mugdesign #objetsdesign #décorationsimple #mugpourdéco #mugdesignsobre #décorationtable #mugminimaliste #décorationnaturelle #mugdesign #objetsdesignsobre #mugpourdéco #décorationcuisine #décorationtable #mugdesign #objetsdesignsobre #mugpourdéco #décorationnaturelle #mugdesignsobre #décorationtable #mugminimaliste #mugdesign #objetsdesignsobre #décorationcuisine #mugpourdéco #décorationtable #mugdesignsobre #mugminimaliste #décorationnaturelle #mugdesign #objetsdesignsobre #décorationcuisine #mugpourdéco #décorationcru\",\n    \"hashtags\": [\"mugblanc\", \"ceramique\", \"décorationtableau\", \"objetdesign\", \"décorationintérieure\"]\n  },\n  \"instagram\": {\n    \"caption\": \"Un mug blanc en céramique, posé sur une table en bois. Son design sobre et élégant se distingue par sa forme ronde, sa texture lisse et son anse courbée. Un accessoire de table minimaliste et intemporel.\",\n    \"hashtags\": [\"mugblanc\", \"ceramique\", \"décorationtableau\", \"objetdesign\", \"décorationintérieure\"]\n  },\n  \"tiktok\": {\n    \"caption\": \"Mug blanc en céramique, design sobre et élégant. Texture lisse, anse courbée. Un accessoire de table intemporel.\",\n    \"hashtags\": [\"mugblanc\", \"ceramique\", \"décorationtableau\", \"objetdesign\", \"décorationintérieure\"]\n  }\n}"
+    },
+    "done": true,
+    "done_reason": "stop",
+    "total_duration": 76597321600,
+    "load_duration": 11540530300,
+    "prompt_eval_count": 337,
+    "prompt_eval_cached_count": 0,
+    "prompt_eval_duration": 731577000,
+    "eval_count": 617,
+    "eval_duration": 64297701000
+  }
+}
