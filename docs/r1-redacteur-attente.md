@@ -1,6 +1,47 @@
 # R1 — Fiabilité du rédacteur : suivi du lot
 
-## État courant — R1.3 terminé, 27 octobre 2026
+## État courant — R1.4 terminé, 27 octobre 2026
+
+Les tests de concurrence et d'interruption sont livrés : **14 tests / 236 assertions réussis**. Prochain point **R1.5**, revue de clôture de tout R1 et contrôles finaux avant de commencer R2. Aucun changement de code applicatif, de configuration, de schéma ou d'assets dans R1.4.
+
+### Objectif, composants et flux R1.4
+
+`tests/Functional/StoryProposalConcurrencyTest.php` orchestre plusieurs processus PHP et vérifie les états persistés. `tests/Fixtures/story-proposal-process.php`, hors du répertoire public, démarre un kernel Symfony de test autonome pour créer une demande, traiter un identifiant ou consommer un message avec le vrai Worker Symfony et le transport Doctrine. Chaque connexion vérifie `shortflow_test` avant toute opération ; aucun worker de développement n'est arrêté.
+
+Les enfants remplacent les clients vidéo/sociaux/texte par des doubles HTTP. Le rédacteur conserve son vrai verrou local ; un `TMPDIR` propre au test, partagé par ses enfants, isole ce verrou des autres traitements. Des fichiers servent de barrières pour suspendre exactement un appel ou un événement du worker. Les courses d'admission et de claim passent par de vrais verrous PostgreSQL : le parent attend de voir les deux PIDs distincts en attente de verrou avant de libérer la barrière, sans se fier à une simple pause arbitraire.
+
+Flux : PHPUnit crée des données synthétiques → démarre les kernels enfants → synchronise leur concurrence → libère les barrières ou envoie SIGKILL à l'enfant ciblé → vérifie résultat, nombre d'appels et messages → arrête les enfants restants et nettoie seulement le répertoire temporaire du test. Aucune requête vidéo ni sociale ; chaque cas vérifie aussi que les tables de génération/publication et les autres files sont restées vides.
+
+| Contrat vérifié en R1.4 | Preuve |
+| --- | --- |
+| Même propriétaire, requêtes simultanées identiques | Même identifiant, une proposition et un message |
+| Même propriétaire, types concurrents différents | Une admission, un refus, aucun appel texte |
+| Neuf places occupées, deux propriétaires demandent la dernière | Une admission et un refus, dix propositions/messages au total |
+| Deux processus traitent le même identifiant | Un seul claim et un seul ensemble d'appels, scénario et éditorial |
+| Deux propriétaires distincts | Résultats privés ; moteur local partagé occupé signalé au second, nouvelle demande humaine réussie après libération |
+| Ancien appel suspendu, expiration depuis un autre processus et remplacement | Résultat ancien rejeté, deuxième appel scénario empêché, nouvelle demande intacte et traitable |
+| SIGKILL avant claim, message repris après 601 s logiques | Premier traitement permis, attente distincte de l'exécution |
+| SIGKILL avant claim, attente portée à une heure | Échec d'attente, aucun appel avant une nouvelle demande volontaire |
+| SIGKILL pendant scénario, scènes ou éditorial | Redélivrance sans rejouer les appels ; échec d'exécution puis nouvelle demande humaine réussie |
+| SIGKILL après résultat prêt, avant acquittement | Résultat inchangé et acquittement à la reprise, aucun nouvel appel |
+
+### Limites exactes des preuves
+
+- L'éligibilité à la redélivrance est accélérée en antidatant uniquement `delivered_at` des messages synthétiques ; l'heure système n'est pas modifiée et le test n'attend pas réellement dix minutes. Le transport configuré reste à 600 s, au-delà du total d'exécution de 420 s.
+- Le cas inter-processus du résultat tardif prouve le rafraîchissement de l'état expiré ailleurs ; les bornes temporelles autonomes restent couvertes par les tests `StoryProposalLifecycleTest` et `StoryProposalQueueTest`.
+- Le vrai Worker utilise ici un dispatcher minimal pour placer les barrières : la commande complète `messenger:consume`, ses listeners opérationnels, son lancement Docker et sa surveillance ne sont pas tous rejoués par ce test.
+- Le verrou `flock` appartient au répertoire temporaire local, pas à un moteur distribué. Deux processus partageant ce verrou ne font pas deux inférences simultanées : le second obtient « occupé » et doit demander explicitement une nouvelle proposition. Ne pas supprimer cette protection pour rendre artificiellement un test parallèle vert.
+- L'admission de dix propositions encore valides ne borne pas les messages physiques expirés, les requêtes déjà bloquées ou les préparations récurrentes directes. Capacité réelle, topologie et supervision restent à vérifier en R8.
+
+### Rejouer et comprendre Symfony
+
+Après installation Docker et migration de `shortflow_test` selon le README : `docker compose exec -T -e APP_ENV=test -e APP_DEBUG=0 php php bin/phpunit tests/Functional/StoryProposalConcurrencyTest.php`. Aucun modèle Ollama ni crédit fournisseur requis. Les autres suites qui nettoient cette base ne doivent pas tourner en parallèle. Les tests nécessitent PostgreSQL et les signaux des conteneurs Linux PHP du projet.
+
+Un transport Messenger garde son message jusqu'à l'acquittement. Un arrêt du processus peut donc provoquer une nouvelle livraison du même message : le handler doit consulter l'état durable et rendre le traitement idempotent. Le verrou de ligne décide quel processus peut prendre un travail ; la transaction doit être terminée avant l'inférence. Doctrine garde aussi des objets en mémoire : rafraîchir l'entité sous verrou est indispensable pour ne pas enregistrer un résultat à partir d'un ancien état.
+
+Analyse statique des deux nouveaux fichiers réussie ; style Symfony appliqué. Journaux de tests locaux ignorés `artifacts/r1-4-focused-final.log` et `r1-4-phpstan-tests.log`. Revue indépendante ciblée : aucun blocage trouvé, limites ci-dessus explicitées. Les contrôles complets et la décision globale de sortie R1 sont consignés séparément en R1.5.
+
+## Historique — R1.3 terminé
 
 Les états du rédacteur et la reprise de suivi sont clarifiés. **Prochain point : R1.4**, vérifications de plusieurs propriétaires, worker interrompu, travail retardé et résultat tardif, notamment concurrence multi-processus. R1.5 et la livraison globale de R1 restent à faire. Les délais et la migration de R1.2 sont conservés ; R1.3 n'ajoute aucune migration.
 

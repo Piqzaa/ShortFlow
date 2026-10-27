@@ -4,9 +4,9 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** lot R1 en cours ; R1.1–R1.3 terminés, états et reprise du suivi clarifiés. R1.4/R1.5 restent à faire.
+- **Phase actuelle :** lot R1 en cours ; R1.1–R1.4 terminés. R1.5, revue globale et contrôles de clôture, en cours.
 - **Dernière validation applicative :** R1.3, suite complète 653 tests / 7 808 assertions réussis et 152 tests frontend ; commit à retrouver via `git log --oneline --grep="feat: clarify writing progress and recovery"`. La référence `d3e4700` reste le socle historique d'avant R1.
-- **Prochaine tâche exacte : `R1.4`**, propriétaires multiples, retard, résultat tardif, worker interrompu et reprise, notamment concurrence multi-processus ; voir [le suivi R1](r1-redacteur-attente.md).
+- **Prochaine tâche exacte : `R1.5`**, revue globale de R1 et contrôles finaux ; voir [le suivi R1](r1-redacteur-attente.md). R1.4 : 14 tests multi-processus / 236 assertions réussis.
 - **Validation actuelle :** reproduction verte, recette simulée desktop/mobile et revue ciblée sans blocage. Migration `Version20261027160000` de R1.2 appliquée en test/dev ; aucune nouvelle migration R1.3. Lot R1 pas encore livré entièrement.
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
@@ -27,6 +27,7 @@ Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre
 6. Conserver les sources et préparations, textes humains, validations, comptes destinataires, isolation propriétaire, confirmations de coûts et limites de récurrence. Aucune suppression de données pour appliquer une nouvelle offre.
 7. Revues indépendantes ciblées lors des lots importants, sans modifier simultanément les mêmes fichiers. Les tests de base utilisent exclusivement `shortflow_test`, migrations appliquées avant PHPUnit ; aucune suite DB concurrente sur cette base.
 8. Pas de changement d'architecture/framework ni de service ajouté sans problème démontré. Garder le monolithe Symfony/Twig/Stimulus et l'orchestration existante.
+9. Après **chaque grand lot R**, réaliser une revue de clôture avant de commencer le suivant : confronter le résultat à toutes ses tâches et à sa porte de sortie, rechercher omissions et régressions, relire les protections, examiner les preuves de tests et la recette pertinente. Faire intervenir un agent indépendant en lecture seule, consigner constats/correctifs/limites et décision de sortie dans le journal. Un défaut bloquant empêche de déclarer le lot terminé. Cette revue globale ne se limite pas aux vérifications de chaque sous-tâche Rn.n ; les points de revue déjà prévus en fin de lot la portent.
 
 Une preuve de fin de lot indique au minimum : tâches, comportement livré, fichiers principaux, commandes et résultats exacts, recette desktop/mobile pertinente, limites restantes, commit, push effectué ou non, prochaine tâche et décision attendue. Ne jamais recopier une ancienne suite comme si elle venait d'être exécutée.
 
@@ -35,7 +36,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | Lot | Objectif | État | Porte avant le suivant |
 | --- | --- | --- | --- |
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
-| R1 | Attente, exécution et reprise du rédacteur | En cours : R1.1–R1.3 terminés, R1.4 à faire | Une attente valide n'est plus confondue avec une exécution bloquée |
+| R1 | Attente, exécution et reprise du rédacteur | En cours : R1.1–R1.4 terminés, clôture R1.5 en cours | Une attente valide n'est plus confondue avec une exécution bloquée |
 | R2 | Qualité des scénarios, dialogues et textes | À faire | Corpus rejoué, écarts signalés, textes humains préservés |
 | R3 | Studio/Séries plus simples et compacts | À faire | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
@@ -65,7 +66,7 @@ Dépendance : R0. Preuve : [T4 de l'audit technique](audit-global-20261027-techn
 - [x] **R1.1** Ajouter une reproduction automatisée déterministe de la demande `queued` de plus de dix minutes, sans inférence ni appel externe. Distinguer explicitement le résultat actuel incorrect du comportement attendu. [Preuve : 12 cas, six échecs attendus, moteur inchangé](r1-redacteur-attente.md).
 - [x] **R1.2** Séparer temps en file et temps d'exécution/phase ; définir admission et délais explicites. Préserver reprise, nouvelle demande et protection contre un ancien résultat qui écraserait le nouveau. [Horloge, délais, admission, migration et preuves](r1-redacteur-attente.md).
 - [x] **R1.3** Afficher des états compréhensibles : en attente, rédaction, préparation des plans/textes, résultat ou erreur ; permettre de quitter puis retrouver le travail. [Étapes, reprise GET, protections et recette desktop/mobile](r1-redacteur-attente.md).
-- [ ] **R1.4** Vérifier plusieurs propriétaires, travail retardé, résultat tardif, worker interrompu et reprise ; aucun double lancement ni génération vidéo déclenchée pour réparer un texte.
+- [x] **R1.4** Vérifier plusieurs propriétaires, travail retardé, résultat tardif, worker interrompu et reprise ; aucun double lancement ni génération vidéo déclenchée pour réparer un texte. [14 cas, barrières PostgreSQL, SIGKILL et redélivrance simulée](r1-redacteur-attente.md).
 - [ ] **R1.5** Revue ciblée, contrôles adaptés, documentation Symfony et commit de fin de lot ; actualiser le repère de reprise.
 
 Sortie : attente valide traitée comme telle, exécution bloquée bornée, tests simulés réussis et messages fidèles aux phases. Ne pas résoudre le défaut uniquement en augmentant un timeout.
@@ -114,8 +115,8 @@ Sortie : lectures et rendu des séries bornés ; résultats comparables sans pro
 
 Dépendance : R4. Références : [matrice de l'audit interface](audit-global-20261027-interface.md).
 
-- [ ] **R5.1** Vérifier les écrans principaux à 320, 390, 768 et 1280 px : vide/rempli, long titre, erreur, envoi actif, brouillon, compte déconnecté et contenu ancien. Inclure montage/export et historique, pas seulement les écrans heureux.
-- [ ] **R5.2** Améliorer la lisibilité de la navigation étroite ; conserver menu, accès compte et toutes les destinations. Vérifier barres fixes, safe areas et clavier virtuel sur téléphone réel.
+- [ ] **R5.1** Vérifier les écrans principaux à 320, 390, 768 et 1280 px : vide/rempli, long titre, erreur, envoi actif, brouillon, compte déconnecté et contenu ancien. Inclure landing publique, montage/export et historique, pas seulement les écrans heureux. Reproduire le chevauchement du téléphone et du texte/CTA de la landing signalé par le propriétaire le 27 octobre ; vérifier animations, état statique et reduced motion, portrait/paysage et zoom.
+- [ ] **R5.2** Améliorer la lisibilité de la navigation étroite ; conserver menu, accès compte et toutes les destinations. Inclure la navigation publique : connexion et inscription accessibles sur mobile, avec menu utilisable au clavier et repli sans JS si nécessaire. Vérifier barres fixes, safe areas et clavier virtuel sur téléphone réel.
 - [ ] **R5.3** Vérifier clavier complet, focus, libellés, annonces d'état, erreurs ouvrant leurs panneaux, contraste, zoom 200 %, lecteur d'écran ciblé et reduced motion système.
 - [ ] **R5.4** Vérifier fallback sans JS, médias manquants, chargement lent/erreur et actions désactivées avec explication. Aucune action payante/sociale ne dépend uniquement d'une protection frontend.
 - [ ] **R5.5** Corriger les défauts bloquants, consigner la matrice et les limites, revue et commit.
@@ -126,7 +127,7 @@ Sortie : parcours principaux utilisables dans les états contrôlés. Ne pas ann
 
 Dépendance : R5. Référence : [audit marché/SEO](audit-global-20261027-marche-seo.md).
 
-- [ ] **R6.1** Corriger les mentions obsolètes, descriptions SEO et accès connexion mobile ; conserver identité, animations et indication des démonstrations.
+- [ ] **R6.1** Corriger les mentions obsolètes, descriptions SEO et accès connexion mobile ; conserver identité, animations et indication des démonstrations. Recontrôler les défauts publics R5.1/R5.2 : connexion trouvable, navigation mobile et aucune superposition qui gêne lecture ou CTA ; ne pas réintroduire ces défauts lors des changements de contenu.
 - [ ] **R6.2** Expliquer en HTML les parcours import/création/série, coûts VydFlow et fournisseur séparés, rôle des validations et statut bêta. Préparer une démonstration réelle autorisée ; aucun résultat fabriqué.
 - [ ] **R6.3** Créer ou regrouper les contenus fonctionnement, coûts/bêta, réseaux compatibles et premiers pas. Aucun tarif provisoire affiché comme offre achetable.
 - [ ] **R6.4** Ajouter aide/contact accessibles depuis landing et studio : adresse lisible/copiable et mailto ; formulaire facultatif. Réception réelle et délai de support à vérifier avec le propriétaire avant ouverture, sans inventer de disponibilité.
@@ -297,6 +298,21 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - Recette simulée desktop 1440 × 900 / mobile 390 × 844 : attente, rédaction, scènes, retour après navigation, textes, coupure/reprise clavier, résultat prêt sans perte du titre modifié et échec confirmé. Aucun POST accepté par le serveur de recette, aucun appel réel. Revue indépendante sans blocage.
 - Bilan pédagogique et protocole dans [le suivi R1](r1-redacteur-attente.md). Cache dev actualisé ; aucun changement de schéma. Six tâches sur 76 désormais cochées, R1 toujours en cours.
 - Commit local à retrouver avec `git log --oneline --grep="feat: clarify writing progress and recovery"` ; aucun push. **Prochaine tâche exacte : R1.4.** Aucun test vidéo payant nécessaire pour cette suite.
+
+### 27 octobre 2026 — Revue globale obligatoire et signalement mobile
+
+- Le propriétaire demande une analyse de clôture après chaque **grand R**, avant le suivant. Règle 9 ajoutée ; elle complète les revues de sous-tâches et s'applique notamment à la future clôture R1.5. Aucun grand lot supplémentaire déclaré terminé par cette décision.
+- Capture de landing fournie par le propriétaire : navigation mobile sans connexion/menu apparent, téléphone qui chevauche la description et le CTA. Signalement visuel confirmé sur la capture, sans prétendre reproduire son viewport exact ni exécuter déjà la recette navigateur de correction.
+- La connexion mobile figurait déjà en R6.1. Landing et défauts précis sont désormais explicités en R5.1/R5.2, puis à revérifier en R6.1. Les animations et leur repli doivent rester utilisables. Ces tâches restent non cochées ; aucun correctif landing n'est mélangé à R1.4.
+- Suite active inchangée : R1.4, tests de concurrence/interruption sans API réelle. Intervention humaine à demander seulement si une future porte l'exige (téléphone réel, compréhension produit, accès externes ou essai payant autorisé).
+
+### 27 octobre 2026 — R1.4 terminé, concurrence et interruption
+
+- Deux nouveaux fichiers de tests : orchestrateur PHPUnit et fixture de processus autonome, chaque connexion gardée sur `shortflow_test`. Aucun code applicatif, schéma, configuration ni asset modifié.
+- 14 tests / 236 assertions réussis : même propriétaire, dernière place globale, double claim, propriétaires isolés, moteur occupé, remplacement tardif, six interruptions/reprises via Worker/transport réels et SIGKILL. Tables vidéo/sociales et files étrangères vérifiées vides.
+- La redélivrance est accélérée uniquement sur les messages de test ; pas de validation du temps mural de dix minutes ou de toute la commande opérationnelle. Le mutex est local au TMPDIR ; le second propriétaire peut recevoir « occupé », puis réessayer volontairement. Aucun renvoi automatique ni capacité réelle promise.
+- PHPStan ciblé réussi, style appliqué et revue indépendante sans blocage. Preuves et guide Symfony dans [le suivi R1](r1-redacteur-attente.md).
+- Commit local `test: verify story concurrency and worker recovery`, aucun push. **Suite immédiate : R1.5**, revue globale et contrôles complets avant R2 ; cette continuation les exécute aussi conformément à la règle 9 demandée.
 
 ### Modèle à recopier à chaque fin de lot ou interruption
 
