@@ -1,6 +1,14 @@
 # R1 — Fiabilité du rédacteur : suivi du lot
 
-## État courant — R1.4 terminé, 27 octobre 2026
+## État courant — R1 terminé, 27 octobre 2026
+
+**R1.1 à R1.5 sont terminés.** [La revue globale de clôture](r1-revue-cloture.md) confronte chaque tâche à ses preuves, consigne les relectures indépendantes backend/interface et les limites à reprendre en R8. Aucun blocage restant identifié dans le périmètre R1. **Prochain point exact : R2.1**, pas encore commencé.
+
+Contrôles finaux : **667 tests PHP / 8 044 assertions** et **152 tests frontend**, tous réussis. Les 14 tests concurrents / 236 assertions ont passé le contrôle final, deux répétitions puis la suite complète. PHPStan applicatif et tests R1.4, CS-Fixer, lints Symfony, schéma test, vérification JS et build réussis. L'avertissement Vite de taille Three.js reste connu. Aucune nouvelle recette navigateur après R1.3 : interface inchangée, tests frontend rejoués.
+
+Le correctif applicatif demeure celui de R1.2/R1.3 ; R1.4 ajoute les tests et R1.5 le bilan. Migration additive R1.2 inchangée, aucune migration supplémentaire. Commits locaux : `818261c` pour R1.4, puis `docs: close R1 writing reliability review` pour la clôture. Aucun push, appel vidéo payant, publication réelle, activation ou intervention manuelle du propriétaire nécessaire pour ces vérifications.
+
+## Historique — R1.4 terminé
 
 Les tests de concurrence et d'interruption sont livrés : **14 tests / 236 assertions réussis**. Prochain point **R1.5**, revue de clôture de tout R1 et contrôles finaux avant de commencer R2. Aucun changement de code applicatif, de configuration, de schéma ou d'assets dans R1.4.
 

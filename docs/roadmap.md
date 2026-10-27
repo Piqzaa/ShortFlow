@@ -4,10 +4,10 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** lot R1 en cours ; R1.1–R1.4 terminés. R1.5, revue globale et contrôles de clôture, en cours.
-- **Dernière validation applicative :** R1.3, suite complète 653 tests / 7 808 assertions réussis et 152 tests frontend ; commit à retrouver via `git log --oneline --grep="feat: clarify writing progress and recovery"`. La référence `d3e4700` reste le socle historique d'avant R1.
-- **Prochaine tâche exacte : `R1.5`**, revue globale de R1 et contrôles finaux ; voir [le suivi R1](r1-redacteur-attente.md). R1.4 : 14 tests multi-processus / 236 assertions réussis.
-- **Validation actuelle :** reproduction verte, recette simulée desktop/mobile et revue ciblée sans blocage. Migration `Version20261027160000` de R1.2 appliquée en test/dev ; aucune nouvelle migration R1.3. Lot R1 pas encore livré entièrement.
+- **Phase actuelle :** **R1 terminé**, R1.1–R1.5 cochés ; revue globale de sortie sans blocage identifié. R2 pas encore commencé.
+- **Dernière validation applicative :** R1.5, suite complète **667 tests / 8 044 assertions** et **152 tests frontend** réussis ; tests R1.4 dans `818261c`, clôture à retrouver via `git log --oneline --grep="docs: close R1 writing reliability review"`. La référence `d3e4700` reste le socle historique d'avant R1.
+- **Prochaine tâche exacte : `R2.1`**, cas de non-régression des défauts capturés de qualité narrative/éditoriale ; voir [la revue de clôture R1](r1-revue-cloture.md).
+- **Validation actuelle :** reproduction verte, concurrence PostgreSQL/SIGKILL simulée et reprise vérifiées ; revue backend et interface sans blocage, limites transférées en R8. Migration `Version20261027160000` de R1.2 appliquée en test/dev ; aucune migration supplémentaire R1.3–R1.5. Recette desktop/mobile R1.3 conservée, frontend inchangé et tests rejoués.
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
 - **Publications Free confirmées :** cinq par mois ; une vidéo diffusée sur plusieurs réseaux dans la même publication compte une seule fois. L'ancienne recommandation de décompte par destinataire est écartée.
@@ -15,7 +15,7 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 - **Décisions en attente :** quotas précis de l'essai Studio, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
-Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; R1.3 est maintenant terminé. Les autres points restent suivis un par un. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
+Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Les autres lots restent suivis dans l'ordre, R2.1 en premier. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
 
 ## Règles de suivi à respecter
 
@@ -36,7 +36,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | Lot | Objectif | État | Porte avant le suivant |
 | --- | --- | --- | --- |
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
-| R1 | Attente, exécution et reprise du rédacteur | En cours : R1.1–R1.4 terminés, clôture R1.5 en cours | Une attente valide n'est plus confondue avec une exécution bloquée |
+| R1 | Attente, exécution et reprise du rédacteur | Terminé, revue globale et contrôles validés | Attente/exécution distinctes, traitements bornés, reprise sans double appel |
 | R2 | Qualité des scénarios, dialogues et textes | À faire | Corpus rejoué, écarts signalés, textes humains préservés |
 | R3 | Studio/Séries plus simples et compacts | À faire | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
@@ -67,7 +67,7 @@ Dépendance : R0. Preuve : [T4 de l'audit technique](audit-global-20261027-techn
 - [x] **R1.2** Séparer temps en file et temps d'exécution/phase ; définir admission et délais explicites. Préserver reprise, nouvelle demande et protection contre un ancien résultat qui écraserait le nouveau. [Horloge, délais, admission, migration et preuves](r1-redacteur-attente.md).
 - [x] **R1.3** Afficher des états compréhensibles : en attente, rédaction, préparation des plans/textes, résultat ou erreur ; permettre de quitter puis retrouver le travail. [Étapes, reprise GET, protections et recette desktop/mobile](r1-redacteur-attente.md).
 - [x] **R1.4** Vérifier plusieurs propriétaires, travail retardé, résultat tardif, worker interrompu et reprise ; aucun double lancement ni génération vidéo déclenchée pour réparer un texte. [14 cas, barrières PostgreSQL, SIGKILL et redélivrance simulée](r1-redacteur-attente.md).
-- [ ] **R1.5** Revue ciblée, contrôles adaptés, documentation Symfony et commit de fin de lot ; actualiser le repère de reprise.
+- [x] **R1.5** Revue ciblée, contrôles adaptés, documentation Symfony et commit de fin de lot ; actualiser le repère de reprise. [Revue globale, preuves, limites et décision de sortie](r1-revue-cloture.md).
 
 Sortie : attente valide traitée comme telle, exécution bloquée bornée, tests simulés réussis et messages fidèles aux phases. Ne pas résoudre le défaut uniquement en augmentant un timeout.
 
@@ -154,11 +154,11 @@ Sortie : périmètre produit assumé et documenté, preuves de compréhension et
 Dépendance : R7. Les démarches peuvent être longues ; à ce lot, le propriétaire choisit les comptes, le domaine, l'hébergement et le budget. Créer/configurer un service externe, envoyer un email réel ou exposer publiquement demande l'autorisation correspondante.
 
 - [ ] **R8.1** Établir une matrice datée YouTube/Instagram/TikTok : revue/audit, comptes tiers autorisés, types de compte, permissions, visibilité et capacités. Préparer les dossiers requis ; ne pas traiter les réussites sur les comptes du propriétaire comme une ouverture à tous.
-- [ ] **R8.2** Choisir une cible simple de production et ses coûts : web/HTTPS, workers, Ollama ou solution texte retenue, stockage privé, trafic, transcodage et transcription. Définir la capacité initiale et les limites de la bêta avant paiement.
+- [ ] **R8.2** Choisir une cible simple de production et ses coûts : web/HTTPS, workers, Ollama ou solution texte retenue, stockage privé, trafic, transcodage et transcription. Définir la capacité initiale et les limites de la bêta avant paiement. Reprendre les limites de [la clôture R1](r1-revue-cloture.md) : mutex local au TMPDIR, topologie réelle des workers, récurrences hors admission manuelle et capacité du moteur.
 - [ ] **R8.3** Préparer un environnement de production séparé du Compose local : serveur adapté, `prod`, debug désactivé, assets construits, secrets privés, origine/proxies/cookies, migrations et déploiement reproductibles. Aucun tunnel de développement assimilé à la production.
 - [ ] **R8.4** Rendre l'expéditeur email configurable et configurer un envoi réel autorisé ; vérifier confirmation/récupération, liens du bon domaine et panne du transport. Ne pas exposer Mailpit.
 - [ ] **R8.5** Définir et tester sauvegarde/restauration de base + médias privés + clés séparées ; reprise sur environnement isolé avec workers et sorties externes désactivés. Fixer rétention et objectifs de reprise.
-- [ ] **R8.6** Mettre en place disponibilité web, état/âge des files, travaux bloqués, échecs métier et espace disque, alertes opérateur et guide d'intervention. Ne pas rejouer automatiquement une soumission incertaine.
+- [ ] **R8.6** Mettre en place disponibilité web, état/âge des files, travaux bloqués, échecs métier et espace disque, alertes opérateur et guide d'intervention. Ne pas rejouer automatiquement une soumission incertaine. Vérifier la commande et les listeners opérationnels du worker sur la cible ; la recette R1 du Worker à dispatcher minimal ne les couvre pas entièrement.
 - [ ] **R8.7** Finaliser données/support/confiance selon les prestataires choisis : conservation, suppression/export, confidentialité, coordonnées et responsabilités. Vérifier l'exécution des procédures, pas seulement leurs textes.
 - [ ] **R8.8** Réaliser les essais de comptes tiers et sociaux uniquement dans le périmètre autorisé ; mesurer une charge synthétique réaliste sur la cible choisie. Consigner les restrictions restant applicables.
 - [ ] **R8.9** Revue d'exploitation/sécurité, dossier des preuves et commit.
@@ -313,6 +313,15 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - La redélivrance est accélérée uniquement sur les messages de test ; pas de validation du temps mural de dix minutes ou de toute la commande opérationnelle. Le mutex est local au TMPDIR ; le second propriétaire peut recevoir « occupé », puis réessayer volontairement. Aucun renvoi automatique ni capacité réelle promise.
 - PHPStan ciblé réussi, style appliqué et revue indépendante sans blocage. Preuves et guide Symfony dans [le suivi R1](r1-redacteur-attente.md).
 - Commit local `test: verify story concurrency and worker recovery`, aucun push. **Suite immédiate : R1.5**, revue globale et contrôles complets avant R2 ; cette continuation les exécute aussi conformément à la règle 9 demandée.
+
+### 27 octobre 2026 — R1.5, clôture globale de R1
+
+- Chaque tâche R1.1–R1.4 confrontée à ses preuves ; relectures indépendantes backend et interface sans blocage restant identifié. [Analyse de clôture versionnée](r1-revue-cloture.md), avec pédagogie, limites de la reprise et éléments à vérifier en production.
+- Tests R1.4 finaux puis deux répétitions : 14 / 236 à chaque passage. Suite PHP complète : **667 / 8 044** ; frontend : **152** tests. Tous réussis, aucune suite DB concurrente, `shortflow_test` vérifiée et migrations à jour.
+- PHPStan applicatif et deux nouveaux fichiers de tests, style, lints conteneur/YAML/Twig, schéma test, `npm run check`, `npm run build`, liens locaux et diff propres. Avertissement Vite Three.js conservé ; pas de nouvelle recette navigateur depuis R1.3, code frontend inchangé.
+- Limites affectées explicitement à R8.2/R8.6/R8.8 : capacité réelle, topologie/mutex local, récurrences hors admission, commande/listeners opérationnels et surveillance. La correction locale ne promet ni débit commercial ni coordination multi-hôtes.
+- **Grand R1 terminé, huit tâches sur 76 cochées.** Commit de clôture à retrouver via `git log --oneline --grep="docs: close R1 writing reliability review"` ; R1.4 dans `818261c`. Aucun push, essai vidéo payant, envoi social, activation réelle ou déploiement.
+- **Prochaine tâche exacte : R2.1**, non commencée. Aucune intervention manuelle requise pour clôturer R1 ; solliciter le propriétaire quand une future validation réelle le nécessite.
 
 ### Modèle à recopier à chaque fin de lot ou interruption
 
