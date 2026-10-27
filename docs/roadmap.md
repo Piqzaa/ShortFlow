@@ -9,7 +9,8 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 - **Prochaine tâche exacte : `R1.1`**, lire et reproduire l'expiration prématurée des rédactions en attente.
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
-- **Décisions en attente :** unité des 5 publications Free, plafonds des offres payantes et ressources de calcul/stockage. Recommandation de comptage par compte destinataire exposée au propriétaire, pas encore validée. Voir les propositions commerciales plus bas.
+- **Publications Free confirmées :** cinq par mois ; une vidéo diffusée sur plusieurs réseaux dans la même publication compte une seule fois. L'ancienne recommandation de décompte par destinataire est écartée.
+- **Décisions en attente :** accès Studio/Séries par offre, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
 La demande du 27 octobre porte sur cette préparation documentaire. Le démarrage de l'implémentation se fera ensuite, point par point, sur instruction du propriétaire. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
@@ -167,7 +168,7 @@ Dépendance : R8 pour les coûts/capacités. La direction commerciale demandée 
 
 | Offre | Prix mensuel proposé | Engagement annuel proposé | Comptes confirmés | Publications |
 | --- | --- | --- | --- | --- |
-| Free | 0 € | Sans abonnement payant | 1 YouTube + 1 Instagram + 1 TikTok | 5 par mois ; unité à confirmer |
+| Free | 0 € | Sans abonnement payant | 1 YouTube + 1 Instagram + 1 TikTok | **5 publications multi-réseaux par mois**, même vidéo diffusée ensemble comptée une fois |
 | Creator | 12,99 €/mois | 9,99 €/mois équivalent, soit **119,88 €/an** facturés annuellement | 3 YouTube + 3 Instagram + 3 TikTok, soit 9 maximum | Plafond à décider |
 | Pro (nom provisoire) | 24,99 €/mois | 19,99 €/mois équivalent, soit **239,88 €/an** facturés annuellement | 9 YouTube + 9 Instagram + 9 TikTok, soit 27 maximum | Plafond à décider |
 
@@ -176,10 +177,11 @@ Les montants sont des propositions du propriétaire, pas une offre publiée. Pri
 **Questions encore ouvertes, à ne pas trancher silencieusement :**
 
 - Limite des comptes **résolue le 27 octobre** par réponse explicite du propriétaire : plafond par plateforme. Cette décision reste acquise ; ne pas la redemander à la reprise.
-- Une vidéo envoyée sur trois comptes consomme-t-elle trois publications ou une seule ? Le propriétaire demande une recommandation. Proposition : une unité par compte destinataire, avec quantité annoncée avant confirmation ; une reprise technique de la même soumission ne doit pas créer une deuxième consommation. L'autre interprétation demande une unité de regroupement explicite. La validation de l'unité et du cycle de consommation reste à obtenir avant R10.
+- Unité des publications **résolue le 27 octobre** après comparaison et accord du propriétaire : cinq publications multi-réseaux mensuelles en Free. Une vidéo diffusée ensemble sur YouTube/Instagram/TikTok compte une fois ; cinq vidéos sur les trois réseaux représentent cinq publications et jusqu'à quinze envois. Republier dans une nouvelle préparation constitue une nouvelle publication ; une reprise de la même soumission ne compte pas une deuxième fois. R9.3 définit l'identité durable du regroupement, le mois, les réservations et les échecs ; ne pas déduire l'unité du nombre de requêtes HTTP.
+- Accès aux fonctions **en discussion** : le propriétaire demande si le Free doit exclure Studio IA et Séries. Recommandation de l'agent, non validée : accès d'essai limité au Studio pour découvrir la création, avec compte fournisseur et coût vidéo propres à l'utilisateur ; Séries/récurrence réservées aux offres payantes. Quotas d'essai, rédaction, stockage et export à définir avant implémentation. Ne pas traiter cette proposition comme une restriction décidée.
 - Quels plafonds mensuels payants, stockage, durée/poids d'import, exports/montage, rédaction locale et récurrences ? Ne pas annoncer « illimité » sans capacité et coûts vérifiés. Ne pas inventer 50/100/500 publications ici.
 
-- [ ] **R9.1** Faire confirmer et consigner prix, nom de l'offre supérieure, périodicité annuelle et unité des publications ; reprendre la limite des comptes déjà confirmée par plateforme, avec exemples sans ambiguïté.
+- [ ] **R9.1** Faire confirmer et consigner prix, nom de l'offre supérieure et périodicité annuelle ; reprendre limites de comptes par plateforme et unité multi-réseaux déjà confirmées, avec exemples sans ambiguïté.
 - [ ] **R9.2** Définir la matrice des fonctions/ressources par offre et ses plafonds à partir de R8 ; conserver un parcours Free réellement utile sans obliger un paiement vidéo pour tester l'import/publication.
 - [ ] **R9.3** Définir le mois de quota, fuseau, réservation des programmations futures, consommation effective, échec/annulation/incertitude, reprise sans double compte et vidéos multi-destinations.
 - [ ] **R9.4** Définir montée/descente d'offre, fin d'abonnement, impayé, surquota et anciens comptes connectés : aucune suppression automatique, aucune déconnexion ou publication silencieuse pour rentrer dans une limite.
@@ -253,6 +255,12 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - Réponse explicite : limite de comptes **par plateforme**. Free = 1/1/1 (3 maximum), Creator = 3/3/3 (9 maximum), Pro = 9/9/9 (27 maximum). Pas de nouvelle restriction applicative implémentée.
 - Pour l'unité des publications, le propriétaire demande conseil. Recommandation présentée : compter chaque compte destinataire, indiquer le nombre avant confirmation et dédupliquer les reprises techniques. Cette recommandation n'est pas encore une décision approuvée ; le nombre Free reste proposé à cinq par mois.
 - Mise à jour documentaire uniquement ; aucun lot fonctionnel commencé. **Prochaine tâche de développement inchangée : R1.1**, après instruction de démarrage.
+
+### 27 octobre 2026 — Publications multi-réseaux et accès Free
+
+- Après recommandation de cinq publications plutôt que trois et comparaison des offres gratuites, le propriétaire accepte la formule : **cinq publications multi-réseaux/mois**, un compte de chaque réseau en Free. La recommandation antérieure par destinataire n'est plus retenue.
+- Question actuelle : accès Free au Studio IA et aux Séries. Proposition exposée, encore à valider : essai Studio limité, génération vidéo chez le fournisseur financée par l'utilisateur, Séries/récurrence payantes. Aucun quota d'essai ni droit fonctionnel inventé/implémenté.
+- Mise à jour documentaire uniquement. **Prochaine tâche de développement inchangée : R1.1**, après instruction de démarrage.
 
 ### Modèle à recopier à chaque fin de lot ou interruption
 
