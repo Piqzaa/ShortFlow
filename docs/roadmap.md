@@ -8,7 +8,8 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 - **Dernier état applicatif validé :** `d3e4700` (performance et recette), sur `master` au moment du cadrage.
 - **Prochaine tâche exacte : `R1.1`**, lire et reproduire l'expiration prématurée des rédactions en attente.
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
-- **Décisions en attente :** unité des limites de comptes (par réseau ou au total), unité des 5 publications Free, plafonds des offres payantes et ressources de calcul/stockage. Voir les propositions commerciales plus bas.
+- **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
+- **Décisions en attente :** unité des 5 publications Free, plafonds des offres payantes et ressources de calcul/stockage. Recommandation de comptage par compte destinataire exposée au propriétaire, pas encore validée. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
 La demande du 27 octobre porte sur cette préparation documentaire. Le démarrage de l'implémentation se fera ensuite, point par point, sur instruction du propriétaire. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
@@ -164,21 +165,21 @@ Sortie : périmètre tiers connu, environnement reproductible et reprise testée
 
 Dépendance : R8 pour les coûts/capacités. La direction commerciale demandée le 27 octobre remplace l'ancienne hypothèse à deux offres ; **aucune facturation ni limite nouvelle n'existe encore**.
 
-| Offre | Prix mensuel proposé | Engagement annuel proposé | Comptes proposés | Publications |
+| Offre | Prix mensuel proposé | Engagement annuel proposé | Comptes confirmés | Publications |
 | --- | --- | --- | --- | --- |
 | Free | 0 € | Sans abonnement payant | 1 YouTube + 1 Instagram + 1 TikTok | 5 par mois ; unité à confirmer |
-| Creator | 12,99 €/mois | 9,99 €/mois équivalent, soit **119,88 €/an** facturés annuellement | Jusqu'à 3 ; par plateforme ou total à confirmer | Plafond à décider |
-| Pro (nom provisoire) | 24,99 €/mois | 19,99 €/mois équivalent, soit **239,88 €/an** facturés annuellement | Jusqu'à 9 ; par plateforme ou total à confirmer | Plafond à décider |
+| Creator | 12,99 €/mois | 9,99 €/mois équivalent, soit **119,88 €/an** facturés annuellement | 3 YouTube + 3 Instagram + 3 TikTok, soit 9 maximum | Plafond à décider |
+| Pro (nom provisoire) | 24,99 €/mois | 19,99 €/mois équivalent, soit **239,88 €/an** facturés annuellement | 9 YouTube + 9 Instagram + 9 TikTok, soit 27 maximum | Plafond à décider |
 
 Les montants sont des propositions du propriétaire, pas une offre publiée. Prix affichés TTC/HT, monnaie des factures et traitement fiscal sont à arrêter selon la commercialisation retenue. L'annuel n'est pas « 9,99 € par an ». L'abonnement rémunère le logiciel ; l'IA vidéo reste payée au fournisseur connecté, sans crédits IA inclus ni wallet.
 
 **Questions encore ouvertes, à ne pas trancher silencieusement :**
 
-- Les plafonds 3 et 9 désignent-ils chaque réseau (9/27 comptes possibles au total) ou tous réseaux réunis ? Proposition de cadrage : par plateforme, en cohérence avec Free à un compte de chaque. Cela reste à confirmer.
-- Une vidéo envoyée sur trois comptes consomme-t-elle trois publications ou une seule ? Proposition : une unité par compte destinataire ; l'autre interprétation demande une unité de regroupement explicite. La réponse du propriétaire prime.
+- Limite des comptes **résolue le 27 octobre** par réponse explicite du propriétaire : plafond par plateforme. Cette décision reste acquise ; ne pas la redemander à la reprise.
+- Une vidéo envoyée sur trois comptes consomme-t-elle trois publications ou une seule ? Le propriétaire demande une recommandation. Proposition : une unité par compte destinataire, avec quantité annoncée avant confirmation ; une reprise technique de la même soumission ne doit pas créer une deuxième consommation. L'autre interprétation demande une unité de regroupement explicite. La validation de l'unité et du cycle de consommation reste à obtenir avant R10.
 - Quels plafonds mensuels payants, stockage, durée/poids d'import, exports/montage, rédaction locale et récurrences ? Ne pas annoncer « illimité » sans capacité et coûts vérifiés. Ne pas inventer 50/100/500 publications ici.
 
-- [ ] **R9.1** Faire confirmer et consigner prix, nom de l'offre supérieure, périodicité annuelle, unité des comptes et publications ; aucune ambiguïté dans les exemples.
+- [ ] **R9.1** Faire confirmer et consigner prix, nom de l'offre supérieure, périodicité annuelle et unité des publications ; reprendre la limite des comptes déjà confirmée par plateforme, avec exemples sans ambiguïté.
 - [ ] **R9.2** Définir la matrice des fonctions/ressources par offre et ses plafonds à partir de R8 ; conserver un parcours Free réellement utile sans obliger un paiement vidéo pour tester l'import/publication.
 - [ ] **R9.3** Définir le mois de quota, fuseau, réservation des programmations futures, consommation effective, échec/annulation/incertitude, reprise sans double compte et vidéos multi-destinations.
 - [ ] **R9.4** Définir montée/descente d'offre, fin d'abonnement, impayé, surquota et anciens comptes connectés : aucune suppression automatique, aucune déconnexion ou publication silencieuse pour rentrer dans une limite.
@@ -246,6 +247,12 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - Code applicatif inchangé dans ce cadrage ; contrôles documentaires : 76 identifiants uniques, trois tâches documentaires cochées, prochaine tâche R1.1, neuf cas JSON et diagnostic complets, liens locaux vérifiés et `git diff --check` réussi. Aucune nouvelle suite applicative exécutée. Aucun essai vidéo payant, envoi social, activation réelle, débit client ou déploiement.
 - **Prochain point : R1.1**, après instruction de démarrage du propriétaire. Aucune tâche R1–R12 commencée.
 - Référence du commit documentaire initial : retrouver avec `git log --all --oneline --grep="docs: version audit and deployment roadmap"` après le commit de ce cadrage. Pour la dernière mise à jour du suivi, utiliser `git log -1 -- docs/roadmap.md`. Le statut de push doit être vérifié sur le dépôt distant, jamais déduit d'un commit local.
+
+### 27 octobre 2026 — Précision commerciale du propriétaire
+
+- Réponse explicite : limite de comptes **par plateforme**. Free = 1/1/1 (3 maximum), Creator = 3/3/3 (9 maximum), Pro = 9/9/9 (27 maximum). Pas de nouvelle restriction applicative implémentée.
+- Pour l'unité des publications, le propriétaire demande conseil. Recommandation présentée : compter chaque compte destinataire, indiquer le nombre avant confirmation et dédupliquer les reprises techniques. Cette recommandation n'est pas encore une décision approuvée ; le nombre Free reste proposé à cinq par mois.
+- Mise à jour documentaire uniquement ; aucun lot fonctionnel commencé. **Prochaine tâche de développement inchangée : R1.1**, après instruction de démarrage.
 
 ### Modèle à recopier à chaque fin de lot ou interruption
 
