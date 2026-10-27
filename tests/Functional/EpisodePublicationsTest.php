@@ -217,6 +217,33 @@ final class EpisodePublicationsTest extends WebTestCase
         self::assertSelectorTextContains('.episode-publications', 'Instagram Reels · Échec');
     }
 
+    public function testCalendarSnapshotCountsSourcesWithoutLoadingTheirTexts(): void
+    {
+        $youtube = new YouTubeConnection($this->owner, 'UC'.str_repeat('b', 22), 'Test', 'synthetic', 'synthetic', 86400);
+        $draft = new PublicationDraft($this->owner, 'Suivi léger', new \DateTimeImmutable());
+        $draft->addItem(new \App\Entity\PublicationDraftItem($draft, $this->video, 0));
+        $draft->edit('Suivi léger', ['youtube'], ['youtube' => $youtube->getChannelId()], new \DateTimeImmutable());
+        $draft->beginImmediate(new \DateTimeImmutable());
+        $draft->dispatched(new \DateTimeImmutable());
+        $job = new YouTubePublication($this->owner, $this->video, $youtube, $draft->getSubmissionKey(), 'Milo', '', 'private', false, false);
+        $job->change('published');
+        $this->em->persist($youtube);
+        $this->em->persist($draft);
+        $this->em->persist($job);
+        $this->em->flush();
+        $id = $draft->getId();
+        $key = $draft->getSubmissionKey();
+        $this->em->clear();
+        $loaded = $this->em->find(PublicationDraft::class, $id);
+        $items = $loaded->getItems();
+        self::assertInstanceOf(\Doctrine\ORM\PersistentCollection::class, $items);
+        self::assertFalse($items->isInitialized());
+        $snapshot = static::getContainer()->get(\App\Service\PublicationCalendar::class)->snapshot([$loaded]);
+        self::assertSame('published', $snapshot['states'][$id]);
+        self::assertSame('published', $snapshot['destinations'][$key]['youtube']);
+        self::assertFalse($items->isInitialized());
+    }
+
     public function testStandaloneStudioVideoUsesTheSamePublicationFlow(): void
     {
         $video = new AiEpisode($this->owner, 1, 'Une vidéo studio', '', $this->episode->getPreparationRecipe());

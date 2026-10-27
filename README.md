@@ -1,5 +1,7 @@
 # VydFlow — bêta, studio IA et publication
 
+Navigation et recette, 27 octobre : lectures groupées des états de publication, indications de connexion IA en une lecture, quatre projets récents et autoloader optimisé. Parcours import → programmation → publication simulée vérifié. [Mesures locales, composants et guide Symfony](docs/performance-recette-v1.md).
+
 Sélection de vidéos, 26 octobre : réseaux et créneau propres à chaque vidéo, brouillons indépendants dédupliqués et confirmation individuelle conservée. Migration additive `Version20261026190000`. [Guide Symfony et vérifications](docs/publications-par-video.md). [Audit produit et comptes multiples](docs/audit-produit-concurrence-20261026.md).
 
 Navigation et textes, 26 octobre : diagnostic du debug local, résumés français des plans avec prompts techniques anglais conservés, et proposition supervisée des textes manquants des séries lors de leur préparation de publication. [Parcours et fonctionnement Symfony](docs/navigation-plans-textes-publication.md).

@@ -97,6 +97,87 @@ final class PublicationComposerTest extends WebTestCase
         return $this->client->followRedirect();
     }
 
+    public function testImportedVideoCanBeReviewedScheduledAndTrackedThroughASimulatedPublication(): void
+    {
+        $vault = new TokenVault($_ENV['YOUTUBE_TOKEN_KEY']);
+        $connection = new \App\Entity\YouTubeConnection($this->owner, 'UC'.str_repeat('s', 22), 'Chaîne de recette', $vault->encrypt('synthetic'), $vault->encrypt('synthetic-refresh'), 86400);
+        $this->em()->persist($connection);
+        $this->em()->flush();
+        $calls = [];
+        $http = static::getContainer()->get('youtube.http');
+        self::assertInstanceOf(MockHttpClient::class, $http);
+        $http->setResponseFactory(static function (string $method, string $url) use (&$calls): \Symfony\Component\HttpClient\Response\MockResponse {
+            $calls[] = $method;
+
+            return match (count($calls)) {
+                1 => new \Symfony\Component\HttpClient\Response\MockResponse('{}', ['response_headers' => ['Location: https://www.googleapis.com/upload/youtube/v3/videos?upload_id=synthetic']]),
+                2 => new \Symfony\Component\HttpClient\Response\MockResponse('', ['http_code' => 308]),
+                3 => new \Symfony\Component\HttpClient\Response\MockResponse('{"id":"abcdefghijk"}', ['http_code' => 201]),
+                4 => new \Symfony\Component\HttpClient\Response\MockResponse('{"items":[{"status":{"uploadStatus":"processed","privacyStatus":"private"},"processingDetails":{"processingStatus":"succeeded"}}]}'),
+                default => throw new \LogicException('Unexpected request in simulated journey.'),
+            };
+        });
+        $temp = tempnam(sys_get_temp_dir(), 'journey-import-');
+        copy(dirname(__DIR__).'/Fixtures/reels-valid.mp4', $temp);
+        $privatePath = null;
+        try {
+            $crawler = $this->client->request('GET', '/studio/bibliotheque/importer?next=compose');
+            $form = $crawler->selectButton('Importer ma vidéo')->form(['video_upload[title]' => 'Recette complète']);
+            $this->client->request('POST', '/studio/bibliotheque/importer?next=compose', $form->getPhpValues(), ['video_upload' => ['file' => new \Symfony\Component\HttpFoundation\File\UploadedFile($temp, 'recette.mp4', null, null, true)]]);
+            self::assertResponseStatusCodeSame(303);
+            $this->video = $this->em()->getRepository(VideoAsset::class)->findOneBy(['owner' => $this->owner], ['id' => 'DESC']);
+            $storage = static::getContainer()->get(\App\Service\PrivateVideoStorage::class);
+            self::assertStringEndsWith('/var/storage/videos/test', $storage->directory());
+            $privatePath = $storage->path($this->video->getStorageName());
+            self::assertFileExists($privatePath);
+            $this->client->followRedirect();
+            self::assertResponseStatusCodeSame(303);
+            $this->url = $this->client->getResponse()->headers->get('Location');
+            $crawler = $this->client->followRedirect();
+            $crawler = $this->networks($crawler, ['youtube']);
+            $this->post($crawler, 'review', ['settings' => ['youtube' => ['videos' => [$this->video->getId() => ['title' => 'Recette complète', 'description' => 'Un texte français #recette', 'privacy' => 'private', 'audience' => 'no']]]], 'mode' => 'scheduled', 'local' => '2026-10-19T14:00', 'timezone' => 'Europe/Paris']);
+            self::assertResponseStatusCodeSame(303);
+            $this->noSend();
+            $crawler = $this->client->followRedirect();
+            $this->client->submit($crawler->selectButton('Confirmer la programmation ↗')->form(['form[confirm]' => true]));
+            self::assertResponseStatusCodeSame(303);
+            $draft = $this->stored();
+            self::assertSame('scheduled', $draft->getStatus());
+            self::assertSame('2026-10-19T12:00:00+00:00', $draft->getScheduledAt()->format(DATE_ATOM));
+            self::assertSame([], $calls);
+            self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+            foreach (['youtube', 'instagram', 'tiktok'] as $network) {
+                self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM '.$network.'_publication'));
+            }
+            $clock = static::getContainer()->get('app.publication_clock');
+            self::assertInstanceOf(MockClock::class, $clock);
+            $clock->sleep(28 * 3600);
+            static::getContainer()->get(\App\Service\PublicationDrafts::class)->dispatchDue($draft->getId(), $draft->getRevision());
+            $job = $this->em()->getRepository(\App\Entity\YouTubePublication::class)->findOneBy(['owner' => $draft->getOwner()]);
+            self::assertNotNull($job);
+            $handler = static::getContainer()->get(\App\MessageHandler\PublishYouTubeHandler::class);
+            $message = new \App\Message\PublishYouTube($job->getId());
+            $handler($message);
+            self::assertSame('processing', $job->getStatus());
+            $handler($message);
+            self::assertSame('published', $job->getStatus());
+            $handler($message);
+            self::assertSame(['POST', 'PUT', 'PUT', 'GET'], $calls);
+            $this->client->request('GET', '/studio/calendrier?month=2026-10&state=published');
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextContains('.calendar-grid', 'Recette complète');
+            self::assertSelectorTextContains('.calendar-grid', 'Publiée');
+            self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
+        } finally {
+            if ($privatePath && is_file($privatePath)) {
+                unlink($privatePath);
+            }
+            if (is_file($temp)) {
+                unlink($temp);
+            }
+        }
+    }
+
     public function testPreparingFailedInstagramAgainKeepsOnlyItsDestinationAndNeverSends(): void
     {
         $vault = new TokenVault($_ENV['INSTAGRAM_TOKEN_KEY']);

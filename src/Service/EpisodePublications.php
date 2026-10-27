@@ -3,11 +3,8 @@
 namespace App\Service;
 
 use App\Entity\AiEpisode;
-use App\Entity\InstagramPublication;
 use App\Entity\PublicationDraft;
-use App\Entity\TikTokPublication;
 use App\Entity\User;
-use App\Entity\YouTubePublication;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -81,17 +78,20 @@ final class EpisodePublications
         if (!$episodes) {
             return [];
         }
-        $drafts = $this->em->getRepository(PublicationDraft::class)->findBy(['owner' => $episodes[0]->getOwner(), 'episode' => $episodes], ['id' => 'DESC']);
-        $states = $this->calendar->states($drafts);
+        $drafts = $this->em->createQueryBuilder()->select('d', 'items')->from(PublicationDraft::class, 'd')
+            ->leftJoin('d.items', 'items')->where('d.owner = :owner AND d.episode IN (:episodes)')
+            ->setParameter('owner', $episodes[0]->getOwner())->setParameter('episodes', $episodes)
+            ->orderBy('d.id', 'DESC')->getQuery()->getResult();
+        $snapshot = $this->calendar->snapshot($drafts);
+        $states = $snapshot['states'];
         $result = [];
         $labels = ['queued' => 'En attente', 'uploading' => 'Envoi en cours', 'processing' => 'Traitement en cours', 'published' => 'Publiée', 'failed' => 'Échec', 'paused' => 'En pause', 'review' => 'À vérifier', 'cancelled' => 'Annulée'];
         foreach ($drafts as $draft) {
             $episode = $draft->getEpisode();
             $destinations = [];
             foreach ($draft->getNetworks() as $network) {
-                $entity = ['youtube' => YouTubePublication::class, 'instagram' => InstagramPublication::class, 'tiktok' => TikTokPublication::class][$network];
-                $jobs = $draft->getSubmissionKey() ? $this->em->getRepository($entity)->findBy(['owner' => $draft->getOwner(), 'submissionKey' => $draft->getSubmissionKey()]) : [];
-                $status = $jobs ? ($labels[$jobs[0]->getStatus()] ?? 'En cours') : PublicationCalendar::LABELS[$states[$draft->getId()]];
+                $jobStatus = $snapshot['destinations'][$draft->getSubmissionKey()][$network] ?? null;
+                $status = $jobStatus ? ($labels[$jobStatus] ?? 'En cours') : PublicationCalendar::LABELS[$states[$draft->getId()]];
                 $destinations[] = ['name' => MultiNetworkPublishing::LABELS[$network], 'status' => $status];
             }
             $result[$episode->getId()][] = ['draft' => $draft, 'label' => PublicationCalendar::LABELS[$states[$draft->getId()]], 'current' => $draft->videoIds() === [$episode->getApprovedVideo()?->getId()], 'destinations' => $destinations];

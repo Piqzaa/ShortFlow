@@ -35,8 +35,10 @@ final class AiStudioController extends AbstractController
         if (!$request->getSession()->has('ai_idea_revision')) {
             $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
         }
+        $apiConnections = $keys->connectedProviders($user);
+        $falConnection = $falOAuth->connection($user);
         $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16']);
-        $idea += ['accessMode' => null !== $keys->connection($user, 'fal') ? 'api' : 'mcp', 'source' => 'text', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop'];
+        $idea += ['accessMode' => $apiConnections['fal'] ? 'api' : 'mcp', 'source' => 'text', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop'];
         if ($request->isMethod('GET') && isset(AiCatalog::MODELS[$idea['model'] ?? ''])) {
             $idea['source'] = $catalog->referenceMode($idea['model']);
         }
@@ -60,10 +62,10 @@ final class AiStudioController extends AbstractController
         }
         $connected = [];
         foreach (AiCatalog::PROVIDERS as $id => $name) {
-            $connected[$id] = null !== $keys->connection($user, $id) || ('fal' === $id && null !== $falOAuth->connection($user));
+            $connected[$id] = $apiConnections[$id] || ('fal' === $id && null !== $falConnection);
         }
-        $connected['fal-api'] = null !== $keys->connection($user, 'fal');
-        $connected['fal-mcp'] = null !== $falOAuth->connection($user);
+        $connected['fal-api'] = $apiConnections['fal'];
+        $connected['fal-mcp'] = null !== $falConnection;
         $connecting = $request->isMethod('POST') && 'connect' === $request->request->getString('intent');
         $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => in_array($request->request->getString('intent'), ['compose', 'replan', 'single'], true) || $request->request->has('plan_action'), 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea'])->handleRequest($request);
         $referenceUrl = $endReferenceUrl = null;
@@ -216,7 +218,7 @@ final class AiStudioController extends AbstractController
         }
         $jobs = $em->getRepository(AiGeneration::class)->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 1);
 
-        $projects = $em->getRepository(AiEpisode::class)->findBy(['owner' => $user], ['id' => 'DESC'], 12);
+        $projects = $episode ? [] : $em->getRepository(AiEpisode::class)->findBy(['owner' => $user], ['id' => 'DESC'], 4);
 
         return $this->render('ai/studio.html.twig', ['projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }

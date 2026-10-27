@@ -25,6 +25,21 @@ final class AiKeys
         return $this->em->getRepository(AiCredential::class)->findOneBy(['owner' => $owner, 'provider' => $provider]);
     }
 
+    /** Connection hints for a form, never a credential or authorization cache.
+     * @return array<string,bool>
+     */
+    public function connectedProviders(User $owner): array
+    {
+        $connected = array_fill_keys(array_keys(AiCatalog::PROVIDERS), false);
+        foreach ($this->em->getConnection()->fetchFirstColumn('SELECT provider FROM ai_credential WHERE owner_id = :owner', ['owner' => $owner->getId()]) as $provider) {
+            if (array_key_exists($provider, $connected)) {
+                $connected[$provider] = true;
+            }
+        }
+
+        return $connected;
+    }
+
     public function masked(User $owner, string $provider = 'fal'): ?string
     {
         $connection = $this->connection($owner, $provider);

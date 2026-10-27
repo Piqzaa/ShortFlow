@@ -34,6 +34,48 @@ final class AiStudioTest extends WebTestCase
     /** @var list<string> */ private array $files = [];
     private const KEY = 'synthetic-fal-key-never-real-1234567890';
 
+    public function testProviderHintsRemainPrivateAndReflectCredentialRemovalImmediately(): void
+    {
+        $keys = static::getContainer()->get(AiKeys::class);
+        $keys->save($this->owner, self::KEY, 'fal');
+        $keys->save($this->other, self::KEY.'-other', 'replicate');
+        self::assertTrue($keys->connectedProviders($this->owner)['fal']);
+        self::assertFalse($keys->connectedProviders($this->owner)['replicate']);
+        self::assertTrue($keys->connectedProviders($this->other)['replicate']);
+        $keys->remove($this->owner, 'fal');
+        self::assertFalse($keys->connectedProviders($this->owner)['fal']);
+    }
+
+    public function testHiddenLatestResultDoesNotPreloadAVideo(): void
+    {
+        $job = $this->job();
+        $video = new VideoAsset($this->owner, 'Dernier résultat', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1000, 8, 720, 1280, 'h264');
+        $this->em()->persist($video);
+        $job->complete($video);
+        $this->em()->flush();
+        $this->client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('aside.creation-preview[hidden] video[preload="none"]');
+        self::assertSelectorNotExists('aside.creation-preview[hidden] video[preload="metadata"]');
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testStudioShowsFourRecentProjectsAndKeepsTheRestInHistory(): void
+    {
+        for ($i = 1; $i <= 8; ++$i) {
+            $this->em()->persist(new \App\Entity\AiEpisode($this->owner, $i, 'Projet performance '.$i));
+        }
+        $this->em()->flush();
+        $this->client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(4, '.recent-creation');
+        self::assertSelectorTextContains('.recent-creations', 'Projet performance 8');
+        self::assertSelectorTextNotContains('.recent-creations', 'Projet performance 1');
+        $this->client->request('GET', '/studio/creation/historique');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Projet performance 1', $this->client->getResponse()->getContent());
+    }
+
     /** @param array<string,mixed> $values */
     private function legacyForm(\Symfony\Component\DomCrawler\Crawler $crawler, array $values = []): \Symfony\Component\DomCrawler\Form
     {
