@@ -229,6 +229,30 @@ final class PublicationEditorialTest extends WebTestCase
         $this->editorial()->request($this->owner, $this->draft);
     }
 
+    public function testReturningToTheDraftRestoresTheQueuedRequestWithoutStartingAnother(): void
+    {
+        $job = $this->editorial()->request($this->owner, $this->draft, 'Milo ouvre sa boîte.');
+        $messages = (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages');
+        $this->client->request('GET', '/studio/series');
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/studio/composer', ['draft' => $this->draft->getId()]);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('[data-publication-writer-target="status"]', 'en attente');
+        self::assertSelectorTextContains('[data-publication-writer-target="progress"]', 'Étape 1 sur 2');
+        self::assertSelectorExists('button[data-publication-writer-target="generate"][disabled]');
+        self::assertSelectorExists('[data-publication-writer-target="elapsed"][aria-live="off"]');
+        $this->client->request('GET', '/studio/brouillons/'.$this->draft->getId().'/textes/'.$job->getId());
+        self::assertResponseIsSuccessful();
+        $state = json_decode($this->client->getResponse()->getContent(), true);
+        self::assertSame('queued', $state['status']);
+        self::assertNull($state['startedAt']);
+        self::assertSame('editorial', $state['kind']);
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        self::assertSame($messages, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+        self::assertSame(0, $this->calls);
+    }
+
     public function testComposerPreviewAndPrivateStatusUseTheCurrentSavedDraft(): void
     {
         $job = $this->ready();
@@ -242,6 +266,11 @@ final class PublicationEditorialTest extends WebTestCase
         $this->client->request('GET', $url);
         self::assertResponseIsSuccessful();
         self::assertSame('ready', json_decode($this->client->getResponse()->getContent(), true)['status']);
+        $timed = json_decode($this->client->getResponse()->getContent(), true);
+        self::assertSame('editorial', $timed['kind']);
+        self::assertNotNull($timed['startedAt']);
+        // PostgreSQL timestamps may round a persisted phase to the next second.
+        self::assertLessThanOrEqual(1, (new \DateTimeImmutable($timed['startedAt']))->getTimestamp() - (new \DateTimeImmutable($timed['observedAt']))->getTimestamp());
         $other = new User('other-editorial@example.test');
         $other->verify();
         $other->setPassword('unused');

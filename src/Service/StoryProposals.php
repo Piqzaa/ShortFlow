@@ -80,6 +80,12 @@ final class StoryProposals
         return $job;
     }
 
+    /** @return array{kind:string,createdAt:string,startedAt:?string,observedAt:string} */
+    public function timing(StoryProposal $job): array
+    {
+        return ['kind' => $job->getKind(), 'createdAt' => $job->getCreatedAt()->format(DATE_ATOM), 'startedAt' => $job->getStartedAt()?->format(DATE_ATOM), 'observedAt' => $this->clock->now()->format(DATE_ATOM)];
+    }
+
     private function expire(StoryProposal $job): void
     {
         if (null !== $this->expiryReason($job)) {

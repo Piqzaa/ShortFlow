@@ -61,6 +61,6 @@ final class PublicationEditorialController extends AbstractController
         $view = $editorial->view($stored);
         $stale = $view['stale'] || $view['job']?->getId() !== $job->getId();
 
-        return $this->json(['id' => $job->getId(), 'status' => $stale ? 'stale' : $job->getStatus(), 'error' => $job->getError()], headers: ['Cache-Control' => 'private, no-store']);
+        return $this->json(['id' => $job->getId(), 'status' => $stale ? 'stale' : $job->getStatus(), 'error' => $job->getError()] + $jobs->timing($job), headers: ['Cache-Control' => 'private, no-store']);
     }
 }

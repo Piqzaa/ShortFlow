@@ -1,6 +1,66 @@
 # R1 — Fiabilité du rédacteur : suivi du lot
 
-## État courant — R1.2 terminé, 27 octobre 2026
+## État courant — R1.3 terminé, 27 octobre 2026
+
+Les états du rédacteur et la reprise de suivi sont clarifiés. **Prochain point : R1.4**, vérifications de plusieurs propriétaires, worker interrompu, travail retardé et résultat tardif, notamment concurrence multi-processus. R1.5 et la livraison globale de R1 restent à faire. Les délais et la migration de R1.2 sont conservés ; R1.3 n'ajoute aucune migration.
+
+### Objectif et comportement livré en R1.3
+
+Le scénario affiche trois étapes nommées : attente, rédaction, préparation des scènes/consignes vidéo. L'éditorial en affiche deux : attente puis préparation des titres, légendes et hashtags. L'ancien indicateur de progression est remplacé par ces étapes, sans pourcentage ni estimation de fin. Le temps de traitement commence au démarrage réel ; le temps passé dans la file reste distinct. Un ancien travail sans date de démarrage dispose d'un message de repli.
+
+La reprise interroge les routes GET privées existantes ; elle ne crée pas de nouvelle demande. Une coupure de suivi propose une récupération explicite. Dans le brouillon éditorial, elle laisse la création désactivée tant que l'état n'est pas connu, pour éviter un renvoi ambigu. Un échec confirmé réactive seulement la demande volontaire, si le moteur est disponible.
+
+Le retour sur un scénario retrouve l'ambiance précédemment choisie uniquement si les autres champs de la préparation correspondent à son empreinte et qu'aucune saisie humaine n'a eu lieu pendant la restauration. Les résultats restent à prévisualiser et à appliquer volontairement. Un résultat éditorial prêt ne recharge pas un formulaire modifié : il invite à enregistrer les textes d'abord. Les indications rappellent de sauvegarder la préparation avant de quitter ; le suivi ne sauvegarde pas silencieusement les modifications.
+
+### Fichiers, responsabilités et flux Symfony
+
+| Fichier | Rôle |
+| --- | --- |
+| `src/Service/StoryProposals.php` | Expose le type et les dates de création/démarrage/observation depuis l'horloge injectée |
+| `src/Controller/AiStoryProposalController.php`, `PublicationEditorialController.php` | Ajoutent ces métadonnées aux réponses privées, après les contrôles de propriétaire et de périmètre existants |
+| `assets/writing-progress.js` | Fonction commune : étapes et durées, repli pour dates absentes et écarts de précision |
+| `assets/controllers/story_writer_controller.js` | Suivi du scénario, récupération de l'ambiance, empreinte de préparation et arrêt des timers à la déconnexion |
+| `assets/controllers/publication_writer_controller.js` | Suivi des textes, reprise GET dédupliquée, protection des saisies et disponibilité de la nouvelle demande |
+| `templates/ai/_story_proposal.html.twig`, `templates/publication/_editorial.html.twig` | États accessibles, aide à la reprise et commandes explicites ; chronomètre hors annonces vocales répétées |
+| `assets/styles/episode.css`, `package.json` | Suppression du style de l'ancienne barre et contrôle syntaxique du module commun |
+| `tests/Frontend/*writer.test.js`, `writing_progress.test.js` | Phases, délais affichés, reprise sans POST, ambiance, erreurs, saisies et nettoyage |
+| `tests/Functional/AiStoryProposalTest.php`, `PublicationEditorialTest.php`, `tests/Unit/StoryProposalQueueTest.php` | Contrat JSON, rendu serveur, retour sur un brouillon sans message supplémentaire et horloge simulée |
+
+Flux : Messenger et le worker conservent leur cycle → le contrôleur lit le travail du propriétaire → le service ajoute ses dates → Stimulus affiche la phase et interroge le suivi → résultat prévisualisé, ou erreur avec action explicite. Aucune inférence n'est lancée par les lectures de suivi. Les contrôleurs restent légers ; les métadonnées proviennent du service et les calculs d'affichage du module JavaScript pur.
+
+Les calculs utilisent l'heure d'observation du serveur, puis le temps écoulé localement depuis sa réception ; ils ne comparent pas l'heure absolue du PC à celle du serveur. Le frontend borne les durées négatives à zéro. Les tests fonctionnels tolèrent une seconde de précision entre une date persistée arrondie par PostgreSQL et sa représentation JSON ; le contrat exact des dates reste testé avec `MockClock`.
+
+### Vérifications R1.3
+
+La base a été vérifiée explicitement : `shortflow_test`, migrations à jour avant PHPUnit. Les tests PHP ont été exécutés dans la copie Linux temporaire du projet dans `edit-worker`, sans suite DB concurrente. Le dernier changement concerne uniquement la tolérance d'une seconde de précision d'une assertion fonctionnelle ; les 46 tests ciblés ont ensuite été rejoués sur les fichiers finaux.
+
+| Contrôle exécuté | Résultat |
+| --- | --- |
+| Suite PHP complète | **653 tests / 7 808 assertions**, tous réussis |
+| Rejeu final scénario/éditorial/file/cycle | **46 tests / 497 assertions**, tous réussis |
+| `npm run test:ui` | **152 tests**, tous réussis, aucun ignoré |
+| PHPStan niveau 5 configuré sur `src`, puis fichier unitaire temporel | Aucune erreur |
+| CS-Fixer final, six fichiers PHP modifiés, `--dry-run --diff` | Aucun fichier à corriger |
+| Lints conteneur, YAML et Twig | Réussis ; 19 YAML et 102 Twig valides |
+| Schéma Doctrine sur la base de test | Mapping et schéma synchronisés |
+| `npm run check` et `npm run build` | Réussis ; avertissement Vite existant sur le chunk Three.js > 500 ko |
+| Cache dev actualisé, GET local `/` | Réussi, HTTP 200 |
+| `git diff --check` | Réussi |
+
+L'analyse statique des tests porte sur le fichier unitaire modifié, pas sur l'ensemble des tests fonctionnels historiques. Les journaux locaux ignorés sont `artifacts/r1-3-full.log`, `r1-3-final-focused.log`, `r1-3-ui-final.log`, `r1-3-phpstan*.log`, `r1-3-style-final.log`, `r1-3-check.log` et `r1-3-build.log` ; les résultats et tests versionnés permettent de reprendre sans eux.
+
+La recette navigateur a utilisé des pages Twig fraîchement rendues avec un propriétaire synthétique sur `shortflow_test`, puis des réponses de suivi simulées servies uniquement sur loopback. Le serveur de recette refuse tous les POST. Il ne représente pas une validation du rendu vidéo ni de l'inférence réelle.
+
+- Desktop **1440 × 900** et mobile **390 × 844** : étapes et durées lisibles, aucun débordement horizontal mesuré ; navigation mobile présente.
+- Scénario : attente de onze minutes, rédaction avec trente secondes de traitement distinctes de l'attente, préparation des scènes ; navigation vers Séries puis retour et suivi retrouvé.
+- Éditorial : attente et préparation des textes, coupure HTTP simulée, création toujours désactivée, récupération au clavier par GET ; résultat prêt avec titre modifié conservé, sans rechargement.
+- Échec éditorial confirmé : message affiché, nouvelle demande explicite disponible ; aucun bouton de nouvelle demande activé par la seule coupure réseau.
+- Console de la recette éditoriale : aucune erreur ni avertissement relevé. Les deux onglets créés sont fermés, le viewport réinitialisé et le serveur temporaire supprimé.
+- Revue indépendante en lecture seule : aucun blocage relevé sur états, reprise, protection des textes/ambiance et annonces accessibles. La concurrence R1.4 n'est pas auditée par cette revue.
+
+Pour rejouer sur un autre PC : installation et base de test isolée du README, migration test à jour, puis `php bin/phpunit --filter 'AiStoryProposalTest|PublicationEditorialTest|StoryProposalQueueTest|StoryProposalLifecycleTest'`, `npm run test:ui`, `npm run check` et `npm run build`. Les fixtures de recette locales sont ignorées ; les tests et le protocole ci-dessus sont versionnés. Aucun crédit fournisseur n'est requis.
+
+### Historique — R1.2 terminé
 
 **Le défaut reproduit en R1.1 est corrigé.** Les paragraphes R1.1 plus bas conservent la phase rouge historique ; ils ne décrivent plus l'état courant. Suite complète : 651 tests / 7 766 assertions réussis. Prochain point : **R1.3**, lisibilité des états et reprise dans l'interface. Le lot R1 reste en cours ; la vérification multi-processus et le bilan global R1.4/R1.5 ne sont pas cochés.
 

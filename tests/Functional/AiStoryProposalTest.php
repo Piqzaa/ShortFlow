@@ -29,6 +29,10 @@ final class AiStoryProposalTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $result = json_decode($client->getResponse()->getContent(), true, 32, JSON_THROW_ON_ERROR);
         self::assertSame('ready', $result['status']);
+        self::assertSame('story', $result['kind']);
+        self::assertNotNull($result['startedAt']);
+        // PostgreSQL timestamps may round a persisted phase to the next second.
+        self::assertLessThanOrEqual(1, (new \DateTimeImmutable($result['startedAt']))->getTimestamp() - (new \DateTimeImmutable($result['observedAt']))->getTimestamp());
 
         return $result['result'];
     }
@@ -48,6 +52,8 @@ final class AiStoryProposalTest extends WebTestCase
         static::getContainer()->get('cache.rate_limiter')->clear();
         $client->request('GET', '/studio/creation');
         $crawler = $client->getCrawler();
+        self::assertSelectorExists('[data-story-writer-target="elapsed"][aria-live="off"]');
+        self::assertSelectorNotExists('progress[data-story-writer-target="progress"]');
         $token = $crawler->filter('[data-story-writer-token-value]')->attr('data-story-writer-token-value');
         $calls = 0;
         $suspicious = false;
@@ -83,6 +89,8 @@ final class AiStoryProposalTest extends WebTestCase
         self::assertStringContainsString('no-store', $client->getResponse()->headers->get('Cache-Control'));
         self::assertSame(0, $calls);
         $queued = json_decode($client->getResponse()->getContent(), true, 32, JSON_THROW_ON_ERROR);
+        self::assertNull($queued['startedAt']);
+        self::assertSame('story', $queued['kind']);
         $client->request('POST', '/studio/creation/scenario', $payload);
         self::assertResponseStatusCodeSame(202);
         self::assertSame($queued['id'], json_decode($client->getResponse()->getContent(), true, 32, JSON_THROW_ON_ERROR)['id']);

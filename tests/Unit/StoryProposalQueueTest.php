@@ -149,6 +149,18 @@ final class StoryProposalQueueTest extends TestCase
         self::assertSame('failed', $job->getStatus());
     }
 
+    public function testProgressMetadataUsesTheServerClockWithoutExposingThePreparation(): void
+    {
+        $clock = new MockClock('2026-10-27T12:00:00Z');
+        $job = new StoryProposal(new User('timing@example.test'), 42, 'private-fingerprint', ['idea' => 'Private preparation'], 'editorial', $clock->now());
+        $service = $this->readingService($job, $clock);
+        $clock->sleep(660);
+        self::assertSame(['kind' => 'editorial', 'createdAt' => '2026-10-27T12:00:00+00:00', 'startedAt' => null, 'observedAt' => '2026-10-27T12:11:00+00:00'], $service->timing($job));
+        $job->phase('editorial', $clock->now());
+        $clock->sleep(30);
+        self::assertSame(['kind' => 'editorial', 'createdAt' => '2026-10-27T12:00:00+00:00', 'startedAt' => '2026-10-27T12:11:00+00:00', 'observedAt' => '2026-10-27T12:11:30+00:00'], $service->timing($job));
+    }
+
     private function readingService(StoryProposal $job, MockClock $clock): StoryProposals
     {
         $repository = $this->createStub(EntityRepository::class);

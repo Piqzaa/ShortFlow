@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { writingProgress } from '../writing-progress.js';
 
 export default class extends Controller {
   static targets = ['tone', 'generate', 'status', 'preview', 'title', 'summary', 'scenes', 'loading', 'progress', 'elapsed', 'retry', 'warnings'];
@@ -31,20 +32,24 @@ export default class extends Controller {
       ]),
     });
   }
-  connect() { this.active = true; this.restore(); }
+  connect() {
+    this.active = true;
+    this.restoreChanged = false;
+    this.connectedForm = this.form;
+    this.changed = event => { if (event.isTrusted) this.restoreChanged = true; };
+    this.connectedForm?.addEventListener('input', this.changed);
+    this.connectedForm?.addEventListener('change', this.changed);
+    this.restore();
+  }
 
   busy(value) {
     this.pending = value;
     this.generateTarget.disabled = value;
-    this.generateTarget.textContent = value ? '✨ Rédaction en cours…' : '✨ Proposer mon scénario';
+    this.generateTarget.textContent = value ? 'Envoi de la demande…' : '✨ Proposer mon scénario';
     if (this.hasLoadingTarget) this.loadingTarget.hidden = !value;
     if (this.hasRetryTarget) this.retryTarget.hidden = true;
     clearInterval(this.elapsedTimer);
-    if (value && this.hasElapsedTarget) {
-      this.startedAt ||= Date.now();
-      const tick = () => { this.elapsedTarget.textContent = `${Math.floor((Date.now() - this.startedAt) / 1000)} s écoulées · tu peux changer de page et revenir.`; };
-      tick(); this.elapsedTimer = setInterval(tick, 1000);
-    }
+    if (this.hasElapsedTarget) this.elapsedTarget.textContent = '';
   }
 
   async request(url, options = {}) {
@@ -56,20 +61,42 @@ export default class extends Controller {
       let data;
       try { data = await response.json(); }
       catch { throw new Error('La connexion ou la session a expiré. Recharge la page pour retrouver ta demande.'); }
-      if (!response.ok) throw new Error(data?.error || 'La proposition est indisponible. Réessaie dans un instant.');
+      if (!response.ok) {
+        const error = new Error(data?.error || 'La proposition est indisponible. Réessaie dans un instant.');
+        error.status = response.status;
+        throw error;
+      }
       return data;
     } finally { clearTimeout(timeout); }
   }
 
-  async restore() {
+  async restore(event) {
     if (!this.latestValue || this.pending) return;
     try {
       const job = await this.request(this.latestValue);
-      if (!this.active || this.pending || !job || job.status === 'none') return;
+      if (!this.active || this.pending || !job) return;
+      if (job.status === 'none') {
+        this.busy(false);
+        if (event) this.statusTarget.textContent = 'Aucune demande à retrouver pour cette préparation. Tu peux proposer un scénario.';
+        return;
+      }
+      this.recoverTone(job);
       if (['ready', 'failed'].includes(job.status) && job.fingerprint !== this.fingerprint()) return;
       this.requestFingerprint = job.fingerprint;
       await this.watch(job);
     } catch (error) { if (this.active) this.failed(error); }
+  }
+
+  recoverTone(job) {
+    if (!this.hasToneTarget || this.restoreChanged) return;
+    try {
+      const saved = JSON.parse(job.fingerprint), current = JSON.parse(this.fingerprint());
+      if (!saved || !current || Array.isArray(saved) || Array.isArray(current)) return;
+      const tone = saved.tone;
+      if (!['auto', 'humour', 'aventure', 'calme'].includes(tone)) return;
+      saved.tone = current.tone;
+      if (JSON.stringify(saved) === JSON.stringify(current)) this.toneTarget.value = tone;
+    } catch { /* Older opaque fingerprints cannot restore a display-only preference. */ }
   }
 
   async propose() {
@@ -81,9 +108,8 @@ export default class extends Controller {
         this.statusTarget.textContent = 'Ajoute une idée, une durée et un modèle vidéo pour proposer des scènes compatibles.';
         return;
       }
-      this.startedAt = Date.now();
       this.busy(true);
-      this.statusTarget.textContent = 'Demande enregistrée…';
+      this.statusTarget.textContent = 'Envoi de la demande…';
       this.previewTarget.hidden = true;
       this.proposal = null;
       this.requestFingerprint = this.fingerprint();
@@ -99,18 +125,29 @@ export default class extends Controller {
   async watch(job) {
     if (!this.active) return;
     clearTimeout(this.pollTimer);
-    if (job.status === 'failed') throw new Error(job.error);
+    if (job.status === 'failed') {
+      this.busy(false);
+      this.proposal = null;
+      this.previewTarget.hidden = true;
+      this.statusTarget.textContent = job.error || 'La rédaction s’est arrêtée. Tes scènes sont conservées ; tu peux demander une nouvelle proposition.';
+      return;
+    }
     if (job.status === 'ready') {
       this.busy(false);
       this.render(job.result);
       return;
     }
-    if (job.createdAt) this.startedAt = Date.parse(job.createdAt);
+    const phase = writingProgress(job);
+    if (!phase) throw new Error('L’état de la demande n’a pas pu être lu. Retrouve son suivi avant de réessayer.');
     this.busy(true);
-    const phases = {queued: [1, 'En attente du rédacteur…'], story: [2, 'L’IA invente l’histoire…'], shots: [3, 'L’IA prépare les prompts des clips…']};
-    const phase = phases[job.status] || phases.queued;
-    this.statusTarget.textContent = phase[1];
-    if (this.hasProgressTarget) this.progressTarget.value = phase[0];
+    this.generateTarget.textContent = phase.button;
+    if (this.statusTarget.textContent !== phase.label) this.statusTarget.textContent = phase.label;
+    if (this.hasProgressTarget) this.progressTarget.textContent = phase.stepLabel;
+    if (this.hasElapsedTarget) {
+      const receivedAt = Date.now();
+      const tick = () => { this.elapsedTarget.textContent = writingProgress(job, (Date.now() - receivedAt) / 1000).detail; };
+      tick(); this.elapsedTimer = setInterval(tick, 1000);
+    }
     this.pollTimer = setTimeout(async () => {
       try { await this.watch(await this.request(job.url)); }
       catch (error) { if (this.active) this.failed(error); }
@@ -120,7 +157,7 @@ export default class extends Controller {
   failed(error) {
     this.busy(false);
     this.statusTarget.textContent = error.name === 'AbortError' ? 'La connexion a pris trop de temps. La rédaction peut continuer en arrière-plan ; retrouve son état ou reviens sur cette page.' : error.name === 'TypeError' ? 'La préparation n’a pas pu être lue ou transmise. Recharge la page puis réessaie ; vérifie aussi ta connexion.' : error.message;
-    if (this.hasRetryTarget) this.retryTarget.hidden = false;
+    if (this.hasRetryTarget) this.retryTarget.hidden = Boolean(error.status && error.status < 500);
   }
 
   render(data) {
@@ -193,5 +230,10 @@ export default class extends Controller {
     this.proposal = null;
     this.statusTarget.textContent = 'Scènes appliquées. Tu peux les personnaliser puis vérifier le coût au récapitulatif.';
   }
-  disconnect() { this.active = false; this.pending = false; this.abort?.abort(); clearTimeout(this.pollTimer); clearInterval(this.elapsedTimer); }
+  disconnect() {
+    this.active = false; this.pending = false;
+    this.abort?.abort(); clearTimeout(this.pollTimer); clearInterval(this.elapsedTimer);
+    this.connectedForm?.removeEventListener('input', this.changed);
+    this.connectedForm?.removeEventListener('change', this.changed);
+  }
 }

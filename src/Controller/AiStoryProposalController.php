@@ -83,7 +83,7 @@ final class AiStoryProposalController extends AbstractController
             $context['generation'] = $prompts->writingContext($request->request->getString('model'), $hints);
             $job = $proposals->create($user, $id ?: 0, $request->request->getString('fingerprint'), ['idea' => $idea, 'durations' => $durations, 'continuity' => $continuity, 'tone' => $tone, 'context' => $context]);
 
-            return $this->json($this->payload($job), 202, $headers);
+            return $this->json($this->payload($job, $proposals), 202, $headers);
         } catch (\RuntimeException|\InvalidArgumentException $error) {
             return $this->json(['error' => $error->getMessage()], 422, $headers);
         }
@@ -94,7 +94,7 @@ final class AiStoryProposalController extends AbstractController
     {
         $job = $proposals->latest($user, max(0, $request->query->getInt('scope')));
 
-        return $this->json($job ? $this->payload($job) : ['status' => 'none'], 200, ['Cache-Control' => 'private, no-store']);
+        return $this->json($job ? $this->payload($job, $proposals) : ['status' => 'none'], 200, ['Cache-Control' => 'private, no-store']);
     }
 
     #[Route('/studio/creation/scenario/{id}', name: 'app_ai_story_status', requirements: ['id' => '[a-f0-9]{32}'], methods: ['GET'])]
@@ -102,12 +102,12 @@ final class AiStoryProposalController extends AbstractController
     {
         $job = $proposals->owned($user, $id) ?? throw $this->createNotFoundException();
 
-        return $this->json($this->payload($job), 200, ['Cache-Control' => 'private, no-store']);
+        return $this->json($this->payload($job, $proposals), 200, ['Cache-Control' => 'private, no-store']);
     }
 
     /** @return array<string,mixed> */
-    private function payload(StoryProposal $job): array
+    private function payload(StoryProposal $job, StoryProposals $proposals): array
     {
-        return ['id' => $job->getId(), 'createdAt' => $job->getCreatedAt()->format(DATE_ATOM), 'status' => $job->getStatus(), 'url' => $this->generateUrl('app_ai_story_status', ['id' => $job->getId()]), 'fingerprint' => $job->getFingerprint(), 'result' => $job->getResult(), 'error' => $job->getError()];
+        return ['id' => $job->getId(), 'status' => $job->getStatus(), 'url' => $this->generateUrl('app_ai_story_status', ['id' => $job->getId()]), 'fingerprint' => $job->getFingerprint(), 'result' => $job->getResult(), 'error' => $job->getError()] + $proposals->timing($job);
     }
 }

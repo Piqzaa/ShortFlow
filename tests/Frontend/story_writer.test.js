@@ -2,10 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import { writingProgress } from '../../assets/writing-progress.js';
 
 function setup(fetch, document = {}) {
-  const source = readFileSync(new URL('../../assets/controllers/story_writer_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Writer');
-  const Writer = runInNewContext(`${source}\nWriter`, { Controller: class {}, Event: class {}, AbortController, URLSearchParams, fetch, setTimeout, clearTimeout, setInterval, clearInterval, document });
+  const source = readFileSync(new URL('../../assets/controllers/story_writer_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { writingProgress } from '../writing-progress.js';", '').replace('export default class', 'class Writer');
+  const Writer = runInNewContext(`${source}\nWriter`, { Controller: class {}, Event: class {}, AbortController, URLSearchParams, fetch, setTimeout, clearTimeout, setInterval, clearInterval, document, writingProgress });
   const writer = new Writer();
   writer.urlValue = '/scenario'; writer.tokenValue = 'csrf';
   writer.payload = () => ({ idea: 'Milo chat blanc', model: 'kling', target: '40' });
@@ -152,12 +153,13 @@ test('an earlier preview cannot be applied after the model, tone or scenes chang
 test('a queued request returns while the worker runs and disconnecting stops only the browser polling', async () => {
   let calls = 0;
   const writer = setup(async () => { calls++; return { ok: true, json: async () => ({id:'job',url:'/status',status:'queued',fingerprint:'original'}) }; });
-  await writer.propose();
-  assert.equal(calls, 1);
-  assert.equal(writer.pending, true);
-  assert.equal(writer.generateTarget.disabled, true);
-  assert.match(writer.statusTarget.textContent, /En attente/);
-  writer.disconnect();
+  try {
+    await writer.propose();
+    assert.equal(calls, 1);
+    assert.equal(writer.pending, true);
+    assert.equal(writer.generateTarget.disabled, true);
+    assert.match(writer.statusTarget.textContent, /en attente/);
+  } finally { writer.disconnect(); }
   assert.equal(writer.pending, false);
   assert.equal(calls, 1);
 });
@@ -205,11 +207,78 @@ test('the progress indicator follows the real worker stages and a failure allows
   const writer = setup(async () => {});
   writer.active = true; writer.hasProgressTarget = true; writer.progressTarget = {};
   await writer.watch({status:'story',url:'/status'});
-  assert.equal(writer.progressTarget.value, 2);
-  assert.match(writer.statusTarget.textContent, /invente l’histoire/);
+  assert.equal(writer.progressTarget.textContent, 'Étape 2 sur 3');
+  assert.match(writer.statusTarget.textContent, /Rédaction du scénario/);
   await writer.watch({status:'shots',url:'/status'});
-  assert.equal(writer.progressTarget.value, 3);
+  assert.equal(writer.progressTarget.textContent, 'Étape 3 sur 3');
   writer.disconnect();
   writer.failed(new Error('Rédacteur indisponible'));
   assert.equal(writer.generateTarget.disabled, false);
+});
+
+test('returning restores only the saved tone when every preparation field still matches', async () => {
+  const writer = setup(() => assert.fail('No new request allowed'));
+  writer.hasToneTarget = true; writer.toneTarget = { value: 'auto' };
+  writer.fingerprint = () => JSON.stringify({ idea: 'Milo', tone: writer.toneTarget.value, model: 'kling' });
+  const fingerprint = JSON.stringify({ idea: 'Milo', tone: 'humour', model: 'kling' });
+  writer.latestValue = '/recent'; writer.active = true;
+  const result = { title: 'Milo', shots: [] };
+  writer.request = async () => ({ status: 'ready', fingerprint, result });
+  let preview;
+  writer.render = data => { preview = data; };
+  await writer.restore();
+  assert.equal(writer.toneTarget.value, 'humour');
+  assert.equal(preview, result);
+});
+
+test('a tone preference from the old job cannot overwrite a changed preparation', () => {
+  const writer = setup(() => {});
+  writer.hasToneTarget = true; writer.toneTarget = { value: 'auto' };
+  writer.fingerprint = () => JSON.stringify({ idea: 'New idea', tone: writer.toneTarget.value });
+  writer.recoverTone({ fingerprint: JSON.stringify({ idea: 'Old idea', tone: 'calme' }) });
+  assert.equal(writer.toneTarget.value, 'auto');
+  writer.restoreChanged = true;
+  writer.recoverTone({ fingerprint: JSON.stringify({ idea: 'New idea', tone: 'calme' }) });
+  assert.equal(writer.toneTarget.value, 'auto');
+});
+
+test('human edits during restoration are tracked and the listeners are cleaned up', () => {
+  const writer = setup(() => {});
+  const listeners = {};
+  const form = { addEventListener(name, callback) { listeners[name] = callback; }, removeEventListener(name) { delete listeners[name]; } };
+  writer.element = { querySelector: () => form };
+  writer.restore = () => {};
+  writer.connect();
+  listeners.change({ isTrusted: false });
+  assert.equal(writer.restoreChanged, false);
+  listeners.input({ isTrusted: true });
+  assert.equal(writer.restoreChanged, true);
+  writer.disconnect();
+  assert.deepEqual(Object.keys(listeners), []);
+});
+
+test('manual recovery with no saved request leaves the editor usable without a POST', async () => {
+  const writer = setup(() => assert.fail('No POST allowed'));
+  writer.active = true; writer.latestValue = '/recent'; writer.hasRetryTarget = true; writer.retryTarget = { hidden: false };
+  writer.request = async url => { assert.equal(url, '/recent'); return { status: 'none' }; };
+  await writer.restore({ type: 'click' });
+  assert.match(writer.statusTarget.textContent, /Aucune demande/);
+  assert.equal(writer.generateTarget.disabled, false);
+  assert.equal(writer.retryTarget.hidden, true);
+});
+
+test('a confirmed worker failure permits a new proposal rather than endlessly retrying its status', async () => {
+  const writer = setup(() => assert.fail('No network request expected'));
+  writer.active = true; writer.hasRetryTarget = true; writer.retryTarget = { hidden: false };
+  await writer.watch({ status: 'failed', error: 'La demande n’a pas pu démarrer.' });
+  assert.equal(writer.generateTarget.disabled, false);
+  assert.equal(writer.retryTarget.hidden, true);
+  assert.match(writer.statusTarget.textContent, /pas pu démarrer/);
+  assert.equal(writer.pending, false);
+});
+
+test('unknown states do not show a false waiting phase', async () => {
+  const writer = setup(() => {}); writer.active = true;
+  await assert.rejects(writer.watch({ status: 'unknown' }), /état/);
+  writer.disconnect();
 });

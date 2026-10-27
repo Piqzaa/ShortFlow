@@ -1,6 +1,6 @@
 {% if sourceEpisode|default(null) and editorial|default(null) %}
 {% set job = editorial.job %}{% set pending = job and job.status in ['queued','editorial'] and not editorial.stale %}
-<section class="story-context" aria-labelledby="editorial-title" data-controller="publication-writer"{% if pending %} data-publication-writer-url-value="{{ path('app_publication_editorial_status',{draft:editorialDraft.id,id:job.id}) }}"{% endif %}>
+<section class="story-context" aria-labelledby="editorial-title" data-controller="publication-writer" data-publication-writer-available-value="{{ editorial.available ? 'true' : 'false' }}"{% if pending %} data-publication-writer-url-value="{{ path('app_publication_editorial_status',{draft:editorialDraft.id,id:job.id}) }}"{% endif %}>
 <h3 id="editorial-title">Des textes adaptés à chaque réseau</h3>
 <p class="library-note">Le moteur local propose des textes à partir des scènes et de tes indications. Il ne regarde pas la vidéo. Rien n’est appliqué ou publié automatiquement.</p>
 {% if not sourceEpisode.standalone %}<p class="library-note">Si tu laisses les textes de l’épisode vides ou avec leur valeur initiale, leur proposition démarre lors de l’enregistrement avec les réseaux choisis. Relis les titres, descriptions ou légendes et hashtags proposés, puis applique les champs voulus. Si le moteur est occupé, utilise le bouton ci-dessous pour réessayer.</p>{% endif %}
@@ -10,9 +10,12 @@
 {% if editorial.stale and job %}<p class="library-note">La précédente proposition ne correspond plus à cette version, au profil ou aux réseaux. Une nouvelle proposition est nécessaire avant application.</p>{% endif %}
 <label for="editorial-brief">Ce que montre cette version (facultatif)</label><textarea id="editorial-brief" name="editorial_brief" rows="3" maxlength="700">{{ editorial.brief }}</textarea>
 <p class="library-note">Précise ici une modification faite au montage ou un fait important. Le rédacteur ne doit pas inventer ce qu’il ne peut pas voir.</p>
-<button type="submit" name="intent" value="editorial" class="account-secondary" formnovalidate{% if pending or not editorial.available %} disabled{% endif %}>Enregistrer et proposer mes textes</button>
+<button type="submit" name="intent" value="editorial" class="account-secondary" data-publication-writer-target="generate" formnovalidate{% if pending or not editorial.available %} disabled{% endif %}>Enregistrer et proposer mes textes</button>
 {% if not editorial.available and not editorial.notice %}<p class="library-note">La rédaction locale n’est pas activée. Tu peux remplir les textes ci-dessous.</p>{% endif %}
-<p class="library-note" role="status" aria-live="polite" data-publication-writer-target="status">{% if pending %}✦ Rédaction locale en cours… Tu peux quitter la page et retrouver la proposition ici.{% elseif job and job.status == 'failed' %}{{ job.error }}{% endif %}</p>
+<p class="library-note">Tu peux quitter ce brouillon puis le rouvrir pour retrouver la demande. Enregistre tes modifications avant de partir.</p>
+<p class="library-note" role="status" aria-live="polite" data-publication-writer-target="status">{% if pending %}{{ job.status == 'queued' ? 'Demande en attente du rédacteur local…' : 'Préparation des titres, légendes et hashtags…' }}{% elseif job and job.status == 'failed' %}{{ job.error }}{% endif %}</p>
+<div class="story-writing" data-publication-writer-target="loading"{% if not pending %} hidden{% endif %}><span class="story-spinner" aria-hidden="true"></span><p class="library-note" data-publication-writer-target="progress">{% if pending %}Étape {{ job.status == 'queued' ? '1' : '2' }} sur 2{% endif %}</p><p class="library-note" data-publication-writer-target="elapsed" aria-live="off"></p></div>
+<button type="button" class="account-secondary" data-publication-writer-target="retry" data-action="publication-writer#poll" hidden>Reprendre le suivi</button>
 <noscript><p class="library-note">Actualise le brouillon pour retrouver le résultat de la rédaction. Les textes ne seront appliqués qu’après ton choix des champs.</p></noscript>
 {% if editorial.texts %}<div class="series-two-columns">
 {% for network,texts in editorial.texts %}<article class="story-shot"><h4>{{ networkLabels[network] }}</h4>{% for field,text in texts %}{% set name = network ~ '.' ~ field %}{% set previous = editorial.fields[name] %}
