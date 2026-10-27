@@ -7,6 +7,7 @@ use App\Form\PublicationPlanType;
 use App\Repository\PublicationDraftRepository;
 use App\Repository\VideoAssetRepository;
 use App\Service\MultiNetworkPublishing;
+use App\Service\ProductionCalendar;
 use App\Service\PublicationCalendar;
 use App\Service\PublicationDrafts;
 use App\Service\PublicationException;
@@ -46,7 +47,7 @@ final class PublicationDraftController extends AbstractController
     }
 
     #[Route('/studio/calendrier', name: 'app_calendar', methods: ['GET'])]
-    public function calendar(Request $request, #[CurrentUser] User $user, PublicationDraftRepository $repository, PublicationCalendar $calendar, ClockInterface $clock, VideoAssetRepository $videos): Response
+    public function calendar(Request $request, #[CurrentUser] User $user, PublicationDraftRepository $repository, PublicationCalendar $calendar, ClockInterface $clock, VideoAssetRepository $videos, ProductionCalendar $production): Response
     {
         $zone = $request->query->getString('zone', $user->getTimezone());
         if (!in_array($zone, \DateTimeZone::listIdentifiers(), true)) {
@@ -68,13 +69,14 @@ final class PublicationDraftController extends AbstractController
         if ($network && !isset(MultiNetworkPublishing::LABELS[$network])) {
             throw $this->createNotFoundException();
         }
-        if ($state && !isset(PublicationCalendar::LABELS[$state])) {
+        $labels = PublicationCalendar::LABELS + ProductionCalendar::LABELS;
+        if ($state && !isset($labels[$state])) {
             throw $this->createNotFoundException();
         }
         $days = [];
         for ($i = 0; $i < $dayCount; ++$i) {
             $date = $start->modify('+'.$i.' days');
-            $days[$date->format('Y-m-d')] = ['date' => $date, 'outside' => $date->format('Y-m') !== $month, 'entries' => []];
+            $days[$date->format('Y-m-d')] = ['date' => $date, 'outside' => $date->format('Y-m') !== $month, 'entries' => [], 'production' => []];
         }
         foreach ($drafts as $draft) {
             if (($network && !in_array($network, $draft->getNetworks(), true)) || ($state && $states[$draft->getId()] !== $state)) {
@@ -86,7 +88,12 @@ final class PublicationDraftController extends AbstractController
             }
         }
 
-        return $this->page('draft/calendar.html.twig', ['libraryVideos' => $videos->page($user), 'libraryTotal' => $videos->count(['owner' => $user]), 'weeks' => (int) ($dayCount / 7), 'days' => $days, 'month' => $first, 'previous' => $first->modify('-1 month')->format('Y-m'), 'next' => $first->modify('+1 month')->format('Y-m'), 'zone' => $zone, 'network' => $network, 'state' => $state, 'states' => $states, 'labels' => PublicationCalendar::LABELS, 'networks' => MultiNetworkPublishing::LABELS, 'undated' => $repository->count(['owner' => $user, 'scheduledAt' => null, 'status' => 'draft'])]);
+        $productionItems = $production->page($user, $start, $end, $network, $state, $request->query->getInt('pendingPage', 1));
+        foreach ($productionItems['dated'] as $entry) {
+            $days[$entry['at']->setTimezone($timezone)->format('Y-m-d')]['production'][] = $entry;
+        }
+
+        return $this->page('draft/calendar.html.twig', ['production' => $productionItems, 'productionLabels' => ProductionCalendar::LABELS, 'libraryVideos' => $videos->page($user), 'libraryTotal' => $videos->count(['owner' => $user]), 'weeks' => (int) ($dayCount / 7), 'days' => $days, 'month' => $first, 'previous' => $first->modify('-1 month')->format('Y-m'), 'next' => $first->modify('+1 month')->format('Y-m'), 'zone' => $zone, 'network' => $network, 'state' => $state, 'states' => $states, 'labels' => $labels, 'networks' => MultiNetworkPublishing::LABELS, 'undated' => $repository->count(['owner' => $user, 'scheduledAt' => null, 'status' => 'draft'])]);
     }
 
     #[Route('/studio/calendrier/videos', name: 'app_calendar_videos', methods: ['GET'])]

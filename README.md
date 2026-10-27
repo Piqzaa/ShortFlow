@@ -190,6 +190,8 @@ Pour une nouvelle modification de schéma : doctrine:migrations:diff dans le con
 Un controller coordonne une requête ; un service porte un comportement réutilisable ; une entité décrit les données persistées ; une migration versionne le schéma ; Twig représente la page. Cette séparation reste volontairement simple.
 
 ## Limites avant production
+Calendrier commun : épisodes aux créneaux visés, vidéos à valider, publications préparées/confirmées et projets sans date. Le suivi reste dans le calendrier existant et ne déclenche aucune génération ou publication à la consultation. [Guide](docs/calendrier-production.md).
+
 Suivi : les étapes en attente sont regroupées dans l’Activité existante, sans rubrique supplémentaire. Le menu mobile commun donne accès aux six rubriques. [Guide](docs/a-valider.md).
 
 Comptes sociaux multiples : ajout et reconnexion par identité, choix du compte destinataire dans les préparations, dates distinctes par vidéo sélectionnée et comptes figés dans les séries. Voir [le guide multi-comptes](docs/comptes-sociaux-multiples.md) et [la préparation par vidéo](docs/publications-par-video.md).
