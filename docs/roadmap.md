@@ -10,7 +10,8 @@ Mise à jour : **27 octobre 2026**. Ce document est la source unique des priorit
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
 - **Publications Free confirmées :** cinq par mois ; une vidéo diffusée sur plusieurs réseaux dans la même publication compte une seule fois. L'ancienne recommandation de décompte par destinataire est écartée.
-- **Décisions en attente :** accès Studio/Séries par offre, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
+- **Accès Free confirmé :** essai limité du Studio IA, sans accès aux Séries ni à leur récurrence. Séries réservées aux offres payantes ; générations vidéo financées directement par le compte fournisseur de l'utilisateur.
+- **Décisions en attente :** quotas précis de l'essai Studio, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
 La demande du 27 octobre porte sur cette préparation documentaire. Le démarrage de l'implémentation se fera ensuite, point par point, sur instruction du propriétaire. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
@@ -178,7 +179,7 @@ Les montants sont des propositions du propriétaire, pas une offre publiée. Pri
 
 - Limite des comptes **résolue le 27 octobre** par réponse explicite du propriétaire : plafond par plateforme. Cette décision reste acquise ; ne pas la redemander à la reprise.
 - Unité des publications **résolue le 27 octobre** après comparaison et accord du propriétaire : cinq publications multi-réseaux mensuelles en Free. Une vidéo diffusée ensemble sur YouTube/Instagram/TikTok compte une fois ; cinq vidéos sur les trois réseaux représentent cinq publications et jusqu'à quinze envois. Republier dans une nouvelle préparation constitue une nouvelle publication ; une reprise de la même soumission ne compte pas une deuxième fois. R9.3 définit l'identité durable du regroupement, le mois, les réservations et les échecs ; ne pas déduire l'unité du nombre de requêtes HTTP.
-- Accès aux fonctions **en discussion** : le propriétaire demande si le Free doit exclure Studio IA et Séries. Recommandation de l'agent, non validée : accès d'essai limité au Studio pour découvrir la création, avec compte fournisseur et coût vidéo propres à l'utilisateur ; Séries/récurrence réservées aux offres payantes. Quotas d'essai, rédaction, stockage et export à définir avant implémentation. Ne pas traiter cette proposition comme une restriction décidée.
+- Accès aux fonctions **confirmé le 27 octobre** : le propriétaire choisit de laisser tester le Studio IA en Free, sans accès aux Séries/récurrence, réservées aux offres payantes. Le compte fournisseur et les dépenses vidéo restent propres à l'utilisateur. Les quotas précis d'essai, rédaction, stockage et export restent à définir avant implémentation ; ne pas inventer de volumes ou annoncer des générations offertes.
 - Quels plafonds mensuels payants, stockage, durée/poids d'import, exports/montage, rédaction locale et récurrences ? Ne pas annoncer « illimité » sans capacité et coûts vérifiés. Ne pas inventer 50/100/500 publications ici.
 
 - [ ] **R9.1** Faire confirmer et consigner prix, nom de l'offre supérieure et périodicité annuelle ; reprendre limites de comptes par plateforme et unité multi-réseaux déjà confirmées, avec exemples sans ambiguïté.
@@ -261,6 +262,12 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - Après recommandation de cinq publications plutôt que trois et comparaison des offres gratuites, le propriétaire accepte la formule : **cinq publications multi-réseaux/mois**, un compte de chaque réseau en Free. La recommandation antérieure par destinataire n'est plus retenue.
 - Question actuelle : accès Free au Studio IA et aux Séries. Proposition exposée, encore à valider : essai Studio limité, génération vidéo chez le fournisseur financée par l'utilisateur, Séries/récurrence payantes. Aucun quota d'essai ni droit fonctionnel inventé/implémenté.
 - Mise à jour documentaire uniquement. **Prochaine tâche de développement inchangée : R1.1**, après instruction de démarrage.
+
+### 27 octobre 2026 — Accès Free confirmé
+
+- Décision explicite du propriétaire : laisser tester le Studio IA en Free, pas les Séries. Séries et récurrence réservées aux offres payantes. Les plafonds précis de l'essai et des ressources seront définis en R9 ; les générations vidéo restent facturées par le fournisseur à l'utilisateur.
+- Cette confirmation ne constitue pas l'implémentation des restrictions : aucun contrôle d'offre ajouté et aucune préparation existante modifiée.
+- **Premier point à travailler : R1.1**, reproduction automatisée de l'expiration d'une rédaction encore en attente, avant correction du cycle de traitement en R1.2. Aucun lot fonctionnel commencé dans cette mise à jour documentaire.
 
 ### Modèle à recopier à chaque fin de lot ou interruption
 
