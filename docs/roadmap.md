@@ -244,6 +244,12 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 
 ## Journal de progression
 
+### 28 octobre 2026 — Rédacteur rétabli après reprise sur ce PC
+
+- Signalement du propriétaire : clic « Proposer mon scénario » sans résultat apparent. Demandes effectivement reçues ; trois échecs dev enregistrés avec « Le moteur local est injoignable ». Aucune demande en attente et file Messenger vide lors du diagnostic ; aucun défaut de clic démontré.
+- Ollama installé mais arrêté ; application locale démarrée en arrière-plan. API version **0.24.0** et catalogue joignables depuis PHP/Docker via l'adresse locale existante ; `qwen3:8b` Q4_K_M déjà présent. Aucun téléchargement, changement de configuration/pare-feu ou écoute publique, aucun nouvel appel d'inférence de contrôle ; le succès d'un nouveau scénario n'est pas encore vérifié.
+- Anciennes demandes échouées conservées et non relancées automatiquement ; propriétaire invité à demander volontairement une nouvelle proposition. Aucun code applicatif modifié, suite de tests/build non rejoués pour ce démarrage de service. Aucune génération vidéo, publication, activation ou dépense. **Prochain point roadmap inchangé : R3.3**, après retour d'usage R3.2.
+
 ### 28 octobre 2026 — R3.1 validé, R3.2 terminé
 
 - Le propriétaire valide le cadrage et demande l'implémentation, avec possibilité d'ajustement après essai. Cartes communes Studio/épisode : durée et résumé français complet visibles, références indicatives, édition des textes/prompts/images progressive. Ancien plan sans résumé ouvert, sans remplissage automatique. Aucun schéma ajouté.
