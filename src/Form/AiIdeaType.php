@@ -8,7 +8,6 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -37,7 +36,7 @@ final class AiIdeaType extends AbstractType
             $disconnected = isset($options['connected_providers'][$model['provider']]) && !$options['connected_providers'][$model['provider']];
             $choices[(in_array($id, $favoriteVariants, true) ? '★ ' : '').$model['name'].$resolution.' · '.AiCatalog::PROVIDERS[$model['provider']].($disconnected ? ' · à connecter' : '')] = $id;
         }
-        $builder->add('target', IntegerType::class, ['label' => 'Durée finale souhaitée (secondes)', 'required' => false, 'constraints' => [new Assert\Range(min: 1, max: 60)], 'attr' => ['min' => 1, 'max' => 60]])
+        $builder->add('target', ChoiceType::class, ['label' => 'Durée finale souhaitée (secondes)', 'required' => false, 'placeholder' => 'Choisir une durée', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' s', range(1, 60)), range(1, 60)), 'constraints' => [new Assert\Range(min: 1, max: 60)]])
             ->add('continuity', ChoiceType::class, ['label' => 'Comment filmer cette vidéo ?', 'required' => true, 'placeholder' => false, 'empty_data' => 'independent', 'choices' => ['Plan unique · un seul appel' => 'single', 'Plusieurs scènes' => 'independent', 'Raccord depuis la dernière image · génération séparée' => 'linked']])
             ->add('mute', CheckboxType::class, ['label' => 'Couper le son des plans au montage', 'required' => false])
             ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])

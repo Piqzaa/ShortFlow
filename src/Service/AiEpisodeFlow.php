@@ -126,10 +126,10 @@ final class AiEpisodeFlow
     public function singlePlan(string $model, int $target, array $rows): array
     {
         if (!in_array($target, $this->catalog->model($model)['seconds'], true)) {
-            throw new \RuntimeException('Ce modèle ne produit pas un seul clip de cette durée. Choisis une durée native ou plusieurs scènes ; aucun modèle ne sera remplacé.');
+            throw new \RuntimeException('Pour un plan unique, ce modèle accepte : '.implode(', ', $this->catalog->model($model)['seconds']).' s. Choisis une de ces durées ou conserve plusieurs scènes ; aucun modèle ne sera remplacé.');
         }
-        if ($rows && array_sum(array_column($rows, 'seconds')) !== $target) {
-            throw new \RuntimeException('La durée souhaitée diffère du total de tes plans. Ajuste explicitement leurs durées avant de les réunir ; aucune durée ne sera réduite automatiquement.');
+        if (count($rows) > 1 && array_sum(array_column($rows, 'seconds')) !== $target) {
+            throw new \RuntimeException('Tes '.count($rows).' plans totalisent '.array_sum(array_column($rows, 'seconds')).' s, pour '.$target.' s souhaitées. Choisis ce total s’il est accepté par le modèle, ou ajuste les durées des scènes ; aucune durée ne sera réduite automatiquement.');
         }
         if (count($rows) <= 1) {
             return [array_replace($rows[0] ?? ['prompt' => ''], ['seconds' => $target])];

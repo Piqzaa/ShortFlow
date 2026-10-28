@@ -383,7 +383,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         self::assertSelectorNotExists('input[name="ai_idea[mute]"][checked]');
         self::assertSelectorExists('select[name="ai_idea[model]"]');
-        self::assertSelectorExists('input[name="ai_idea[target]"][value="30"]');
+        self::assertSelectorExists('select[name="ai_idea[target]"] option[value="30"][selected]');
         self::assertSelectorCount(3, '[data-shot-editor-target="list"] .story-shot');
         $crawler = $this->client->submit($crawler->selectButton('Répartir la durée')->form());
         self::assertResponseIsSuccessful();
@@ -906,7 +906,7 @@ final class AiEpisodeFlowTest extends WebTestCase
     {
         $episode = $this->planned();
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
-        self::assertSelectorExists('input[name="ai_idea[target]"]');
+        self::assertSelectorExists('select[name="ai_idea[target]"]');
         self::assertSelectorExists('select[name="ai_idea[model]"]');
         $old = $this->flow()->quote($this->fresh($episode))['hash'];
         $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[model]' => 'kling-3', 'ai_idea[shots][0][seconds]' => 5, 'ai_idea[shots][1][seconds]' => 15, 'ai_idea[shots][2][seconds]' => 10]));
@@ -938,7 +938,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $crawler = $this->client->request('GET', $url);
         $this->client->submit($crawler->selectButton('Répartir la durée')->form(['ai_idea[target]' => 32]));
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorExists('input[name="ai_idea[target]"][value="32"]');
+        self::assertSelectorExists('select[name="ai_idea[target]"] option[value="32"][selected]');
         self::assertSelectorTextContains('.creation-form', 'total exact');
         self::assertSelectorTextContains('textarea[name="ai_idea[shots][1][prompt]"]', 'Scene 2');
         self::assertSame(0, $this->submissions);
@@ -1107,6 +1107,25 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSelectorCount(1, '[data-shot-editor-target="list"] [data-shot-editor-row]');
         self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', 'Étape 1. Étape 2. Étape 3.');
         self::assertSelectorExists('select[name="ai_idea[continuity]"] option[value="single"][selected]');
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testSingleClipCanUseAnExplicitlyChosenDurationWithoutChangingItsTextOrModel(): void
+    {
+        $episode = $this->planned(false, 10);
+        $original = $this->flow()->shots($episode)[0]->getPrompt();
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $form = $crawler->selectButton('Préparer un plan unique')->form();
+        $form['ai_idea[target]'] = '5';
+        $this->client->submit($form);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('select[name="ai_idea[shots][0][seconds]"] option[value="5"][selected]');
+        self::assertSame($original, $this->client->getCrawler()->selectButton('Voir le récapitulatif →')->form()->getValues()['ai_idea[shots][0][prompt]']);
+        self::assertSame(10, $this->flow()->shots($this->fresh($episode))[0]->getSeconds());
+        $this->client->submit($this->client->getCrawler()->selectButton('Voir le récapitulatif →')->form());
+        self::assertResponseRedirects();
+        self::assertSame(5, $this->flow()->shots($this->fresh($episode))[0]->getSeconds());
+        self::assertSame('kling-25', $episode->getFlowRecipe()['model']);
         self::assertSame(0, $this->submissions);
     }
 

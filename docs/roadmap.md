@@ -5,7 +5,7 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 ## Repère de reprise immédiat
 
 - **Phase actuelle :** **Grand R3 en cours, R3.1–R3.3 terminés**. Grand R2 terminé, R2.1–R2.7 validés avec limitations explicites et revue globale indépendante. Décision du propriétaire conservée : préparation automatique des scénarios, relecture et confirmation manuelle du devis de chaque vidéo. Anciennes autorisations automatiques bloquées avant nouveau POST ; récupération des demandes déjà transmises conservée. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée. [Bilan global R2](r2-revue-cloture.md).
-- **Dernière suite complète verte : R3.3**, **775 tests / 8 882 assertions**, **156 tests frontend** verts, lints/PHPStan/style/schémas/check/build réussis. Recette synthétique mobile/desktop/clavier terminée ; limites du POST navigateur consignées dans le bilan. Les mesures R2.6 et du complément traduction restent historiques et distinctes.
+- **Dernière suite complète verte : complément guidage R3.3**, **776 tests / 8 891 assertions**, **159 tests frontend** verts, lints/PHPStan/style/schémas/check/build réussis. Recette synthétique modèle/durée/total sur desktop/mobile/clavier terminée. Les contrôles initiaux R3.3 et mesures R2.6/traduction restent historiques et distincts.
 - **Prochain point exact : `R3.4`**, choix guidé des modèles/connexions commun Studio/Séries. [R3.3 livré : plan unique sans perte silencieuse](r3-plan-unique.md). [Complément R2 traduction terminé](redacteur-traduction-production.md), [R3.1 validé](r3-parcours-commun.md), [R3.2 livré](r3-cartes-scenes.md). Grand R3 en cours, revue globale en R3.7.
 - **Validation actuelle :** captures R2.6 inchangées (18 essais, dont quatre timeouts). R2.7 : prompt éditorial concis + exemple et 600 tokens, délai inchangé ; six nouveaux essais locaux, quatre packs complets normalisés et deux refus de contexte sans HTTP. Un récit garde des faits/hashtags incorrects : relecture explicite avant application. [Captures complémentaires](fixtures/redacteur-cloture-r2.json), empreintes vérifiées. Aucune activation réelle, dépense, publication, média ou migration.
 - **Ne pas commencer maintenant :** R4 avant la clôture globale R3.7, abonnement, publication autonome, blog ou déploiement.
@@ -243,6 +243,13 @@ Après lancement : amélioration fondée sur les retours ; quelques guides/blog 
 Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie le journal et l'état Git, résume le prochain point exact puis reprends seulement ce point et ses vérifications, sans action externe réelle non autorisée. »
 
 ## Journal de progression
+
+### 28 octobre 2026 — Complément R3.3, guidage des durées demandé après essai
+
+- Retour du propriétaire : les limites et écarts de total n'étaient expliqués qu'après échec. Liste de durée finale filtrée par modèle en mode unique, limites visibles, ancienne durée incompatible conservée et signalée au changement de modèle ; aucun raccourcissement implicite. Bouton de reprise du total des scènes si accepté, actions indisponibles expliquées avant soumission, retour à 1–60 s en plusieurs scènes.
+- Choix explicite de durée finale d'un clip unique synchronisé avec sa carte ; serveur compatible avec ce choix sans JS. Plusieurs scènes gardent leur total à la réunion. Sans JS, liste 1–60 et refus serveur détaillé ; filtrage/reprise par bouton réactifs uniquement avec JS. [Fichiers, flux Symfony et recette](r3-plan-unique.md).
+- **7 / 104 ciblés**, puis **776 tests PHP / 8 891 assertions**, **159 frontend** ; PHPStan/style/lints/schémas/check/build réussis. Recette synthétique Kling 3 → Kling 2.5 : ancienne valeur 15 conservée, choix 10 synchronisé, nouveaux choix 5/10 uniquement ; reprise de quinze pour trois plans de cinq sans perte, focus conservé. Mobile 375/375 de largeur utile/scroll, console sans erreur capturée. Revue indépendante finale sans blocage restant identifié.
+- Cache dev et quatre workers actualisés après garde d'inactivité. Aucune migration, modèle appelé, dépense, vidéo, publication, activation ou push. Commit local `fix: guide single clip duration choices`. **Prochain point exact inchangé : R3.4**, grand R3 en cours, revue globale R3.7 à faire.
 
 ### 28 octobre 2026 — R3.3 terminé, plan unique et transformation
 

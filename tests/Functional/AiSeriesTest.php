@@ -393,7 +393,7 @@ final class AiSeriesTest extends WebTestCase
         self::assertSelectorTextContains('.creation-form', 'changé');
         $next = $this->episodes($series)[1];
         $this->client->request('GET', '/studio/series/episodes/'.$next->getId());
-        self::assertSelectorExists('input[name="ai_idea[target]"][value="45"]');
+        self::assertSelectorExists('select[name="ai_idea[target]"] option[value="45"][selected]');
         $nextJob = $this->legacyPrepare($series, 1);
         self::assertSame(10, $nextJob->getSeconds());
         self::assertSame(70, $nextJob->getEstimatedCents());
