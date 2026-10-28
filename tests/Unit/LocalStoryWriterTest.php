@@ -79,6 +79,8 @@ final class LocalStoryWriterTest extends TestCase
         );
         $result = $writer->propose('Milo mon chat blanc', [5, 10], 'independent', 'calme');
         self::assertSame([], $result['warnings']);
+        self::assertTrue($result['translationReady']);
+        self::assertSame(\App\Service\StoryTextChecks::translationSource('Milo mon chat blanc'), $result['shots'][0]['translationSource']);
         self::assertSame([5, 10], array_column($result['shots'], 'seconds'));
         foreach ($result['shots'] as $shot) {
             self::assertStringStartsWith('Milo, a white cat. ', $shot['prompt']);
@@ -98,6 +100,19 @@ final class LocalStoryWriterTest extends TestCase
         self::assertStringContainsString('accessoire', $result['warnings'][1]);
         self::assertStringContainsString('précédent', $result['warnings'][2]);
         self::assertCount(1, $result['shots']);
+        self::assertFalse($result['translationReady']);
+    }
+
+    public function testFrenchIdentityCannotBeHiddenByEnglishSceneAndDraftIsPreservedWithoutRetry(): void
+    {
+        $result = $this->writer(
+            ['title' => 'Banane', 'summary' => 'La banane ouvre une porte.', 'identity' => 'Une banane jaune.', 'beats' => ['La banane ouvre une porte.']],
+            ['identity' => 'Une banane jaune.', 'shots' => [['seconds' => 5, 'prompt' => 'A static camera frames the banana opening the door.']]],
+        )->propose('Une banane jaune ouvre une porte.', [5], 'independent', 'auto');
+        self::assertFalse($result['translationReady']);
+        self::assertSame('La banane ouvre une porte.', $result['shots'][0]['description']);
+        self::assertSame('Une banane jaune.', $result['shots'][0]['translatedIdentity']);
+        self::assertStringContainsString('Traduction à corriger', implode(' ', $result['warnings']));
     }
 
     public function testRequestedClothingDoesNotTriggerAnAccessoryWarning(): void

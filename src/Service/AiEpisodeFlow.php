@@ -241,7 +241,11 @@ final class AiEpisodeFlow
             throw new \RuntimeException('Choisis un format final explicite dans la préparation avant de confirmer les coûts.');
         }
         $shots = $this->shots($episode);
+        if (!$episode->isStandalone() && array_filter($shots, static fn (AiShot $shot): bool => '' !== ($shot->getInputs()['translatedIdentity'] ?? ''))) {
+            $this->em->refresh($episode->getSeries());
+        }
         $data = [];
+        (new VideoPromptLanguage())->assertSpeech($episode, array_map(static fn (AiShot $shot): string => $redo && $shot->getId() === $redo ? ($shot->getInputs()['repairPrompt'] ?? $shot->getPrompt()) : $shot->getPrompt(), $shots));
         $cents = $seconds = 0;
         $references = [];
         foreach ($shots as $index => $shot) {
@@ -256,6 +260,7 @@ final class AiEpisodeFlow
                 throw new \RuntimeException('Complète le prompt de chaque plan avant de vérifier l’estimation.');
             }
             $this->catalog->validate($recipe['model'], $shot->getSeconds(), $recipe['ratio']);
+            (new VideoPromptLanguage())->assertScene($episode, $shot, $scene);
             $effectivePrompt = $this->prompt($episode, $shot, $scene);
             $this->catalog->validatePrompt($recipe['model'], $effectivePrompt);
             $price = $this->catalog->estimate($recipe['model'], $shot->getSeconds());
@@ -269,7 +274,7 @@ final class AiEpisodeFlow
             }
             $references[] = ['position' => $shot->getPosition(), 'seconds' => $shot->getSeconds(), 'model' => $recipe['model'], 'prompt' => $effectivePrompt] + $resolved;
             $data[] = [$shot->getId(), $shot->getPrompt(), $shot->getSeconds(), $price, $shot->getGeneration()?->getId(), $resolved];
-            if (($recipe['inputVersion'] ?? 1) >= 3 || $redo) {
+            if (($recipe['inputVersion'] ?? 1) >= 3 || $redo || '' !== ($shot->getInputs()['translatedIdentity'] ?? '')) {
                 $data[] = $effectivePrompt;
             }
             $cents += $price;
@@ -326,7 +331,7 @@ final class AiEpisodeFlow
                 $shot->replace($anchor, $shot->getInputs()['repairPrompt'] ?? null);
                 $episode->repair();
             }
-            if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 3) {
+            if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 3 || array_filter($confirmedShots, static fn (AiShot $shot): bool => '' !== ($shot->getInputs()['translatedIdentity'] ?? ''))) {
                 $episode->freezeVisualContext($this->visualContext($episode));
             }
             foreach ($confirmedShots as $confirmedShot) {
@@ -431,6 +436,25 @@ final class AiEpisodeFlow
             $recipe['visualContext'] = $this->visualContext($episode);
             $recipe['inputVersion'] = max(4, $recipe['inputVersion'] ?? 1);
             $episode->reviewRemaining($recipe);
+        });
+    }
+
+    public function correctUnsent(AiEpisode $episode, int $shotId, int $revision, string $prompt, string $identity): void
+    {
+        $this->locked($episode, function () use ($episode, $shotId, $revision, $prompt, $identity): void {
+            $this->revision($episode, $revision);
+            $shot = $this->em->find(AiShot::class, $shotId);
+            if ('review' !== $episode->getFlowState() || !$shot || $shot->getEpisode()->getId() !== $episode->getId() || null !== $shot->getGeneration()) {
+                throw new \RuntimeException('Seul un plan non transmis de cet épisode peut être corrigé.');
+            }
+            if ('' === trim($prompt) || mb_strlen($prompt) > 1500 || mb_strlen($identity) > 300) {
+                throw new \RuntimeException('Le prompt doit contenir de 1 à 1 500 caractères et l’identité au maximum 300.');
+            }
+            $inputs = $shot->getInputs();
+            $inputs['translatedIdentity'] = trim($identity);
+            $inputs['translationSource'] = '' === trim($identity) ? '' : StoryTextChecks::translationSource($episode->getPrompt(), (new VideoPromptLanguage())->context($episode));
+            $shot->correctUnsent($prompt, $this->inputs->row($episode->getOwner(), $inputs, $episode->getFlowRecipe()['imageFit']));
+            $episode->touchReview();
         });
     }
 
@@ -589,8 +613,12 @@ final class AiEpisodeFlow
     {
         $scene ??= $shot->getPrompt();
         $recipe = $episode->getFlowRecipe();
-        if (($recipe['inputVersion'] ?? 1) >= 3) {
+        if (($recipe['inputVersion'] ?? 1) >= 3 || '' !== ($shot->getInputs()['translatedIdentity'] ?? '')) {
             $context = $recipe['visualContext'] ?? $this->visualContext($episode);
+            if ('' !== ($shot->getInputs()['translatedIdentity'] ?? '')) {
+                (new VideoPromptLanguage())->assertScene($episode, $shot, $scene);
+                $context = $shot->getInputs()['translatedIdentity'];
+            }
 
             return $this->prompts->build($recipe['model'], $shot->getSeconds(), $scene, $context, $episode->getContinuity(), count($recipe['subjects'] ?? []), $recipe['subjectDetails'] ?? []);
         }

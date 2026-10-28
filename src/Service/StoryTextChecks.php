@@ -9,6 +9,50 @@ final class StoryTextChecks
     private const ENGLISH = ['the', 'with', 'then', 'into', 'while', 'his', 'her', 'their', 'a', 'an', 'on', 'in', 'of', 'to', 'is', 'camera', 'shot', 'scene', 'close', 'wide', 'static', 'slowly', 'walks', 'moves', 'follows', 'holds', 'cat'];
     private const SPEECH_CUE = 'dit|disant|répond|répondant|prononce|parle|parlant|répliques?|dialogues?|paroles?|says?|speaks?|replies|speaking|dialogue|voiceover|voix off|narrateur|narration';
 
+    /** @param array<string,mixed> $context */
+    public static function translationSource(string $idea, array $context = []): string
+    {
+        return hash('sha256', trim($idea)."\n".trim($context['characters'] ?? '')."\n".trim($context['style'] ?? ''));
+    }
+
+    /** @param array<string,mixed> $context */
+    public function directionIssue(string $prompt, string $idea = '', array $context = []): ?string
+    {
+        $directions = $this->withoutAllowedQuotes($prompt, array_column($this->quotes($this->source($idea, $context)), 'text'));
+        $french = $this->markers($directions, [...self::FRENCH, 'blanc', 'blanche', 'jaune', 'mûre', 'courbée', 'peau', 'debout']);
+        $english = $this->markers($directions, [...self::ENGLISH, 'and', 'are', 'yellow', 'red', 'white', 'skin', 'characters', 'wearing', 'named', 'background', 'light', 'door', 'banana', 'strawberry']);
+        if ($french >= 3 || ($french >= 2 && $english < 2)) {
+            return 'Traduction à corriger : des consignes vidéo semblent encore en français. Corrige le prompt et son identité en anglais, en conservant les citations demandées. Aucun nouvel envoi vidéo ne sera effectué.';
+        }
+        if ('' === trim($directions) || ($english < 2 && preg_match_all('/\p{L}+/u', $directions) >= 8)) {
+            return 'Traduction à vérifier : la langue des consignes vidéo est indéterminée. Précise les directions en anglais, sans traduire les citations demandées. Aucun nouvel envoi vidéo ne sera effectué.';
+        }
+
+        return null;
+    }
+
+    /** @param array<string,mixed> $context
+     * @param list<string> $prompts
+     */
+    public function speechIssue(string $idea, array $context, array $prompts): ?string
+    {
+        $proposal = ['summary' => '', 'shots' => array_map(static fn (string $prompt): array => ['prompt' => $prompt, 'description' => '', 'seconds' => 1], $prompts)];
+        $warnings = $this->review($idea, $context, $proposal);
+        if (isset($warnings['missingSpeech']) || isset($warnings['repeatedSpeech']) || isset($warnings['speechOrder'])) {
+            return 'Répliques à corriger : les citations demandées sont absentes, modifiées, répétées ou déplacées. Corrige les prompts avant de confirmer la vidéo. Aucun nouvel envoi ne sera effectué.';
+        }
+
+        return null;
+    }
+
+    /** @param array<string,mixed> $context */
+    public function requireEnglish(string $prompt, string $idea = '', array $context = []): void
+    {
+        if ($issue = $this->directionIssue($prompt, $idea, $context)) {
+            throw new \RuntimeException($issue);
+        }
+    }
+
     /** @param array<string,mixed> $context
      * @return list<string>
      */

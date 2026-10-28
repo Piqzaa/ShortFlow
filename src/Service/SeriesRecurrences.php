@@ -274,6 +274,7 @@ final class SeriesRecurrences
                 $recipe = $settings['recipe'];
                 foreach ($story['shots'] as &$shot) {
                     $shot['sceneDescription'] = $shot['description'];
+                    $shot['translationSource'] = StoryTextChecks::translationSource($series->initialPrompt(), ['characters' => $series->getCharacters(), 'style' => $series->getStyle()]);
                 }
                 unset($shot);
                 $this->flow->prepare($series->getOwner(), $recipe + ['source' => $this->catalog->referenceMode($recipe['model']), 'target' => array_sum($settings['durations']), 'shots' => $story['shots'], 'prompt' => $series->initialPrompt(), 'title' => $story['title'], 'continuity' => $settings['continuity'], 'mute' => false, 'useEnd' => (bool) $recipe['endReference'], 'revision' => 1], $episode);

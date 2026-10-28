@@ -35,6 +35,15 @@ export default class extends Controller {
 
   rows() { return Array.from(this.listTarget.querySelectorAll('[data-shot-editor-row]')); }
 
+  detachTranslation(event) {
+    event.preventDefault();
+    const row = event.currentTarget.closest('[data-shot-editor-row]');
+    for (const name of ['translatedIdentity', 'translationSource']) row.querySelector(`[name$="[${name}]"]`).value = '';
+    this.update();
+    this.focusRow(row);
+    this.element.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
   act(event) {
     event.preventDefault();
     const [action, value] = event.currentTarget.value.split(':');
@@ -64,6 +73,12 @@ export default class extends Controller {
       const description = row.querySelector('[name$="[sceneDescription]"]')?.value || '';
       const descriptionText = row.querySelector('[data-shot-description-text]');
       if (descriptionText) descriptionText.textContent = description.trim() || 'Résumé à compléter';
+      const translated = row.querySelector('[data-shot-translated-context]');
+      if (translated) {
+        const identity = row.querySelector('[name$="[translatedIdentity]"]').value;
+        translated.hidden = !identity;
+        translated.querySelector('[data-shot-translated-identity]').textContent = identity;
+      }
       const prompt = row.querySelector('textarea').value;
       const status = row.querySelector('[data-shot-summary-status]');
       if (status) {
@@ -93,7 +108,7 @@ export default class extends Controller {
       row.querySelectorAll('[name="plan_action"]').forEach(button => {
         const action = button.value.split(':')[0];
         button.value = `${action}:${index}`;
-        button.disabled = action === 'up' ? index === 0 : action === 'down' ? index === rows.length - 1 : rows.length === 1;
+        button.disabled = action === 'up' ? index === 0 : action === 'down' ? index === rows.length - 1 : action === 'remove' && rows.length === 1;
       });
       const duration = Number(row.querySelector('select').value);
       seconds += duration;

@@ -153,7 +153,7 @@ final class AiStudioTest extends WebTestCase
 
     private function job(string $model = 'kling-25'): AiGeneration
     {
-        $job = new AiGeneration($this->owner, 'Création privée', 'Un oiseau au soleil <script>', $model, 5, '9:16', 'wan-25' === $model ? 50 : 35);
+        $job = new AiGeneration($this->owner, 'Création privée', 'A bird in the sunlight <script>', $model, 5, '9:16', 'wan-25' === $model ? 50 : 35);
         $this->em()->persist($job);
         $this->em()->flush();
 
@@ -164,6 +164,33 @@ final class AiStudioTest extends WebTestCase
     {
         $this->owner = $this->em()->find(User::class, $this->owner->getId());
         static::getContainer()->get(AiKeys::class)->save($this->owner, self::KEY);
+    }
+
+    public function testOldQueuedFrenchDirectionsAreStoppedWithoutProviderSubmission(): void
+    {
+        $this->key();
+        $job = new AiGeneration($this->owner, 'Banane', 'La banane ouvre la porte puis regarde dans le couloir avec la fraise.', 'kling-25', 5, '9:16', 35);
+        $job->progress('queued');
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $this->service()->process($job->getId());
+        self::assertSame('prepared', $job->getStatus());
+        self::assertStringContainsString('Traduction à corriger', $job->getIssue());
+        self::assertSame(0, $this->submissions);
+        self::assertSame([], $job->getRemote());
+    }
+
+    public function testAlreadySubmittedFrenchPromptCanStillBeRecoveredWithoutAnotherPost(): void
+    {
+        $this->key();
+        $job = new AiGeneration($this->owner, 'Banane', 'La banane ouvre la porte puis regarde dans le couloir avec la fraise.', 'kling-25', 5, '9:16', 35);
+        $job->progress('processing', remote: ['status_url' => 'https://queue.fal.run/fal-ai/kling-video/requests/synthetic-id/status', 'response_url' => 'https://queue.fal.run/fal-ai/kling-video/requests/synthetic-id']);
+        $this->em()->persist($job);
+        $this->em()->flush();
+        $this->service()->process($job->getId());
+        self::assertSame('available', $job->getStatus());
+        self::assertNotNull($job->getVideo());
+        self::assertSame(0, $this->submissions);
     }
 
     private function reload(int $id): AiGeneration
@@ -1242,7 +1269,7 @@ final class AiStudioTest extends WebTestCase
         $this->client->submit($form);
         self::assertResponseRedirects('/studio/creation', 303);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('textarea[name="ai_idea[prompt]"]', 'Un oiseau au soleil <script>');
+        self::assertSelectorTextContains('textarea[name="ai_idea[prompt]"]', 'A bird in the sunlight <script>');
         self::assertSelectorExists('select[name="ai_idea[accessMode]"] option[value="mcp"][selected]');
         self::assertSame(1, $this->em()->getRepository(AiGeneration::class)->count([]));
         $this->client->loginUser($this->other);

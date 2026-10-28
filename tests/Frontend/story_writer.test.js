@@ -20,17 +20,20 @@ function setup(fetch, document = {}) {
 test('applying a scenario keeps English directions and saves its French explanation separately', () => {
   const writer = setup(() => assert.fail('Applying must not request generation'));
   const prompt = { value: '', focus() {} }, seconds = { value: '' }, description = { value: '' }, title = { value: '' };
-  const row = { querySelector: selector => selector === 'textarea' ? prompt : selector === 'select' ? seconds : selector.includes('sceneDescription') ? description : null };
+  const identity = { value: '' }, source = { value: '' };
+  const row = { querySelector: selector => selector === 'textarea' ? prompt : selector === 'select' ? seconds : selector.includes('sceneDescription') ? description : selector.includes('translatedIdentity') ? identity : selector.includes('translationSource') ? source : null };
   let changed = 0, updated = 0;
   const form = { querySelector: selector => selector.includes('[title]') ? title : null, dispatchEvent() { changed++; } };
   const editor = { rows: () => [row], listTarget: { replaceChildren() {}, insertAdjacentHTML() {} }, prototypeTarget: { innerHTML: '' }, update() { updated++; } };
   writer.element = { querySelector: () => form };
   writer.application = { getControllerForElementAndIdentifier: () => editor };
   writer.requestFingerprint = 'original';
-  writer.proposal = { title: 'Milo', shots: [{ description: 'Milo ouvre la boîte.', prompt: 'Milo opens the box in a wide shot.', seconds: 5 }] };
+  writer.proposal = { title: 'Milo', shots: [{ description: 'Milo ouvre la boîte.', prompt: 'Milo opens the box in a wide shot.', seconds: 5, translatedIdentity: 'A white cat.', translationSource: 'a'.repeat(64) }] };
   writer.apply();
   assert.equal(prompt.value, 'Milo opens the box in a wide shot.');
   assert.equal(description.value, 'Milo ouvre la boîte.');
+  assert.equal(identity.value, 'A white cat.');
+  assert.equal(source.value, 'a'.repeat(64));
   assert.equal(updated, 1);
   assert.equal(changed, 1);
 });
@@ -133,6 +136,9 @@ test('quality warnings stay visible as plain text and disappear on the next clea
   assert.equal(writer.warningsTarget.children[0].textContent, warning);
   assert.match(writer.statusTarget.textContent, /à vérifier/);
   assert.equal(writer.previewTarget.hidden, false);
+  writer.render({ title: 'Milo', summary: 'Brouillon à corriger', shots: [], warnings: [warning], translationReady: false });
+  assert.match(writer.statusTarget.textContent, /Traduction à corriger/);
+  assert.match(writer.statusTarget.textContent, /brouillon/);
   writer.render({ title: 'Milo', summary: 'Une autre histoire', shots: [] });
   assert.equal(writer.warningsTarget.hidden, true);
   assert.equal(writer.warningsTarget.children.length, 0);

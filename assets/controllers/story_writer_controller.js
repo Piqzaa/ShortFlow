@@ -28,7 +28,7 @@ export default class extends Controller {
       subjectDetails: [...this.form.querySelectorAll('[name^="ai_idea[subjectDetails]"]')].filter(input => !input.disabled).map(input => [input.name, input.value]),
       shots: this.editor.rows().map(row => [
         row.querySelector('textarea').value, row.querySelector('select').value,
-        ...['startReference', 'endReference', 'referenceFit', 'sceneDescription'].map(name => row.querySelector(`[name$="[${name}]"]`)?.value || ''),
+        ...['startReference', 'endReference', 'referenceFit', 'sceneDescription', 'translatedIdentity', 'translationSource'].map(name => row.querySelector(`[name$="[${name}]"]`)?.value || ''),
       ]),
     });
   }
@@ -189,7 +189,7 @@ export default class extends Controller {
       description.textContent = shot.description;
       const technical = document.createElement('details');
       const label = document.createElement('summary');
-      label.textContent = 'Voir le prompt vidéo en anglais';
+      label.textContent = 'Voir le prompt vidéo';
       const prompt = document.createElement('p');
       prompt.textContent = shot.prompt;
       technical.append(label, prompt);
@@ -197,10 +197,11 @@ export default class extends Controller {
       this.scenesTarget.append(scene);
     });
     this.previewTarget.hidden = false;
-    this.statusTarget.textContent = warnings.length ? 'Proposition à vérifier : des points demandent ta relecture avant d’utiliser ces scènes.' : 'Proposition prête. Relis-la puis utilise ces scènes si elles te conviennent. L’absence d’alerte ne garantit pas sa fidélité.';
+    this.statusTarget.textContent = data.translationReady === false ? 'Traduction à corriger. Le scénario français est conservé. Tu peux appliquer ce brouillon pour corriger les prompts ; la génération vidéo reste bloquée jusqu’à correction des points signalés.' : warnings.length ? 'Proposition à vérifier : des points demandent ta relecture avant d’utiliser ces scènes.' : 'Proposition prête. Relis-la puis utilise ces scènes si elles te conviennent. L’absence d’alerte ne garantit pas sa fidélité.';
   }
   apply() {
     if (!this.proposal) return;
+    const correctionNotice = this.proposal.translationReady === false ? 'Brouillon appliqué. Corrige les points signalés avant de demander le devis. Alertes de la proposition initiale : '+(this.proposal.warnings || []).join(' ') : null;
     if (this.requestFingerprint !== this.fingerprint()) {
       this.statusTarget.textContent = 'Ta préparation a changé. Demande une nouvelle proposition avant de remplacer tes scènes.';
       return;
@@ -217,6 +218,10 @@ export default class extends Controller {
       row.querySelector('textarea').value = shot.prompt;
       const description = row.querySelector('[name$="[sceneDescription]"]');
       if (description) description.value = shot.description || '';
+      for (const name of ['translatedIdentity', 'translationSource']) {
+        const field = row.querySelector(`[name$="[${name}]"]`);
+        if (field) field.value = shot[name] || '';
+      }
       row.querySelector('select').value = String(shot.seconds);
       for (const [name,value] of Object.entries(inputs[index] || {})) { const input=row.querySelector(`[name$="[${name}]"]`); if (input) input.value=value; }
     });
@@ -233,7 +238,7 @@ export default class extends Controller {
     }
     this.previewTarget.hidden = true;
     this.proposal = null;
-    this.statusTarget.textContent = 'Scènes appliquées. Tu peux les personnaliser puis vérifier le coût au récapitulatif.';
+    this.statusTarget.textContent = correctionNotice || 'Scènes appliquées. Tu peux les personnaliser puis vérifier le coût au récapitulatif.';
   }
   disconnect() {
     this.active = false; this.pending = false;

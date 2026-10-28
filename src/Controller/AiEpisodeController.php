@@ -107,6 +107,8 @@ final class AiEpisodeController extends AbstractController
                             $index = ctype_digit($index) ? (int) $index : -1;
                             if ('add' === $command && count($rows) < 8) {
                                 $rows[] = ['prompt' => '', 'seconds' => min(AiCatalog::MODELS[$episode->getFlowRecipe()['model']]['seconds'])];
+                            } elseif ('detach_translation' === $command && isset($rows[$index])) {
+                                $rows[$index]['translatedIdentity'] = $rows[$index]['translationSource'] = '';
                             } elseif ('remove' === $command && isset($rows[$index]) && count($rows) > 1) {
                                 array_splice($rows, $index, 1);
                             } elseif (in_array($command, ['up', 'down'], true)) {
@@ -134,6 +136,10 @@ final class AiEpisodeController extends AbstractController
                         $seriesConsent->manual($episode, fn () => $flow->confirm($episode, $request->request->getString('quote'), $request->request->getInt('redo')));
                     } elseif ('review_remaining' === $intent) {
                         $flow->reviewRemaining($episode, $request->request->getInt('revision'));
+
+                        return $this->redirectToRoute('app_series_episode', ['id' => $id, 'review' => 1], 303);
+                    } elseif ('correct_unsent' === $intent) {
+                        $flow->correctUnsent($episode, $request->request->getInt('shot'), $request->request->getInt('revision'), $request->request->getString('remaining_prompt'), $request->request->getString('translated_identity'));
 
                         return $this->redirectToRoute('app_series_episode', ['id' => $id, 'review' => 1], 303);
                     } elseif ('repair_prompt' === $intent) {

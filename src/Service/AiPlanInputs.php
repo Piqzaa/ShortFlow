@@ -110,11 +110,20 @@ final class AiPlanInputs
     }
 
     /** @param array<string,mixed> $row
-     * @return array{startReference:?string,endReference:?string,referenceFit:string,imagePrompt?:string,sceneDescription?:string}
+     * @return array{startReference:?string,endReference:?string,referenceFit:string,imagePrompt?:string,sceneDescription?:string,translatedIdentity?:string,translationSource?:string}
      */
     public function row(User $owner, array $row, string $defaultFit): array
     {
         $result = ['startReference' => null, 'endReference' => null, 'referenceFit' => $row['referenceFit'] ?? $defaultFit];
+        $identity = $row['translatedIdentity'] ?? '';
+        $source = $row['translationSource'] ?? '';
+        if (!is_string($identity) || mb_strlen($identity) > 300 || !is_string($source) || ('' !== $source && !preg_match('/^[a-f0-9]{64}$/D', $source)) || (('' !== trim($identity)) !== ('' !== $source))) {
+            throw new \RuntimeException('Le contexte traduit du plan est incomplet. Propose un nouveau scénario ou détache ce contexte pour reprendre manuellement.');
+        }
+        if ('' !== trim($identity)) {
+            $result['translatedIdentity'] = trim($identity);
+            $result['translationSource'] = $source;
+        }
         $description = $row['sceneDescription'] ?? '';
         if (!is_string($description) || mb_strlen($description) > 300) {
             throw new \RuntimeException('Le résumé français du plan doit contenir au maximum 300 caractères.');

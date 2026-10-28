@@ -35,7 +35,7 @@ class AiEpisode
     #[ORM\Column(length: 16, nullable: true)]
     private ?string $flowState = null;
 
-    /** @var array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>}|null */
+    /** @var array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,translationContext?:array{characters:string,style:string},subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>}|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $flowRecipe = null;
 
@@ -113,7 +113,7 @@ class AiEpisode
         return $this->approvedVideo;
     }
 
-    /** @return array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>}|null */
+    /** @return array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,translationContext?:array{characters:string,style:string},subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>}|null */
     public function getFlowRecipe(): ?array
     {
         return $this->flowRecipe;
@@ -132,7 +132,7 @@ class AiEpisode
         ++$this->revision;
     }
 
-    /** @param array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} $recipe */
+    /** @param array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,translationContext?:array{characters:string,style:string},subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} $recipe */
     public function configurePreparation(array $recipe, string $context, string $continuity, bool $mute): void
     {
         if ($this->flowState && 'draft' !== $this->flowState) {
@@ -161,9 +161,10 @@ class AiEpisode
         if (!array_key_exists('visualContext', $this->flowRecipe ?? [])) {
             $this->flowRecipe['visualContext'] = $context;
         }
+        $this->flowRecipe['translationContext'] ??= $this->isStandalone() ? ['characters' => '', 'style' => ''] : ['characters' => $this->series->getCharacters(), 'style' => $this->series->getStyle()];
     }
 
-    /** @param array{model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} $recipe */
+    /** @param array{model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,translationContext?:array{characters:string,style:string},subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} $recipe */
     public function reviewRemaining(array $recipe): void
     {
         if ('paused' !== $this->flowState) {
@@ -196,6 +197,14 @@ class AiEpisode
         ++$this->revision;
     }
 
+    public function touchReview(): void
+    {
+        if ('review' !== $this->flowState) {
+            throw new \RuntimeException('Les plans ne sont pas en révision.');
+        }
+        ++$this->revision;
+    }
+
     public function approve(VideoAsset $video): void
     {
         if ('ready' !== $this->flowState || $video->getOwner()->getId() !== $this->getOwner()->getId()) {
@@ -205,7 +214,7 @@ class AiEpisode
         ++$this->revision;
     }
 
-    /** @param array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>}|null $recipe */
+    /** @param array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,translationContext?:array{characters:string,style:string},subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>}|null $recipe */
     public function __construct(AiSeries|User $series, int $number, string $title = '', string $prompt = '', ?array $recipe = null)
     {
         $this->series = $series instanceof AiSeries ? $series : null;
@@ -226,7 +235,7 @@ class AiEpisode
         return $this->owner ?? $this->getSeries()->getOwner();
     }
 
-    /** @return array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} */
+    /** @return array{totalSeconds?:int,model:string,seconds:int,ratio:string,accessMode:string,reference:?string,endReference:?string,imageFit:string,montage?:array{sourceVolume:int,intro:bool,fit:string},inputVersion?:int,subjects?:list<string>,visualContext?:string,translationContext?:array{characters:string,style:string},subjectDetails?:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>} */
     public function getPreparationRecipe(): array
     {
         if ($this->flowRecipe) {

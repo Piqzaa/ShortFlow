@@ -1,11 +1,14 @@
 <section class="story-shot shot-card" data-shot-editor-row data-action="input->shot-editor#update change->shot-editor#update">
   <header class="shot-card-heading"><h3 data-shot-heading>Plan {{ shotNumber|default('') }}</h3><div class="shot-card-duration">{{ form_row(shotForm.seconds) }}</div></header>
   {{ form_errors(shotForm) }}
+  {{ form_widget(shotForm.translatedIdentity) }}{{ form_errors(shotForm.translatedIdentity) }}
+  {{ form_widget(shotForm.translationSource) }}{{ form_errors(shotForm.translationSource) }}
   {% include 'ai/_shot_description.html.twig' %}
   <p class="library-note shot-reference-summary" data-shot-reference-summary>{% if shotForm.startReference.vars.value or shotForm.endReference.vars.value %}Cadres renseignés : {{ shotForm.startReference.vars.value ? 'début' : '' }}{{ shotForm.startReference.vars.value and shotForm.endReference.vars.value ? ' et ' : '' }}{{ shotForm.endReference.vars.value ? 'fin' : '' }}. {% endif %}Références communes selon le mode ; envoi exact à vérifier au récapitulatif.</p>
   <details class="shot-card-details" data-shot-details{% if not shotForm.vars.valid or not shotForm.prompt.vars.value or not shotForm.sceneDescription.vars.value %} open{% endif %}>
     <summary>Modifier le résumé, le prompt et les images</summary>
     {{ form_row(shotForm.sceneDescription) }}
+    <div class="library-note" data-shot-translated-context{% if not shotForm.translatedIdentity.vars.value %} hidden{% endif %}><strong>Identité et style proposés</strong><p data-shot-translated-identity>{{ shotForm.translatedIdentity.vars.value }}</p><p>Ce contexte accompagne ce plan. Vérifie sa traduction et sa fidélité. Le brief français reste enregistré ; ses détails utiles doivent être repris dans le prompt et ce contexte.</p><button type="submit" name="plan_action" value="detach_translation:{{ shotIndex|default(0) }}" class="account-secondary" data-action="shot-editor#detachTranslation">Détacher ce contexte et reprendre manuellement</button></div>
     {{ form_row(shotForm.prompt) }}
     <p class="library-note">Le prompt vidéo est envoyé au modèle. Le résumé français sert à ta relecture ; le modifier ne réécrit pas le prompt.</p>
     {% include 'ai/_shot_references.html.twig' %}

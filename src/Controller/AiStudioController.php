@@ -108,6 +108,8 @@ final class AiStudioController extends AbstractController
                         $index = ctype_digit($index) ? (int) $index : -1;
                         if ('add' === $action && count($rows) < 8) {
                             $rows[] = ['prompt' => '', 'seconds' => min($catalog->model($data['model'])['seconds'])];
+                        } elseif ('detach_translation' === $action && isset($rows[$index])) {
+                            $rows[$index]['translatedIdentity'] = $rows[$index]['translationSource'] = '';
                         } elseif ('remove' === $action && count($rows) > 1 && isset($rows[$index])) {
                             array_splice($rows, $index, 1);
                         } elseif (in_array($action, ['up', 'down'], true)) {
@@ -138,7 +140,7 @@ final class AiStudioController extends AbstractController
                         if (count($old) !== count($durations) && array_filter($old, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? ''))) {
                             throw new \RuntimeException('Déplace ou retire les cadres et les consignes d’images avant de changer automatiquement le nombre de plans. Tes textes et images restent conservés.');
                         }
-                        $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds] + array_intersect_key($old[$i] ?? [], array_flip(['startReference', 'endReference', 'referenceFit', 'imagePrompt', 'sceneDescription'])), $durations, array_keys($durations));
+                        $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds] + array_intersect_key($old[$i] ?? [], array_flip(['startReference', 'endReference', 'referenceFit', 'imagePrompt', 'sceneDescription', 'translatedIdentity', 'translationSource'])), $durations, array_keys($durations));
                         if (count($old) > count($durations)) {
                             $last = count($durations) - 1;
                             $data['shots'][$last]['prompt'] .= "\n".implode("\n", array_column(array_slice($old, count($durations)), 'prompt'));

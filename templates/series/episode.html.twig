@@ -7,6 +7,7 @@
 {% if episode.flowState in ['running','assembling','paused'] %}{% include 'series/_progress.html.twig' %}{% endif %}
 {% if error %}<p class="account-notice error" role="alert">{{ error }}</p>{% endif %}
 {% if episode.flowIssue %}<p class="account-notice" role="status">{{ episode.flowIssue }}</p>{% endif %}
+{% include 'ai/_remaining_prompt_correction.html.twig' %}
 <details class="story-context"><summary>Contexte de préparation</summary><p class="series-prompt">{{ episode.prompt }}</p>{% if recipe.reference %}<img class="series-reference" src="{{ path('app_ai_reference_image',{name:recipe.reference}) }}" alt="Référence commune des plans">{% endif %}<p class="library-note">Les scènes décrivent des actions différentes. Le devis indique le prompt exact, avec le contexte visuel adapté à la place disponible. Les références aident à garder le personnage, sans garantir une continuité parfaite.</p></details>
 {% if not episode.flowState %}
 <section class="story-panel"><h2>Choisir la durée de ta vidéo, jusqu’à 60 secondes</h2><p>VydFlow propose un découpage compatible avec ton modèle. Complète ensuite la scène de chaque plan avant toute génération.</p>

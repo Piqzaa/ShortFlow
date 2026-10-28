@@ -1,0 +1,11 @@
+{% if episode.flowState == 'review' %}
+<section class="story-panel" aria-labelledby="remaining-correction-title"><h2 id="remaining-correction-title">Corriger les plans non transmis</h2><p>Les clips terminés restent conservés. Enregistrer un texte ne lance aucune vidéo ; vérifie ensuite le nouveau devis.</p>
+{% for shot in shots %}{% if not shot.generation %}
+<form method="post" class="account-form story-shot" data-controller="unsaved" data-action="input->unsaved#change change->unsaved#change submit->unsaved#submit">
+<input type="hidden" name="_token" value="{{ csrf_token('episode_flow_' ~ episode.id) }}"><input type="hidden" name="revision" value="{{ episode.revision }}"><input type="hidden" name="shot" value="{{ shot.id }}"><input type="hidden" name="intent" value="correct_unsent">
+<label for="remaining-prompt-{{ shot.id }}">Prompt du plan {{ shot.position }} en anglais</label><textarea id="remaining-prompt-{{ shot.id }}" name="remaining_prompt" rows="5" maxlength="1500" required>{{ shot.prompt }}</textarea>
+<label for="remaining-identity-{{ shot.id }}">Identité et style en anglais · facultatif</label><input id="remaining-identity-{{ shot.id }}" type="text" name="translated_identity" maxlength="300" value="{{ shot.inputs.translatedIdentity|default('') }}"><p class="library-note">Laisser l’identité vide détache ce contexte traduit. Le prompt, les références et le brief source restent enregistrés. Conserve les citations demandées dans leur langue.</p>
+<button class="account-secondary" type="submit">Enregistrer le plan {{ shot.position }} et revoir le devis</button>
+</form>
+{% endif %}{% endfor %}</section>
+{% endif %}

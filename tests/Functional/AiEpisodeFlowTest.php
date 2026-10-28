@@ -247,6 +247,109 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame(0, $this->submissions);
     }
 
+    public function testFrenchScenesCannotReceiveAQuoteButRemainSavedForCorrection(): void
+    {
+        $episode = $this->planned(false, 10);
+        $rows = [['prompt' => 'La banane ouvre la porte puis regarde dans le couloir avec la fraise.', 'seconds' => 10, 'sceneDescription' => 'La banane ouvre la porte.']];
+        $this->flow()->save($episode, $episode->getRevision(), 'Banane', $rows);
+        try {
+            $this->flow()->quote($episode);
+            self::fail('French directions must be blocked before cost confirmation.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('Traduction à corriger', $error->getMessage());
+        }
+        self::assertSame($rows[0]['prompt'], $this->flow()->shots($episode)[0]->getPrompt());
+        self::assertSame(0, $this->submissions);
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testConfirmedTranslationKeepsItsSourceWhenSeriesSettingsChange(): void
+    {
+        $episode = $this->planned(false, 10);
+        $series = $episode->getSeries();
+        $source = \App\Service\StoryTextChecks::translationSource($episode->getPrompt(), ['characters' => $series->getCharacters(), 'style' => $series->getStyle()]);
+        $this->flow()->save($episode, $episode->getRevision(), 'Milo', [['prompt' => 'Milo, a white cat. Scene 1: the cat opens the box in a static shot.', 'seconds' => 10, 'translatedIdentity' => 'A white cat.', 'translationSource' => $source]]);
+        $this->flow()->confirm($episode, $this->flow()->quote($episode)['hash']);
+        $series->configure($series->getName(), $series->getTheme(), 'Nouveau style.', 'Milo est désormais bleu dans les futurs épisodes.', $series->getRecipe());
+        $this->em()->flush();
+        self::assertSame('Miniature cinema.', $episode->getFlowRecipe()['translationContext']['style']);
+        $this->flow()->advance($episode->getId());
+        $job = $this->flow()->shots($episode)[0]->getGeneration();
+        self::assertNotNull($job);
+        static::getContainer()->get(AiGenerations::class)->process($job->getId());
+        self::assertSame('processing', $job->getStatus());
+        self::assertSame(1, $this->submissions);
+        self::assertStringNotContainsString('désormais bleu', $job->getPrompt());
+    }
+
+    public function testBlockedUnsentTranslationCanReturnToManualReviewWithoutLosingScenes(): void
+    {
+        $episode = $this->planned(false, 10);
+        $prompt = 'La banane ouvre la porte puis regarde dans le couloir avec la fraise.';
+        $this->flow()->save($episode, $episode->getRevision(), 'Banane', [['prompt' => $prompt, 'seconds' => 10]]);
+        $shot = $this->flow()->shots($episode)[0];
+        $job = new AiGeneration($this->owner, 'Ancienne traduction', $prompt, 'kling-25', 10, '9:16', 70);
+        $job->progress('queued');
+        $this->em()->persist($job);
+        $shot->bind($job);
+        $episode->flow('running');
+        $this->em()->flush();
+        static::getContainer()->get(AiGenerations::class)->process($job->getId());
+        self::assertSame('prepared', $job->getStatus());
+        self::assertSame('paused', $episode->getFlowState());
+        $this->flow()->reviewRemaining($episode, $episode->getRevision());
+        self::assertSame('review', $episode->getFlowState());
+        self::assertSame($prompt, $shot->getPrompt());
+        self::assertNull($shot->getGeneration());
+        self::assertSame('cancelled', $job->getStatus());
+        self::assertSame(0, $this->submissions);
+        $revision = $episode->getRevision();
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertResponseIsSuccessful();
+        $form = $crawler->selectButton('Enregistrer le plan 1 et revoir le devis')->form();
+        $form['remaining_prompt'] = 'A yellow banana opens the door and looks down the corridor with a red strawberry.';
+        $form['translated_identity'] = '';
+        $this->client->submit($form);
+        self::assertResponseRedirects('/studio/series/episodes/'.$episode->getId().'?review=1', 303);
+        $episode = $this->em()->find(AiEpisode::class, $episode->getId());
+        $shot = $this->flow()->shots($episode)[0];
+        self::assertSame($revision + 1, $episode->getRevision());
+        self::assertStringContainsString('A yellow banana', $shot->getPrompt());
+        self::assertNull($shot->getGeneration());
+        self::assertArrayNotHasKey('translatedIdentity', $shot->getInputs());
+        self::assertNotEmpty($this->flow()->quote($episode)['hash']);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testTranslatedContextRoundTripsWithoutAddingFrenchBriefToTheVideoPrompt(): void
+    {
+        $episode = $this->planned(false, 10);
+        $episode->edit('Milo', 'Milo est un chat blanc dans une pièce avec une boîte.');
+        $this->em()->flush();
+        $this->flow()->save($episode, $episode->getRevision(), 'Milo', [['prompt' => 'White cat Milo. A static camera frames the cat opening the box.', 'seconds' => 10, 'sceneDescription' => 'Milo ouvre la boîte.', 'translatedIdentity' => 'A white cat in a room with a box.', 'translationSource' => \App\Service\StoryTextChecks::translationSource($episode->getPrompt(), ['characters' => $episode->getSeries()->getCharacters(), 'style' => $episode->getSeries()->getStyle()])]]);
+        $quote = $this->flow()->quote($episode);
+        self::assertStringNotContainsString('une pièce', $quote['references'][0]['prompt']);
+        self::assertStringContainsString('A white cat in a room with a box.', $quote['references'][0]['prompt']);
+        $job = new AiGeneration($this->owner, 'Nom de référence', '5 seconds. Reference1="Le chat dans la boîte".'."\nScene: ".$this->flow()->shots($episode)[0]->getPrompt(), 'kling-25', 10, '9:16', 70);
+        (new \App\Service\VideoPromptLanguage())->assertGeneration($job, $this->flow()->shots($episode)[0]);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertResponseIsSuccessful();
+        self::assertInputValueSame('ai_idea[shots][0][translatedIdentity]', 'A white cat in a room with a box.');
+        $episode->edit('Milo', 'Le sujet a changé.');
+        $this->em()->flush();
+        try {
+            $this->flow()->quote($episode);
+            self::fail('Changed source must not reuse the old translated context.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('contexte source a changé', $error->getMessage());
+        }
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $this->client->submit($crawler->selectButton('Détacher ce contexte et reprendre manuellement')->form());
+        self::assertResponseRedirects();
+        self::assertArrayNotHasKey('translatedIdentity', $this->flow()->shots($episode)[0]->getInputs());
+        self::assertStringContainsString('opening the box', $this->flow()->shots($episode)[0]->getPrompt());
+    }
+
     public function testCompactCardsPreserveHumanSummariesWhenReducingAndExposeImageErrors(): void
     {
         $episode = $this->planned();

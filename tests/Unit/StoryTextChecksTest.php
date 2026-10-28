@@ -11,6 +11,21 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class StoryTextChecksTest extends TestCase
 {
+    public function testProductionGateChecksFrenchIdentityAndDoesNotTreatDirectionsAsTheirOwnQuoteSource(): void
+    {
+        $checks = new StoryTextChecks();
+        foreach (['Un chat blanc.', 'Banane longue et courbée, peau jaune mûre.', '« Le chat est dans une boîte sur les coussins. »'] as $text) {
+            self::assertNotNull($checks->directionIssue($text));
+        }
+        foreach (['A white cat named Le Mans walks slowly.', 'A camera frames Café de Flore in warm sunlight.', 'A static shot of Lea. She says « Le chat est dans une boîte sur les coussins. ».'] as $text) {
+            self::assertNull($checks->directionIssue($text, 'Léa dit « Le chat est dans une boîte sur les coussins. ».'));
+        }
+        self::assertNotNull($checks->directionIssue('Zwei Freunde begegnen einander langsam vor einem ruhigen kleinen Haus.'));
+        self::assertNull($checks->directionIssue('Yellow banana, smooth skin and soft curves. Red strawberry, visible seeds and rounded shape. Both characters are stylized simple anthropomorphs, no accessories.'));
+        self::assertNotNull($checks->speechIssue('Léa dit « Bonjour ! » puis Hugo répond « Salut ! ».', [], ['A static shot of Lea. She says « Bonjour ! ».']));
+        self::assertNull($checks->speechIssue('Léa dit « Bonjour ! » puis Hugo répond « Salut ! ».', [], ['A static shot of Lea. She says « Bonjour ! ».', 'A wide shot of Hugo. He replies « Salut ! ».']));
+    }
+
     /** @param list<string> $prompts @param array<string,mixed> $context
      * @return array<string,string>
      */
@@ -161,7 +176,7 @@ final class StoryTextChecksTest extends TestCase
             self::assertStringNotContainsString('ni dialogue', $instructions);
             self::assertStringNotContainsString('subtitles or dialogue', $instructions);
             $input = json_decode($request['messages'][1]['content'], true, 32, JSON_THROW_ON_ERROR);
-            $brief = 1 === $calls ? $input : $input['brief'];
+            $brief = $input;
             self::assertSame([$line], $brief['requested_lines']);
             $result = 1 === $calls
                 ? ['title' => 'Une rencontre', 'summary' => 'Léa répond à Hugo.', 'identity' => 'Léa.', 'beats' => ['Léa dit « '.$line.' ».']]

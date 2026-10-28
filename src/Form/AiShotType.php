@@ -16,6 +16,8 @@ final class AiShotType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('sceneDescription', TextType::class, ['label' => 'Résumé en français', 'required' => false, 'attr' => ['maxlength' => 300, 'placeholder' => 'Résume l’action de ce plan…'], 'constraints' => [new Assert\Length(max: 300, groups: ['Default', 'connection', 'autosave'])]])
+            ->add('translatedIdentity', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Length(max: 300, groups: ['Default', 'connection', 'autosave'])]])
+            ->add('translationSource', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^[a-f0-9]{64}$/D', groups: ['Default', 'connection', 'autosave'])]])
             ->add('startReference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^[a-f0-9]{48}\.jpg$/D')]])
             ->add('endReference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^[a-f0-9]{48}\.jpg$/D')]])
             ->add('referenceFit', HiddenType::class, ['required' => false, 'empty_data' => 'crop', 'constraints' => [new Assert\Choice(['crop', 'contain'])]])

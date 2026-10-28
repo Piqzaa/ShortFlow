@@ -56,6 +56,7 @@ final class AiGenerations
             }
             $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
             $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
+            $this->assertLanguage($job);
             $this->assertReference($job);
             if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
                 throw new \RuntimeException('Le tarif doit être revérifié. Prépare une nouvelle estimation avant de lancer.');
@@ -90,6 +91,7 @@ final class AiGenerations
                 }
                 $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
                 $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
+                $this->assertLanguage($job);
                 $this->assertReference($job);
                 if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
                     throw new \RuntimeException('Le tarif doit être revérifié avant de reprendre.');
@@ -147,6 +149,7 @@ final class AiGenerations
             }
             if ('queued' === $job->getStatus()) {
                 try {
+                    $this->assertLanguage($job);
                     $this->assertCapacity($job);
                     $this->api->checkAccess($job, $key);
                     $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
@@ -155,6 +158,15 @@ final class AiGenerations
                     if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
                         throw new \RuntimeException('Le tarif doit être revérifié avant de lancer. Prépare une nouvelle estimation.');
                     }
+                } catch (VideoPromptReviewRequired $error) {
+                    $job->progress('prepared', $error->getMessage());
+                    $shot = $this->em->getRepository(\App\Entity\AiShot::class)->findOneBy(['generation' => $job]);
+                    if ($shot) {
+                        $shot->getEpisode()->flow('paused', $error->getMessage());
+                    }
+                    $this->em->flush();
+
+                    return;
                 } catch (\InvalidArgumentException|\RuntimeException $error) {
                     $job->progress('review', $error->getMessage());
                     $this->em->flush();
@@ -168,9 +180,31 @@ final class AiGenerations
                     $this->em->refresh($job, LockMode::PESSIMISTIC_WRITE);
                     $shot = $this->em->getRepository(\App\Entity\AiShot::class)->findOneBy(['generation' => $job]);
                     if ($shot) {
+                        $this->em->refresh($shot, LockMode::PESSIMISTIC_WRITE);
                         $this->em->refresh($shot->getEpisode());
+                        if (!$shot->getEpisode()->isStandalone()) {
+                            $this->em->refresh($shot->getEpisode()->getSeries());
+                        }
                     }
                     if ('queued' !== $job->getStatus() || ($shot && 'running' !== $shot->getEpisode()->getFlowState())) {
+                        return false;
+                    }
+                    try {
+                        (new VideoPromptLanguage())->assertGeneration($job, $shot);
+                        if ($shot) {
+                            $allShots = $this->em->getRepository(\App\Entity\AiShot::class)->findBy(['episode' => $shot->getEpisode()], ['position' => 'ASC']);
+                            foreach ($allShots as $episodeShot) {
+                                $this->em->refresh($episodeShot);
+                            }
+                            (new VideoPromptLanguage())->assertSpeech($shot->getEpisode(), array_map(static fn (\App\Entity\AiShot $episodeShot): string => $episodeShot->getPrompt(), $allShots));
+                        }
+                    } catch (VideoPromptReviewRequired $failure) {
+                        $job->progress('prepared', $failure->getMessage());
+                        if ($shot) {
+                            $shot->getEpisode()->flow('paused', $failure->getMessage());
+                        }
+                        $this->em->flush();
+
                         return false;
                     }
                     if ($shot) {
@@ -315,6 +349,12 @@ final class AiGenerations
 
             return true;
         });
+    }
+
+    private function assertLanguage(AiGeneration $job): void
+    {
+        $shot = $this->em->getRepository(\App\Entity\AiShot::class)->findOneBy(['generation' => $job]);
+        (new VideoPromptLanguage())->assertGeneration($job, $shot);
     }
 
     private function estimatedCost(AiGeneration $job): int
