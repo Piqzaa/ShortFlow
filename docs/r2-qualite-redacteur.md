@@ -1,6 +1,18 @@
 # R2 — Qualité des scénarios et textes : suivi
 
-## État courant — R2.5 terminé, 28 octobre 2026
+## État courant — R2.6 terminé, 28 octobre 2026
+
+Deux passages réels de Qwen3 8B local sur neuf cas synthétiques fixes : **18 essais, 28 appels HTTP, 12 scénarios normalisés, quatre timeouts éditoriaux de 180 s sans corps capturé et deux refus `context` sans HTTP**. Programme, corpus, captures versionnées, protocole, horloges, conditions et relectures dans [le bilan R2.6](r2-evaluation-redacteur.md). Les sources applicatives restent celles de R2.5 ; aucun changement de consignes entre passages. Campagne complète mais programme sorti avec le **code 1** pour les quatre packs non aboutis : ne pas annoncer 18 réussites.
+
+Relectures indépendantes du protocole, des douze scénarios, des six essais éditoriaux et de la métrologie réalisées. Citations exactes et locuteurs conservés dans les deux dialogues ; détails ajoutés, actions/états incohérents et préfixes contenant des actions restent observés, souvent sans alerte. Mémoire balle/carton respectée dans ces deux exemples uniquement. **Aucune qualité vidéo/audio ou fiabilité autonome validée.** Les quatre délais ne prouvent pas un défaut de hashtags : leur contenu n'a pas été obtenu.
+
+Mesures des douze scénarios : médiane murale **58,424257 s**, monotone **58,396488 s**, premier chargement natif **33,0442357 s**, écart absolu maximal des horloges par essai **0,140863 s**. Deux répétitions et un proxy d'observation ne constituent pas un benchmark de production ni une comparaison statistique avec l'audit ancien. Empreintes programme/corpus/trois services inchangées contrôlées avant archivage ; les 18 entrées correspondent au corpus, horodatages et corps exacts conservés.
+
+Programme exécuté, `php -l`, style et mode sans appel réussis ; JSON/liens/repères/diff vérifiés. Aucune application modifiée : dernière suite complète verte historique **758 / 8 619**, frontend **152**, R2.5, non rejouée ici. Aucun build, changement de schéma, interface, service ni worker. Aucun essai image/vidéo payant, compte, envoi social ou activation ; conteneur CLI temporaire retiré automatiquement. Le maintien du PC éveillé était la seule précaution manuelle de mesure.
+
+**Prochain point exact : R2.7**, revue de clôture du grand R2 avec traitement ou limitation explicite des écarts avant toute validation de sortie ; ne pas passer directement à R3. Commit local `test: evaluate local writer on repeated corpus`, aucun push.
+
+## Historique — R2.5 terminé, 28 octobre 2026
 
 Le contrôle de contexte refuse les sources sans description/scènes distinctes du titre avant verrou local et HTTP. Il protège aussi l'application d'une ancienne proposition insuffisamment décrite, sans modifier les textes déjà saisis ou appliqués. Le préparateur explique le besoin avec une aide liée au champ et un exemple ; saisie directe et application volontaire conservées. [Fonctionnement, fichiers, limites et recette](redacteur-contexte-factuel.md).
 

@@ -1,0 +1,176 @@
+{
+    "purpose": "Corpus synthétique fixe R2.6 : aucun média ni compte réel. Deux répétitions séquentielles, aucune correction entre passages.",
+    "cases": [
+        {
+            "id": "milo",
+            "kind": "story",
+            "input": {
+                "id": "milo",
+                "idea": "Milo mon chat blanc joueur découvre les objets du quotidien.",
+                "durations": [
+                    10,
+                    15,
+                    15
+                ],
+                "continuity": "independent",
+                "tone": "auto",
+                "context": []
+            }
+        },
+        {
+            "id": "recette",
+            "kind": "story",
+            "input": {
+                "id": "recette",
+                "idea": "Tutoriel réaliste : préparer une tartine de pain avec du beurre puis de la confiture de fraise. Seules les mains de la personne sont visibles. Montrer le résultat terminé, sans personnage animal ni gag.",
+                "durations": [
+                    5,
+                    5,
+                    5
+                ],
+                "continuity": "independent",
+                "tone": "auto",
+                "context": []
+            }
+        },
+        {
+            "id": "produit",
+            "kind": "story",
+            "input": {
+                "id": "produit",
+                "idea": "Présenter un mug blanc en céramique sans logo, posé sur une table en bois. Montrer sa forme puis la texture de la céramique et son anse, sans personne ni dialogue.",
+                "durations": [
+                    5,
+                    5,
+                    5
+                ],
+                "continuity": "independent",
+                "tone": "calme",
+                "context": []
+            }
+        },
+        {
+            "id": "dialogue",
+            "kind": "story",
+            "input": {
+                "id": "dialogue",
+                "idea": "Deux amis adultes se croisent devant un café. Léa dit en français « Tu as trouvé mon chat ? » puis Hugo répond « Oui, il dort sur ta chaise ! ». Fin : ils regardent le chat roux endormi sur la chaise. Conserver ces deux phrases audibles en français et ces personnages, sans narrateur.",
+                "durations": [
+                    5,
+                    5,
+                    5
+                ],
+                "continuity": "independent",
+                "tone": "auto",
+                "context": {
+                    "characters": "Léa porte une veste bleue, Hugo une chemise blanche. Le chat est roux."
+                }
+            }
+        },
+        {
+            "id": "danse",
+            "kind": "story",
+            "input": {
+                "id": "danse",
+                "idea": "Un chat blanc réaliste debout danse avec de petits pas latéraux synchronisés sur un rythme joyeux, puis termine immobile avec les pattes en l’air. Garder ce chat et le même salon, sans texte ni dialogue.",
+                "durations": [
+                    5,
+                    5,
+                    5
+                ],
+                "continuity": "linked",
+                "tone": "auto",
+                "context": []
+            }
+        },
+        {
+            "id": "memoire",
+            "kind": "story",
+            "input": {
+                "id": "memoire",
+                "idea": "Milo mon chat blanc joueur découvre les objets du quotidien. Une nouvelle aventure, sans reprendre les objets déjà utilisés.",
+                "durations": [
+                    10,
+                    15,
+                    15
+                ],
+                "continuity": "independent",
+                "tone": "auto",
+                "context": {
+                    "characters": "Milo est un chat blanc, sans costume ni accessoire.",
+                    "previous": [
+                        {
+                            "title": "La balle",
+                            "summary": "Milo a poursuivi une balle qui a roulé sous le canapé."
+                        },
+                        {
+                            "title": "Le carton",
+                            "summary": "Milo a essayé de rentrer dans un carton trop petit."
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "texte-produit",
+            "kind": "editorial",
+            "input": {
+                "source": {
+                    "title": "Mug blanc",
+                    "videoTitle": "Mug blanc",
+                    "description": "Un mug blanc en céramique sans logo, sur une table en bois. Présenter sa forme, sa texture et son anse.",
+                    "scenes": [
+                        "A white ceramic mug rests on a wooden table.",
+                        "Close-up of the smooth ceramic surface.",
+                        "Show the curved handle."
+                    ]
+                },
+                "profile": {
+                    "language": "fr",
+                    "tone": "Naturel et simple"
+                },
+                "networks": [
+                    "youtube",
+                    "instagram",
+                    "tiktok"
+                ]
+            }
+        },
+        {
+            "id": "texte-recit",
+            "kind": "editorial",
+            "input": {
+                "source": {
+                    "title": "Milo et la boîte",
+                    "description": "Milo, un chat blanc, trouve une boîte vide, s’y installe puis s’endort."
+                },
+                "profile": {
+                    "language": "fr",
+                    "tone": "Naturel et simple"
+                },
+                "networks": [
+                    "youtube",
+                    "instagram",
+                    "tiktok"
+                ]
+            }
+        },
+        {
+            "id": "import-minimal",
+            "kind": "editorial",
+            "input": {
+                "source": {
+                    "title": "Vacances 2026"
+                },
+                "profile": {
+                    "language": "fr"
+                },
+                "networks": [
+                    "youtube",
+                    "instagram",
+                    "tiktok"
+                ]
+            }
+        }
+    ]
+}
