@@ -6,7 +6,7 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 
 - **Phase actuelle :** **Grand R2 terminé, R2.1–R2.7 validés avec limitations explicites**, revue globale indépendante réalisée. Décision du propriétaire : préparation automatique des scénarios, relecture et confirmation manuelle du devis de chaque vidéo. Anciennes autorisations automatiques bloquées avant nouveau POST ; récupération des demandes déjà transmises conservée. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée. [Bilan global](r2-revue-cloture.md).
 - **Dernière suite complète verte :** R2.7, **761 tests / 8 715 assertions**, puis **96 / 824 ciblés** après clarification Twig ; **152 tests frontend** verts, lints/PHPStan/style/build réussis. Recette synthétique mobile/desktop/clavier terminée. Les mesures R2.6 restent historiques et distinctes du suivi éditorial R2.7.
-- **Prochaine tâche exacte : `R3.1`**, décrire puis valider le parcours commun idée / scènes / récapitulatif, sans nouvel onglet « À valider » ni assistant multipage imposé. Préserver la relecture, les références, les devis et les confirmations.
+- **Prochaine tâche exacte : `R3.1`**, [cadrage rédigé à valider par le propriétaire](r3-parcours-commun.md) : idée et scènes sur l'écran commun, puis devis existant ; sans nouvel onglet « À valider » ni assistant multipage imposé. R3.1 reste non coché, aucune interface modifiée. Préserver la relecture, les références, les devis et les confirmations.
 - **Validation actuelle :** captures R2.6 inchangées (18 essais, dont quatre timeouts). R2.7 : prompt éditorial concis + exemple et 600 tokens, délai inchangé ; six nouveaux essais locaux, quatre packs complets normalisés et deux refus de contexte sans HTTP. Un récit garde des faits/hashtags incorrects : relecture explicite avant application. [Captures complémentaires](fixtures/redacteur-cloture-r2.json), empreintes vérifiées. Aucune activation réelle, dépense, publication, média ou migration.
 - **Ne pas commencer maintenant :** implémentation R3 avant son cadrage R3.1, abonnement, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
@@ -89,7 +89,7 @@ Sortie : les défauts connus sont corrigés ou signalés avant dépense, textes 
 
 Dépendance : R2. Préserver la préparation commune et les six destinations de navigation.
 
-- [ ] **R3.1** Décrire puis valider un parcours commun en trois groupes : idée, scènes, récapitulatif ; aucun nouvel onglet « À valider » ni assistant multipage imposé.
+- [ ] **R3.1** Décrire puis valider un parcours commun en trois groupes : idée, scènes, récapitulatif ; aucun nouvel onglet « À valider » ni assistant multipage imposé. [Proposition rédigée, validation propriétaire attendue](r3-parcours-commun.md).
 - [ ] **R3.2** Présenter les plans en cartes compactes avec résumé français, durée et référence ; détails des prompts/images progressifs, accès manuel conservé. Signaler un résumé à revérifier après modification du prompt.
 - [ ] **R3.3** Rapprocher choix « plan unique » et transformation effective, sans perte des textes ni réduction silencieuse des durées.
 - [ ] **R3.4** Harmoniser le choix guidé des modèles et connexions entre vidéo ponctuelle et série ; distinguer proposition locale de texte et connexion nécessaire pour générer la vidéo.
@@ -243,6 +243,14 @@ Après lancement : amélioration fondée sur les retours ; quelques guides/blog 
 Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie le journal et l'état Git, résume le prochain point exact puis reprends seulement ce point et ses vérifications, sans action externe réelle non autorisée. »
 
 ## Journal de progression
+
+### 28 octobre 2026 — Reprise sur ce PC et cadrage R3.1
+
+- R3.1 commencé : [parcours concret proposé](r3-parcours-commun.md), placements, cas manuels/locaux/séries/récurrence/reprise, erreurs et protections, répartition R3.2–R3.7 et pédagogie Symfony. Lecture des sources, pas d'interface implémentée. **Validation du propriétaire attendue, R3.1 non coché ; prochaine tâche exacte : valider/amender ce cadrage avant R3.2.**
+- Incident signalé pendant le cadrage : pages en 500 sur ce PC après récupération du projet. Logs : ancien conteneur Symfony injectant `AiCatalog` à la place d'`AiKeys` dans `SeriesGenerationConsent`, argument `$production` du calendrier non résolu. Cache compilé périmé ; trois migrations locales manquantes.
+- Garde avant intervention : aucun message Messenger, aucune rédaction/occurrence/génération/montage/publication active ou en attente selon les états de la base ; aucun traitement interrompu. Arrêt propre des quatre workers précédemment actifs ; `cache:clear --env=dev --no-debug` puis `composer db:sync` : trois migrations exécutées (`20261026190000`, `20261026200000`, `20261027160000`), schéma dev conforme, **39 migrations exécutées, zéro restante**. Aucune purge de données ni remplacement de clé.
+- `lint:container --env=dev --no-debug`, préchauffage cache réussis. Arguments actualisés de `SeriesGenerationConsent` et résolution de `ProductionCalendar` vérifiés ; les quatre workers relancés et démarrés. HTTP local sans session : accueil **200**, calendrier **302** (authentification) ; cela ne valide pas le rendu connecté. Accès à la fenêtre Edge expiré avant vérification, rechargement des pages connectées à confirmer par le propriétaire. Les essais HTTP depuis le sandbox n'avaient pas de connexion ; réussites ci-dessus obtenues avec accès local autorisé.
+- Aucun test PHP/frontend ni build rejoué pour cette remise à niveau/cadrage documentaire ; les chiffres R2.7 restent historiques. Aucun nouveau POST vidéo/social, activation, coût, modèle installé ou push. Le service de tunnel déjà actif sur ce poste n'a pas été démarré ni modifié ici. Commit documentaire local prévu : `docs: frame R3 common preparation flow`.
 
 ### 28 octobre 2026 — R2.7, clôture globale du grand R2
 
