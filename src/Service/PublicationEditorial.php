@@ -162,6 +162,7 @@ final class PublicationEditorial
             if (!$job || $job->getScope() !== $draft->getId() || 'ready' !== $job->getStatus() || !hash_equals($job->getFingerprint(), $snapshot['hash'])) {
                 throw new PublicationException('Cette proposition ne correspond plus à la version validée, au profil ou aux réseaux. Demande une nouvelle proposition. Tes textes restent conservés.');
             }
+            $this->texts->requireContext($snapshot['source']);
             $fields = $this->fields($draft);
             if (!$selected || !array_is_list($selected) || count($selected) > 4 || array_filter($selected, static fn ($name): bool => !is_string($name)) || array_diff($selected, array_keys($fields))) {
                 throw new PublicationException('Choisis les champs à appliquer dans l’aperçu.');

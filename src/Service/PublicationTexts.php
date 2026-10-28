@@ -7,6 +7,35 @@ final class PublicationTexts
     public const VERSION = '2026-10-25.1';
     public const FIELDS = ['youtube' => ['title', 'description'], 'instagram' => ['caption'], 'tiktok' => ['caption']];
 
+    /** Reject absent context, without claiming to verify its factual truth.
+     * @param array<string,mixed> $source
+     */
+    public function requireContext(array $source): void
+    {
+        $normalize = static fn (string $value): string => trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', mb_strtolower($value)));
+        $titles = [];
+        foreach (['title', 'videoTitle'] as $field) {
+            if (is_string($source[$field] ?? null)) {
+                $titles[] = $normalize($source[$field]);
+            }
+        }
+        $descriptions = [$source['description'] ?? null];
+        if (is_array($source['scenes'] ?? null)) {
+            $descriptions = [...$descriptions, ...$source['scenes']];
+        }
+        foreach ($descriptions as $description) {
+            if (!is_string($description)) {
+                continue;
+            }
+            $text = $normalize($description);
+            if (!in_array($text, $titles, true) && preg_match('/\p{L}/u', $text) && preg_match_all('/[\p{L}\p{N}]+/u', $text) >= 2) {
+                return;
+            }
+        }
+
+        throw new PublicationException('Décris ce que montre cette version en quelques mots : sujet, action ou fait à mentionner. Un titre seul ne suffit pas : le rédacteur ne voit pas la vidéo. Tes textes restent conservés.', reason: 'context');
+    }
+
     /** @param array<string,mixed> $input
      * @return array<string,string>
      */

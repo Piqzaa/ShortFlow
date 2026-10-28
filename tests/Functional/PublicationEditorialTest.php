@@ -4,6 +4,7 @@ namespace App\Tests\Functional;
 
 use App\Entity\AiEpisode;
 use App\Entity\AiSeries;
+use App\Entity\AiShot;
 use App\Entity\PublicationDraft;
 use App\Entity\StoryProposal;
 use App\Entity\User;
@@ -60,6 +61,10 @@ final class PublicationEditorialTest extends WebTestCase
         $this->em->persist($this->owner);
         $this->series = new AiSeries($this->owner, 'Milo', 'Milo ouvre une boîte.', 'Réaliste', 'Chat blanc', ['model' => 'kling-25', 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => null, 'endReference' => null, 'imageFit' => 'crop']);
         $this->episode = new AiEpisode($this->series, 1);
+        $this->episode->flow('draft');
+        $shot = new AiShot($this->episode, 1, 5);
+        $shot->revise('Milo ouvre une boîte.', 5);
+        $this->em->persist($shot);
         $this->episode->flow('ready');
         $video = new VideoAsset($this->owner, 'Version approuvée', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 10, 720, 1280, 'h264');
         $video->recordTechnicalMetadata(['fps' => 30, 'videoBitrate' => 3000000]);
@@ -97,6 +102,56 @@ final class PublicationEditorialTest extends WebTestCase
         self::assertSame('ready', $job->getStatus(), $job->getError() ?? '');
 
         return $job;
+    }
+
+    private function removeSceneContext(): void
+    {
+        foreach ($this->em->getRepository(AiShot::class)->findBy(['episode' => $this->episode]) as $shot) {
+            $this->em->remove($shot);
+        }
+        $this->em->flush();
+    }
+
+    public function testMissingContextFailsBeforeInferenceAndManualDetailsAllowANewProposal(): void
+    {
+        $this->removeSceneContext();
+        $before = $this->draft->content();
+        $job = $this->editorial()->request($this->owner, $this->draft);
+        $this->jobs()->process($job->getId());
+        self::assertSame('failed', $job->getStatus());
+        self::assertStringContainsString('Un titre seul ne suffit pas', $job->getError());
+        self::assertSame(0, $this->calls);
+        self::assertNull($job->getResult());
+        self::assertSame($before, $this->draft->content());
+
+        $retry = $this->editorial()->request($this->owner, $this->draft, 'Milo ouvre une boîte sur la table.');
+        self::assertNotSame($job->getId(), $retry->getId());
+        $this->jobs()->process($retry->getId());
+        self::assertSame('ready', $retry->getStatus(), $retry->getError() ?? '');
+        self::assertSame(1, $this->calls);
+        self::assertSame($before, $this->draft->content());
+        self::assertSame('draft', $this->draft->getStatus());
+        self::assertNull($this->draft->getSubmissionKey());
+    }
+
+    public function testOldTitleOnlyProposalCannotBeAppliedButExistingHumanTextsStayUsable(): void
+    {
+        $this->removeSceneContext();
+        $before = $this->draft->content();
+        $job = $this->editorial()->request($this->owner, $this->draft);
+        $input = $job->getInput();
+        $job->complete(['source' => $input['source'], 'baseline' => $input['baseline'], 'texts' => ['youtube' => ['description' => 'Un fait inventé par une ancienne proposition.']]]);
+        $this->em->flush();
+        try {
+            $this->editorial()->apply($this->owner, $this->draft, $job->getId(), ['youtube.description'], true);
+            self::fail('An old proposal without context must not bypass the new gate.');
+        } catch (PublicationException $error) {
+            self::assertSame('context', $error->reason);
+        }
+        self::assertSame($before, $this->draft->content());
+        self::assertSame('draft', $this->draft->getStatus());
+        self::assertSame('ready', $job->getStatus());
+        self::assertSame(0, $this->calls);
     }
 
     public function testRejectedPackKeepsHumanTextsAndRequiresManualRetryAndApplication(): void
@@ -297,6 +352,8 @@ final class PublicationEditorialTest extends WebTestCase
         $this->client->followRedirect();
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('#editorial-title', 'textes adaptés');
+        self::assertSelectorTextContains('#editorial-brief-help', 'Un titre seul ne suffit pas');
+        self::assertSelectorExists('#editorial-brief[aria-describedby="editorial-brief-help"]:not([required])');
         self::assertSelectorExists('a[href="/studio/series/'.$this->series->getId().'/textes"]');
         self::assertSelectorNotExists('input[name="editorial_fields[]"][checked]');
         $url = '/studio/brouillons/'.$this->draft->getId().'/textes/'.$job->getId();

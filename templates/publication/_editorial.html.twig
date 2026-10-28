@@ -8,8 +8,8 @@
 {% if editorial.notice %}<p class="account-notice" role="status">{{ editorial.notice }}</p>{% endif %}
 {% if editorial.review %}<p class="account-notice" role="status">Les textes appliqués sont à relire : la version ou le profil a changé. Tes textes sont conservés.</p>{% endif %}
 {% if editorial.stale and job %}<p class="library-note">La précédente proposition ne correspond plus à cette version, au profil ou aux réseaux. Une nouvelle proposition est nécessaire avant application.</p>{% endif %}
-<label for="editorial-brief">Ce que montre cette version (facultatif)</label><textarea id="editorial-brief" name="editorial_brief" rows="3" maxlength="700">{{ editorial.brief }}</textarea>
-<p class="library-note">Précise ici une modification faite au montage ou un fait important. Le rédacteur ne doit pas inventer ce qu’il ne peut pas voir.</p>
+<label for="editorial-brief">Ce que montre cette version</label><textarea id="editorial-brief" name="editorial_brief" rows="3" maxlength="700" aria-describedby="editorial-brief-help">{{ editorial.brief }}</textarea>
+<p id="editorial-brief-help" class="library-note">Pour proposer des textes, le rédacteur a besoin de scènes décrites ou de tes précisions ici : sujet, action ou fait à mentionner. Un titre seul ne suffit pas. Il ne voit pas la vidéo. Exemple : « Un mug bleu tourne sur une table. » Précise aussi les changements faits au montage. Tu peux toujours écrire les textes directement.</p>
 <button type="submit" name="intent" value="editorial" class="account-secondary" data-publication-writer-target="generate" formnovalidate{% if pending or not editorial.available %} disabled{% endif %}>Enregistrer et proposer mes textes</button>
 {% if not editorial.available and not editorial.notice %}<p class="library-note">La rédaction locale n’est pas activée. Tu peux remplir les textes ci-dessous.</p>{% endif %}
 <p class="library-note">Tu peux quitter ce brouillon puis le rouvrir pour retrouver la demande. Enregistre tes modifications avant de partir.</p>

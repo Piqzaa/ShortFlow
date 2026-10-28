@@ -36,7 +36,7 @@ final class StoryProposalQueueTest extends TestCase
         $owner = new User('queue-regression@example.test');
         $input = 'story' === $kind
             ? ['idea' => 'Un chat blanc se couche sur un coussin.', 'durations' => [5], 'continuity' => 'independent', 'tone' => 'calme', 'context' => []]
-            : ['source' => ['title' => 'Le chat et le coussin'], 'profile' => ['language' => 'fr'], 'networks' => ['youtube'], 'baseline' => []];
+            : ['source' => ['title' => 'Le chat et le coussin', 'description' => 'Le chat se couche sur un coussin.'], 'profile' => ['language' => 'fr'], 'networks' => ['youtube'], 'baseline' => []];
         $clock = new MockClock('2026-10-27T12:00:00Z');
         $job = new StoryProposal($owner, 42, 'unchanged-preparation', $input, $kind, $clock->now()->modify('-'.$minutes.' minutes'));
         self::assertSame('queued', $job->getStatus());

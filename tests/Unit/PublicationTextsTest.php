@@ -57,7 +57,7 @@ final class PublicationTextsTest extends TestCase
 
             return new MockResponse(json_encode(['done' => true, 'done_reason' => 'stop', 'message' => ['content' => json_encode(['youtube' => ['title' => 'Milo découvre une boîte', 'description' => 'Une découverte toute simple.', 'hashtags' => ['Milo']]], JSON_THROW_ON_ERROR)]], JSON_THROW_ON_ERROR));
         });
-        $result = (new LocalStoryWriter($http, true, 'http://localhost:11434', 'configured-local-model'))->publication(['title' => 'Milo'], [], ['youtube']);
+        $result = (new LocalStoryWriter($http, true, 'http://localhost:11434', 'configured-local-model'))->publication(['title' => 'Milo', 'description' => 'Milo découvre une boîte.'], [], ['youtube']);
         self::assertSame(1, $calls);
         self::assertStringContainsString('#Milo', $result['youtube']['description']);
     }

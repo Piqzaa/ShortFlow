@@ -75,7 +75,7 @@ final class StoryProposalConcurrencyTest extends KernelTestCase
     {
         return 'story' === $kind
             ? ['idea' => 'Un chat blanc se couche sur un coussin.', 'durations' => [5], 'continuity' => 'independent', 'tone' => 'calme', 'context' => []]
-            : ['source' => ['title' => 'Un moment calme'], 'profile' => ['language' => 'fr'], 'networks' => ['youtube'], 'baseline' => []];
+            : ['source' => ['title' => 'Un moment calme', 'description' => 'Le chat se couche sur un coussin.'], 'profile' => ['language' => 'fr'], 'networks' => ['youtube'], 'baseline' => []];
     }
 
     private function jobs(): StoryProposals

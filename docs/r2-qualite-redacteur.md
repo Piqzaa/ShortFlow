@@ -1,6 +1,18 @@
 # R2 — Qualité des scénarios et textes : suivi
 
-## État courant — R2.4 terminé, 28 octobre 2026
+## État courant — R2.5 terminé, 28 octobre 2026
+
+Le contrôle de contexte refuse les sources sans description/scènes distinctes du titre avant verrou local et HTTP. Il protège aussi l'application d'une ancienne proposition insuffisamment décrite, sans modifier les textes déjà saisis ou appliqués. Le préparateur explique le besoin avec une aide liée au champ et un exemple ; saisie directe et application volontaire conservées. [Fonctionnement, fichiers, limites et recette](redacteur-contexte-factuel.md).
+
+**Suite complète verte : 758 tests / 8 619 assertions**, code 0, et **129 tests ciblés / 989 assertions réussis**. Le corpus R2.1 est inchangé : tous ses 15 cas passent désormais. Dix-huit nouveaux cas ; fixtures temporelles enrichies de faits, aucune assertion existante affaiblie. **152 frontend** et syntaxe JS réussis ; PHPStan `src` + nouveau test unitaire : aucune erreur ; CS-Fixer final neuf fichiers : aucune correction. Migrations, lints conteneur/19 YAML/103 Twig et schéma test réussis. Revue indépendante sans blocage ; recette synthétique 390 × 844 / 1440 × 900 et clavier réussie, aucun débordement horizontal ou erreur console observé. Aucun build supplémentaire, assets inchangés.
+
+La première tentative complète sur le conteneur `edit-worker` s'est interrompue avec le code **137**, sans bilan PHPUnit ; ce n'est pas une suite réussie. Ce conteneur héberge un worker limité à une heure puis redémarré. Le passage vert ci-dessus vient d'une relance dans un conteneur de test temporaire dédié, sans worker ni ce cycle de vie, copie Linux propre des sources et dépendances, garde `shortflow_test` et migrations avant tests : **7 min 16 s**, mémoire PHPUnit **84,5 Mio**. Une seule suite DB à la fois. Cache dev et `story-worker` local actualisés après garde de zéro rédaction active/en attente ou occurrence en rédaction, état `running` vérifié. Conteneurs temporaires de tests/recette retirés, viewport restauré et onglet fermé.
+
+Sorties locales ignorées : `artifacts/r2-5-focused.log`, `r2-5-full.log` (interrompu), `r2-5-full-isolated.log` (vert), `r2-5-ui.log`, `r2-5-js.log`. Aucun appel modèle réel, image/vidéo payante, publication sociale ou activation ; aucune migration. Pas d'intervention manuelle nécessaire pour ce lot.
+
+**Prochain point exact : R2.6**, évaluation sur corpus fixe avec répétitions et mesures ; aucune qualité réelle Qwen/audio déduite des tests simulés. Revue globale du grand R2 toujours en R2.7. Commit local `fix: require factual context for publication texts`, aucun push.
+
+## Historique — R2.4 terminé, 28 octobre 2026
 
 Les packs sociaux ont des consignes plus explicites (tous les réseaux/champs, limites et hashtags séparés), avec des diagnostics distincts et des actions de reprise. Le validateur reste strict : pas de réparation silencieuse, résultat partiel, troncature ni second appel automatique. Les causes externes brutes ne sont ni journalisées ni conservées dans la chaîne d'exception.
 
