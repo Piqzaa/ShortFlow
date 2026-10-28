@@ -66,6 +66,7 @@ export default class extends Controller {
     const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds);
     if (!proposal.parts) { this.refresh(); return; }
     const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt','sceneDescription'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
+    if (inputs.slice(proposal.parts.length).some(row => row.sceneDescription.trim())) { this.noticeTarget.textContent = 'Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.'; return; }
     if (inputs.length !== proposal.parts.length && inputs.some(row=>row.startReference || row.endReference || row.imagePrompt?.trim())) { this.noticeTarget.textContent = 'Déplace ou retire les cadres et les consignes d’images avant de changer le nombre de plans. Tes textes restent conservés.'; return; }
     const prompts = this.editor.rows().map(row => row.querySelector('textarea').value);
     this.editor.listTarget.replaceChildren();

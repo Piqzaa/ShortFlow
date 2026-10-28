@@ -228,8 +228,43 @@ final class AiEpisodeFlowTest extends WebTestCase
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('textarea[name="ai_idea[shots][0][imagePrompt]"]', 'Mon costume <script>privé</script>');
-        self::assertSelectorTextContains('[data-shot-description-text]', 'Milo ouvre une boîte <privée>.');
+        self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', 'Milo ouvre une boîte <privée>.');
+        self::assertSelectorExists('[data-shot-editor-target="list"] .shot-card [data-shot-details]:not([open])');
+        self::assertSelectorTextContains('[data-shot-summary-status]', 'Résumé à relire');
         self::assertStringContainsString('&lt;script&gt;privé&lt;/script&gt;', $this->client->getResponse()->getContent());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testLegacyScenesStayEditableWithoutInventingSummaries(): void
+    {
+        $episode = $this->planned(false, 10);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertResponseIsSuccessful();
+        self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', '');
+        self::assertSelectorTextContains('[data-shot-summary-status]', 'Résumé à compléter');
+        self::assertSelectorExists('[data-shot-editor-target="list"] [data-shot-details][open] textarea[name="ai_idea[shots][0][prompt]"]');
+        self::assertSelectorExists('[data-shot-reference-summary]');
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testCompactCardsPreserveHumanSummariesWhenReducingAndExposeImageErrors(): void
+    {
+        $episode = $this->planned();
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $form = $crawler->selectButton('Préparer un plan unique')->form();
+        $form['ai_idea[target]'] = '10';
+        $form['ai_idea[shots][2][sceneDescription]'] = 'Ma conclusion à conserver.';
+        $crawler = $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('#ai-idea-form', 'Ce découpage retirerait un résumé');
+        self::assertInputValueSame('ai_idea[shots][2][sceneDescription]', 'Ma conclusion à conserver.');
+        self::assertSelectorCount(3, '[data-shot-editor-target="list"] .shot-card');
+        $form = $crawler->selectButton('Voir le récapitulatif →')->form();
+        $form['ai_idea[shots][2][imagePrompt]'] = str_repeat('x', 3001);
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('[data-shot-editor-target="list"] [data-shot-details][open] .image-preparation[open] textarea[name="ai_idea[shots][2][imagePrompt]"]');
+        self::assertInputValueSame('ai_idea[shots][2][sceneDescription]', 'Ma conclusion à conserver.');
         self::assertSame(0, $this->submissions);
     }
 

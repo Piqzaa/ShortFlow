@@ -1,0 +1,18 @@
+<section class="story-shot shot-card" data-shot-editor-row data-action="input->shot-editor#update change->shot-editor#update">
+  <header class="shot-card-heading"><h3 data-shot-heading>Plan {{ shotNumber|default('') }}</h3><div class="shot-card-duration">{{ form_row(shotForm.seconds) }}</div></header>
+  {{ form_errors(shotForm) }}
+  {% include 'ai/_shot_description.html.twig' %}
+  <p class="library-note shot-reference-summary" data-shot-reference-summary>{% if shotForm.startReference.vars.value or shotForm.endReference.vars.value %}Cadres renseignés : {{ shotForm.startReference.vars.value ? 'début' : '' }}{{ shotForm.startReference.vars.value and shotForm.endReference.vars.value ? ' et ' : '' }}{{ shotForm.endReference.vars.value ? 'fin' : '' }}. {% endif %}Références communes selon le mode ; envoi exact à vérifier au récapitulatif.</p>
+  <details class="shot-card-details" data-shot-details{% if not shotForm.vars.valid or not shotForm.prompt.vars.value or not shotForm.sceneDescription.vars.value %} open{% endif %}>
+    <summary>Modifier le résumé, le prompt et les images</summary>
+    {{ form_row(shotForm.sceneDescription) }}
+    {{ form_row(shotForm.prompt) }}
+    <p class="library-note">Le prompt vidéo est envoyé au modèle. Le résumé français sert à ta relecture ; le modifier ne réécrit pas le prompt.</p>
+    {% include 'ai/_shot_references.html.twig' %}
+    <div class="story-row-actions">
+      <button type="submit" class="account-secondary" name="plan_action" value="up:{{ shotIndex|default(0) }}" data-action="shot-editor#act">Monter</button>
+      <button type="submit" class="account-secondary" name="plan_action" value="down:{{ shotIndex|default(0) }}" data-action="shot-editor#act">Descendre</button>
+      <button type="submit" class="account-secondary" name="plan_action" value="remove:{{ shotIndex|default(0) }}" data-action="shot-editor#act">Retirer ce plan</button>
+    </div>
+  </details>
+</section>

@@ -132,6 +132,9 @@ final class AiStudioController extends AbstractController
                             $data['continuity'] = 'single';
                         }
                         $old = array_values($data['shots']);
+                        if (array_filter(array_slice($old, count($durations)), static fn (array $row): bool => '' !== trim($row['sceneDescription'] ?? ''))) {
+                            throw new \RuntimeException('Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.');
+                        }
                         if (count($old) !== count($durations) && array_filter($old, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? ''))) {
                             throw new \RuntimeException('Déplace ou retire les cadres et les consignes d’images avant de changer automatiquement le nombre de plans. Tes textes et images restent conservés.');
                         }

@@ -1,6 +1,6 @@
 # R3.1 — Parcours commun Studio / Séries
 
-28 octobre 2026. **Cadrage proposé, validation du propriétaire attendue.** Aucun changement d'interface livré. R3.1 reste non coché et R3.2 n'est pas commencé.
+28 octobre 2026. **Cadrage validé par le propriétaire**, qui conserve la possibilité d'ajuster le parcours après essai dans l'application. R3.1 terminé ; implémentation progressive à partir de R3.2. La description ci-dessous est une cible, pas la déclaration de livraison de tous les points R3.
 
 ## Objectif et point de départ
 
@@ -62,6 +62,6 @@ Flux à conserver : saisie → proposition locale facultative → application vo
 
 Pour tester ce cadrage aujourd'hui : lire les cinq parcours et vérifier que chaque décision a un emplacement et une action ; la recette fonctionnelle et visuelle appartient à l'implémentation R3.2–R3.7. Aucun test applicatif ou rendu de la future interface exécuté pour ce document.
 
-## État et décision attendue
+## Validation et suite
 
-Le propriétaire doit valider ou amender ce parcours avant R3.2, conformément à R3.1 de [la roadmap](roadmap.md). La validation porte sur l'organisation et les actions ci-dessus ; elle n'autorise ni coût fournisseur ni activation réelle. La revue globale indépendante de R3 reste à faire en R3.7.
+Le propriétaire a validé ce parcours avant R3.2, conformément à R3.1 de [la roadmap](roadmap.md), puis demandé son implémentation. Les retours d'usage pourront conduire à des ajustements. Cette validation n'autorise ni coût fournisseur ni activation réelle. La revue globale indépendante de R3 reste à faire en R3.7.

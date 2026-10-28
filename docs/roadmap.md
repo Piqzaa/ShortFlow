@@ -4,9 +4,9 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** **Grand R2 terminé, R2.1–R2.7 validés avec limitations explicites**, revue globale indépendante réalisée. Décision du propriétaire : préparation automatique des scénarios, relecture et confirmation manuelle du devis de chaque vidéo. Anciennes autorisations automatiques bloquées avant nouveau POST ; récupération des demandes déjà transmises conservée. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée. [Bilan global](r2-revue-cloture.md).
+- **Phase actuelle :** **Grand R3 en cours, R3.1 et R3.2 terminés**. Grand R2 terminé, R2.1–R2.7 validés avec limitations explicites et revue globale indépendante. Décision du propriétaire conservée : préparation automatique des scénarios, relecture et confirmation manuelle du devis de chaque vidéo. Anciennes autorisations automatiques bloquées avant nouveau POST ; récupération des demandes déjà transmises conservée. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée. [Bilan global R2](r2-revue-cloture.md).
 - **Dernière suite complète verte :** R2.7, **761 tests / 8 715 assertions**, puis **96 / 824 ciblés** après clarification Twig ; **152 tests frontend** verts, lints/PHPStan/style/build réussis. Recette synthétique mobile/desktop/clavier terminée. Les mesures R2.6 restent historiques et distinctes du suivi éditorial R2.7.
-- **Prochaine tâche exacte : `R3.1`**, [cadrage rédigé à valider par le propriétaire](r3-parcours-commun.md) : idée et scènes sur l'écran commun, puis devis existant ; sans nouvel onglet « À valider » ni assistant multipage imposé. R3.1 reste non coché, aucune interface modifiée. Préserver la relecture, les références, les devis et les confirmations.
+- **Prochaine tâche exacte : `R3.3`**, rapprocher le mode unique de sa transformation sans perte de textes/références ni réduction silencieuse des durées. [R3.1 validé](r3-parcours-commun.md), [R3.2 livré : cartes compactes](r3-cartes-scenes.md). Grand R3 en cours, revue globale en R3.7.
 - **Validation actuelle :** captures R2.6 inchangées (18 essais, dont quatre timeouts). R2.7 : prompt éditorial concis + exemple et 600 tokens, délai inchangé ; six nouveaux essais locaux, quatre packs complets normalisés et deux refus de contexte sans HTTP. Un récit garde des faits/hashtags incorrects : relecture explicite avant application. [Captures complémentaires](fixtures/redacteur-cloture-r2.json), empreintes vérifiées. Aucune activation réelle, dépense, publication, média ou migration.
 - **Ne pas commencer maintenant :** implémentation R3 avant son cadrage R3.1, abonnement, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
@@ -38,7 +38,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
 | R1 | Attente, exécution et reprise du rédacteur | Terminé, revue globale et contrôles validés | Attente/exécution distinctes, traitements bornés, reprise sans double appel |
 | R2 | Qualité des scénarios, dialogues et textes | Terminé, revue globale et limites supervisées acceptées | Corpus rejoué, écarts signalés avant coût, génération récurrente manuelle |
-| R3 | Studio/Séries plus simples et compacts | À faire | Parcours commun compréhensible, devis et contrôles conservés |
+| R3 | Studio/Séries plus simples et compacts | En cours, R3.1–R3.2 terminés | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
 | R5 | Responsive, accessibilité et finitions | À faire | Matrice d'écrans/états vérifiée, défauts bloquants corrigés |
 | R6 | Landing, aide, contact et SEO de base | À faire | Promesse fidèle et premier parcours expliqué |
@@ -89,8 +89,8 @@ Sortie : les défauts connus sont corrigés ou signalés avant dépense, textes 
 
 Dépendance : R2. Préserver la préparation commune et les six destinations de navigation.
 
-- [ ] **R3.1** Décrire puis valider un parcours commun en trois groupes : idée, scènes, récapitulatif ; aucun nouvel onglet « À valider » ni assistant multipage imposé. [Proposition rédigée, validation propriétaire attendue](r3-parcours-commun.md).
-- [ ] **R3.2** Présenter les plans en cartes compactes avec résumé français, durée et référence ; détails des prompts/images progressifs, accès manuel conservé. Signaler un résumé à revérifier après modification du prompt.
+- [x] **R3.1** Décrire puis valider un parcours commun en trois groupes : idée, scènes, récapitulatif ; aucun nouvel onglet « À valider » ni assistant multipage imposé. [Cadrage validé le 28 octobre, ajustable après essai](r3-parcours-commun.md).
+- [x] **R3.2** Présenter les plans en cartes compactes avec résumé français, durée et référence ; détails des prompts/images progressifs, accès manuel conservé. Signaler un résumé à revérifier après modification du prompt. [Comportement, preuves, pédagogie et limites](r3-cartes-scenes.md).
 - [ ] **R3.3** Rapprocher choix « plan unique » et transformation effective, sans perte des textes ni réduction silencieuse des durées.
 - [ ] **R3.4** Harmoniser le choix guidé des modèles et connexions entre vidéo ponctuelle et série ; distinguer proposition locale de texte et connexion nécessaire pour générer la vidéo.
 - [ ] **R3.5** Garder action suivante, erreurs, modèle/compte, références réellement utilisées, nombre de plans, coût et confirmation accessibles. Replier les détails, pas les protections.
@@ -243,6 +243,15 @@ Après lancement : amélioration fondée sur les retours ; quelques guides/blog 
 Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie le journal et l'état Git, résume le prochain point exact puis reprends seulement ce point et ses vérifications, sans action externe réelle non autorisée. »
 
 ## Journal de progression
+
+### 28 octobre 2026 — R3.1 validé, R3.2 terminé
+
+- Le propriétaire valide le cadrage et demande l'implémentation, avec possibilité d'ajustement après essai. Cartes communes Studio/épisode : durée et résumé français complet visibles, références indicatives, édition des textes/prompts/images progressive. Ancien plan sans résumé ouvert, sans remplissage automatique. Aucun schéma ajouté.
+- Résumé éditable avec limite inchangée ; indicateur de relecture pour la saisie courante, invalidé par modification. Empreinte des propositions incluant ce texte humain ; réduction automatique refusée si elle retirerait un résumé. Focus conservé et détails d'image ouverts sur erreurs même sans JS. Revue indépendante des quatre protections après correction sans blocage restant identifié. [Bilan pédagogique et recette](r3-cartes-scenes.md).
+- PHP ciblé **32 / 520** vert puis **3 / 38** au passage final après correctif mobile ; **155 frontend** verts. Base `shortflow_test` vérifiée, migrations du poste appliquées avant tests. Cache test sans debug ancien détecté puis régénéré. Pas de suite PHP complète nouvelle ; chiffres R2.7 historiques. PHPStan/style/lint Twig/conteneur, check JS et build réussis, avertissements Vite/polices connus.
+- Recette synthétique desktop 1440 × 900/mobile 390 × 844 : résumé long lisible, détails, alerte/relecture, ajout/déplacement et associations des champs, Tab jusqu'au prompt, aucun débordement horizontal ou erreur console observé au contrôle final. Serveur GET uniquement et fournisseurs simulés ; aucune validation audiovisuelle. Viewport restauré et onglets temporaires fermés.
+- Cache dev actualisé et quatre workers relancés après garde zéro traitement/message actif ; assets reconstruits pour le poste. Aucun appel réel de modèle, vidéo, coût fournisseur, publication, activation, suppression de données dev ou push. **Dix-sept tâches sur 76 cochées, grand R3 toujours en cours.** Commit local prévu : `feat: compact editable scene cards`.
+- **Prochaine tâche exacte : R3.3**, puis R3.4–R3.7 et revue globale ; pas de passage à R4.
 
 ### 28 octobre 2026 — Reprise sur ce PC et cadrage R3.1
 

@@ -28,7 +28,7 @@ export default class extends Controller {
       subjectDetails: [...this.form.querySelectorAll('[name^="ai_idea[subjectDetails]"]')].filter(input => !input.disabled).map(input => [input.name, input.value]),
       shots: this.editor.rows().map(row => [
         row.querySelector('textarea').value, row.querySelector('select').value,
-        ...['startReference', 'endReference', 'referenceFit'].map(name => row.querySelector(`[name$="[${name}]"]`)?.value || ''),
+        ...['startReference', 'endReference', 'referenceFit', 'sceneDescription'].map(name => row.querySelector(`[name$="[${name}]"]`)?.value || ''),
       ]),
     });
   }
@@ -225,7 +225,12 @@ export default class extends Controller {
     this.form.dispatchEvent(new Event('input', { bubbles: true }));
     const details = this.form.querySelector('[data-story-scenes]');
     if (details) details.open = true;
-    this.editor.rows()[0]?.querySelector('textarea').focus();
+    const firstPrompt = this.editor.rows()[0]?.querySelector('textarea');
+    if (firstPrompt) {
+      const panel = firstPrompt.closest?.('[data-shot-details]');
+      if (panel) panel.open = true;
+      firstPrompt.focus();
+    }
     this.previewTarget.hidden = true;
     this.proposal = null;
     this.statusTarget.textContent = 'Scènes appliquées. Tu peux les personnaliser puis vérifier le coût au récapitulatif.';

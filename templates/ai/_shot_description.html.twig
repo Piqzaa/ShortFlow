@@ -1,2 +1,3 @@
-{{ form_widget(shotForm.sceneDescription) }}
-<div class="library-note" data-shot-description{% if not shotForm.sceneDescription.vars.value %} hidden{% endif %}><strong>Résumé du scénario en français</strong><p data-shot-description-text>{{ shotForm.sceneDescription.vars.value }}</p><small>Ce résumé accompagne le scénario proposé. Si tu modifies le prompt ci-dessous, vérifie qu’il décrit toujours ton intention.</small></div>
+<p class="shot-description" data-shot-description-text>{{ shotForm.sceneDescription.vars.value ?: 'Résumé à compléter' }}</p>
+<p class="library-note shot-summary-status" data-shot-summary-status role="status">{{ shotForm.sceneDescription.vars.value ? 'Résumé à relire avec le prompt vidéo.' : 'Résumé à compléter. Tu peux écrire directement le prompt vidéo dans les détails.' }}</p>
+<button type="button" class="account-secondary shot-summary-review" data-shot-summary-review data-action="shot-editor#review" hidden>J’ai relu ce résumé avec le prompt</button>

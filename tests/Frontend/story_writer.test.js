@@ -55,6 +55,14 @@ test('changing a subject or a per-shot frame invalidates an earlier story previe
   const changedFrame = writer.fingerprint();
   subjectDetails[0].value = 'Alice';
   assert.notEqual(writer.fingerprint(), changedFrame);
+  const beforeSummaryEdit = writer.fingerprint();
+  writer.requestFingerprint = beforeSummaryEdit;
+  writer.proposal = { title: 'Ancienne proposition', shots: [] };
+  frame.sceneDescription = 'Mon résumé corrigé à conserver';
+  assert.notEqual(writer.fingerprint(), beforeSummaryEdit);
+  writer.apply();
+  assert.match(writer.statusTarget.textContent, /préparation a changé/);
+  assert.equal(frame.sceneDescription, 'Mon résumé corrigé à conserver');
 });
 
 test('a text engine error leaves the current scenes untouched and permits retry', async () => {
