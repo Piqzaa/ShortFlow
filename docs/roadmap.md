@@ -4,10 +4,10 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** **R2 en cours, R2.1–R2.3 terminés**. Consignes/langue/fidélité corrigées avec alertes conservatrices ; trois reproductions scénario devenues vertes. Seul le contexte pauvre R2.5 reste rouge, sans exclusion. R1 reste terminé et revu ; aucune voix ou prise en charge structurée complète annoncée.
+- **Phase actuelle :** **R2 en cours, R2.1–R2.4 terminés**. Consignes/langue/fidélité corrigées avec alertes conservatrices ; packs sociaux stricts et diagnostics précis, sans retry automatique ni écrasement humain. Le défaut de contexte pauvre R2.5 reste à corriger, sans exclusion. R1 reste terminé et revu ; aucune voix ou prise en charge structurée complète annoncée.
 - **Dernière suite complète verte :** R1.5, **667 tests / 8 044 assertions** et **152 tests frontend**, clôture `abda42e`. Ce résultat historique ne valide pas les nouveaux tests rouges R2.1. La référence `d3e4700` reste le socle d'avant R1.
-- **Prochaine tâche exacte : `R2.4`**, packs sociaux complets et diagnostic fiable, sans supprimer la validation de hashtags ; contexte pauvre ensuite R2.5. Voir [le suivi R2](r2-qualite-redacteur.md) et [les contrôles de fidélité](redacteur-langue-fidelite.md).
-- **Validation actuelle :** suite complète **720 tests / 8 419 assertions, un échec R2.5 connu uniquement** ; rejeu final 57 / 379 et 152 frontend réussis. Corpus R2.1 inchangé : 14 cas sur 15 désormais verts. PHPStan, style, lints et schéma test réussis ; cache/worker local actualisés hors rédaction active. Ni rendu réel ni ancienne proposition réévaluée automatiquement ; aucune migration.
+- **Prochaine tâche exacte : `R2.5`**, contexte factuel suffisant, aucune invention depuis un titre seul. Voir [le suivi R2](r2-qualite-redacteur.md) et [les packs sociaux/diagnostics](packs-sociaux-diagnostic.md).
+- **Validation actuelle :** dernière suite complète **740 tests / 8 517 assertions, deux échecs** : libellé « occupé » corrigé puis **61 tests / 507 assertions réussis** au rejeu final incluant toute la concurrence ; contexte pauvre R2.5 toujours non corrigé. Pas de second passage complet après correction du libellé. **152 frontend** et syntaxe JS réussis ; PHPStan/style/lints/schéma réussis. Cache/worker actualisés hors rédaction active, aucune migration ni appel modèle réel. Ne pas annoncer la suite complète verte.
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
 - **Publications Free confirmées :** cinq par mois ; une vidéo diffusée sur plusieurs réseaux dans la même publication compte une seule fois. L'ancienne recommandation de décompte par destinataire est écartée.
@@ -15,7 +15,7 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 - **Décisions en attente :** quotas précis de l'essai Studio, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
-Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Ses demandes de suite du 28 octobre ont livré R2.1–R2.3 ; R2.4 est le prochain point. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
+Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Ses demandes de suite du 28 octobre ont livré R2.1–R2.4 ; R2.5 est le prochain point. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
 
 ## Règles de suivi à respecter
 
@@ -37,7 +37,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | --- | --- | --- | --- |
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
 | R1 | Attente, exécution et reprise du rédacteur | Terminé, revue globale et contrôles validés | Attente/exécution distinctes, traitements bornés, reprise sans double appel |
-| R2 | Qualité des scénarios, dialogues et textes | En cours : R2.1–R2.3 terminés, R2.4 suivant, un contexte pauvre encore rouge | Corpus rejoué, écarts signalés, textes humains préservés |
+| R2 | Qualité des scénarios, dialogues et textes | En cours : R2.1–R2.4 terminés, R2.5 suivant, contexte pauvre encore rouge | Corpus rejoué, écarts signalés, textes humains préservés |
 | R3 | Studio/Séries plus simples et compacts | À faire | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
 | R5 | Responsive, accessibilité et finitions | À faire | Matrice d'écrans/états vérifiée, défauts bloquants corrigés |
@@ -78,7 +78,7 @@ Dépendance : R1. Preuves : [rapport qualité](audit-global-20261027-qualite.md)
 - [x] **R2.1** Transformer les défauts capturés en cas de non-régression : répliques perdues, prompts français non signalés, hashtags intégrés au texte, contexte inventé depuis un titre pauvre. Garder séparés les contrôles de structure et de sens. [15 cas, quatre rouges attendus, aucun correctif applicatif](r2-qualite-redacteur.md).
 - [x] **R2.2** Définir le contrat des scènes parlantes : locuteur, réplique exacte, langue et capacité réelle du chemin vidéo. Tant que le contrat n'est pas porté, l'indiquer avant coût ; ne pas promettre de voix/lipsync depuis le seul indicateur audio. [Contrat défini, portage non implémenté et notices avant coût](scenes-parlantes-contrat.md).
 - [x] **R2.3** Corriger les consignes/validations de langue et fidélité ; accepter un prompt anglais contenant intentionnellement une citation française. Éviter les traits inventés et les actions contradictoires ; conserver une alerte honnête quand le contrôle ne peut pas conclure. [Règles ciblées, témoins et limites de la relecture](redacteur-langue-fidelite.md).
-- [ ] **R2.4** Fiabiliser les packs sociaux complets et leur diagnostic. Garder la séparation des hashtags et les limites des réseaux ; ne pas désactiver le validateur pour accepter une mauvaise sortie.
+- [x] **R2.4** Fiabiliser les packs sociaux complets et leur diagnostic. Garder la séparation des hashtags et les limites des réseaux ; ne pas désactiver le validateur pour accepter une mauvaise sortie. [Contrat complet, diagnostics sûrs, reprise manuelle et preuves](packs-sociaux-diagnostic.md).
 - [ ] **R2.5** Demander un contexte factuel suffisant et rendre explicite que le rédacteur ne voit pas la vidéo. Proposer une réponse neutre ou une demande de précision plutôt qu'inventer ; préserver les textes saisis et l'application volontaire.
 - [ ] **R2.6** Évaluer sur un corpus fixe avec quelques répétitions : récit, tutoriel, produit, dialogue, danse, mémoire de série, import peu décrit. Consigner structure, fidélité, erreurs, langue, corrections humaines, durées murale/monotone et conditions du poste. Aucun score commercial déduit d'un petit échantillon.
 - [ ] **R2.7** Revue indépendante des sorties, bilan des limites, contrôles et commit. Si une capacité reste non validée, la limiter ou l'annoncer explicitement avant de cocher la sortie, avec décision du propriétaire ; ne pas l'omettre silencieusement.
@@ -362,3 +362,12 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - Commit(s) et push effectué ou non :
 - Version déployée si applicable :
 - **Prochaine tâche exacte :**
+
+### 28 octobre 2026 — R2.4 terminé, packs sociaux et diagnostic
+
+- Tous les réseaux/champs et leurs limites sont explicités dans les consignes et le schéma existant. Un seul appel local borné à 180 s ; aucun second essai automatique. Séparation des hashtags et toutes les règles d'acceptation conservées, aucun pack partiel ou silencieusement réparé.
+- Refus distingués (réseaux, format, textes, longueur, hashtags/profil) et erreurs moteur (modèle, indisponibilité, délai, interruption, JSON), avec action française dans le préparateur existant. Logger limité à une raison technique ; risque de chaîne d'exception brute signalé en revue indépendante, supprimé et couvert, puis revue finale sans blocage.
+- Vingt nouveaux cas, y compris refus → diagnostic HTML à la réouverture → nouvelle demande manuelle. Les textes et réglages humains restent inchangés, aucune soumission créée ; verrou tiers et isolation multi-processus conservés. Détails et pédagogie Symfony : [packs sociaux](packs-sociaux-diagnostic.md).
+- Suite complète **740 / 8 517, deux échecs** : libellé de concurrence corrigé en conservant « occupé », sans changer le test, puis **61 / 507 réussis** au rejeu final incluant tous les tests de concurrence. Le second échec est R2.5, sans exclusion ; pas de deuxième suite complète après le correctif de libellé. **152 frontend**, syntaxe JS, PHPStan, style, lints et schéma test réussis. Ne pas annoncer la suite complète verte.
+- Aucun schéma/template/asset modifié, aucune nouvelle recette visuelle ou build ; parcours HTML testé, recette R2.2 historique. Cache/worker local actualisés hors rédaction active. Aucun appel modèle réel, coût, publication ou activation ; aucune action manuelle nécessaire pour R2.4.
+- Douze tâches sur 76 cochées. Commit local à retrouver avec `git log --oneline --grep="fix: clarify editorial pack failures"` ; aucun push. **Prochaine tâche exacte : R2.5**. Revue globale R2 toujours en R2.7 ; benchmark réel des consignes en R2.6.

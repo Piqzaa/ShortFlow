@@ -107,8 +107,9 @@ final class LocalStoryWriter
      */
     public function publication(array $source, array $profile, array $networks): array
     {
-        $lock = $this->lock();
+        $lock = null;
         try {
+            $lock = $this->lock();
             $texts = new PublicationTexts();
             $profile = $texts->profile($profile);
             $result = $this->generate(
@@ -117,18 +118,39 @@ final class LocalStoryWriter
                 .'Adapte chaque texte au réseau : titre YouTube précis sans hashtags, description informative ; légende Instagram naturelle ; légende TikTok concise. '
                 .'Respecte le ton, le public et les mots-clés fournis. CTA et marque seulement s’ils sont demandés. Aucun hashtag prétendument tendance. '
                 .'Propose zéro à cinq hashtags pertinents dans le tableau hashtags, jamais dans les autres champs. Respecte les listes autorisées/exclues. '
+                .'Fournis exactement tous les réseaux demandés dans networks, chacun avec tous les champs du schéma, sans champ supplémentaire. '
+                .'Pour YouTube : title de 1 à 100 caractères et description de 1 à 1200 ; pour Instagram et TikTok : caption de 1 à 800. '
+                .'Les champs title, description et caption ne contiennent jamais #, < ou >. N’ajoute pas de bloc de hashtags à ces textes : utilise uniquement hashtags, ou [] si aucun ne convient. '
                 .'Ne fournis aucun réglage de visibilité, d’audience, d’interaction ni de publication. Les propositions seront relues et appliquées par le créateur.',
-                json_encode(['source' => $source, 'profile' => $profile], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+                json_encode(['source' => $source, 'profile' => $profile, 'networks' => $networks], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
                 $texts->schema($networks),
             );
 
             return $texts->normalize($result, $networks, $profile);
         } catch (\Throwable $error) {
-            $this->logger?->warning('Local editorial writing failed.', ['reason' => $error instanceof StoryWritingException ? $error->reason : 'invalid']);
-            throw new PublicationException($error instanceof PublicationException ? $error->getMessage() : 'Le rédacteur local n’a pas fourni de textes exploitables. Réessaie ou rédige-les directement ; tes textes restent conservés.');
+            $reason = match (true) {
+                $error instanceof PublicationException, $error instanceof StoryWritingException => $error->reason,
+                $error instanceof TimeoutExceptionInterface || ($error instanceof TransportExceptionInterface && (str_contains($error->getMessage(), 'Max duration') || str_contains(strtolower($error->getMessage()), 'timed out'))) => 'timeout',
+                $error instanceof TransportExceptionInterface => 'unavailable',
+                $error instanceof \JsonException => 'json',
+                default => 'invalid',
+            };
+            $this->logger?->warning('Local editorial writing failed.', ['reason' => $reason]);
+            $message = $error instanceof PublicationException ? $error->getMessage() : match ($reason) {
+                'timeout' => 'Le moteur local a dépassé le délai de rédaction. Réessaie lorsque le poste est moins chargé ou rédige les textes directement.',
+                'unavailable' => 'Le moteur local est injoignable. Vérifie qu’Ollama fonctionne sur le poste puis réessaie.',
+                'model' => 'Le modèle de rédaction configuré est introuvable dans Ollama. Vérifie son installation puis réessaie.',
+                'busy' => 'Le rédacteur local est occupé par une autre demande. Réessaie dans un instant ou rédige les textes directement.',
+                'incomplete' => 'Le moteur local a interrompu sa réponse avant la fin. Demande une nouvelle proposition ou rédige les textes directement.',
+                'json' => 'Le moteur local a renvoyé un format de réponse illisible. Demande une nouvelle proposition ou rédige les textes directement.',
+                default => 'Le rédacteur local n’a pas fourni de textes exploitables. Réessaie ou rédige-les directement.',
+            };
+            throw new PublicationException($message.($error instanceof PublicationException ? '' : ' Tes textes restent conservés.'), reason: $reason);
         } finally {
-            flock($lock, LOCK_UN);
-            fclose($lock);
+            if (is_resource($lock)) {
+                flock($lock, LOCK_UN);
+                fclose($lock);
+            }
         }
     }
 

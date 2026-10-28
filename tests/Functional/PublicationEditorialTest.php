@@ -29,6 +29,7 @@ final class PublicationEditorialTest extends WebTestCase
     private AiEpisode $episode;
     private PublicationDraft $draft;
     private int $calls = 0;
+    private bool $invalidPack = false;
 
     protected function setUp(): void
     {
@@ -46,6 +47,9 @@ final class PublicationEditorialTest extends WebTestCase
         $http = new MockHttpClient(function (): MockResponse {
             ++$this->calls;
             $texts = ['youtube' => ['title' => 'Une découverte avec Milo', 'description' => 'Milo ouvre sa boîte.', 'hashtags' => ['Milo']], 'instagram' => ['caption' => 'Une pause avec Milo.', 'hashtags' => ['Milo']], 'tiktok' => ['caption' => 'La boîte de Milo.', 'hashtags' => ['Milo']]];
+            if ($this->invalidPack) {
+                $texts['youtube']['description'] .= ' #Milo';
+            }
 
             return new MockResponse(json_encode(['done' => true, 'done_reason' => 'stop', 'message' => ['content' => json_encode($texts, JSON_THROW_ON_ERROR)]], JSON_THROW_ON_ERROR));
         });
@@ -93,6 +97,39 @@ final class PublicationEditorialTest extends WebTestCase
         self::assertSame('ready', $job->getStatus(), $job->getError() ?? '');
 
         return $job;
+    }
+
+    public function testRejectedPackKeepsHumanTextsAndRequiresManualRetryAndApplication(): void
+    {
+        $before = $this->draft->content();
+        $this->invalidPack = true;
+        $job = $this->editorial()->request($this->owner, $this->draft, 'Milo ouvre la boîte.');
+        $this->jobs()->process($job->getId());
+        $this->jobs()->process($job->getId());
+        self::assertSame('failed', $job->getStatus());
+        self::assertStringContainsString('Les hashtags doivent rester séparés', $job->getError());
+        self::assertStringContainsString('Demande une nouvelle proposition', $job->getError());
+        self::assertNull($job->getResult());
+        self::assertSame([], $this->editorial()->view($this->draft)['texts']);
+        self::assertSame($before, $this->draft->content());
+        self::assertSame(1, $this->calls);
+        $this->client->request('GET', '/studio/composer', ['draft' => $this->draft->getId()]);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('[data-publication-writer-target="status"]', 'Les hashtags doivent rester séparés');
+        self::assertSame(1, $this->calls);
+
+        $this->owner = $this->em->find(User::class, $this->owner->getId());
+        $this->draft = $this->em->find(PublicationDraft::class, $this->draft->getId());
+        $this->invalidPack = false;
+        $retry = $this->editorial()->request($this->owner, $this->draft, 'Milo ouvre la boîte.');
+        self::assertNotSame($job->getId(), $retry->getId());
+        $this->jobs()->process($retry->getId());
+        self::assertSame('ready', $retry->getStatus(), $retry->getError() ?? '');
+        self::assertSame(2, $this->calls);
+        self::assertSame($before, $this->draft->content());
+        self::assertSame('draft', $this->draft->getStatus());
+        self::assertNull($this->draft->getSubmissionKey());
     }
 
     public function testMissingSeriesTextsQueueOneProposalWithoutApplyingOrPublishing(): void

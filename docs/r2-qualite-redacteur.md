@@ -1,6 +1,25 @@
 # R2 — Qualité des scénarios et textes : suivi
 
-## État courant — R2.3 terminé, 28 octobre 2026
+## État courant — R2.4 terminé, 28 octobre 2026
+
+Les packs sociaux ont des consignes plus explicites (tous les réseaux/champs, limites et hashtags séparés), avec des diagnostics distincts et des actions de reprise. Le validateur reste strict : pas de réparation silencieuse, résultat partiel, troncature ni second appel automatique. Les causes externes brutes ne sont ni journalisées ni conservées dans la chaîne d'exception.
+
+Les **47 tests ciblés / 271 assertions** passent. Ils couvrent le pack complet trois réseaux, les refus, le verrou occupé et le parcours asynchrone refus → diagnostic HTML → nouvelle demande manuelle, sans modifier les textes. Détails pédagogiques : [packs sociaux et diagnostic](packs-sociaux-diagnostic.md).
+
+### Résultats exécutés R2.4
+
+- Suite complète : **740 tests / 8 517 assertions, deux échecs**, code 1. Le premier attendait le mot « occupé » dans le nouveau diagnostic de concurrence : libellé corrigé sans changer le test. Le second est la reproduction de contexte pauvre R2.5, conservée sans exclusion ni affaiblissement.
+- **Rejeu final après correction : 61 tests / 507 assertions réussis**, code 0, incluant tous les tests de concurrence multi-processus, les tests éditoriaux et les tests unitaires des packs/du writer. Le cas du premier échec passe avec la reprise manuelle et l'isolation propriétaire ; aucun autre défaut observé. La suite complète n'a pas été rejouée après cette correction de libellé : ne pas présenter son résultat historique de deux échecs comme un nouveau passage à un seul échec.
+- **152 tests frontend** et `npm run check` réussis. PHPStan sur `src` et les nouveaux tests unitaires : aucune erreur. CS-Fixer sur cinq fichiers PHP : aucun fichier à corriger ; PHPStan et style rejoués après la dernière correction du libellé.
+- Garde `shortflow_test`, migrations puis lints conteneur/YAML/Twig et schéma réussis avant les suites ; aucune suite DB concurrente. Corpus historique inchangé, aucun test existant modifié pour masquer le défaut.
+
+Sorties ignorées : `artifacts/r2-4-focused.log`, `r2-4-full.log`, `r2-4-final.log`. Pour rejouer les contrôles finaux : `php bin/phpunit --filter 'PublicationPackDiagnosisTest|PublicationTextsTest|PublicationEditorialTest|LocalStoryWriterTest|StoryProposalConcurrencyTest'` après garde de base et migrations. La suite par défaut reste rouge jusqu'au traitement de R2.5.
+
+Revue indépendante : risque de fuite dans la chaîne d'exception externe corrigé et couvert, puis aucun autre blocage. Cache dev actualisé et `story-worker` redémarré après garde d'inactivité (zéro rédaction/occurrence en cours), état `running` confirmé. Aucune migration, aucun appel modèle réel ou essai payant/social. Aucun nouveau build ou recette navigateur, frontend inchangé ; scénario HTML couvert en fonctionnel.
+
+**Prochain point exact : R2.5**, contexte factuel suffisant et refus d'inventer depuis un titre seul. Ce dernier cas reste volontairement rouge. R2 reste en cours ; revue globale en R2.7. Commit local `fix: clarify editorial pack failures`, aucun push.
+
+## Historique — R2.3 terminé, 28 octobre 2026
 
 **Prochain point exact : R2.4**, fiabiliser les packs sociaux complets et leur diagnostic sans relâcher la validation des hashtags. Le contexte pauvre reste ensuite en R2.5. R2 demeure en cours et aura sa revue globale en R2.7.
 

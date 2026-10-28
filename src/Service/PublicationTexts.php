@@ -75,7 +75,7 @@ final class PublicationTexts
         $this->schema($networks);
         $profile = $this->profile($profile);
         if (array_diff(array_keys($result), $networks) || array_diff($networks, array_keys($result))) {
-            throw new PublicationException('La proposition ne contient pas les réseaux demandés. Tes textes restent conservés.');
+            throw new PublicationException('La proposition ne contient pas exactement les réseaux demandés. Demande une nouvelle proposition ou rédige les textes directement. Tes textes restent conservés.', reason: 'networks');
         }
         $allowed = $this->tags($profile['allowedHashtags']);
         $excluded = $this->tags($profile['excludedHashtags']);
@@ -84,34 +84,37 @@ final class PublicationTexts
             $row = $result[$network];
             $expected = [...self::FIELDS[$network], 'hashtags'];
             if (!is_array($row) || array_diff(array_keys($row), $expected) || array_diff($expected, array_keys($row)) || !is_array($row['hashtags']) || !array_is_list($row['hashtags']) || count($row['hashtags']) > 5) {
-                throw new PublicationException('La proposition est incomplète. Tes textes restent conservés.');
+                throw new PublicationException('La proposition est incomplète ou son format est invalide. Demande une nouvelle proposition ou rédige les textes directement. Tes textes restent conservés.', reason: 'structure');
             }
             $tags = [];
             foreach ($row['hashtags'] as $tag) {
                 if (!is_string($tag) || !preg_match('/^#?([\p{L}\p{N}_]{1,40})$/uD', $tag, $match)) {
-                    throw new PublicationException('Un hashtag proposé est invalide.');
+                    throw new PublicationException('Un hashtag proposé est invalide. Demande une nouvelle proposition ou saisis tes hashtags directement. Tes textes restent conservés.', reason: 'hashtag');
                 }
                 $normalized = mb_strtolower($match[1]);
                 if (in_array($normalized, $excluded, true) || ($allowed && !in_array($normalized, $allowed, true))) {
-                    throw new PublicationException('Les hashtags proposés ne respectent pas le profil de la série. Tes textes restent conservés.');
+                    throw new PublicationException('Les hashtags proposés ne respectent pas le profil de la série. Vérifie les listes autorisées et exclues puis demande une nouvelle proposition. Tes textes restent conservés.', reason: 'hashtag_profile');
                 }
                 $tags[$normalized] = '#'.$match[1];
             }
             foreach (self::FIELDS[$network] as $field) {
                 $value = $row[$field] ?? null;
-                if (!is_string($value) || '' === trim($value) || preg_match('/[<>#]/u', $value)) {
-                    throw new PublicationException('Un texte proposé est invalide. Les hashtags doivent rester séparés dans la réponse du rédacteur.');
+                if (is_string($value) && str_contains($value, '#')) {
+                    throw new PublicationException('Les hashtags doivent rester séparés dans la réponse du rédacteur. Demande une nouvelle proposition ou saisis les textes directement. Tes textes restent conservés.', reason: 'embedded_hashtags');
+                }
+                if (!is_string($value) || '' === trim($value) || preg_match('/[<>]/u', $value)) {
+                    throw new PublicationException('Un texte proposé est vide ou contient des caractères interdits. Demande une nouvelle proposition ou rédige-le directement. Tes textes restent conservés.', reason: 'text');
                 }
                 $value = trim($value);
                 $limit = 'title' === $field ? 100 : ('description' === $field ? 1200 : 800);
                 if (mb_strlen($value) > $limit) {
-                    throw new PublicationException('Un texte proposé est trop long. Aucune troncature ni application automatique.');
+                    throw new PublicationException('Un texte proposé est trop long. Demande une nouvelle proposition plus courte ou rédige-le directement. Aucune troncature ni application automatique.', reason: 'length');
                 }
                 if ('title' !== $field && $tags) {
                     $value .= "\n\n".implode(' ', $tags);
                 }
                 if (('description' === $field && strlen($value) > 5000) || ('caption' === $field && mb_strlen($value) > 2200)) {
-                    throw new PublicationException('Le texte et ses hashtags dépassent la limite du réseau.');
+                    throw new PublicationException('Le texte et ses hashtags dépassent la limite du réseau. Rédige un texte plus court. Tes textes restent conservés.', reason: 'length');
                 }
                 $output[$network][$field] = $value;
             }
