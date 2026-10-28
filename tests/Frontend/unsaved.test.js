@@ -30,4 +30,12 @@ test('leaving warns only about unsaved edits; submitting and disconnecting clear
   assert.equal(warnings, 1);
   controller.disconnect();
   assert.equal(listeners.size, 0);
+  controller.element = { dataset: { unsavedInitial: 'true' } };
+  controller.connect();
+  listeners.get('beforeunload')(event);
+  assert.equal(warnings, 2);
+  controller.submit();
+  listeners.get('beforeunload')(event);
+  assert.equal(warnings, 2);
+  controller.disconnect();
 });

@@ -118,6 +118,40 @@ final class AiEpisodeFlow
         });
     }
 
+    /**
+     * @param list<array<string,mixed>> $rows
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function singlePlan(string $model, int $target, array $rows): array
+    {
+        if (!in_array($target, $this->catalog->model($model)['seconds'], true)) {
+            throw new \RuntimeException('Ce modèle ne produit pas un seul clip de cette durée. Choisis une durée native ou plusieurs scènes ; aucun modèle ne sera remplacé.');
+        }
+        if ($rows && array_sum(array_column($rows, 'seconds')) !== $target) {
+            throw new \RuntimeException('La durée souhaitée diffère du total de tes plans. Ajuste explicitement leurs durées avant de les réunir ; aucune durée ne sera réduite automatiquement.');
+        }
+        if (count($rows) <= 1) {
+            return [array_replace($rows[0] ?? ['prompt' => ''], ['seconds' => $target])];
+        }
+        if (array_filter($rows, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? ''))) {
+            throw new \RuntimeException('Tes plans ont des images ou des consignes d’images distinctes. Conserve plusieurs scènes ou réaffecte ces éléments manuellement avant de les réunir ; rien n’a été retiré.');
+        }
+        foreach (['translatedIdentity', 'translationSource', 'referenceFit'] as $field) {
+            if (count(array_unique(array_map(static fn (array $row): string => $row[$field] ?? '', $rows))) > 1) {
+                throw new \RuntimeException('Les contextes traduits ou cadrages de tes plans diffèrent. Conserve plusieurs scènes ou harmonise ces détails avant de les réunir ; tes textes sont conservés.');
+            }
+        }
+        $prompt = implode("\n", array_filter(array_map(static fn (array $row): string => $row['prompt'] ?? '', $rows), static fn (string $text): bool => '' !== trim($text)));
+        $description = implode(' ', array_filter(array_map(static fn (array $row): string => $row['sceneDescription'] ?? '', $rows), static fn (string $text): bool => '' !== trim($text)));
+        if (mb_strlen($prompt) > 1500 || mb_strlen($description) > 300) {
+            throw new \RuntimeException('Les textes réunis dépassent la limite d’un plan (1 500 caractères de prompt, 300 de résumé). Conserve plusieurs scènes ou adapte les textes manuellement ; aucun texte n’a été raccourci.');
+        }
+        $this->catalog->validatePrompt($model, $prompt);
+
+        return [array_replace($rows[0], ['prompt' => $prompt, 'sceneDescription' => $description, 'seconds' => $target])];
+    }
+
     /** @return list<array{value:string,label:string,seconds:int}> */
     public function suggestions(string $model, int $target): array
     {

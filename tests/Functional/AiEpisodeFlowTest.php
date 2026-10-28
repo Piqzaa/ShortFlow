@@ -354,7 +354,7 @@ final class AiEpisodeFlowTest extends WebTestCase
     {
         $episode = $this->planned();
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
-        $form = $crawler->selectButton('Préparer un plan unique')->form();
+        $form = $crawler->selectButton('Répartir la durée')->form();
         $form['ai_idea[target]'] = '10';
         $form['ai_idea[shots][2][sceneDescription]'] = 'Ma conclusion à conserver.';
         $crawler = $this->client->submit($form);
@@ -994,6 +994,119 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame('single', $this->fresh($episode)->getContinuity());
         self::assertSame(1, $this->flow()->quote($episode)['count']);
         self::assertSame('kling-25', $episode->getFlowRecipe()['model']);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testSinglePlanConversionPreservesOrderedTextsAndTranslationBeforeASeparateQuote(): void
+    {
+        $episode = $this->planned();
+        $episode->edit($episode->getTitle(), 'Milo is a ginger cat exploring a room.');
+        $this->em()->flush();
+        $url = '/studio/series/episodes/'.$episode->getId();
+        $crawler = $this->client->request('GET', $url);
+        self::assertSelectorCount(1, '[data-preparation-target="continuityPanel"] button[value="single"]');
+        $form = $crawler->selectButton('Préparer un plan unique')->form();
+        $form['ai_idea[model]'] = 'kling-3';
+        $form['ai_idea[target]'] = '15';
+        $identity = 'Milo is a ginger cat in miniature cinema style.';
+        $source = \App\Service\StoryTextChecks::translationSource($episode->getPrompt(), ['characters' => $episode->getSeries()->getCharacters(), 'style' => $episode->getSeries()->getStyle()]);
+        for ($i = 0; $i < 3; ++$i) {
+            $form['ai_idea[shots]['.$i.'][seconds]'] = '5';
+            $form['ai_idea[shots]['.$i.'][prompt]'] = 'Scene '.($i + 1).': Milo takes a step forward.';
+            $form['ai_idea[shots]['.$i.'][sceneDescription]'] = 'Étape '.($i + 1).' de Milo.';
+            $form['ai_idea[shots]['.$i.'][translatedIdentity]'] = $identity;
+            $form['ai_idea[shots]['.$i.'][translationSource]'] = $source;
+        }
+        $this->client->submit($form);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(1, '[data-shot-editor-target="list"] [data-shot-editor-row]');
+        self::assertSame("Scene 1: Milo takes a step forward.\nScene 2: Milo takes a step forward.\nScene 3: Milo takes a step forward.", $this->client->getCrawler()->selectButton('Voir le récapitulatif →')->form()->getValues()['ai_idea[shots][0][prompt]']);
+        self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', 'Étape 1 de Milo. Étape 2 de Milo. Étape 3 de Milo.');
+        self::assertSelectorExists('#ai-idea-form[data-unsaved-initial="true"]');
+        self::assertSelectorTextContains('[data-preparation-target="singleAction"]', 'enregistrer la préparation avant de quitter');
+        self::assertInputValueSame('ai_idea[shots][0][translatedIdentity]', $identity);
+        self::assertInputValueSame('ai_idea[shots][0][translationSource]', $source);
+        self::assertSelectorExists('select[name="ai_idea[shots][0][seconds]"] option[value="15"][selected]');
+        self::assertCount(3, $this->flow()->shots($this->fresh($episode)));
+        $form = $this->client->getCrawler()->selectButton('Voir le récapitulatif →')->form();
+        $form['ai_idea[target]'] = '14';
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('#ai-idea-form[data-unsaved-initial="true"]');
+        self::assertSelectorCount(1, '[data-shot-editor-target="list"] [data-shot-editor-row]');
+        $form = $this->client->getCrawler()->selectButton('Voir le récapitulatif →')->form();
+        $form['ai_idea[target]'] = '15';
+        $this->client->submit($form);
+        self::assertResponseRedirects();
+        $episode = $this->fresh($episode);
+        self::assertSame('single', $episode->getContinuity());
+        self::assertSame('kling-3', $episode->getFlowRecipe()['model']);
+        self::assertSame(1, $this->flow()->quote($episode)['count']);
+        self::assertSame(15, $this->flow()->shots($episode)[0]->getSeconds());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testSinglePlanConversionRefusesDurationLossAndLongSummariesWithoutChangingSavedScenes(): void
+    {
+        $episode = $this->planned();
+        $url = '/studio/series/episodes/'.$episode->getId();
+        foreach (['native', 'total', 'summary', 'prompt', 'context'] as $case) {
+            $crawler = $this->client->request('GET', $url);
+            $form = $crawler->selectButton('Préparer un plan unique')->form();
+            $form['ai_idea[continuity]'] = 'single';
+            $form['ai_idea[model]'] = 'native' === $case ? 'kling-25' : 'seedance-25';
+            $form['ai_idea[target]'] = 'total' === $case ? '10' : '30';
+            $form['ai_idea[shots][1][sceneDescription]'] = 'summary' === $case ? str_repeat('Résumé ', 39).'Résumé' : 'Texte humain à conserver.';
+            if ('summary' === $case) {
+                $form['ai_idea[shots][0][sceneDescription]'] = str_repeat('Début ', 15);
+            }
+            if ('prompt' === $case) {
+                $form['ai_idea[shots][0][prompt]'] = str_repeat('Milo walks. ', 100);
+                $form['ai_idea[shots][1][prompt]'] = str_repeat('Milo pauses. ', 40);
+            }
+            if ('context' === $case) {
+                $form['ai_idea[shots][1][translatedIdentity]'] = 'Milo is a ginger cat.';
+                $form['ai_idea[shots][1][translationSource]'] = str_repeat('a', 64);
+            }
+            $this->client->submit($form);
+            self::assertResponseStatusCodeSame(422);
+            self::assertSelectorCount(3, '[data-shot-editor-target="list"] [data-shot-editor-row]');
+            self::assertInputValueSame('ai_idea[shots][1][sceneDescription]', 'summary' === $case ? str_repeat('Résumé ', 39).'Résumé' : 'Texte humain à conserver.');
+            self::assertCount(3, $this->flow()->shots($this->fresh($episode)));
+            self::assertSame('kling-25', $episode->getFlowRecipe()['model']);
+        }
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testSinglePlanConversionRefusesPerPlanImagesWithoutDiscardingThem(): void
+    {
+        $episode = $this->planned(true);
+        $reference = $episode->getPreparationRecipe()['reference'];
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $form = $crawler->selectButton('Préparer un plan unique')->form();
+        $form['ai_idea[model]'] = 'seedance-25-image';
+        $form['ai_idea[shots][1][imagePrompt]'] = 'Image à conserver pour la deuxième scène.';
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('#ai-idea-form', 'images ou des consignes d’images distinctes');
+        self::assertSelectorTextSame('textarea[name="ai_idea[shots][1][imagePrompt]"]', 'Image à conserver pour la deuxième scène.');
+        self::assertSelectorCount(3, '[data-shot-editor-target="list"] [data-shot-editor-row]');
+        self::assertSame($reference, $this->fresh($episode)->getPreparationRecipe()['reference']);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testSinglePlanConversionForANewStudioIdeaSurvivesReturningToThePage(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $crawler->selectButton('Préparer un plan unique')->form()->getPhpValues();
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['model' => 'kling-3', 'source' => 'text', 'prompt' => 'Milo is a ginger cat exploring a room.', 'seconds' => 5, 'target' => 15, 'accessMode' => 'api', 'ratio' => '9:16', 'shots' => array_map(static fn (int $i): array => ['prompt' => 'Scene '.$i.': Milo walks forward.', 'sceneDescription' => 'Étape '.$i.'.', 'seconds' => 5], [1, 2, 3])]);
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(1, '[data-shot-editor-target="list"] [data-shot-editor-row]');
+        self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', 'Étape 1. Étape 2. Étape 3.');
+        self::assertSelectorExists('select[name="ai_idea[continuity]"] option[value="single"][selected]');
         self::assertSame(0, $this->submissions);
     }
 

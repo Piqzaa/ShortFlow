@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'fixContinuity', 'audioHelp'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'fixContinuity', 'audioHelp'];
   static values = { models: Object };
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) this.refresh(); }); }
@@ -36,7 +36,11 @@ export default class extends Controller {
     this.fixContinuityTarget.hidden = single || possible || this.continuityTarget.value !== 'linked';
     this.continuityTarget.querySelector('[value="linked"]').disabled = false;
     this.continuityHelpTarget.textContent = this.continuityTarget.value === 'linked' ? (possible ? 'Chaque clip repart de la dernière image du précédent. Cela aide les raccords, sans garantir un plan continu ni un personnage identique.' : 'Le raccord depuis une image exige un premier cadre et un modèle compatible. Il ne transmet ni le mouvement ni le son du clip précédent.') : 'Clips indépendants, assemblés avec des coupes visibles. Sans référence visuelle commune, le personnage peut changer entre les scènes. Pour prolonger une action, choisis un modèle image compatible et une référence.';
-    if (this.continuityTarget.value === 'single') this.continuityHelpTarget.textContent = single ? 'Une prise continue demandée en un seul appel. Le modèle peut introduire une coupe ; aucun raccord entre générations.' : 'Choisis « Préparer un plan unique » avec une durée native, ou conserve tes plans en choisissant plusieurs scènes.';
+    if (this.continuityTarget.value === 'single') this.continuityHelpTarget.textContent = single ? 'Une prise continue demandée en un seul appel. Le modèle peut introduire une coupe ; aucun raccord entre générations.' : 'Le mode est choisi, mais tes scènes ne sont pas encore réunies. Utilise « Préparer un plan unique » ci-dessous ou conserve plusieurs scènes.';
+    if (this.hasSingleActionTarget) {
+      this.singleActionTarget.hidden = this.continuityTarget.value !== 'single';
+      this.singleStatusTarget.textContent = single ? 'Un seul plan est présent. Sa durée doit être native pour ce modèle ; le devis reste à confirmer.' : `${this.editor.rows().length} plans actuellement. Le bouton réunit leurs prompts et résumés dans l’ordre, sans raccourcir la durée. Les images propres ou détails incompatibles empêchent la conversion ; tes saisies sont conservées.`;
+    }
     if (!model || !this.editor) return;
     this.editor.modelValue = model;
     for (const row of this.editor.rows()) for (const option of row.querySelector('select').options) {

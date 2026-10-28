@@ -1,0 +1,7 @@
+<div class="single-plan-action" data-preparation-target="singleAction">
+  {% if singlePrepared|default(false) %}<p class="library-note" role="status">Plan unique préparé sur cette page. Relis les scènes puis ouvre le récapitulatif pour enregistrer la préparation avant de quitter cette page. Aucune vidéo n’a été lancée.</p>{% endif %}
+  <p class="library-note" id="single-plan-status" data-preparation-target="singleStatus" role="status" aria-live="polite">{{ ideaForm.shots|length }} plan(s) actuellement. Choisir ce mode ne réunit pas les scènes : utilise le bouton ci-dessous. Textes conservés dans l’ordre, conversion refusée si une durée, une image ou un détail serait perdu.</p>
+  <button type="submit" class="account-secondary" name="intent" value="single" aria-describedby="single-plan-status">Préparer un plan unique</button>
+  <p class="library-note">Un seul appel pour toute la durée native choisie. Relis le résultat dans les scènes avant le récapitulatif. Le modèle peut encore introduire une coupe.</p>
+</div>
+

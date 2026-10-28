@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
   connect() {
-    this.dirty = false;
+    this.dirty = this.element?.dataset.unsavedInitial === 'true';
     this.warn = event => {
       if (!this.dirty) return;
       event.preventDefault();

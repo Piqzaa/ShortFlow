@@ -4,9 +4,9 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** **Grand R3 en cours, R3.1 et R3.2 terminés**. Grand R2 terminé, R2.1–R2.7 validés avec limitations explicites et revue globale indépendante. Décision du propriétaire conservée : préparation automatique des scénarios, relecture et confirmation manuelle du devis de chaque vidéo. Anciennes autorisations automatiques bloquées avant nouveau POST ; récupération des demandes déjà transmises conservée. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée. [Bilan global R2](r2-revue-cloture.md).
-- **Dernière suite complète verte : complément R2 traduction**, **771 tests / 8 808 assertions**, **155 tests frontend** verts, lints/PHPStan/style/schémas/check/build réussis. Recette synthétique mobile/desktop/clavier terminée. Les mesures R2.6 restent historiques et distinctes des deux campagnes de traduction.
-- **Prochain point exact : `R3.3`**. Complément R2 traduction terminé après demande explicite du propriétaire : [correctif, évaluation et limites](redacteur-traduction-production.md). Reprendre le mode unique et sa transformation sans perte. [R3.1 validé](r3-parcours-commun.md), [R3.2 livré : cartes compactes](r3-cartes-scenes.md). Grand R3 en cours, revue globale en R3.7.
+- **Phase actuelle :** **Grand R3 en cours, R3.1–R3.3 terminés**. Grand R2 terminé, R2.1–R2.7 validés avec limitations explicites et revue globale indépendante. Décision du propriétaire conservée : préparation automatique des scénarios, relecture et confirmation manuelle du devis de chaque vidéo. Anciennes autorisations automatiques bloquées avant nouveau POST ; récupération des demandes déjà transmises conservée. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée. [Bilan global R2](r2-revue-cloture.md).
+- **Dernière suite complète verte : R3.3**, **775 tests / 8 882 assertions**, **156 tests frontend** verts, lints/PHPStan/style/schémas/check/build réussis. Recette synthétique mobile/desktop/clavier terminée ; limites du POST navigateur consignées dans le bilan. Les mesures R2.6 et du complément traduction restent historiques et distinctes.
+- **Prochain point exact : `R3.4`**, choix guidé des modèles/connexions commun Studio/Séries. [R3.3 livré : plan unique sans perte silencieuse](r3-plan-unique.md). [Complément R2 traduction terminé](redacteur-traduction-production.md), [R3.1 validé](r3-parcours-commun.md), [R3.2 livré](r3-cartes-scenes.md). Grand R3 en cours, revue globale en R3.7.
 - **Validation actuelle :** captures R2.6 inchangées (18 essais, dont quatre timeouts). R2.7 : prompt éditorial concis + exemple et 600 tokens, délai inchangé ; six nouveaux essais locaux, quatre packs complets normalisés et deux refus de contexte sans HTTP. Un récit garde des faits/hashtags incorrects : relecture explicite avant application. [Captures complémentaires](fixtures/redacteur-cloture-r2.json), empreintes vérifiées. Aucune activation réelle, dépense, publication, média ou migration.
 - **Ne pas commencer maintenant :** R4 avant la clôture globale R3.7, abonnement, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
@@ -15,7 +15,7 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 - **Décisions en attente :** quotas précis de l'essai Studio, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
-Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Ses demandes de suite du 28 octobre ont livré R2.1–R2.7 et la revue globale, puis R3.1–R3.2 ; R3.3 est le prochain point après clôture du complément traduction. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
+Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Ses demandes de suite du 28 octobre ont livré R2.1–R2.7 et la revue globale, puis R3.1–R3.3 et le complément traduction ; R3.4 est le prochain point. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
 
 ## Règles de suivi à respecter
 
@@ -38,7 +38,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
 | R1 | Attente, exécution et reprise du rédacteur | Terminé, revue globale et contrôles validés | Attente/exécution distinctes, traitements bornés, reprise sans double appel |
 | R2 | Qualité des scénarios, dialogues et textes | Terminé, revue globale et limites supervisées acceptées | Corpus rejoué, écarts signalés avant coût, génération récurrente manuelle |
-| R3 | Studio/Séries plus simples et compacts | En cours, R3.1–R3.2 terminés | Parcours commun compréhensible, devis et contrôles conservés |
+| R3 | Studio/Séries plus simples et compacts | En cours, R3.1–R3.3 terminés | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
 | R5 | Responsive, accessibilité et finitions | À faire | Matrice d'écrans/états vérifiée, défauts bloquants corrigés |
 | R6 | Landing, aide, contact et SEO de base | À faire | Promesse fidèle et premier parcours expliqué |
@@ -91,7 +91,7 @@ Dépendance : R2. Préserver la préparation commune et les six destinations de 
 
 - [x] **R3.1** Décrire puis valider un parcours commun en trois groupes : idée, scènes, récapitulatif ; aucun nouvel onglet « À valider » ni assistant multipage imposé. [Cadrage validé le 28 octobre, ajustable après essai](r3-parcours-commun.md).
 - [x] **R3.2** Présenter les plans en cartes compactes avec résumé français, durée et référence ; détails des prompts/images progressifs, accès manuel conservé. Signaler un résumé à revérifier après modification du prompt. [Comportement, preuves, pédagogie et limites](r3-cartes-scenes.md).
-- [ ] **R3.3** Rapprocher choix « plan unique » et transformation effective, sans perte des textes ni réduction silencieuse des durées.
+- [x] **R3.3** Rapprocher choix « plan unique » et transformation effective, sans perte des textes ni réduction silencieuse des durées. [Comportement, refus, enregistrement et vérifications](r3-plan-unique.md).
 - [ ] **R3.4** Harmoniser le choix guidé des modèles et connexions entre vidéo ponctuelle et série ; distinguer proposition locale de texte et connexion nécessaire pour générer la vidéo.
 - [ ] **R3.5** Garder action suivante, erreurs, modèle/compte, références réellement utilisées, nombre de plans, coût et confirmation accessibles. Replier les détails, pas les protections.
 - [ ] **R3.6** Corriger le contexte de navigation après `forward`, le libellé « Subjects » et les résumés de comptes par vidéo. Expliquer disponibilités locales et reprise des créneaux manqués sans vocabulaire inutilement technique.
@@ -243,6 +243,14 @@ Après lancement : amélioration fondée sur les retours ; quelques guides/blog 
 Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie le journal et l'état Git, résume le prochain point exact puis reprends seulement ce point et ses vérifications, sans action externe réelle non autorisée. »
 
 ## Journal de progression
+
+### 28 octobre 2026 — R3.3 terminé, plan unique et transformation
+
+- Action rapprochée du sélecteur, nombre actuel explicite ; choix seul sans mutation. Conversion serveur ordonnée des prompts/résumés compatibles, total conservé et durée native obligatoire, aucun remplacement de modèle. Refus explicite des images/consignes par plan, contextes/cadrages incompatibles ou textes dépassant les limites, saisies conservées.
+- Épisode : transformation provisoire annoncée, état modifié dès le chargement et après récapitulatif refusé ; enregistrement/révision/devis séparés. Studio neuf : conversion conservée en session, retour GET testé. Même transformation sans JS, aucune génération déclenchée. [Pédagogie Symfony, fichiers, recette et limites](r3-plan-unique.md).
+- **775 tests / 8 882 assertions**, **156 frontend**, PHPStan/style/lints/schémas/check/build réussis. Base `shortflow_test` et copie Linux temporaire, aucune suite DB concurrente. Recette synthétique desktop/mobile/clavier : résumé complet, action accessible, 375/375 de largeur utile/scroll, aucune erreur console sur le résultat. POST navigateur du serveur de recette refusé à la racine ; résultat ensuite inspecté en GET, POST applicatif vérifié fonctionnellement. Ne pas confondre ces preuves.
+- Revue indépendante : séparateur HTML du résumé, sauvegarde session et état provisoire après refus corrigés et relus ; aucun blocage restant identifié sur R3.3. Cache dev et quatre workers actualisés hors traitement actif. Aucune migration, appel modèle, vidéo, coût, publication, activation ou push. Commit local `feat: preserve scenes when preparing a single take`.
+- **Prochain point exact : R3.4**, non commencé ; R3.5–R3.7 et revue globale restent à faire, pas de passage à R4.
 
 ### 28 octobre 2026 — Complément R2 traduction, avant R3.3
 
