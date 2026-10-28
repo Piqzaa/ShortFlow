@@ -250,6 +250,32 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertSame(0, $this->paidCalls);
     }
 
+    public function testRequestedSpeechPausesRecurringGenerationForHumanReview(): void
+    {
+        $this->series->configure('Milo', 'Milo dit en français « Bonjour ! ».', 'réaliste', 'Milo, chat blanc joueur', $this->series->getRecipe());
+        $this->em->flush();
+        $r = $this->service()->activate($this->series, $this->data());
+        $message = $this->message($r);
+        $this->due();
+        $this->service()->produce($message);
+        self::assertSame('paused', $r->getStatus());
+        self::assertSame(0, $r->getReservedCents());
+        self::assertSame(0, $this->paidCalls);
+        self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
+        $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $r]);
+        self::assertSame('attention', $occurrence->getStatus());
+        self::assertStringContainsString('réplique', $occurrence->getIssue());
+        self::assertStringContainsString('locuteur', $occurrence->getIssue());
+        self::assertStringContainsString('2 point(s)', $occurrence->getIssue());
+        self::assertMatchesRegularExpression('/[.!?]$/u', $occurrence->getIssue());
+        self::assertLessThanOrEqual(255, mb_strlen($occurrence->getIssue()));
+        self::assertSame('draft', $occurrence->getEpisode()->getFlowState());
+        self::assertNotEmpty(static::getContainer()->get(AiEpisodeFlow::class)->shots($occurrence->getEpisode()));
+        $this->service()->produce($message);
+        self::assertSame(2, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
+    }
+
     public function testActivationRequiresConsentAndCsrfAndIsPrivateAndRevisioned(): void
     {
         $url = '/studio/series/'.$this->series->getId();

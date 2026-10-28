@@ -4,10 +4,10 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** **R2 en cours, R2.1/R2.2 terminés**. Contrat des scènes parlantes documenté, limites visibles avant coût ; aucun support structuré de dialogue livré. Quatre reproductions R2.1 toujours rouges, sans exclusion. R1 reste terminé et revu.
+- **Phase actuelle :** **R2 en cours, R2.1–R2.3 terminés**. Consignes/langue/fidélité corrigées avec alertes conservatrices ; trois reproductions scénario devenues vertes. Seul le contexte pauvre R2.5 reste rouge, sans exclusion. R1 reste terminé et revu ; aucune voix ou prise en charge structurée complète annoncée.
 - **Dernière suite complète verte :** R1.5, **667 tests / 8 044 assertions** et **152 tests frontend**, clôture `abda42e`. Ce résultat historique ne valide pas les nouveaux tests rouges R2.1. La référence `d3e4700` reste le socle d'avant R1.
-- **Prochaine tâche exacte : `R2.3`**, corriger langue/fidélité et citations françaises intentionnelles, avec alertes honnêtes ; voir [le suivi R2](r2-qualite-redacteur.md) et [le contrat R2.2](scenes-parlantes-contrat.md). Packs R2.4 et contexte R2.5 ensuite.
-- **Validation actuelle :** suite complète **692 tests / 8 318 assertions, 688 réussites et les quatre échecs R2.1 connus uniquement** ; 152 frontend réussis. Notices testées sur les vraies routes, recette synthétique desktop/mobile, qualité statique/lints/build réussis. Aucun service métier, catalogue, tarif, prompt ou schéma changé ; migration R1.2 inchangée.
+- **Prochaine tâche exacte : `R2.4`**, packs sociaux complets et diagnostic fiable, sans supprimer la validation de hashtags ; contexte pauvre ensuite R2.5. Voir [le suivi R2](r2-qualite-redacteur.md) et [les contrôles de fidélité](redacteur-langue-fidelite.md).
+- **Validation actuelle :** suite complète **720 tests / 8 419 assertions, un échec R2.5 connu uniquement** ; rejeu final 57 / 379 et 152 frontend réussis. Corpus R2.1 inchangé : 14 cas sur 15 désormais verts. PHPStan, style, lints et schéma test réussis ; cache/worker local actualisés hors rédaction active. Ni rendu réel ni ancienne proposition réévaluée automatiquement ; aucune migration.
 - **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
 - **Publications Free confirmées :** cinq par mois ; une vidéo diffusée sur plusieurs réseaux dans la même publication compte une seule fois. L'ancienne recommandation de décompte par destinataire est écartée.
@@ -15,7 +15,7 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 - **Décisions en attente :** quotas précis de l'essai Studio, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
-Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Ses demandes de suite du 28 octobre ont livré R2.1/R2.2 ; R2.3 est le prochain point. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
+Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Ses demandes de suite du 28 octobre ont livré R2.1–R2.3 ; R2.4 est le prochain point. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
 
 ## Règles de suivi à respecter
 
@@ -37,7 +37,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | --- | --- | --- | --- |
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
 | R1 | Attente, exécution et reprise du rédacteur | Terminé, revue globale et contrôles validés | Attente/exécution distinctes, traitements bornés, reprise sans double appel |
-| R2 | Qualité des scénarios, dialogues et textes | En cours : R2.1/R2.2 terminés, R2.3 suivant, quatre reproductions rouges | Corpus rejoué, écarts signalés, textes humains préservés |
+| R2 | Qualité des scénarios, dialogues et textes | En cours : R2.1–R2.3 terminés, R2.4 suivant, un contexte pauvre encore rouge | Corpus rejoué, écarts signalés, textes humains préservés |
 | R3 | Studio/Séries plus simples et compacts | À faire | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
 | R5 | Responsive, accessibilité et finitions | À faire | Matrice d'écrans/états vérifiée, défauts bloquants corrigés |
@@ -77,7 +77,7 @@ Dépendance : R1. Preuves : [rapport qualité](audit-global-20261027-qualite.md)
 
 - [x] **R2.1** Transformer les défauts capturés en cas de non-régression : répliques perdues, prompts français non signalés, hashtags intégrés au texte, contexte inventé depuis un titre pauvre. Garder séparés les contrôles de structure et de sens. [15 cas, quatre rouges attendus, aucun correctif applicatif](r2-qualite-redacteur.md).
 - [x] **R2.2** Définir le contrat des scènes parlantes : locuteur, réplique exacte, langue et capacité réelle du chemin vidéo. Tant que le contrat n'est pas porté, l'indiquer avant coût ; ne pas promettre de voix/lipsync depuis le seul indicateur audio. [Contrat défini, portage non implémenté et notices avant coût](scenes-parlantes-contrat.md).
-- [ ] **R2.3** Corriger les consignes/validations de langue et fidélité ; accepter un prompt anglais contenant intentionnellement une citation française. Éviter les traits inventés et les actions contradictoires ; conserver une alerte honnête quand le contrôle ne peut pas conclure.
+- [x] **R2.3** Corriger les consignes/validations de langue et fidélité ; accepter un prompt anglais contenant intentionnellement une citation française. Éviter les traits inventés et les actions contradictoires ; conserver une alerte honnête quand le contrôle ne peut pas conclure. [Règles ciblées, témoins et limites de la relecture](redacteur-langue-fidelite.md).
 - [ ] **R2.4** Fiabiliser les packs sociaux complets et leur diagnostic. Garder la séparation des hashtags et les limites des réseaux ; ne pas désactiver le validateur pour accepter une mauvaise sortie.
 - [ ] **R2.5** Demander un contexte factuel suffisant et rendre explicite que le rédacteur ne voit pas la vidéo. Proposer une réponse neutre ou une demande de précision plutôt qu'inventer ; préserver les textes saisis et l'application volontaire.
 - [ ] **R2.6** Évaluer sur un corpus fixe avec quelques répétitions : récit, tutoriel, produit, dialogue, danse, mémoire de série, import peu décrit. Consigner structure, fidélité, erreurs, langue, corrections humaines, durées murale/monotone et conditions du poste. Aucun score commercial déduit d'un petit échantillon.
@@ -340,6 +340,15 @@ Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie l
 - Recette synthétique desktop 1440 × 900/mobile 390 × 844, clavier et console ; aucun POST accepté par le serveur de recette. Cache dev actualisé, serveur temporaire retiré. Revue indépendante sans blocage après clarification du texte récurrent ; grand R2 toujours non livré, revue globale future en R2.7.
 - [Contrat et composants Symfony](scenes-parlantes-contrat.md), [résultats et limites](r2-qualite-redacteur.md). Dix tâches sur 76 cochées. Commit local à retrouver avec `git log --oneline --grep="feat: explain speech limits before generation costs"`, aucun push.
 - **Prochaine tâche exacte : R2.3.** Aucun appel texte/vidéo réel ni essai payant, publication, activation ou nouvelle migration. Pas d'intervention manuelle requise pour valider ce point ; la qualité des voix devra être testée séparément avec autorisation.
+
+### 28 octobre 2026 — R2.3 terminé, consignes et garde-fous de fidélité
+
+- Interdiction contradictoire des dialogues retirée ; narration française, directions anglaises et citations originales distinguées. Repères de répliques transmis aux deux étapes texte, sans nouvelle API/script structuré du fournisseur vidéo.
+- Nouveau service pur de contrôles : citations exactes fermées, langue inconnue, paroles absentes/modifiées/fragmentées/répétées ou désordonnées, tenue par personnage nommé, contradictions d'actions ciblées. Aucune réécriture des préparations ; alertes de capacité/locuteur conservées même si les mots sont présents.
+- Pause récurrente avant toute vidéo vérifiée ; résumé d'alertes complet et borné à 255 caractères, plans éditables et réservations non consommées libérées. Pas d'activation réelle ni de rendu audio prétendu validé.
+- 27 nouveaux cas unitaires et un cas fonctionnel ; suite complète **720 / 8 419, un rouge R2.5 uniquement**. Rejeu final **57 / 379** vert ; reproductions R2.1 inchangées **14 / 15** vertes, seul contexte pauvre encore rouge ; **152 frontend** verts. PHPStan, style, lints et schéma réussis. Pas de nouveau build/recette navigateur, sources frontend inchangées.
+- Revue indépendante sans blocage après renfort sur les répétitions. Cache dev/worker actualisés après garde zéro rédaction active/en attente ; aucun appel modèle/vidéo/social réel. Limites, composants Symfony et commandes : [correctif](redacteur-langue-fidelite.md), [suivi R2](r2-qualite-redacteur.md).
+- Onze tâches sur 76 cochées. Commit local à retrouver avec `git log --oneline --grep="fix: preserve requested speech and improve story checks"` ; aucun push. **Prochaine tâche exacte : R2.4**, puis R2.5 pour rendre le dernier cas vert. Revue globale de R2 toujours en R2.7.
 
 ### Modèle à recopier à chaque fin de lot ou interruption
 

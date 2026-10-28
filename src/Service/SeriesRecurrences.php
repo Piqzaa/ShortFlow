@@ -284,7 +284,12 @@ final class SeriesRecurrences
                 $this->flow->prepare($series->getOwner(), $recipe + ['source' => $this->catalog->referenceMode($recipe['model']), 'target' => array_sum($settings['durations']), 'shots' => $story['shots'], 'prompt' => $series->initialPrompt(), 'title' => $story['title'], 'continuity' => $settings['continuity'], 'mute' => false, 'useEnd' => (bool) $recipe['endReference'], 'revision' => 1], $episode);
                 $occurrence->story($story['summary']);
                 if ($story['warnings']) {
-                    $issue = 'Scénario à relire dans l’épisode avant génération. '.implode(' ', $story['warnings']);
+                    // Persist a complete summary within both entities' 255-character bounds.
+                    $prefix = 'Scénario à relire dans l’épisode avant génération. '.count($story['warnings']).' point(s) à vérifier. ';
+                    $issue = $prefix.$story['warnings'][0];
+                    if (mb_strlen($issue) > 255) {
+                        $issue = $prefix.'Relis les consignes, les paroles, leurs locuteurs et l’identité des sujets avant tout lancement.';
+                    }
                     $occurrence->fail($issue);
                     $recurrence->pause($issue);
                     $this->em->flush();

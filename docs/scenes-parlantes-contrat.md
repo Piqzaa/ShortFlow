@@ -4,7 +4,7 @@
 
 ## Ce qui existe réellement
 
-Les préparations conservent une idée, des descriptions françaises et des prompts vidéo. `AiShotPrompts` construit le prompt envoyé ; `LocalStoryWriter` peut proposer des scènes, mais ses consignes actuelles excluent les dialogues et ses contrôles ne vérifient pas les répliques. Le cas capturé R2.1 prouve qu'une phrase présente dans la description peut manquer du prompt effectif.
+Les préparations conservent une idée, des descriptions françaises et des prompts vidéo. `AiShotPrompts` construit le prompt envoyé. Lors du cadrage R2.2, les consignes de `LocalStoryWriter` excluaient les dialogues ; le cas capturé R2.1 prouve qu'une phrase présente dans la description peut manquer du prompt effectif. **Depuis R2.3**, [les consignes et contrôles textuels sont corrigés](redacteur-langue-fidelite.md) : citations conservées lorsqu'elles sont présentes, pertes/écarts signalés et relecture des locuteurs toujours requise. Cela ne constitue pas le portage complet du script structuré ni une validation audio.
 
 Il n'existe actuellement aucun script structuré de répliques transmis séparément au fournisseur. Le booléen `audio` du catalogue ne décrit pas un contrat de paroles exactes, de voix stable ou de synchronisation des lèvres. Ce constat porte sur **le chemin intégré à VydFlow**, pas sur toutes les possibilités commerciales des modèles ou de leurs interfaces externes.
 

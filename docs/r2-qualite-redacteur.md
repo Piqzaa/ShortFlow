@@ -1,6 +1,41 @@
 # R2 — Qualité des scénarios et textes : suivi
 
-## État courant — R2.2 terminé, 28 octobre 2026
+## État courant — R2.3 terminé, 28 octobre 2026
+
+**Prochain point exact : R2.4**, fiabiliser les packs sociaux complets et leur diagnostic sans relâcher la validation des hashtags. Le contexte pauvre reste ensuite en R2.5. R2 demeure en cours et aura sa revue globale en R2.7.
+
+Les trois rouges scénario de R2.1 sont désormais verts, sans modifier le corpus ni leurs assertions. Le [correctif de langue/fidélité](redacteur-langue-fidelite.md) précise les consignes, distingue citations et directions, contrôle les répliques et conserve une alerte humaine sur les locuteurs/capacités. Il n'annonce pas de rendu parlé validé ni de script structuré entièrement pris en charge.
+
+### Fichiers et garanties de R2.3
+
+`StoryTextChecks` contient les contrôles purs ; `LocalStoryWriter` l'utilise pour préparer les repères de citations et relire les sorties. Ses deux appels HTTP restent locaux et inchangés en nombre/délais. `SeriesRecurrences` garde sa pause avant coût et enregistre un résumé complet borné à 255 caractères. `StoryTextChecksTest` ajoute 27 cas ; `SeriesRecurrencesTest` prouve la pause d'une demande de parole avant toute génération créée/appel vidéo et la conservation des plans éditables.
+
+Les textes d'origine ne sont pas réécrits par la relecture ; les répétitions explicitement demandées restent conservées. Citations inconnues, modifiées ou non fermées ne masquent pas les consignes françaises. Absence, fragmentation, répétition excédentaire et ordre des répliques sont distingués. Les tenues nommées et contradictions d'actions sont limitées à des formes explicites, avec des témoins de non-régression.
+
+La présence des mots ne certifie pas leur locuteur ni l'audio. Une parole identifiable reçoit une alerte de relecture même si ses mots sont présents ; en récurrence, elle passe donc par une pause et une reprise manuelle avant vidéo. Les préparations anciennes ne sont pas modifiées et leurs résultats/alertes enregistrés ne sont pas recalculés automatiquement. Voir les limites et le flux Symfony dans [la documentation du correctif](redacteur-langue-fidelite.md).
+
+### Résultats R2.3 exécutés
+
+| Contrôle | Résultat |
+| --- | --- |
+| Suite PHP complète | **720 tests / 8 419 assertions, 719 réussites et un échec attendu**, code 1 : invention depuis le seul titre, prévu en R2.5 |
+| Rejeu ciblé final writer/contrôles/API/récurrence | **57 tests / 379 assertions réussis**, code 0 |
+| Reproductions R2.1 rejouées séparément | **15 cas / 90 assertions : 14 réussites, seul le contexte pauvre encore rouge** ; aucun test exclu ni oracle affaibli |
+| Frontend et syntaxe JS | **152 tests réussis**, `npm run check` réussi |
+| PHPStan niveau 5 sur `src` et les nouveaux tests unitaires | Aucune erreur |
+| CS-Fixer final, cinq fichiers PHP | Aucun fichier à corriger |
+| Lints conteneur/YAML/Twig et schéma test | Réussis ; 19 YAML, 103 Twig, mapping et base synchronisés |
+| Installation de test | `shortflow_test` vérifiée, migrations à jour avant les suites, aucune suite DB concurrente |
+| Application locale | Cache dev actualisé, worker `story-worker` redémarré après garde : zéro rédaction active/en attente et zéro occurrence en rédaction ; état `running` vérifié |
+| Documentation | Liens locaux, identifiants roadmap et `git diff --check` vérifiés avant commit |
+
+Revue indépendante ciblée sans blocage : ajout d'un contrôle de répétitions excédentaires et de ses témoins, sans supprimer les répétitions demandées. Le suivi récurrent tronquait auparavant des alertes longues au milieu d'un mot : il affiche maintenant leur nombre et une première indication complète, ou une consigne générale complète si nécessaire.
+
+Aucun appel modèle réel, vidéo/image payante, publication sociale ou activation réelle n'a été lancé. Pas de nouvelle recette navigateur ni de build : templates et assets inchangés, contrôleur d'affichage des alertes couvert par les tests frontend rejoués ; la recette visuelle R2.2 reste historique. La qualité des nouvelles consignes sur Qwen réel reste à évaluer en R2.6, et celle des voix en R7 avec autorisation. Aucune migration.
+
+Sorties locales ignorées : `artifacts/r2-3-full.log`, `r2-3-final-focused.log`, `r2-3-phpstan-final.log`, `r2-3-style-check.log`, `r2-3-ui-tests.log`, `r2-3-js-check.log`, `r2-3-refresh.log`. Pour rejouer après garde/migration de `shortflow_test` : `php bin/phpunit --filter 'StoryTextChecksTest|LocalStoryWriterTest|SeriesRecurrencesTest|AiStoryProposalTest'`, puis `php bin/phpunit tests/Unit/WriterQualityRegressionTest.php` (un rouge attendu). La suite par défaut reste rouge jusqu'au traitement de R2.5 ; ne pas masquer ce cas.
+
+## Historique — R2.2 terminé
 
 **Prochain point exact : R2.3**, corrections de langue/fidélité, citations françaises intentionnelles et alertes honnêtes. R2 reste en cours ; la prise en charge structurée et la qualité réelle des paroles ne sont pas annoncées comme livrées. Les quatre échecs R2.1 restent présents, sans exclusion.
 
