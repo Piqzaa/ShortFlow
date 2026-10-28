@@ -1,6 +1,6 @@
 # VydFlow — bêta, studio IA et publication
 
-**Reprise du projet : lire [la roadmap active et son avancement](docs/roadmap.md).** **R2 en cours : R2.1 terminé en phase rouge**, 15 cas / 90 assertions, quatre échecs attendus et onze réussites ; 17 tests voisins réussis. Aucun correctif applicatif R2 encore livré ; la suite par défaut inclut les reproductions et n'est pas verte. **Prochain point : R2.2**, contrat des scènes parlantes avant coût. [Preuves et commandes R2](docs/r2-qualite-redacteur.md).
+**Reprise du projet : lire [la roadmap active et son avancement](docs/roadmap.md).** **R2 en cours : R2.1/R2.2 terminés**, [contrat des scènes parlantes et limites visibles avant coût](docs/scenes-parlantes-contrat.md), sans support structuré de dialogue livré. Suite complète : **692 tests / 8 318 assertions, quatre échecs R2.1 connus uniquement** ; **152 tests frontend réussis**, recette synthétique desktop/mobile et revue ciblée sans blocage. La suite reste rouge pour les protections manquantes du rédacteur. **Prochain point : R2.3**, langue/fidélité et citations françaises intentionnelles. [Preuves et commandes R2](docs/r2-qualite-redacteur.md).
 
 **Grand lot R1 terminé et revu**, dernier socle complet vert : 667 tests PHP / 8 044 assertions et 152 frontend, commit `abda42e`. [Analyse de clôture et limites](docs/r1-revue-cloture.md). Chaque grand R doit se terminer par une revue globale ; les défauts précis de landing mobile sont suivis en R5.1/R5.2 et R6.1.
 

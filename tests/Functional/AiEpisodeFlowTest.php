@@ -414,6 +414,10 @@ final class AiEpisodeFlowTest extends WebTestCase
         $quote = $this->flow()->quote($episode, $shots[1]->getId());
         self::assertSame(70, $quote['cents']);
         self::assertSame(1, $quote['count']);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?redo='.$shots[1]->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#story-quote [data-speech-notice]', 'pas encore prises en charge');
+        self::assertSelectorExists('#story-quote input[name="confirm"][required]');
         $originalPrompt = $shots[1]->getPrompt();
         $this->flow()->stageRepair($episode, $shots[1]->getId(), $episode->getRevision(), 'Scene 2: Milo opens the door slowly, then holds it open.');
         self::assertSame($originalPrompt, $shots[1]->getPrompt());

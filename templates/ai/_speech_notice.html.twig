@@ -1,0 +1,6 @@
+<aside class="account-notice" aria-label="Limites des paroles et voix" data-speech-notice>
+  <strong>Répliques exactes : pas encore prises en charge.</strong>
+  <p>Le parcours actuel ne gère pas séparément qui parle, les mots exacts et leur langue. Le scénario proposé peut oublier des répliques. Même avec audio, les paroles demandées, une voix identique entre les plans et la synchronisation des lèvres ne sont pas garanties. {% if speechAutomatic|default(false) %}La récurrence écrit puis génère les futurs épisodes sans relecture intermédiaire du scénario. Si les paroles exactes sont essentielles, prépare chaque épisode manuellement.{% else %}Relis les prompts avant de confirmer le coût.{% endif %}</p>
+  {% if speechAudio is defined and not speechAudio %}<p>Le modèle choisi produit des clips sans audio. Il ne créera pas de paroles audibles dans ces clips.</p>{% endif %}
+  {% if speechMuted|default(false) %}<p>Tu as choisi de couper le son des clips au montage : leur voix éventuelle ne sera pas conservée. Cela ne réduit pas le coût fournisseur.</p>{% endif %}
+</aside>

@@ -1,6 +1,61 @@
 # R2 — Qualité des scénarios et textes : suivi
 
-## État courant — R2.1 terminé, 28 octobre 2026
+## État courant — R2.2 terminé, 28 octobre 2026
+
+**Prochain point exact : R2.3**, corrections de langue/fidélité, citations françaises intentionnelles et alertes honnêtes. R2 reste en cours ; la prise en charge structurée et la qualité réelle des paroles ne sont pas annoncées comme livrées. Les quatre échecs R2.1 restent présents, sans exclusion.
+
+Suite complète exécutée : **692 tests / 8 318 assertions, 688 réussites et uniquement les quatre échecs R2.1 connus**, code 1. Les **152 tests frontend** passent. Le dernier socle entièrement vert reste R1 ; ne pas présenter ce passage R2 comme une suite verte.
+
+### R2.2 — Contrat et information avant coût
+
+Le [contrat des scènes parlantes](scenes-parlantes-contrat.md) définit plan, locuteur stable, texte exact, langue et ordre, ainsi que la capacité du chemin fournisseur réellement intégré. Il distingue explicitement le comportement attendu de son portage futur : **aucun champ de dialogue structuré n'est ajouté ou annoncé comme fonctionnel**. Les quatre rouges R2.1 restent à corriger.
+
+Une note commune informe avant la proposition de scénario, les confirmations individuelles `prepared`/`waiting_key`, le devis Studio/Séries, le remplacement d'un plan, la reprise après pause et l'autorisation récurrente. Elle distingue modèle sans audio, audio sans paroles garanties et son des clips coupé au montage. La variante récurrente explique que les futurs épisodes sont écrits puis générés sans relecture intermédiaire ; elle oriente vers la préparation manuelle si les mots exacts sont essentiels.
+
+### Fichiers et flux
+
+| Fichier | Rôle |
+| --- | --- |
+| `templates/ai/_speech_notice.html.twig` | Texte commun visible sans JS ; variantes audio, montage muet et récurrence |
+| `templates/ai/_story_proposal.html.twig` | Information avant de demander un scénario, dans la préparation commune |
+| `templates/ai/generation.html.twig` | Information avant coût individuel et reprise de connexion, extensions incluses |
+| `templates/series/episode.html.twig` | Information au devis initial/remplacement et à la reprise des étapes en pause |
+| `templates/series/_recurrence.html.twig` | Information visible hors panneau replié, avant toute autorisation de coûts récurrents |
+| `tests/Functional/AiSpeechNoticeTest.php` | Dix cas sur les routes réelles avec API interdites : présence/ordre/visibilité, devis et texte inchangés, aucun message créé |
+| `tests/Functional/AiEpisodeFlowTest.php` | Ajout d'une vérification sur le devis de remplacement d'un clip existant |
+
+Le contrôleur fournit les mêmes données privées → Twig réutilise une seule note avec des variables explicites et `only` → les formulaires d'origine gardent leurs tokens, choix et confirmations → les services valident les mêmes prompts/devis. Aucun service métier, catalogue, tarif, prompt, modèle, hash de consentement ou schéma n'est modifié. La note informe ; elle ne constitue ni un nouveau blocage serveur ni une preuve de paroles fidèles.
+
+### Recette et limites
+
+Pages fraîchement rendues sur `shortflow_test` avec propriétaire et clés synthétiques, API interdites, puis servies sur loopback par un routeur refusant les POST. Aucun lancement vidéo/récurrent/social effectué.
+
+- Desktop **1440 × 900**, mobile **390 × 844** : Studio, devis avec clips muets, génération sans audio et récurrence ; notices visibles, texte lisible et aucun débordement horizontal mesuré sur ces vues.
+- Navigation au clavier après le bouton de confirmation : focus accessible sur la commande suivante ; aucune soumission du formulaire. Console de recette : aucune erreur/alerte relevée.
+- Récurrence : note visible alors que sa configuration reste repliée, sans invitation impossible à relire les prompts futurs avant qu'ils existent.
+- Revue indépendante : la formulation propre à la récurrence a été corrigée ; dernière relecture sans blocage. La revue globale de tout R2 demeure en R2.7.
+- Onglet créé fermé, viewport remis à sa taille normale, serveur temporaire retiré et cache dev actualisé pour les templates.
+
+### Contrôles R2.2 exécutés
+
+| Contrôle | Résultat |
+| --- | --- |
+| Premier passage ciblé des dix cas de notice | 10 tests / 176 assertions réussis ; les assertions spécifiques de formulation récurrente ont ensuite été ajoutées et vérifiées dans la suite complète |
+| Rejeu ciblé final des notices et du remplacement | **11 tests / 225 assertions réussis**, code 0, sur les fichiers finaux |
+| Suite PHP complète, aucun test exclu | 692 tests / 8 318 assertions, quatre échecs connus de `WriterQualityRegressionTest` uniquement ; aucun nouveau défaut |
+| Suite frontend et syntaxe JS | 152 tests réussis ; `npm run check` réussi |
+| Build Vite | Réussi ; avertissement connu sur le chunk Three.js > 500 ko |
+| PHPStan ciblé sur `AiSpeechNoticeTest` | Aucune erreur |
+| CS-Fixer final sur les deux fichiers PHP modifiés | Aucun fichier à corriger |
+| Conteneur, YAML, Twig et Doctrine test | Réussis : 19 YAML, 103 Twig, schéma synchronisé |
+| Migration/base | `shortflow_test` vérifiée avant PHPUnit, migration `Version20261027160000` déjà à jour |
+| Cache dev | Actualisé ; aucune migration ni redémarrage de worker nécessaire pour les textes Twig |
+
+Les quatre échecs sont exactement les alertes de langue absentes, répliques perdues, faux positif de citation dense et invention depuis titre pauvre de R2.1. Aucun test de reproduction ou corpus historique modifié. Les sorties locales ignorées sont `artifacts/r2-2-full.log`, `r2-2-focused.log`, `r2-2-final-focused.log`, `r2-2-ui-tests.log`, `r2-2-js-check.log`, `r2-2-build.log`, `r2-2-phpstan.log`, `r2-2-style-final.log` et `r2-2-dev-cache.log` ; les tests et résultats sont versionnés dans ce suivi.
+
+Ce n'est pas une validation du rendu parlé. Aucun essai payant nécessaire pour cette étape. Une évaluation réelle des voix/répliques nécessitera son autorisation propre, au lot prévu. Pour rejouer les notices : après vérification/migration de `shortflow_test`, `php bin/phpunit tests/Functional/AiSpeechNoticeTest.php` et le cas `AiEpisodeFlowTest::testRepairOnlyRegeneratesChosenShotAndInvalidatesApproval`. Ne pas exécuter d'autres suites DB simultanément.
+
+## Historique — R2.1 terminé en phase rouge
 
 **R2 est en cours, pas livré.** R2.1 ajoute les reproductions automatisées ; il ne corrige pas encore le rédacteur. **15 cas / 90 assertions : 11 réussites et 4 échecs attendus**, code de sortie 1. Les quatre rouges sont des défauts applicatifs déjà capturés, pas des pannes d'installation. Aucun test exclu, ignoré ou marqué artificiellement vert. La suite par défaut inclut ce fichier et reste rouge jusqu'aux corrections correspondantes.
 
