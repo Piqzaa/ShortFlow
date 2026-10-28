@@ -32,6 +32,7 @@ final class SeriesRecurrencesTest extends WebTestCase
     private MockClock $clock;
     private int $textCalls = 0;
     private int $paidCalls = 0;
+    private int $providerPosts = 0;
     private ?\Closure $duringWriting = null;
     private bool $badStory = false;
     private bool $acceptProvider = false;
@@ -54,8 +55,14 @@ final class SeriesRecurrencesTest extends WebTestCase
         }
         static::getContainer()->set('ai.http', new MockHttpClient(function (string $method): MockResponse {
             ++$this->paidCalls;
+            if ('POST' === $method) {
+                ++$this->providerPosts;
+            }
             if ($this->acceptProvider && 'POST' === $method) {
                 return new MockResponse('{"status_url":"https://queue.fal.run/fal-ai/kling-video/requests/synthetic/status","response_url":"https://queue.fal.run/fal-ai/kling-video/requests/synthetic"}');
+            }
+            if ($this->acceptProvider && 'GET' === $method) {
+                return new MockResponse('{"status":"IN_QUEUE"}');
             }
             throw new \LogicException('No billable provider request expected');
         }));
@@ -96,6 +103,13 @@ final class SeriesRecurrencesTest extends WebTestCase
     private function service(): SeriesRecurrences
     {
         return static::getContainer()->get(SeriesRecurrences::class);
+    }
+
+    private function confirmReviewed(AiEpisode $episode): void
+    {
+        $flow = static::getContainer()->get(AiEpisodeFlow::class);
+        $quote = $flow->quote($episode);
+        static::getContainer()->get(\App\Service\SeriesGenerationConsent::class)->manual($episode, fn () => $flow->confirm($episode, $quote['hash']));
     }
 
     /** @return array<string,mixed> */
@@ -183,7 +197,8 @@ final class SeriesRecurrencesTest extends WebTestCase
         };
         $this->service()->produce($message);
         $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence]);
-        self::assertSame('production', $occurrence->getStatus());
+        self::assertSame('manual', $occurrence->getStatus());
+        self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
         self::assertFalse($this->service()->inspectWriting($occurrence->getId()));
         self::assertSame(2, $this->textCalls);
         self::assertSame(0, $this->paidCalls);
@@ -228,19 +243,20 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertSame(0, $this->paidCalls);
     }
 
-    public function testQualityWarningPreservesAnEditableDraftAndPausesBeforeAnyPaidRequest(): void
+    public function testQualityWarningPreservesAnEditableDraftWithoutAuthorizingAnyPaidRequest(): void
     {
         $r = $this->service()->activate($this->series, $this->data());
         $message = $this->message($r);
         $this->due();
         $this->suspiciousStory = true;
         $this->service()->produce($message);
-        self::assertSame('paused', $r->getStatus());
+        self::assertSame('active', $r->getStatus());
         self::assertSame(0, $r->getReservedCents());
         self::assertSame(0, $this->paidCalls);
         self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
         $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $r]);
-        self::assertSame('attention', $occurrence->getStatus());
+        self::assertSame('manual', $occurrence->getStatus());
+        self::assertFalse($occurrence->isAutomatic());
         self::assertStringContainsString('Scénario à relire', $occurrence->getIssue());
         self::assertNotNull($occurrence->getSummary());
         self::assertSame('draft', $occurrence->getEpisode()->getFlowState());
@@ -250,7 +266,7 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertSame(0, $this->paidCalls);
     }
 
-    public function testRequestedSpeechPausesRecurringGenerationForHumanReview(): void
+    public function testRequestedSpeechRemainsForHumanReviewWhilePreparationStaysActive(): void
     {
         $this->series->configure('Milo', 'Milo dit en français « Bonjour ! ».', 'réaliste', 'Milo, chat blanc joueur', $this->series->getRecipe());
         $this->em->flush();
@@ -258,12 +274,13 @@ final class SeriesRecurrencesTest extends WebTestCase
         $message = $this->message($r);
         $this->due();
         $this->service()->produce($message);
-        self::assertSame('paused', $r->getStatus());
+        self::assertSame('active', $r->getStatus());
         self::assertSame(0, $r->getReservedCents());
         self::assertSame(0, $this->paidCalls);
         self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
         $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $r]);
-        self::assertSame('attention', $occurrence->getStatus());
+        self::assertSame('manual', $occurrence->getStatus());
+        self::assertFalse($occurrence->isAutomatic());
         self::assertStringContainsString('réplique', $occurrence->getIssue());
         self::assertStringContainsString('locuteur', $occurrence->getIssue());
         self::assertStringContainsString('2 point(s)', $occurrence->getIssue());
@@ -281,7 +298,7 @@ final class SeriesRecurrencesTest extends WebTestCase
         $url = '/studio/series/'.$this->series->getId();
         $crawler = $this->client->request('GET', $url);
         self::assertResponseIsSuccessful();
-        $form = $crawler->selectButton('Confirmer les coûts et activer la préparation →')->form();
+        $form = $crawler->selectButton('Activer la préparation des scénarios →')->form();
         $values = $form->getPhpValues();
         $values['series_recurrence']['networks'] = ['youtube'];
         $this->client->request('POST', $url, $values);
@@ -313,7 +330,7 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
-    public function testAUniqueOccurrenceWritesPreparesAndConfirmsClipsAndPrefillsUnarmedPublication(): void
+    public function testAUniqueOccurrenceOnlyPreparesForReviewAndLaterPrefillsUnarmedPublication(): void
     {
         $r = $this->service()->activate($this->series, $this->data());
         $m = $this->message($r);
@@ -327,10 +344,14 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertSame(1, $r->getStarted());
         self::assertSame('2026-11-03T17:00:00+00:00', $r->getNextAt()->format(DATE_ATOM));
         $o = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $r]);
-        self::assertSame('production', $o->getStatus());
-        self::assertSame($r->getSettings()['cents'], $r->getReservedCents());
+        self::assertSame('manual', $o->getStatus());
+        self::assertFalse($o->isAutomatic());
+        self::assertStringContainsString('Même sans alerte', $o->getIssue());
+        self::assertSame(0, $r->getReservedCents());
+        self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
         $episode = $o->getEpisode();
-        self::assertSame('running', $episode->getFlowState());
+        self::assertSame('draft', $episode->getFlowState());
+        self::assertNull($episode->getConsentHash());
         self::assertCount(3, static::getContainer()->get(AiEpisodeFlow::class)->shots($episode));
         $video = new VideoAsset($this->owner, 'Milo final', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 30, 720, 1280, 'h264');
         $this->em->persist($video);
@@ -369,12 +390,14 @@ final class SeriesRecurrencesTest extends WebTestCase
         $this->service()->produce($m);
         $o = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $r]);
         $episode = $o->getEpisode();
+        $this->confirmReviewed($episode);
         static::getContainer()->get(AiEpisodeFlow::class)->advance($episode->getId());
         $job = $this->em->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
         self::assertSame('queued', $job->getStatus());
         static::getContainer()->get(AiKeys::class)->save($this->owner, 'replacement-synthetic-key-never-real-1234567890');
         static::getContainer()->get(AiGenerations::class)->process($job->getId());
-        self::assertSame('review', $job->getStatus());
+        self::assertSame('waiting_key', $job->getStatus());
+        static::getContainer()->get(AiEpisodeFlow::class)->advance($episode->getId());
         self::assertSame('paused', $episode->getFlowState());
         self::assertSame(0, $this->paidCalls);
     }
@@ -421,7 +444,7 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
     }
 
-    public function testLastAuthorizedEpisodeMayFinishButNoFollowingOccurrenceIsScheduled(): void
+    public function testLastPreparedEpisodeCanBeGeneratedManuallyIndependentlyOfPreparationPause(): void
     {
         $r = $this->service()->activate($this->series, $this->data(1));
         $m = $this->message($r);
@@ -430,6 +453,7 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertSame('finished', $r->getStatus());
         self::assertNull($r->getNextAt());
         $o = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $r]);
+        $this->confirmReviewed($o->getEpisode());
         static::getContainer()->get(AiEpisodeFlow::class)->advance($o->getEpisode()->getId());
         self::assertSame(1, $this->em->getRepository(AiGeneration::class)->count(['status' => 'queued']));
         self::assertSame(0, $this->paidCalls);
@@ -439,7 +463,7 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertSame('processing', $job->getStatus());
         self::assertSame(1, $this->paidCalls);
         $this->service()->pause($r, $r->getRevision());
-        self::assertSame('paused', $o->getEpisode()->getFlowState());
+        self::assertSame('running', $o->getEpisode()->getFlowState());
     }
 
     public function testADeadlineReachedWhileWritingDoesNotLaunchGeneration(): void
@@ -457,10 +481,8 @@ final class SeriesRecurrencesTest extends WebTestCase
     public function testManualTakeoverOnlyTakesEffectAfterASuccessfulConfirmedAction(): void
     {
         $r = $this->service()->activate($this->series, $this->data());
-        $m = $this->message($r);
         $this->due();
-        $this->service()->produce($m);
-        $o = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $r]);
+        $o = $this->interruptedOccurrence($r);
         $consent = static::getContainer()->get(\App\Service\SeriesGenerationConsent::class);
         try {
             $consent->manual($o->getEpisode(), static function (): never { throw new \RuntimeException('Invalid manual confirmation'); });
@@ -471,5 +493,79 @@ final class SeriesRecurrencesTest extends WebTestCase
         $consent->manual($o->getEpisode(), static fn () => null);
         self::assertFalse($o->isAutomatic());
         self::assertSame(0, $this->paidCalls);
+    }
+
+    public function testPreparationRequiresNoVideoCredentialOrEnabledPaidGenerator(): void
+    {
+        $this->em->getConnection()->executeStatement('DELETE FROM ai_credential');
+        $generator = static::getContainer()->get(AiGenerations::class);
+        (new \ReflectionProperty($generator, 'enabled'))->setValue($generator, false);
+        self::assertFalse($generator->enabled());
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        self::assertSame('preparation', $recurrence->getSettings()['mode']);
+        $message = $this->message($recurrence);
+        $this->due();
+        $this->service()->produce($message);
+        $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence]);
+        self::assertSame('manual', $occurrence->getStatus());
+        self::assertSame('draft', $occurrence->getEpisode()->getFlowState());
+        self::assertSame(0, $this->paidCalls);
+        self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
+    }
+
+    public function testLegacyAuthorizationPausesBeforeInferenceAndKeepsItsHistory(): void
+    {
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        $settings = $recurrence->getSettings();
+        unset($settings['mode']);
+        $recurrence->activate($settings, $recurrence->getNextAt(), $this->clock->now());
+        $recurrence->reserve($settings['cents']);
+        $this->em->flush();
+        $message = $this->message($recurrence);
+        $this->due();
+        $this->service()->produce($message);
+        self::assertSame('paused', $recurrence->getStatus());
+        self::assertStringContainsString('Ancienne autorisation', $recurrence->getNotice());
+        self::assertSame($settings['cents'], $recurrence->getReservedCents());
+        self::assertSame(0, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
+        self::assertSame(0, $this->em->getRepository(AiGeneration::class)->count([]));
+    }
+
+    public function testLegacyQueuedGenerationCannotPostButAnAlreadySubmittedClipCanStillBePolled(): void
+    {
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        $message = $this->message($recurrence);
+        $this->due();
+        $this->service()->produce($message);
+        $occurrence = $this->em->getRepository(SeriesOccurrence::class)->findOneBy(['recurrence' => $recurrence]);
+        $episode = $occurrence->getEpisode();
+        $this->confirmReviewed($episode);
+        static::getContainer()->get(AiEpisodeFlow::class)->advance($episode->getId());
+        $job = $this->em->getRepository(AiGeneration::class)->findOneBy(['owner' => $this->owner]);
+        $this->em->getConnection()->executeStatement('UPDATE series_occurrence SET automatic = true WHERE id = ?', [$occurrence->getId()]);
+        $this->em->refresh($occurrence);
+        static::getContainer()->get(AiGenerations::class)->process($job->getId());
+        self::assertSame('waiting_key', $job->getStatus());
+        self::assertSame(0, $this->providerPosts);
+        self::assertSame('paused', $episode->getFlowState());
+
+        // The existing review/quote/confirmation path recovers a known unsent legacy request.
+        $flow = static::getContainer()->get(AiEpisodeFlow::class);
+        $flow->reviewRemaining($episode, $episode->getRevision());
+        $this->confirmReviewed($episode);
+        $flow->advance($episode->getId());
+        $job = $flow->shots($episode)[0]->getGeneration();
+        $this->acceptProvider = true;
+        static::getContainer()->get(AiGenerations::class)->process($job->getId());
+        self::assertSame('processing', $job->getStatus());
+        self::assertSame(1, $this->providerPosts);
+        $remote = $job->getRemote();
+        $this->em->getConnection()->executeStatement('UPDATE series_occurrence SET automatic = true WHERE id = ?', [$occurrence->getId()]);
+        $this->em->refresh($occurrence);
+        static::getContainer()->get(AiGenerations::class)->process($job->getId());
+        self::assertSame(1, $this->providerPosts);
+        self::assertSame($remote, $job->getRemote());
+        self::assertSame('processing', $job->getStatus());
     }
 }

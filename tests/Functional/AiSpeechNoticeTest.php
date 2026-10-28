@@ -53,6 +53,11 @@ final class AiSpeechNoticeTest extends WebTestCase
         $ordered = $this->client->getCrawler()->filter('[data-speech-notice],'.$action);
         self::assertGreaterThanOrEqual(2, $ordered->count());
         self::assertSame('aside', $ordered->first()->nodeName(), 'The limitation must precede the action.');
+        self::assertSelectorTextContains('[data-quality-notice]', 'Même sans alerte');
+        self::assertSelectorTextContains('[data-quality-notice]', 'descriptions et les prompts');
+        $quality = $this->client->getCrawler()->filter('[data-quality-notice]')->first();
+        self::assertSame(0.0, $quality->evaluate('count(ancestor::*[@hidden or (self::details and not(@open))])')[0]);
+        self::assertSame('aside', $this->client->getCrawler()->filter('[data-quality-notice],'.$action)->first()->nodeName());
         self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
@@ -145,8 +150,9 @@ final class AiSpeechNoticeTest extends WebTestCase
         $this->client->request('GET', '/studio/series/'.$series->getId());
         $this->assertNoticeBefore('.series-recurrence input[type="checkbox"]');
         self::assertSelectorTextContains('.series-recurrence [data-speech-notice]', 'clips sans audio');
-        self::assertSelectorTextContains('.series-recurrence [data-speech-notice]', 'sans relecture intermédiaire du scénario');
-        self::assertSelectorTextNotContains('.series-recurrence [data-speech-notice]', 'Relis les prompts');
+        self::assertSelectorTextContains('.series-recurrence', 'n’autorise aucun appel vidéo payant');
+        self::assertSelectorTextContains('.series-recurrence [data-speech-notice]', 'Relis les prompts');
+        self::assertSelectorTextNotContains('.series-recurrence [data-speech-notice]', 'sans relecture intermédiaire du scénario');
         self::assertSelectorExists('.series-recurrence input[name="series_recurrence[consent]"]');
         self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM series_recurrence'));
     }

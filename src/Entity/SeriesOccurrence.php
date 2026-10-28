@@ -128,7 +128,7 @@ class SeriesOccurrence
     public function manageManually(): void
     {
         $this->automatic = false;
-        if (in_array($this->status, ['writing', 'attention'], true)) {
+        if (in_array($this->status, ['writing', 'attention', 'manual'], true)) {
             $this->status = 'manual';
             $this->issue = null;
         }
@@ -137,6 +137,13 @@ class SeriesOccurrence
     public function story(string $summary): void
     {
         $this->summary = $summary;
+    }
+
+    public function preparedForReview(string $notice): void
+    {
+        $this->automatic = false;
+        $this->status = 'manual';
+        $this->issue = mb_substr($notice, 0, 255);
     }
 
     public function produced(int $cents): void

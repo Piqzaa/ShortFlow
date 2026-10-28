@@ -313,8 +313,8 @@ final class AiEpisodeFlow
                 throw new \RuntimeException('Le tarif des plans restants a changé. Aucun lancement supplémentaire sans nouvelle estimation complète.');
             }
             $this->capacity($episode, $quote['count'] + ($redo && 'paused' === $episode->getFlowState() ? 0 : 1));
-            $account = null;
             $recipe = $episode->getFlowRecipe();
+            $account = $this->keys->identity($episode->getOwner(), $this->catalog->model($recipe['model'])['provider'], $recipe['accessMode']);
             if ('mcp' === $recipe['accessMode']) {
                 $account = json_decode($this->keys->plain($episode->getOwner(), $this->catalog->model($recipe['model'])['provider'], 'mcp'), true, 32, JSON_THROW_ON_ERROR)['account_id'];
             }

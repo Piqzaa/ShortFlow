@@ -4,18 +4,18 @@ Mise à jour : **28 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
-- **Phase actuelle :** **R2 en cours, R2.1–R2.6 terminés**. Les 15 reproductions R2.1 passent sans exclusion ; l'évaluation réelle R2.6 relève encore des incohérences non alertées et quatre packs sociaux expirés. **Grand R2 non clôturé**, aucune voix, qualité vidéo ou fiabilité autonome validée. R1 reste terminé et revu.
-- **Dernière suite complète verte :** R2.5, **758 tests / 8 619 assertions** et **152 tests frontend** ; voir le journal et le commit `fix: require factual context for publication texts`. La clôture R1 `abda42e` et son résultat 667 / 8 044 restent historiques. La référence `d3e4700` reste le socle d'avant R1.
-- **Prochaine tâche exacte : `R2.7`**, revue de clôture du grand R2 avec les corrections/limitations nécessaires ; priorités constatées : timeouts éditoriaux, préfixes d'identité contenant actions/états et incohérences physiques non alertées. Voir [le suivi R2](r2-qualite-redacteur.md) et [le bilan réel R2.6](r2-evaluation-redacteur.md). Ne pas passer directement à R3.
-- **Validation actuelle :** R2.6 **18 essais réels, 28 appels d'inférence locaux : 12 scénarios normalisés, quatre timeouts éditoriaux, deux refus de contexte sans HTTP** ; campagne complète, **code 1**, pas 18 réussites. Deux revues ciblées indépendantes, corrections humaines proposées sans modifier les captures. Corpus/résultats/empreintes versionnés, script syntaxe/style/mode sans appel vérifiés. Application inchangée : les **758 / 8 619**, **129 / 989 ciblés** et **152 frontend** verts restent les contrôles R2.5 historiques, non rejoués ici. Aucun média, paiement, publication ou activation ; pas de migration.
-- **Ne pas commencer maintenant :** abonnement, nouvelle UI, publication autonome, blog ou déploiement.
+- **Phase actuelle :** **Grand R2 terminé, R2.1–R2.7 validés avec limitations explicites**, revue globale indépendante réalisée. Décision du propriétaire : préparation automatique des scénarios, relecture et confirmation manuelle du devis de chaque vidéo. Anciennes autorisations automatiques bloquées avant nouveau POST ; récupération des demandes déjà transmises conservée. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée. [Bilan global](r2-revue-cloture.md).
+- **Dernière suite complète verte :** R2.7, **761 tests / 8 715 assertions**, puis **96 / 824 ciblés** après clarification Twig ; **152 tests frontend** verts, lints/PHPStan/style/build réussis. Recette synthétique mobile/desktop/clavier terminée. Les mesures R2.6 restent historiques et distinctes du suivi éditorial R2.7.
+- **Prochaine tâche exacte : `R3.1`**, décrire puis valider le parcours commun idée / scènes / récapitulatif, sans nouvel onglet « À valider » ni assistant multipage imposé. Préserver la relecture, les références, les devis et les confirmations.
+- **Validation actuelle :** captures R2.6 inchangées (18 essais, dont quatre timeouts). R2.7 : prompt éditorial concis + exemple et 600 tokens, délai inchangé ; six nouveaux essais locaux, quatre packs complets normalisés et deux refus de contexte sans HTTP. Un récit garde des faits/hashtags incorrects : relecture explicite avant application. [Captures complémentaires](fixtures/redacteur-cloture-r2.json), empreintes vérifiées. Aucune activation réelle, dépense, publication, média ou migration.
+- **Ne pas commencer maintenant :** implémentation R3 avant son cadrage R3.1, abonnement, publication autonome, blog ou déploiement.
 - **Comptes confirmés :** Free 1, Creator 3 et Pro 9 comptes **par plateforme**, soit respectivement 3, 9 et 27 comptes maximum sur les trois réseaux.
 - **Publications Free confirmées :** cinq par mois ; une vidéo diffusée sur plusieurs réseaux dans la même publication compte une seule fois. L'ancienne recommandation de décompte par destinataire est écartée.
 - **Accès Free confirmé :** essai limité du Studio IA, sans accès aux Séries ni à leur récurrence. Séries réservées aux offres payantes ; générations vidéo financées directement par le compte fournisseur de l'utilisateur.
 - **Décisions en attente :** quotas précis de l'essai Studio, plafonds payants et ressources de calcul/stockage ; identité précise de la publication, réservation et consommation à spécifier en R9. Voir les propositions commerciales plus bas.
 - **Passage sur un autre PC :** lire ce repère, le journal en fin de document, puis [le protocole de reprise](#reprise-sur-un-autre-pc). Les conversations et `artifacts` ne sont pas nécessaires pour retrouver le prochain travail.
 
-Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Ses demandes de suite du 28 octobre ont livré R2.1–R2.6 ; R2.7 est le prochain point. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
+Le propriétaire a autorisé le démarrage de R1.1 puis ses suites le 27 octobre ; **le grand lot R1 est terminé**, revue globale incluse. Ses demandes de suite du 28 octobre ont livré R2.1–R2.7 et la revue globale ; R3.1 est le prochain point. Cette roadmap n'est pas une autorisation de dépense, de publication réelle, de paiement réel ou d'exposition publique.
 
 ## Règles de suivi à respecter
 
@@ -37,7 +37,7 @@ Une preuve de fin de lot indique au minimum : tâches, comportement livré, fich
 | --- | --- | --- | --- |
 | R0 | Audit, preuves et feuille de route portable | Terminé documentaire | Repère et données synthétiques lisibles dans Git |
 | R1 | Attente, exécution et reprise du rédacteur | Terminé, revue globale et contrôles validés | Attente/exécution distinctes, traitements bornés, reprise sans double appel |
-| R2 | Qualité des scénarios, dialogues et textes | En cours : R2.1–R2.6 terminés, revue R2.7 et écarts réels à traiter | Corpus rejoué, écarts signalés, textes humains préservés |
+| R2 | Qualité des scénarios, dialogues et textes | Terminé, revue globale et limites supervisées acceptées | Corpus rejoué, écarts signalés avant coût, génération récurrente manuelle |
 | R3 | Studio/Séries plus simples et compacts | À faire | Parcours commun compréhensible, devis et contrôles conservés |
 | R4 | Performance et volumes bornés | À faire | Grandes séries paginées et mesures comparables |
 | R5 | Responsive, accessibilité et finitions | À faire | Matrice d'écrans/états vérifiée, défauts bloquants corrigés |
@@ -81,7 +81,7 @@ Dépendance : R1. Preuves : [rapport qualité](audit-global-20261027-qualite.md)
 - [x] **R2.4** Fiabiliser les packs sociaux complets et leur diagnostic. Garder la séparation des hashtags et les limites des réseaux ; ne pas désactiver le validateur pour accepter une mauvaise sortie. [Contrat complet, diagnostics sûrs, reprise manuelle et preuves](packs-sociaux-diagnostic.md).
 - [x] **R2.5** Demander un contexte factuel suffisant et rendre explicite que le rédacteur ne voit pas la vidéo. Proposer une réponse neutre ou une demande de précision plutôt qu'inventer ; préserver les textes saisis et l'application volontaire. [Refus sans inférence, aide et protection des anciennes propositions](redacteur-contexte-factuel.md).
 - [x] **R2.6** Évaluer sur un corpus fixe avec quelques répétitions : récit, tutoriel, produit, dialogue, danse, mémoire de série, import peu décrit. Consigner structure, fidélité, erreurs, langue, corrections humaines, durées murale/monotone et conditions du poste. Aucun score commercial déduit d'un petit échantillon. [Deux passages réels, captures et limites constatées](r2-evaluation-redacteur.md).
-- [ ] **R2.7** Revue indépendante des sorties, bilan des limites, contrôles et commit. Si une capacité reste non validée, la limiter ou l'annoncer explicitement avant de cocher la sortie, avec décision du propriétaire ; ne pas l'omettre silencieusement.
+- [x] **R2.7** Revue indépendante des sorties, bilan des limites, contrôles et commit. Décision du propriétaire appliquée : scénarios automatiques, chaque génération après relecture et confirmation du devis ; anciennes autorisations bloquées avant envoi. [Bilan global, captures complémentaires, preuves et pédagogie](r2-revue-cloture.md).
 
 Sortie : les défauts connus sont corrigés ou signalés avant dépense, textes humains protégés et évaluation publiée. Aucune autonomie éditoriale activée par ce lot. Un nouveau fournisseur/modèle ou appel payant demande son cadrage propre.
 
@@ -243,6 +243,15 @@ Après lancement : amélioration fondée sur les retours ; quelques guides/blog 
 Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie le journal et l'état Git, résume le prochain point exact puis reprends seulement ce point et ses vérifications, sans action externe réelle non autorisée. »
 
 ## Journal de progression
+
+### 28 octobre 2026 — R2.7, clôture globale du grand R2
+
+- **Décision du propriétaire : « Préparation automatique, génération après relecture (recommandé) ».** Mise en œuvre : 1–12 scénarios préparés sans clé vidéo, réservation ni confirmation de coût ; chaque vidéo exige relecture et devis confirmé. Les alertes de qualité laissent un brouillon manuel, y compris sans alerte. Les anciennes autorisations automatiques sont bloquées avant inférence récurrente/nouveau POST ; récupération des appels déjà transmis et historiques conservés, nouveau devis pour les plans restants. Clé changée après mise en file : zéro POST, confirmation liée à l’identité fournisseur.
+- Prompts éditoriaux plus courts avec exemple complet, budget de sortie 600 tokens ; scénarios à 1 800, délai 180 s, schéma et validation stricte inchangés. Diagnostics et six essais complémentaires distincts versionnés : quatre packs complets normalisés en 23–42 s, deux refus `context` sans HTTP. Le deuxième récit invente préférences/durée et `#chatgris` pour un chat blanc : aucune fidélité générale déduite, aide explicite avant application. Corpus/oracles/captures R2.6 inchangés, empreintes des trois services et du runner vérifiées.
+- [Revue globale R2 et pédagogie Symfony](r2-revue-cloture.md), [captures complémentaires](fixtures/redacteur-cloture-r2.json). Revue indépendante lecture seule des protections, héritage et sorties : pas de blocage restant identifié. Qualité narrative autonome, filmabilité, voix et lipsync restent non validés ; notices avant dépense et limitation effective retenue par le propriétaire. Essais médias réels en R7, distincts de la clôture R2.
+- Contrôles exécutés : **761 tests / 8 715 assertions**, puis **96 / 824 ciblés** après seule clarification de présentation Twig ; **152 frontend**, syntaxe JS, PHPStan/style/lints et schéma test verts, build réussi (avertissements Three.js/polices consignés). Base `shortflow_test` et conteneur dédié, aucun test exclu. Recette synthétique mobile 390 px, série à 1440 px, devis/pause à 1280 px, clavier/menu/estimation, aucune activation/envoi.
+- Cache dev et workers **story-worker + background-worker** actualisés après garde d’inactivité (zéro rédaction/génération en attente ou active). Aucune migration, installation de modèle, vidéo/image, dépense fournisseur, publication, activation réelle, paiement ou déploiement. Temporaires retirés. **Quinze tâches sur 76 cochées, grand R2 terminé.** Commit local à retrouver via `git log --oneline --grep="fix: require reviewed generation for recurring stories"`, **aucun push**.
+- **Prochain point exact : R3.1**, décrire et valider le parcours idée / scènes / récapitulatif ; aucun autre lot commencé ici. Les journaux datés ci-dessous restent historiques.
 
 ### 27 octobre 2026 — Cadrage après audit
 

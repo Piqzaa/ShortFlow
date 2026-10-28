@@ -1,6 +1,6 @@
 <section class="story-assistant" aria-labelledby="story-assistant-title">
   <h2 id="story-assistant-title">Une idée, un scénario ✨</h2>
-  {% include 'ai/_speech_notice.html.twig' only %}
+  {% include 'ai/_quality_notice.html.twig' only %}{% include 'ai/_speech_notice.html.twig' only %}
   <label for="story-tone">Ambiance</label><select id="story-tone" data-story-writer-target="tone"><option value="auto">Automatique</option><option value="humour">Humour léger</option><option value="aventure">Aventure</option><option value="calme">Douce et contemplative</option></select><p class="library-note">Automatique respecte ton sujet et son format : récit, tutoriel ou présentation.</p>
   <button type="button" class="account-secondary" data-story-writer-target="generate" data-action="story-writer#propose">✨ Proposer mon scénario</button>
   <p class="library-note">Proposition de texte par le moteur local. Tu choisis de l’appliquer ; aucune génération vidéo ne démarre ici.</p>

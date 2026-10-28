@@ -151,6 +151,7 @@ final class AiEpisodeController extends AbstractController
                         if (!$request->request->getBoolean('confirm')) {
                             throw new \RuntimeException('Confirme la reprise des plans restant à générer et de leur coût déjà accepté.');
                         }
+                        $seriesConsent->assertAllowed($episode);
                         $seriesConsent->manual($episode, fn () => $flow->resume($episode));
                     } elseif ('approve' === $intent) {
                         $video = $videos->owned($request->request->getInt('video'), $user) ?? throw $this->createNotFoundException();
@@ -192,7 +193,7 @@ final class AiEpisodeController extends AbstractController
         $recipe = $episode->getPreparationRecipe();
         $library = 'ready' === $episode->getFlowState() ? $videos->findBy(['owner' => $user], ['createdAt' => 'DESC'], 100) : [];
 
-        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'error' => $error, 'model' => AiCatalog::MODELS[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'error' => $error, 'model' => AiCatalog::MODELS[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'automaticOccurrence' => $em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode])?->isAutomatic() ?? false, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/episodes/{id}/etat', name: 'app_series_episode_state', requirements: ['id' => '\d+'], methods: ['GET'])]

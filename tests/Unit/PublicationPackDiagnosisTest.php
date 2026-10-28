@@ -103,6 +103,9 @@ final class PublicationPackDiagnosisTest extends TestCase
             self::assertSame(array_keys($pack), $input['networks']);
             self::assertSame(array_keys($pack), $request['format']['required']);
             self::assertFalse($request['format']['additionalProperties']);
+            self::assertSame(600, $request['options']['num_predict']);
+            self::assertSame(180.0, (float) $options['max_duration']);
+            self::assertStringContainsString('Exemple de structure seulement', $request['messages'][0]['content']);
             self::assertStringContainsString('jamais #, < ou >', $request['messages'][0]['content']);
             foreach ($pack as $network => $fields) {
                 self::assertSame(array_keys($fields), $request['format']['properties'][$network]['required']);

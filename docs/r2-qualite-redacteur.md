@@ -1,5 +1,13 @@
 # R2 — Qualité des scénarios et textes : suivi
 
+## État courant — grand R2 clôturé, 28 octobre 2026
+
+**R2.1–R2.7 terminés**, [revue globale, décision et pédagogie](r2-revue-cloture.md). Décision humaine mise en œuvre : préparation récurrente automatique des scénarios, puis relecture et confirmation du devis de chaque vidéo. Les anciennes autorisations automatiques ne permettent plus un nouvel envoi ; résultats déjà transmis récupérables. Les limites de fidélité et de parole sont visibles avant dépense, les faits/hashtags sont à relire avant application. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée.
+
+Le correctif éditorial a son évaluation distincte : six essais locaux sur les trois cas éditoriaux inchangés, quatre packs normalisés en 23–42 s et deux refus `context` sans HTTP ; un récit contient encore `#chatgris` pour un chat blanc et des détails inventés. [Métadonnées, sources et captures complémentaires](fixtures/redacteur-cloture-r2.json) ; les 18 captures R2.6 et leur code 1 restent historiques, sans réécriture.
+
+Contrôles R2.7 : **761 PHP / 8 715 assertions**, puis **96 / 824 ciblés** après clarification de texte Twig ; **152 frontend**, PHPStan/style/lints/schéma/check/build et recette synthétique desktop/mobile/clavier réussis. Aucun test exclu, migration, activation réelle, média, dépense, publication ou push. **Prochain point exact : R3.1**, parcours commun idée/scènes/récapitulatif. Commit local `fix: require reviewed generation for recurring stories`. Les états datés ci-dessous sont historiques.
+
 ## État courant — R2.6 terminé, 28 octobre 2026
 
 Deux passages réels de Qwen3 8B local sur neuf cas synthétiques fixes : **18 essais, 28 appels HTTP, 12 scénarios normalisés, quatre timeouts éditoriaux de 180 s sans corps capturé et deux refus `context` sans HTTP**. Programme, corpus, captures versionnées, protocole, horloges, conditions et relectures dans [le bilan R2.6](r2-evaluation-redacteur.md). Les sources applicatives restent celles de R2.5 ; aucun changement de consignes entre passages. Campagne complète mais programme sorti avec le **code 1** pour les quatre packs non aboutis : ne pas annoncer 18 réussites.

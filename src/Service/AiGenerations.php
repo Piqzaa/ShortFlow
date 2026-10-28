@@ -185,7 +185,7 @@ final class AiGenerations
                             }
                             $this->seriesConsent->assertAllowed($shot->getEpisode());
                         } catch (\RuntimeException $failure) {
-                            $job->progress('review', $failure->getMessage());
+                            $job->progress($failure instanceof SeriesReviewRequired ? 'waiting_key' : 'review', $failure->getMessage());
                             $shot->getEpisode()->flow('paused', $failure->getMessage());
                             $this->em->flush();
 

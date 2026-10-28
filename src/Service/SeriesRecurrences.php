@@ -18,7 +18,7 @@ final class SeriesRecurrences
 {
     private const WRITING_TIMEOUT_SECONDS = 600;
 
-    public function __construct(private EntityManagerInterface $em, private AiEpisodeFlow $flow, private AiCatalog $catalog, private AiKeys $keys, private AiReferenceStorage $references, private AiGenerations $generations, private LocalStoryWriter $writer, private WeeklySeriesTime $time, private ClockInterface $clock, private MessageBusInterface $bus, private SocialAccounts $accounts)
+    public function __construct(private EntityManagerInterface $em, private AiEpisodeFlow $flow, private AiCatalog $catalog, private AiReferenceStorage $references, private LocalStoryWriter $writer, private WeeklySeriesTime $time, private ClockInterface $clock, private MessageBusInterface $bus, private SocialAccounts $accounts)
     {
     }
 
@@ -44,23 +44,15 @@ final class SeriesRecurrences
         foreach ($durations as $duration) {
             $this->catalog->validate($recipe['model'], $duration, $recipe['ratio']);
         }
-        if (!$this->keys->hasAccess($series->getOwner(), $model['provider'], $recipe['accessMode'])) {
-            if ('fal' === $model['provider'] && 'api' === $recipe['accessMode'] && $this->keys->hasAccess($series->getOwner(), 'fal', 'mcp')) {
-                throw new \RuntimeException('Fal est déjà connecté par navigateur, mais cette série utilise « Ma clé API ». Dans « Configurer la série », choisis « Mon compte Fal connecté par navigateur », puis enregistre.');
-            }
-            $connection = 'mcp' === $recipe['accessMode'] ? 'le compte Fal par navigateur' : 'la clé API '.$this->catalog->provider($model['provider']);
-            throw new \RuntimeException('Pour configurer la préparation automatique, connecte '.$connection.'. Vérifie « Connexion au fournisseur vidéo » dans « Configurer la série ».');
-        }
-        $identity = $this->keys->identity($series->getOwner(), $model['provider'], $recipe['accessMode']);
         foreach ([$recipe['reference'], $recipe['endReference']] as $reference) {
             if ($reference) {
                 $this->references->path($series->getOwner(), $reference);
             }
         }
         $cents = array_sum(array_map(fn (int $s): int => $this->catalog->estimate($recipe['model'], $s), $durations));
-        $hash = (new SeriesAuthorization($this->catalog))->fingerprint($recipe, $series->initialPrompt(), $durations, $cents, $identity);
+        $hash = (new SeriesAuthorization($this->catalog))->fingerprint($recipe, $series->initialPrompt(), $durations, 0, 'preparation-only');
 
-        return ['recipe' => $recipe, 'brief' => $series->initialPrompt(), 'durations' => $durations, 'cents' => $cents, 'hash' => $hash, 'authorizationVersion' => SeriesAuthorization::VERSION];
+        return ['mode' => 'preparation', 'recipe' => $recipe, 'brief' => $series->initialPrompt(), 'durations' => $durations, 'cents' => $cents, 'hash' => $hash, 'authorizationVersion' => SeriesAuthorization::VERSION];
     }
 
     /** @param array<string,mixed> $data */
@@ -76,12 +68,12 @@ final class SeriesRecurrences
             if (($recurrence?->getRevision() ?? 0) !== (int) ($data['revision'] ?? -1)) {
                 throw new \RuntimeException('La récurrence a changé. Recharge avant de confirmer.');
             }
-            if (!$this->writer->available() || !$this->generations->enabled()) {
-                throw new \RuntimeException('La préparation automatique est indisponible : la rédaction locale et la génération vidéo doivent être activées dans cette installation.');
+            if (!$this->writer->available()) {
+                throw new \RuntimeException('La préparation automatique est indisponible : active la rédaction locale dans cette installation.');
             }
             $preview = $this->preview($series);
             if (!hash_equals($preview['hash'], $data['quote'] ?? '') || empty($data['consent'])) {
-                throw new \RuntimeException('Vérifie l’estimation et confirme les coûts fournisseur avant d’activer.');
+                throw new \RuntimeException('Vérifie les réglages et confirme la préparation des scénarios avant d’activer. Aucun coût vidéo n’est autorisé ici.');
             }
             if (($data['limit'] ?? 0) < 1 || $data['limit'] > 12 || empty($data['networks']) || array_diff($data['networks'], array_keys(MultiNetworkPublishing::LABELS)) || !in_array($data['tone'], ['auto', 'humour', 'aventure', 'calme'], true) || !in_array($data['continuity'], ['independent', 'linked'], true)) {
                 throw new \InvalidArgumentException('Vérifie le nombre d’épisodes, les réseaux et l’ambiance.');
@@ -210,8 +202,11 @@ final class SeriesRecurrences
             $series = $recurrence->getSeries();
             $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
             try {
+                if ('preparation' !== ($settings['mode'] ?? null)) {
+                    throw new \RuntimeException('Ancienne autorisation de génération automatique : reconfigure la préparation des scénarios. Chaque vidéo nécessite désormais ta relecture et une confirmation de coût.');
+                }
                 if (!hash_equals($settings['hash'], $this->preview($series)['hash'])) {
-                    throw new \RuntimeException('Le thème, les références, le modèle, le tarif ou le compte fournisseur ont changé. Vérifie et confirme à nouveau la récurrence.');
+                    throw new \RuntimeException('Le thème, les références ou le modèle ont changé. Vérifie et confirme à nouveau la préparation.');
                 }
             } catch (\RuntimeException $error) {
                 $recurrence->pause($error->getMessage());
@@ -274,7 +269,7 @@ final class SeriesRecurrences
                     throw new \RuntimeException('La préparation a été suspendue, modifiée ou son créneau est dépassé. Aucun lancement payant automatique.');
                 }
                 if (!hash_equals($settings['hash'], $this->preview($series)['hash'])) {
-                    throw new \RuntimeException('Les paramètres ou la connexion au fournisseur ont changé pendant la rédaction. Confirme à nouveau la récurrence.');
+                    throw new \RuntimeException('Les paramètres ont changé pendant la rédaction. Confirme à nouveau la préparation.');
                 }
                 $recipe = $settings['recipe'];
                 foreach ($story['shots'] as &$shot) {
@@ -283,6 +278,7 @@ final class SeriesRecurrences
                 unset($shot);
                 $this->flow->prepare($series->getOwner(), $recipe + ['source' => $this->catalog->referenceMode($recipe['model']), 'target' => array_sum($settings['durations']), 'shots' => $story['shots'], 'prompt' => $series->initialPrompt(), 'title' => $story['title'], 'continuity' => $settings['continuity'], 'mute' => false, 'useEnd' => (bool) $recipe['endReference'], 'revision' => 1], $episode);
                 $occurrence->story($story['summary']);
+                $issue = 'Scénario préparé : relis les descriptions et les prompts, puis confirme le coût dans l’épisode pour générer la vidéo. Même sans alerte, des incohérences peuvent subsister.';
                 if ($story['warnings']) {
                     // Persist a complete summary within both entities' 255-character bounds.
                     $prefix = 'Scénario à relire dans l’épisode avant génération. '.count($story['warnings']).' point(s) à vérifier. ';
@@ -290,17 +286,9 @@ final class SeriesRecurrences
                     if (mb_strlen($issue) > 255) {
                         $issue = $prefix.'Relis les consignes, les paroles, leurs locuteurs et l’identité des sujets avant tout lancement.';
                     }
-                    $occurrence->fail($issue);
-                    $recurrence->pause($issue);
-                    $this->em->flush();
-
-                    return;
                 }
-                $quote = $this->flow->quote($episode);
-                $recurrence->reserve($quote['cents']);
-                $occurrence->produced($quote['cents']);
+                $occurrence->preparedForReview($issue);
                 $this->em->flush();
-                $this->flow->confirm($episode, $quote['hash']);
             });
         } catch (\Throwable $failure) {
             if (!$this->em->isOpen()) {
@@ -332,6 +320,9 @@ final class SeriesRecurrences
             return;
         }
         foreach ($this->em->getRepository(SeriesOccurrence::class)->findBy(['recurrence' => $recurrence]) as $occurrence) {
+            if (!$occurrence->isAutomatic()) {
+                continue;
+            }
             if ($episode = $occurrence->getEpisode()) {
                 $this->flow->pause($episode);
             }

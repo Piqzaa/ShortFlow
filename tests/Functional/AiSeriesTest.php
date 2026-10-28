@@ -96,8 +96,8 @@ final class AiSeriesTest extends WebTestCase
         $this->client->request('GET', '/studio/series/'.$series->getId().'/configuration');
         self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="api"][selected]');
         $this->open($series);
-        self::assertSelectorTextContains('.series-recurrence', 'Fal est déjà connecté par navigateur');
-        self::assertSelectorTextContains('.series-recurrence', 'Mon compte Fal connecté par navigateur');
+        self::assertSelectorTextContains('.series-recurrence', 'Elle n’est pas nécessaire pour préparer les scénarios');
+        self::assertSelectorTextContains('.series-recurrence', 'clé API Fal');
         self::assertSame('api', $series->getRecipe()['accessMode']);
         $this->em()->persist(new \App\Entity\AiCredential($this->em()->find(User::class, $this->owner->getId()), 'synthetic-own-key', 'fal'));
         $this->em()->flush();

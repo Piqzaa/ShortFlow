@@ -1,5 +1,7 @@
 # Récurrence supervisée — 24 octobre 2026
 
+> **Changement de règle V1, 28 octobre 2026 (R2.7) :** le propriétaire a choisi la préparation automatique des scénarios, puis relecture et confirmation du devis avant chaque génération vidéo. Les passages historiques ci-dessous décrivant génération/assemblage automatiques après activation sont remplacés par [le parcours et les protections de clôture R2](r2-revue-cloture.md). La planification ne nécessite pas de clé vidéo, ne réserve aucun coût et prépare 1 à 12 brouillons ; même sans alerte, chaque épisode attend une confirmation manuelle. Les anciennes autorisations automatiques sont bloquées avant nouveau POST ; les demandes déjà transmises peuvent encore finir et être facturées. Aucune série réelle activée pour cette évolution.
+
 Complément du même jour : le [contrôle de relecture du rédacteur](redacteur-local-fiabilite.md) conserve les scènes signalées comme brouillon modifiable et met la récurrence en pause avant réservation du budget ou confirmation vidéo. L'absence d'alerte ne valide pas la qualité narrative ; la validation finale de la vidéo reste manuelle.
 
 ## Objectif et parcours

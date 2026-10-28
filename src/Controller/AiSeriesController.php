@@ -169,7 +169,7 @@ final class AiSeriesController extends AbstractController
                 if ($recurrenceForm->isValid()) {
                     try {
                         $recurrences->activate($series, $recurrenceForm->getData());
-                        $this->addFlash('success', 'Récurrence activée avec ton autorisation de coûts. Chaque vidéo attendra ta validation avant publication.');
+                        $this->addFlash('success', 'Préparation des scénarios activée. Relis chaque épisode puis confirme séparément son coût pour générer la vidéo.');
 
                         return $this->redirectToRoute('app_series_show', ['id' => $id], 303);
                     } catch (\RuntimeException|\InvalidArgumentException $error) {
