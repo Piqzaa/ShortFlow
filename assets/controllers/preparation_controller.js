@@ -24,6 +24,7 @@ export default class extends Controller {
     if (this.hasPlanCountTarget && event.target.matches('[data-preparation-target="continuity"]') && this.continuityTarget.value !== 'single' && this.editor?.rows().length === 1) this.planCountTarget.value = '';
     if (this.continuityTarget.value === 'single' && this.editor?.rows().length === 1 && event.target.matches('[name*="[shots]"][name$="[seconds]"]') && this.model?.seconds.includes(Number(event.target.value))) this.totalTarget.value = event.target.value;
     this.refresh();
+    if (this.continuityTarget.value === 'single' && event.target.matches('[data-preparation-target="continuity"]')) this.applySingle();
     if (this.continuityTarget.value !== 'single' && event.target.matches('[data-creation-target="model"]') && this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) this.redistribute();
   }
   input() { this.refresh(); }
@@ -32,10 +33,21 @@ export default class extends Controller {
       const row = this.editor?.rows().length === 1 ? this.editor.rows()[0] : null;
       if (row && this.model?.seconds.includes(Number(this.totalTarget.value))) row.querySelector('select').value = this.totalTarget.value;
       this.refresh();
+      this.applySingle();
       return;
     }
     if (this.hasPlanCountTarget && this.desiredCount || this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) { this.redistribute(event); return; }
     this.refresh();
+  }
+
+  applySingle() {
+    if (!this.hasSingleActionTarget || !this.model || !this.editor || this.editor.rows().length === 1 || this.singleButtonTarget.disabled) return;
+    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { this.showNotice('Attends la fin de l’import des images avant de passer au plan unique. Tes plans restent conservés.'); return; }
+    // Use the existing server conversion so references, contexts and text limits
+    // are checked before any card is removed. This intent cannot generate video.
+    const form = this.singleButtonTarget.form;
+    if (!form) return;
+    form.requestSubmit(this.singleButtonTarget);
   }
 
   refresh() {
@@ -57,7 +69,7 @@ export default class extends Controller {
     this.fixContinuityTarget.hidden = single || possible || this.continuityTarget.value !== 'linked';
     this.continuityTarget.querySelector('[value="linked"]').disabled = false;
     this.continuityHelpTarget.textContent = this.continuityTarget.value === 'linked' ? (possible ? 'Chaque clip repart de la dernière image du précédent. Cela aide les raccords, sans garantir un plan continu ni un personnage identique.' : 'Le raccord depuis une image exige un premier cadre et un modèle compatible. Il ne transmet ni le mouvement ni le son du clip précédent.') : 'Clips indépendants, assemblés avec des coupes visibles. Sans référence visuelle commune, le personnage peut changer entre les scènes. Pour prolonger une action, choisis un modèle image compatible et une référence.';
-    if (this.continuityTarget.value === 'single') this.continuityHelpTarget.textContent = single ? 'Une prise continue demandée en un seul appel. Le modèle peut introduire une coupe ; aucun raccord entre générations.' : 'Le mode est choisi, mais tes scènes ne sont pas encore réunies. Utilise « Préparer un plan unique » ci-dessous ou conserve plusieurs scènes.';
+    if (this.continuityTarget.value === 'single') this.continuityHelpTarget.textContent = single ? 'Une prise continue demandée en un seul appel. Le modèle peut introduire une coupe ; aucun raccord entre générations.' : 'Passage au plan unique à terminer. Les cartes restent conservées si une durée, une référence ou un texte empêche leur réunion.';
     if (this.hasSingleActionTarget) this.singleActionTarget.hidden = this.continuityTarget.value !== 'single' || !model;
     if (!model || !this.editor) {
       if (!model) {
@@ -101,11 +113,13 @@ export default class extends Controller {
       const native = model.seconds.includes(desired);
       const mismatch = this.editor.rows().length > 1 && total !== desired;
       this.singleButtonTarget.disabled = !native || mismatch;
+      this.singleButtonTarget.hidden = single && total === desired && native;
       this.useTotalTarget.hidden = !singleMode || total === desired || !model.seconds.includes(total);
       this.useTotalTarget.textContent = `Utiliser les ${total} s de mes plans`;
       this.singleStatusTarget.textContent = !native ? `La durée actuelle (${desired} s) ne convient pas à ce modèle en un seul clip. Choisis ${allowed} dans « Durée finale souhaitée », ou conserve plusieurs scènes. Tes plans totalisent ${total} s et restent conservés.`
         : mismatch ? `${this.editor.rows().length} plans actuellement : ${total} s au total, pour ${desired} s souhaitées. ${model.seconds.includes(total) ? 'Utilise le bouton ci-dessous pour reprendre leur total sans modifier les scènes.' : `Ce total n’est pas accepté en un seul clip (${allowed}, maximum ${Math.max(...model.seconds)} s). Choisis un modèle acceptant ${total} s ou conserve plusieurs scènes.`}`
-          : `${this.editor.rows().length} plan(s) actuellement · ${total} s. ${single ? total === desired ? 'Durée compatible : tu peux ouvrir le récapitulatif.' : `Utilise « Préparer un plan unique » pour appliquer les ${desired} s choisies à ce clip, ou reprends son total ci-dessous.` : 'Le bouton réunit les prompts et résumés dans l’ordre ; la durée totale est conservée.'} Les détails incompatibles restent protégés ; relis ensuite le récapitulatif.`;
+          : single && total === desired ? `Plan unique · ${total} s · un seul clip. Tu peux ouvrir le récapitulatif.`
+            : `Passage au plan unique à terminer : ${this.editor.rows().length} plan(s) conservés · ${total} s. Corrige les champs signalés puis utilise « Préparer un plan unique ». Aucun texte ni référence n’est supprimé.`;
       if (this.hasRecapTarget) this.recapTarget.disabled = singleMode && (!native || this.editor.rows().length !== 1 || total !== desired);
     }
     const invalid = this.editor.rows().some(row => !model.seconds.includes(Number(row.querySelector('select').value)));

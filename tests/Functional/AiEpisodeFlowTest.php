@@ -1190,6 +1190,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorCount(1, '[data-shot-editor-target="list"] [data-shot-editor-row]');
         self::assertSame("Scene 1: Milo takes a step forward.\nScene 2: Milo takes a step forward.\nScene 3: Milo takes a step forward.", $this->client->getCrawler()->selectButton('Voir le récapitulatif →')->form()->getValues()['ai_idea[shots][0][prompt]']);
+        self::assertSelectorCount(1, '[data-shot-editor-target="list"] textarea[autofocus]');
         self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', 'Étape 1 de Milo. Étape 2 de Milo. Étape 3 de Milo.');
         self::assertSelectorExists('#ai-idea-form[data-unsaved-initial="true"]');
         self::assertSelectorTextContains('[data-preparation-target="singleAction"]', 'enregistrer la préparation avant de quitter');

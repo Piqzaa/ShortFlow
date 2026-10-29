@@ -1,5 +1,15 @@
 # R3.3 — Choisir et préparer un plan unique
 
+## Correctif du 29 octobre — changement de mode effectif
+
+Retour propriétaire après R3.5 : sélectionner « Plan unique » laissait trois cartes et exigeait encore le bouton de conversion. Le choix explicite déclenche désormais le POST de préparation existant `intent=single`, puis le serveur réunit les textes et renvoie une seule carte. Aucun appel vidéo ni devis confirmé. Le prompt réuni reçoit le focus ; le bouton de conversion disparaît quand le plan unique est prêt. Le fallback sans JavaScript conserve le bouton.
+
+Exemple vérifié : trois plans de 5 s → un plan de 15 s avec Kling 3, trois prompts conservés dans l’ordre. Aucune fusion en JavaScript avant réponse : les gardes serveur sur durées, images, contextes et limites de texte restent identiques. Un total incompatible, un import actif ou un champ obligatoire manquant empêche la conversion ; les cartes restent affichées avec un état explicitement à terminer. Corriger la durée choisie réessaie la conversion ; corriger un autre champ conserve le bouton pour une reprise explicite. Aucun changement automatique au simple chargement de la page.
+
+Contrôles nouveaux : **175 frontend**, **6 PHP ciblés / 95 assertions**, syntaxe JS/build, **33 Twig** et style ciblé réussis. Pas de nouvelle suite complète : **794 / 9 101** reste le passage historique de R3.5. Recette desktop/mobile/clavier sur réponses Symfony réelles exportées : changement de mode transmet les trois cartes avec `intent=single` et reçoit la réponse à une carte, focus prompt ; modèle limité à 10 s et idée vide conservent les trois cartes sans POST. Le serveur de recette contrôle l’intention puis rejoue la réponse de préparation, pas un fournisseur ; conservation et refus sont vérifiés par PHPUnit. 375 px sans débordement, aucune erreur console. Captures locales `artifacts/r3-light/single-switch-desktop.png` et `single-switch-mobile.png`.
+
+Revue indépendante : aucun blocage de sécurité/conservation ; validation HTML globale vérifiée dans le navigateur. Pas de service PHP métier, schéma, inférence, vidéo, dépense, publication, activation ou push. Commit local `fix: prepare a single clip when selecting single mode`. Ce complément remplace le comportement à deux actions décrit historiquement ci-dessous. R3.6 reste non commencé ; vérification des raccords demandée ensuite par le propriétaire.
+
 28 octobre 2026. R3.3 terminé dans le parcours commun Studio/épisodes. Grand R3 en cours ; prochaine étape R3.4, revue globale en R3.7.
 
 Complément du 29 octobre : [choisir le nombre de plans avant le scénario](r3-nombre-plans.md), répartition native exacte, conservation des données et contrôles finaux **780 / 8 926**, **163 frontend**. Les preuves initiales ci-dessous restent datées du 28 octobre.

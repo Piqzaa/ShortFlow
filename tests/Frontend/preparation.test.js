@@ -60,15 +60,15 @@ test('the empty studio shows one model hint and an import refusal always becomes
   assert.match(controller.noticeTarget.textContent,/fin de l’import/);
 });
 
-test('choosing single exposes conversion and native duration choices without changing scenes', () => {
+test('pending single conversion keeps the original cards until the server accepts them', () => {
   const {controller,rows} = setup();
   controller.refresh();
   assert.equal(controller.singleActionTarget.hidden, true);
   controller.continuityTarget.value = 'single';
   controller.refresh();
   assert.equal(controller.singleActionTarget.hidden, false);
-  assert.match(controller.singleStatusTarget.textContent, /3 plan\(s\) actuellement/);
-  assert.match(controller.continuityHelpTarget.textContent, /pas encore réunies/);
+  assert.match(controller.singleStatusTarget.textContent, /Passage au plan unique à terminer/);
+  assert.match(controller.continuityHelpTarget.textContent, /cartes restent conservées/);
   assert.equal(controller.totalTarget.options.find(o=>o.value==='16').disabled, true);
   assert.equal(controller.totalTarget.options.find(o=>o.value==='15').disabled, false);
   assert.equal(controller.singleButtonTarget.disabled, false);
@@ -78,6 +78,42 @@ test('choosing single exposes conversion and native duration choices without cha
   controller.refresh();
   assert.equal(controller.totalTarget.options.find(o=>o.value==='60').disabled,false);
   assert.equal(controller.recapTarget.disabled,false);
+});
+
+test('choosing single submits only the existing safe conversion intent with all three cards intact', () => {
+  const {controller,rows}=setup();
+  let submitted;
+  controller.singleButtonTarget.form={requestSubmit(button){submitted=button;}};
+  controller.continuityTarget.value='single';
+  controller.change({target:{matches(selector){return selector==='[data-preparation-target="continuity"]';}}});
+  assert.equal(submitted,controller.singleButtonTarget);
+  assert.equal(rows.length,3);
+  assert.equal(rows[2].querySelector('textarea').value,'Scene 3.');
+  submitted=null;
+  controller.selectedModel={name:'Kling 2.5',seconds:[5,10]};
+  controller.change({target:{matches(selector){return selector==='[data-preparation-target="continuity"]';}}});
+  assert.equal(submitted,null);
+  assert.match(controller.singleStatusTarget.textContent,/5 ou 10 s/);
+});
+
+test('a duration correction retries conversion, while active image imports and completed single cards never submit', () => {
+  const {controller}=setup();
+  let count=0;
+  controller.singleButtonTarget.form={requestSubmit(){count++;}};
+  controller.continuityTarget.value='single';
+  controller.totalTarget.value='15';
+  controller.duration();
+  assert.equal(count,1);
+  controller.element.querySelector=selector=>selector.includes('data-plan-reference-busy')?{}:{value:''};
+  controller.duration();
+  assert.equal(count,1);
+  assert.match(controller.noticeTarget.textContent,/fin de l’import/);
+  const ready=setup(1).controller;
+  ready.singleButtonTarget.form={requestSubmit(){count++;}};
+  ready.continuityTarget.value='single'; ready.totalTarget.value='5';
+  ready.duration();
+  assert.equal(count,1);
+  assert.equal(ready.singleButtonTarget.hidden,true);
 });
 
 test('switching to a shorter model preserves the old duration and scenes, blocks conversion and explains the limit', () => {

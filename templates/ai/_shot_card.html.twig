@@ -6,7 +6,7 @@
   {{ form_widget(shotForm.promptOnly) }}{{ form_errors(shotForm.promptOnly) }}
   <div class="shot-card-details" data-shot-details>
     {{ form_widget(shotForm.sceneDescription) }}{{ form_errors(shotForm.sceneDescription) }}
-    {{ form_row(shotForm.prompt) }}
+    {{ form_row(shotForm.prompt,{attr:singlePrepared|default(false) and shotNumber|default(0) == 1 ? {autofocus:true} : {}}) }}
     <p class="library-note">Rédige les consignes vidéo en anglais, comme les propositions du scénario. Garde les dialogues et textes souhaités dans leur langue.</p>
     {% include 'ai/_shot_references.html.twig' %}
     <div class="story-row-actions">
