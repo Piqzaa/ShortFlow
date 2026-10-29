@@ -2,6 +2,26 @@
 
 Complément après essai du propriétaire, avant R3.4. Grand R3 reste en cours.
 
+## Ajustement suivant — prompt directement visible
+
+Le propriétaire demande ensuite de retirer les informations répétées des cartes. Le résumé français et son bouton de relecture disparaissent de cette zone ; le résumé reste dans l'aperçu de proposition et dans les données existantes, sans édition ni suppression. Le prompt vidéo est directement visible et modifiable, avec la durée et une courte consigne sur l'anglais et les dialogues. Il n'y a plus de volet à ouvrir pour saisir le prompt.
+
+Le contexte anglais séparé passe dans « Contexte avancé », replié par défaut. Il n'est pas supprimé : le moteur l'ajoute encore à la génération. Le cacher définitivement aurait laissé des consignes influentes sans possibilité de détachement. L'aide avancée explique ce rôle ; le récapitulatif conserve le texte exact envoyé. Un contexte incomplet avec seulement l'empreinte source reste accessible pour être détaché, même sans identité. Les outils d'image et indications de références sont regroupés dans leur volet existant.
+
+Fichiers : `_shot_card.html.twig` affiche le prompt directement et conserve les champs cachés ; `_shot_description.html.twig`, devenu inutilisé, est retiré ; `_shot_references.html.twig` accueille l'indication de références. `shot_editor_controller.js` retire le repère de relecture devenu inutile, conserve les métadonnées et le focus, et montre le contexte incomplet. `story_writer_controller.js` adapte l'ouverture au conteneur visible. `episode.css` réduit l'espacement des options repliées. Aucun service PHP de génération, schéma, tarif, modèle, consentement ni préparation enregistrée n'est changé.
+
+Flux inchangé : aperçu français → application volontaire des textes dans le formulaire → modification du prompt anglais → sauvegarde/validation serveur → récapitulatif → confirmation du coût. Le résumé caché reste soumis pour conserver les anciennes données ; un champ caché n'est pas une protection de sécurité. Pour essayer : recharger, modifier directement le prompt, ouvrir le contexte si nécessaire, vérifier le texte exact au récapitulatif. Les actions d'images, déplacement et retrait restent disponibles.
+
+Contrôles de ce second ajustement : **165 tests frontend**, `npm run check` et build réussis ; avertissements Vite de médias/polices et taille Three.js conservés. **Quatre tests fonctionnels / 51 assertions** réussis sur résumés conservés, ancien plan, contexte et erreurs d'image. Lint des **28 Twig** restants et CS-Fixer ciblé réussis. Aucun nouveau passage complet PHP, ni nouveau PHPStan : aucun service/formulaire PHP applicatif modifié.
+
+Cas fonctionnel complémentaire d'empreinte sans identité : première tentative à cinq tests, **52 assertions et une erreur de montage de fixture** ; le chemin public refusait correctement d'enregistrer ce contexte incomplet. Fixture ensuite construite directement sur l'entité de test pour simuler une donnée stockée incohérente, sans assouplir la validation ; **1 test / 6 assertions réussi** au rejeu. Les quatre autres cas avaient encore réussi dans le passage précédent.
+
+Recette sur un fragment Twig réel et les assets compilés, deux plans synthétiques, serveur loopback GET uniquement : prompt accessible d'emblée, édition, Tab vers contexte, ouverture/détachement et retour du focus au prompt ; résumé caché conservé. Desktop puis mobile 390 × 844, largeur utile/scroll **375/375**, aucune alerte/erreur console capturée. Capture locale de ce fragment, pas de l'onglet propriétaire. Le premier serveur sandbox était inaccessible ; relance sur loopback, sans pare-feu modifié. Deux tentatives de rendu CLI nécessitaient le conteneur de test puis une session simulée ; aucune donnée réelle utilisée. Onglets de recette fermés, viewport restauré, serveur arrêté.
+
+Revue indépendante : conservation et focus validés ; cas d'empreinte sans identité corrigé dans Twig/JS et couvert en frontend. Cache dev/worker actualisés après garde d'inactivité. Prochain point inchangé **R3.4**, non commencé. Commit local `refactor: focus scene cards on editable video prompts`, aucun push, appel réel, coût ou publication.
+
+Les sections suivantes décrivent le premier ajustement, avant ce nouvel allègement.
+
 ## Ce qui change
 
 Le résumé français devient un repère en lecture seule. Les anciens textes restent conservés, affichés et transportés dans le formulaire ; aucune donnée existante n'est supprimée. Le champ à modifier porte désormais le nom « Prompt vidéo — consignes envoyées au modèle ». L'aide demande les directions en anglais pour ce parcours et conserve les paroles/textes demandés dans leur langue. Ce choix ne constitue pas une affirmation que tous les fournisseurs imposent universellement l'anglais.

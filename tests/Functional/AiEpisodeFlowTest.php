@@ -230,9 +230,8 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSelectorTextContains('textarea[name="ai_idea[shots][0][imagePrompt]"]', 'Mon costume <script>privé</script>');
         self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', 'Milo ouvre une boîte <privée>.');
         self::assertSelectorExists('input[type="hidden"][name="ai_idea[shots][0][sceneDescription]"]');
-        self::assertSelectorTextContains('[data-shot-details] summary', 'Modifier le prompt vidéo et les images');
-        self::assertSelectorExists('[data-shot-editor-target="list"] .shot-card [data-shot-details]:not([open])');
-        self::assertSelectorTextContains('[data-shot-summary-status]', 'Résumé à relire');
+        self::assertSelectorNotExists('[data-shot-summary-status], [data-shot-summary-review], [data-shot-description-text]');
+        self::assertSelectorExists('[data-shot-editor-target="list"] .shot-card div[data-shot-details] textarea[name="ai_idea[shots][0][prompt]"]');
         self::assertStringContainsString('&lt;script&gt;privé&lt;/script&gt;', $this->client->getResponse()->getContent());
         self::assertSame(0, $this->submissions);
     }
@@ -243,8 +242,8 @@ final class AiEpisodeFlowTest extends WebTestCase
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         self::assertResponseIsSuccessful();
         self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', '');
-        self::assertSelectorTextContains('[data-shot-summary-status]', 'Résumé non disponible');
-        self::assertSelectorExists('[data-shot-editor-target="list"] [data-shot-details][open] textarea[name="ai_idea[shots][0][prompt]"]');
+        self::assertSelectorNotExists('[data-shot-summary-status], [data-shot-summary-review]');
+        self::assertSelectorExists('[data-shot-editor-target="list"] div[data-shot-details] textarea[name="ai_idea[shots][0][prompt]"]');
         self::assertSelectorExists('[data-shot-reference-summary]');
         self::assertSame(0, $this->submissions);
     }
@@ -337,6 +336,8 @@ final class AiEpisodeFlowTest extends WebTestCase
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         self::assertResponseIsSuccessful();
         self::assertInputValueSame('ai_idea[shots][0][translatedIdentity]', 'A white cat in a room with a box.');
+        self::assertSelectorTextContains('details[data-shot-translated-context]:not([open]) summary', 'Contexte avancé');
+        self::assertSelectorTextContains('[data-shot-translated-identity]', 'A white cat in a room with a box.');
         $episode->edit('Milo', 'Le sujet a changé.');
         $this->em()->flush();
         try {
@@ -350,6 +351,20 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertResponseRedirects();
         self::assertArrayNotHasKey('translatedIdentity', $this->flow()->shots($episode)[0]->getInputs());
         self::assertStringContainsString('opening the box', $this->flow()->shots($episode)[0]->getPrompt());
+    }
+
+    public function testIncompleteTranslationContextKeepsItsDetachmentActionAccessible(): void
+    {
+        $episode = $this->planned(false, 10);
+        // Simulate incomplete stored metadata; the public save path correctly rejects it.
+        $shot = $this->flow()->shots($episode)[0];
+        $shot->configureInputs(array_replace($shot->getInputs(), ['translatedIdentity' => '', 'translationSource' => str_repeat('a', 64)]));
+        $this->em()->flush();
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('details[data-shot-translated-context]:not([hidden]) button[value="detach_translation:0"]');
+        self::assertInputValueSame('ai_idea[shots][0][translationSource]', str_repeat('a', 64));
+        self::assertSame(0, $this->submissions);
     }
 
     public function testCompactCardsPreserveHumanSummariesWhenReducingAndExposeImageErrors(): void
@@ -369,7 +384,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $form['ai_idea[shots][2][imagePrompt]'] = str_repeat('x', 3001);
         $this->client->submit($form);
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorExists('[data-shot-editor-target="list"] [data-shot-details][open] .image-preparation[open] textarea[name="ai_idea[shots][2][imagePrompt]"]');
+        self::assertSelectorExists('[data-shot-editor-target="list"] [data-shot-details] .image-preparation[open] textarea[name="ai_idea[shots][2][imagePrompt]"]');
         self::assertInputValueSame('ai_idea[shots][2][sceneDescription]', 'Ma conclusion à conserver.');
         self::assertSame(0, $this->submissions);
     }

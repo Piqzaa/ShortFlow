@@ -243,7 +243,7 @@ export default class extends Controller {
     const firstPrompt = this.editor.rows()[0]?.querySelector('textarea');
     if (firstPrompt) {
       const panel = firstPrompt.closest?.('[data-shot-details]');
-      if (panel) panel.open = true;
+      if (panel?.tagName === 'DETAILS') panel.open = true;
       firstPrompt.focus();
     }
     this.editor.rows()[0]?.scrollIntoView?.({ block: 'start' });

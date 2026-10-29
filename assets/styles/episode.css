@@ -4,6 +4,7 @@
 .story-row-actions { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1rem; }
 
 .shot-card{margin:14px 0;padding:20px;border:1px solid var(--workspace-border);border-radius:12px;background:var(--workspace-panel)}
+.shot-card .story-context{padding:0;margin:8px 0;border:0}
 .shot-description{font-size:15px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 12px}
 .shot-card-heading{align-items:center!important;margin-bottom:12px}.shot-card-heading h3{margin:0;font:500 18px/1.4 'Space Grotesk',sans-serif}.shot-card-duration{width:110px}.shot-card-duration>div{margin:0}.shot-card-duration label{font-size:12px}.shot-card input[type=text]{width:100%;min-width:0}.shot-card>div{min-width:0}.shot-summary-status{margin:8px 0;overflow-wrap:anywhere}.shot-reference-summary{padding-top:12px;border-top:1px solid var(--workspace-border);overflow-wrap:anywhere}.shot-card-details>summary{font-weight:500}.shot-card-details[open]>summary{margin-bottom:14px}.shot-card-details .image-preparation{margin-bottom:0}.shot-summary-review{font-size:12px;min-height:44px}.shot-card [hidden]{display:none!important}
 @media(max-width:650px){.shot-card{padding:15px}.shot-card-heading{gap:12px}.shot-card-duration{width:100px}.shot-card .story-row-actions{display:grid;grid-template-columns:1fr 1fr}.shot-card .story-row-actions button:last-child{grid-column:1/-1}}

@@ -22,15 +22,6 @@ export default class extends Controller {
   focusRow(row) {
     const field = row?.querySelector('textarea');
     if (field) { this.reveal(field); field.focus(); }
-    else row?.querySelector('textarea')?.focus();
-  }
-
-  review(event) {
-    const row = event.currentTarget.closest('[data-shot-editor-row]');
-    row.dataset.reviewedPrompt = row.querySelector('textarea').value;
-    row.dataset.reviewedDescription = row.querySelector('[name$="[sceneDescription]"]').value;
-    this.update();
-    this.focusRow(row);
   }
 
   rows() { return Array.from(this.listTarget.querySelectorAll('[data-shot-editor-row]')); }
@@ -71,24 +62,11 @@ export default class extends Controller {
     const rows = this.rows();
     let seconds = 0, cents = 0;
     rows.forEach((row, index) => {
-      const description = row.querySelector('[name$="[sceneDescription]"]')?.value || '';
-      const descriptionText = row.querySelector('[data-shot-description-text]');
-      if (descriptionText) descriptionText.textContent = description.trim() || 'Résumé non disponible';
       const translated = row.querySelector('[data-shot-translated-context]');
       if (translated) {
         const identity = row.querySelector('[name$="[translatedIdentity]"]').value;
-        translated.hidden = !identity;
+        translated.hidden = !identity && !row.querySelector('[name$="[translationSource]"]').value;
         translated.querySelector('[data-shot-translated-identity]').textContent = identity;
-      }
-      const prompt = row.querySelector('textarea').value;
-      const status = row.querySelector('[data-shot-summary-status]');
-      if (status) {
-        row.dataset.originalPrompt ??= prompt;
-        const reviewed = row.dataset.reviewedPrompt === prompt && row.dataset.reviewedDescription === description;
-        status.textContent = !description.trim() ? 'Résumé non disponible. Le prompt vidéo reste accessible dans les détails.'
-          : reviewed ? 'Résumé relu pour cette saisie. Vérifie aussi les références au récapitulatif.'
-            : prompt !== row.dataset.originalPrompt || row.dataset.reviewedPrompt !== undefined ? 'Prompt modifié : résumé à revérifier, il ne se met pas à jour automatiquement.' : 'Résumé à relire avec le prompt vidéo. Repère en lecture seule.';
-        row.querySelector('[data-shot-summary-review]').hidden = !description.trim() || reviewed;
       }
       const references = row.querySelector('[data-shot-reference-summary]');
       if (references) {

@@ -1,5 +1,7 @@
 # R3.2 — Cartes de scènes compactes
 
+**Allègement suivant du 29 octobre :** le résumé et sa relecture sont retirés des cartes et restent dans l'aperçu/données. Le prompt est visible directement ; le contexte séparé et les images sont repliés. [Comportement actuel](r3-relecture-prompts.md). Cette décision prime sur les descriptions historiques ci-dessous.
+
 **Décision du 29 octobre :** le propriétaire remplace l'édition du résumé par un repère en lecture seule ; seul le prompt permet de modifier les consignes vidéo. Les textes existants sont conservés. [Comportement actuel, diagnostic et limites de recette](r3-relecture-prompts.md). Le bilan ci-dessous décrit la livraison historique du 28 octobre.
 
 28 octobre 2026. Suite du [parcours R3.1 validé par le propriétaire](r3-parcours-commun.md). Cette étape concerne les scènes ; le rapprochement du mode unique, le choix guidé commun et la navigation restent en R3.3–R3.6. Grand R3 en cours, revue globale en R3.7.

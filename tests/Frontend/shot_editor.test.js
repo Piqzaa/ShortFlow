@@ -28,32 +28,24 @@ function setup() {
   return { editor, row, prompt, description, status, review, references };
 }
 
-test('reviewing a summary preserves keyboard focus and becomes stale after a prompt or summary edit', () => {
-  const { editor, row, prompt, description, status, review } = setup();
+test('focusing a card targets the prompt and edits preserve the stored French summary', () => {
+  const { editor, row, prompt, description } = setup();
   editor.update();
-  editor.review({ currentTarget: { closest: () => row } });
+  editor.focusRow(row);
   assert.equal(prompt.focused, true);
   assert.equal(description.focused, undefined);
-  assert.equal(review.hidden, true);
   prompt.value = 'Milo closes the box.';
   editor.update();
-  assert.match(status.textContent, /à revérifier/);
-  assert.equal(review.hidden, false);
-  editor.review({ currentTarget: { closest: () => row } });
-  description.value = 'Milo ferme la boîte.';
-  editor.update();
-  assert.match(status.textContent, /à revérifier/);
+  assert.equal(description.value, 'Milo ouvre une boîte.');
   assert.equal(prompt.value, 'Milo closes the box.');
 });
 
 test('an old scene without summary keeps its prompt and does not invent a summary', () => {
-  const { editor, description, prompt, status, review, references } = setup();
+  const { editor, description, prompt, references } = setup();
   description.value = '';
   editor.update();
-  assert.match(status.textContent, /non disponible/);
   assert.equal(description.value, '');
   assert.equal(prompt.value, 'Milo opens a box.');
-  assert.equal(review.hidden, true);
   assert.match(references.textContent, /aucune image envoyée/);
 });
 
@@ -64,4 +56,21 @@ test('invalid fields reveal every enclosing detail before native focus', () => {
   editor.reveal({ parentElement: inner });
   assert.equal(inner.open, true);
   assert.equal(outer.open, true);
+});
+
+test('an orphan translation source keeps advanced context accessible for detachment', () => {
+  const { editor, row } = setup();
+  const query = row.querySelector.bind(row);
+  const identity = { value: '' }, source = { value: 'a'.repeat(64) }, text = { textContent: '' };
+  const panel = { hidden: true, querySelector: () => text };
+  row.querySelector = selector => selector === '[data-shot-translated-context]' ? panel : selector.includes('translatedIdentity') ? identity : selector.includes('translationSource') ? source : query(selector);
+  editor.update();
+  assert.equal(panel.hidden, false);
+  source.value = '';
+  editor.update();
+  assert.equal(panel.hidden, true);
+  identity.value = 'A yellow robot.';
+  editor.update();
+  assert.equal(panel.hidden, false);
+  assert.equal(text.textContent, 'A yellow robot.');
 });
