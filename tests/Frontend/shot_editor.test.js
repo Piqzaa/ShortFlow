@@ -58,19 +58,14 @@ test('invalid fields reveal every enclosing detail before native focus', () => {
   assert.equal(outer.open, true);
 });
 
-test('an orphan translation source keeps advanced context accessible for detachment', () => {
-  const { editor, row } = setup();
+test('refreshing cards preserves their archived context without adding it to the edited prompt', () => {
+  const { editor, row, prompt } = setup();
   const query = row.querySelector.bind(row);
-  const identity = { value: '' }, source = { value: 'a'.repeat(64) }, text = { textContent: '' };
-  const panel = { hidden: true, querySelector: () => text };
-  row.querySelector = selector => selector === '[data-shot-translated-context]' ? panel : selector.includes('translatedIdentity') ? identity : selector.includes('translationSource') ? source : query(selector);
+  const identity = { value: 'A white cat.' }, source = { value: 'a'.repeat(64) };
+  row.querySelector = selector => selector.includes('translatedIdentity') ? identity : selector.includes('translationSource') ? source : query(selector);
+  prompt.value = 'A blue cat walks across the room.';
   editor.update();
-  assert.equal(panel.hidden, false);
-  source.value = '';
-  editor.update();
-  assert.equal(panel.hidden, true);
-  identity.value = 'A yellow robot.';
-  editor.update();
-  assert.equal(panel.hidden, false);
-  assert.equal(text.textContent, 'A yellow robot.');
+  assert.equal(prompt.value, 'A blue cat walks across the room.');
+  assert.equal(identity.value, 'A white cat.');
+  assert.equal(source.value, 'a'.repeat(64));
 });

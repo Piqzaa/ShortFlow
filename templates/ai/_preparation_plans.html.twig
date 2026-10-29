@@ -2,11 +2,12 @@
 <section class="preparation-plans" aria-labelledby="preparation-plans-title">
   <div class="series-episodes-heading"><h2 id="preparation-plans-title">Les plans de ta vidéo</h2><button type="submit" class="account-secondary" name="intent" value="replan" data-action="preparation#redistribute">Répartir la durée</button></div>
   <p class="library-note" data-shot-editor-target="summary" role="status" aria-live="polite">Le coût total sera calculé à partir de tes plans.</p>
-  <p class="library-note">Le rédacteur propose un résumé français pour comprendre chaque plan et un prompt vidéo en anglais envoyé au modèle. Tu peux modifier ce prompt ; vérifie alors que le résumé correspond toujours à ton intention.</p>
+  <p class="library-note">Le résumé français reste dans l’aperçu du scénario. Ici, modifie le prompt complet de chaque plan, identité et style compris, puis vérifie le texte envoyé au récapitulatif.</p>
   <p class="library-note">Pour préparer tes images, ouvre « Préparer l’image de ce plan » sous chaque scène : propose et copie les consignes, crée l’image dans ton outil habituel, puis importe-la au bon plan. Cette préparation n’appelle aucun fournisseur.</p>
   <p class="library-note">Un plan ci-dessous correspond à un clip généré, puis assemblé aux autres. Le modèle peut faire varier le cadrage dans un clip. Le texte commun ne garantit pas un personnage identique entre clips indépendants. Prévois une seule action courte par plan et sa conclusion avant la coupe ; une référence visuelle aide à garder son identité.</p>
   <div data-shot-editor-target="list">{% for shotForm in ideaForm.shots %}{% include 'ai/_shot_card.html.twig' with {shotNumber:loop.index,shotIndex:loop.index0} %}{% endfor %}</div><template data-shot-editor-target="prototype">{% set shotForm = ideaForm.shots.vars.prototype %}{% include 'ai/_shot_card.html.twig' %}</template>
   <button type="submit" name="plan_action" class="account-secondary" data-shot-editor-target="add" data-action="shot-editor#act" value="add">Ajouter un plan +</button>
+  <details class="creation-details"><summary>Reprise manuelle</summary><p class="library-note">Après un changement d’idée, relis et corrige tes prompts complets. Cette action les reprend comme ta saisie manuelle, sans nouvelle rédaction. Les anciens contextes restent archivés ; les contrôles de langue, de répliques et le devis restent nécessaires.</p><button type="submit" name="plan_action" value="manual_prompts:0" class="account-secondary">Utiliser mes prompts relus</button></details>
   <noscript><p class="library-note">« Répartir la durée » prépare les champs sur cette page. Les plans peuvent ensuite être modifiés et enregistrés sans JavaScript.</p></noscript>
 </section>
 </details>

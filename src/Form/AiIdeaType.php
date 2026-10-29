@@ -41,7 +41,7 @@ final class AiIdeaType extends AbstractType
             ->add('planCount', ChoiceType::class, ['label' => 'Combien de plans ?', 'required' => false, 'placeholder' => 'Choisir le nombre de plans', 'choices' => array_combine(array_map(static fn (int $n): string => $n.' plans', range(2, 8)), range(2, 8))])
             ->add('mute', CheckboxType::class, ['label' => 'Couper le son des plans au montage', 'required' => false])
             ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])
-            ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations()], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
+            ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations(), 'visual_context' => $options['visual_context']], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
         $builder
             ->add('subjectDetails', CollectionType::class, ['entry_type' => AiSubjectType::class, 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'label' => false, 'constraints' => [new Assert\Count(max: 7)]])
             ->add('subjects', CollectionType::class, ['entry_type' => HiddenType::class, 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'constraints' => [new Assert\Count(max: 7)], 'entry_options' => ['required' => false, 'constraints' => [new Assert\Regex('/^[a-f0-9]{48}\.jpg$/D')]]])
@@ -107,6 +107,8 @@ final class AiIdeaType extends AbstractType
     {
         $resolver->setDefault('composed', false);
         $resolver->setAllowedTypes('composed', 'bool');
+        $resolver->setDefault('visual_context', '');
+        $resolver->setAllowedTypes('visual_context', 'string');
         $resolver->setDefault('connected_providers', []);
         $resolver->setAllowedTypes('connected_providers', 'array');
         $resolver->setDefault('favorite_models', []);

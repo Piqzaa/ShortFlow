@@ -140,7 +140,7 @@ final class AiEpisodeFlow
         if (array_filter($rows, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? ''))) {
             throw new \RuntimeException('Tes plans ont des images ou des consignes d’images distinctes. Conserve plusieurs scènes ou réaffecte ces éléments manuellement avant de les réunir ; rien n’a été retiré.');
         }
-        foreach (['translatedIdentity', 'translationSource', 'referenceFit'] as $field) {
+        foreach (['translatedIdentity', 'translationSource', 'referenceFit', 'promptOnly'] as $field) {
             if (count(array_unique(array_map(static fn (array $row): string => $row[$field] ?? '', $rows))) > 1) {
                 throw new \RuntimeException('Les contextes traduits ou cadrages de tes plans diffèrent. Conserve plusieurs scènes ou harmonise ces détails avant de les réunir ; tes textes sont conservés.');
             }
@@ -339,7 +339,7 @@ final class AiEpisodeFlow
             }
             $references[] = ['position' => $shot->getPosition(), 'seconds' => $shot->getSeconds(), 'model' => $recipe['model'], 'prompt' => $effectivePrompt] + $resolved;
             $data[] = [$shot->getId(), $shot->getPrompt(), $shot->getSeconds(), $price, $shot->getGeneration()?->getId(), $resolved];
-            if (($recipe['inputVersion'] ?? 1) >= 3 || $redo || '' !== ($shot->getInputs()['translatedIdentity'] ?? '')) {
+            if (($recipe['inputVersion'] ?? 1) >= 3 || $redo || '' !== ($shot->getInputs()['translatedIdentity'] ?? '') || in_array($shot->getInputs()['promptOnly'] ?? '', ['1', 'manual'], true)) {
                 $data[] = $effectivePrompt;
             }
             $cents += $price;
@@ -396,7 +396,7 @@ final class AiEpisodeFlow
                 $shot->replace($anchor, $shot->getInputs()['repairPrompt'] ?? null);
                 $episode->repair();
             }
-            if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 3 || array_filter($confirmedShots, static fn (AiShot $shot): bool => '' !== ($shot->getInputs()['translatedIdentity'] ?? ''))) {
+            if (($episode->getFlowRecipe()['inputVersion'] ?? 1) >= 3 || array_filter($confirmedShots, static fn (AiShot $shot): bool => '' !== ($shot->getInputs()['translatedIdentity'] ?? '') || in_array($shot->getInputs()['promptOnly'] ?? '', ['1', 'manual'], true))) {
                 $episode->freezeVisualContext($this->visualContext($episode));
             }
             foreach ($confirmedShots as $confirmedShot) {
@@ -678,11 +678,15 @@ final class AiEpisodeFlow
     {
         $scene ??= $shot->getPrompt();
         $recipe = $episode->getFlowRecipe();
-        if (($recipe['inputVersion'] ?? 1) >= 3 || '' !== ($shot->getInputs()['translatedIdentity'] ?? '')) {
+        if (($recipe['inputVersion'] ?? 1) >= 3 || '' !== ($shot->getInputs()['translatedIdentity'] ?? '') || in_array($shot->getInputs()['promptOnly'] ?? '', ['1', 'manual'], true)) {
             $context = $recipe['visualContext'] ?? $this->visualContext($episode);
             if ('' !== ($shot->getInputs()['translatedIdentity'] ?? '')) {
                 (new VideoPromptLanguage())->assertScene($episode, $shot, $scene);
                 $context = $shot->getInputs()['translatedIdentity'];
+            }
+            if (in_array($shot->getInputs()['promptOnly'] ?? '', ['1', 'manual'], true)) {
+                (new VideoPromptLanguage())->assertScene($episode, $shot, $scene);
+                $context = '';
             }
 
             return $this->prompts->build($recipe['model'], $shot->getSeconds(), $scene, $context, $episode->getContinuity(), count($recipe['subjects'] ?? []), $recipe['subjectDetails'] ?? []);

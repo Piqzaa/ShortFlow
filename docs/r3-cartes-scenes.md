@@ -1,5 +1,7 @@
 # R3.2 — Cartes de scènes compactes
 
+**Dernier complément du 29 octobre :** contexte avancé supprimé des cartes, consignes complètes dans le prompt modifiable et réglages durée/mode/nombre compacts. [État actuel et protections de reprise](r3-reglages-compacts.md). Les notes suivantes sont historiques.
+
 **Allègement suivant du 29 octobre :** le résumé et sa relecture sont retirés des cartes et restent dans l'aperçu/données. Le prompt est visible directement ; le contexte séparé et les images sont repliés. [Comportement actuel](r3-relecture-prompts.md). Cette décision prime sur les descriptions historiques ci-dessous.
 
 **Décision du 29 octobre :** le propriétaire remplace l'édition du résumé par un repère en lecture seule ; seul le prompt permet de modifier les consignes vidéo. Les textes existants sont conservés. [Comportement actuel, diagnostic et limites de recette](r3-relecture-prompts.md). Le bilan ci-dessous décrit la livraison historique du 28 octobre.

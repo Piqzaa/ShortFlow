@@ -1,0 +1,11 @@
+<div class="preparation-timing">
+  <div>{{ form_row(ideaForm.target,{label:'Durée totale',attr:{'data-preparation-target':'total','data-action':'change->preparation#duration'}}) }}</div>
+  <div data-preparation-target="continuityPanel">{{ form_row(ideaForm.continuity,{label:'Mode de génération',attr:{'data-preparation-target':'continuity'}}) }}</div>
+  {% include 'ai/_plan_count.html.twig' %}
+</div>
+{% include 'ai/_plan_count_status.html.twig' %}
+<p class="library-note" data-preparation-target="notice" role="status">Choisis un modèle pour obtenir un découpage compatible. Le coût total sera confirmé avant toute génération.</p>
+<p class="library-note" data-preparation-target="single">Un seul clip : aucun enchaînement à régler.</p>
+<details class="creation-details preparation-timing-help"><summary>Comprendre le découpage</summary><p class="library-note" data-preparation-target="continuityHelp">Plusieurs scènes assemblées, ou une action prolongée avec un modèle image compatible.</p></details>
+{% include 'ai/_single_plan.html.twig' %}
+<button type="button" class="account-secondary" data-preparation-target="fixContinuity" data-action="preparation#imageMode">Choisir un modèle image et sa référence</button>

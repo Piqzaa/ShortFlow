@@ -62,12 +62,6 @@ export default class extends Controller {
     const rows = this.rows();
     let seconds = 0, cents = 0;
     rows.forEach((row, index) => {
-      const translated = row.querySelector('[data-shot-translated-context]');
-      if (translated) {
-        const identity = row.querySelector('[name$="[translatedIdentity]"]').value;
-        translated.hidden = !identity && !row.querySelector('[name$="[translationSource]"]').value;
-        translated.querySelector('[data-shot-translated-identity]').textContent = identity;
-      }
       const references = row.querySelector('[data-shot-reference-summary]');
       if (references) {
         const source = this.element.querySelector('[data-creation-target="source"]')?.value || (this.modelValue.subjectReference ? 'subject' : this.modelValue.image ? 'image' : 'text');

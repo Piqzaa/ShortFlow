@@ -1,5 +1,7 @@
 # VydFlow — bêta, studio IA et publication
 
+**Réglages compacts et prompt complet, 29 octobre :** durée/mode/nombre regroupés, contexte avancé retiré des cartes, ancien contexte repris dans le champ sans perte et reprise manuelle globale sans inférence. **787 PHP / 8 971 assertions**, puis **7 / 50 ciblés**, **165 frontend**, contrôles et recette synthétique mobile/clavier verts. [Bilan pédagogique et essai](docs/r3-reglages-compacts.md). Prochain point **R3.4**, non commencé ; commit local sans push.
+
 **Cartes allégées, 29 octobre :** prompt vidéo directement modifiable et aide courte ; résumés français conservés dans l'aperçu et les données. Contexte/outil image repliés. **165 frontend**, **4 fonctionnels / 51 assertions**, check/build/lints et recette synthétique mobile/clavier réussis. [Comportement actuel et pédagogie](docs/r3-relecture-prompts.md). R3.4 reste à reprendre ; commit local, aucun push.
 
 **Relecture des scènes ajustée, 29 octobre :** résumé français conservé en lecture seule, prompt vidéo explicitement modifiable ; contrôles de langue harmonisés et copie des scènes annoncée. [Pédagogie, diagnostic et limites de vérification](docs/r3-relecture-prompts.md). Le refus exact dans l'onglet propriétaire reste non reproduit ; ancienne proposition conservée. Prochain point **R3.4**, après résolution de ces détails.

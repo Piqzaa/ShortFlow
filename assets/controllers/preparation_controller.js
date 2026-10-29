@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'planCount', 'countStatus', 'countApply'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply'];
   static values = { models: Object };
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
@@ -33,8 +33,10 @@ export default class extends Controller {
   }
 
   refresh() {
+    this.noticeTarget.hidden = false;
     const model = this.model;
     if (this.hasCountPanelTarget) this.countPanelTarget.hidden = this.continuityTarget.value === 'single';
+    if (this.hasCountInfoTarget) this.countInfoTarget.hidden = this.continuityTarget.value === 'single';
     if (this.hasAudioHelpTarget) this.audioHelpTarget.textContent = model?.audio ? 'Ce modèle génère son propre audio pour chaque clip. Le raccord par image ne transmet pas le son précédent. « Couper le son » agit au montage, sans réduire le coût de génération.' : model ? 'Ce modèle produit des clips sans audio. Tu peux ajouter une bande sonore dans le montage. Le réglage ci-dessous concerne uniquement le son conservé à l’export.' : 'Choisis un modèle pour connaître son audio. Couper le son au montage ne réduit pas le coût de génération.';
     const reference = this.element.querySelector('[data-creation-target="reference"]').value;
     const firstFrame = this.editor?.rows()[0]?.querySelector('[name$="[startReference]"]')?.value;
@@ -116,7 +118,11 @@ export default class extends Controller {
           : ready ? `${this.desiredCount} plans · ${this.editor.rows().map(row => row.querySelector('select').value).join(' + ')} = ${desired} s. Le scénario utilisera ce découpage ; tu peux ajuster les durées dans les cartes.`
             : `${this.desiredCount} plans proposés : ${proposal.parts.join(' + ')} = ${desired} s, selon les durées du modèle. Applique ce découpage pour préparer les cartes ; les textes et images restent protégés.`;
       if (this.hasRecapTarget) this.recapTarget.disabled = !ready;
-      if (this.hasCountApplyTarget) this.countApplyTarget.disabled = !this.desiredCount || !proposal.parts || Boolean(loss);
+      if (this.hasCountApplyTarget) {
+        this.countApplyTarget.disabled = !this.desiredCount || !proposal.parts || Boolean(loss);
+        this.countApplyTarget.hidden = Boolean(ready);
+      }
+      if (ready) this.noticeTarget.hidden = true;
     }
   }
 
@@ -168,7 +174,7 @@ export default class extends Controller {
     if (this.hasPlanCountTarget && this.continuityTarget.value !== 'single' && !this.desiredCount) { this.refresh(); this.planCountTarget.focus(); return false; }
     const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds, this.desiredCount);
     if (!proposal.parts) { this.refresh(); return false; }
-    const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt','sceneDescription','translatedIdentity','translationSource'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
+    const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt','sceneDescription','translatedIdentity','translationSource','promptOnly'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
     if (inputs.slice(proposal.parts.length).some(row => row.sceneDescription.trim())) { this.noticeTarget.textContent = 'Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.'; return false; }
     const prompts = this.editor.rows().map(row => row.querySelector('textarea').value);
     if (this.editor.rows().slice(proposal.parts.length).some(row => this.rowHasContent(row))) { this.noticeTarget.textContent = 'Ce découpage retirerait un plan déjà renseigné. Conserve le nombre actuel ou réaffecte ses textes et images avant de le réduire. Rien n’a été effacé.'; return false; }

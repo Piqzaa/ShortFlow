@@ -28,7 +28,7 @@ export default class extends Controller {
       subjectDetails: [...this.form.querySelectorAll('[name^="ai_idea[subjectDetails]"]')].filter(input => !input.disabled).map(input => [input.name, input.value]),
       shots: this.editor.rows().map(row => [
         row.querySelector('textarea').value, row.querySelector('select').value,
-        ...['startReference', 'endReference', 'referenceFit', 'sceneDescription', 'translatedIdentity', 'translationSource'].map(name => row.querySelector(`[name$="[${name}]"]`)?.value || ''),
+        ...['startReference', 'endReference', 'referenceFit', 'sceneDescription', 'translatedIdentity', 'translationSource', 'promptOnly'].map(name => row.querySelector(`[name$="[${name}]"]`)?.value || ''),
       ]),
     });
   }
@@ -226,6 +226,8 @@ export default class extends Controller {
       this.editor.listTarget.insertAdjacentHTML('beforeend', this.editor.prototypeTarget.innerHTML.replaceAll('__name__', String(index)));
       const row = this.editor.rows()[index];
       row.querySelector('textarea').value = shot.prompt;
+      const promptOnly = row.querySelector('[name$="[promptOnly]"]');
+      if (promptOnly) promptOnly.value = '1';
       const description = row.querySelector('[name$="[sceneDescription]"]');
       if (description) description.value = shot.description || '';
       for (const name of ['translatedIdentity', 'translationSource']) {

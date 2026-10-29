@@ -3,11 +3,11 @@
   {{ form_errors(shotForm) }}
   {{ form_widget(shotForm.translatedIdentity) }}{{ form_errors(shotForm.translatedIdentity) }}
   {{ form_widget(shotForm.translationSource) }}{{ form_errors(shotForm.translationSource) }}
+  {{ form_widget(shotForm.promptOnly) }}{{ form_errors(shotForm.promptOnly) }}
   <div class="shot-card-details" data-shot-details>
     {{ form_widget(shotForm.sceneDescription) }}{{ form_errors(shotForm.sceneDescription) }}
     {{ form_row(shotForm.prompt) }}
     <p class="library-note">Rédige les consignes vidéo en anglais, comme les propositions du scénario. Garde les dialogues et textes souhaités dans leur langue.</p>
-    <details class="story-context" data-shot-translated-context{% if not shotForm.translatedIdentity.vars.value and not shotForm.translationSource.vars.value and shotForm.translatedIdentity.vars.valid and shotForm.translationSource.vars.valid %} hidden{% endif %}{% if not shotForm.translatedIdentity.vars.valid or not shotForm.translationSource.vars.valid %} open{% endif %}><summary>Contexte avancé</summary><p data-shot-translated-identity>{{ shotForm.translatedIdentity.vars.value }}</p><p class="library-note">Ce contexte est ajouté au prompt pour l’identité et le style. Si tu changes les personnages, vérifie aussi ce contexte au récapitulatif ou détache-le.</p><button type="submit" name="plan_action" value="detach_translation:{{ shotIndex|default(0) }}" class="account-secondary" data-action="shot-editor#detachTranslation">Détacher ce contexte et reprendre manuellement</button></details>
     {% include 'ai/_shot_references.html.twig' %}
     <div class="story-row-actions">
       <button type="submit" class="account-secondary" name="plan_action" value="up:{{ shotIndex|default(0) }}" data-action="shot-editor#act">Monter</button>

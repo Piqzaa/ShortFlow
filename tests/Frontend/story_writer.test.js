@@ -20,9 +20,9 @@ function setup(fetch, document = {}) {
 test('applying a scenario keeps English directions and saves its French explanation separately', () => {
   const writer = setup(() => assert.fail('Applying must not request generation'));
   const prompt = { value: '', focus() {} }, seconds = { value: '' }, description = { value: '' }, title = { value: '' };
-  const identity = { value: '' }, source = { value: '' };
+  const identity = { value: '' }, source = { value: '' }, promptOnly = { value: '' };
   let scrolled = false;
-  const row = { scrollIntoView() { scrolled = true; }, querySelector: selector => selector === 'textarea' ? prompt : selector === 'select' ? seconds : selector.includes('sceneDescription') ? description : selector.includes('translatedIdentity') ? identity : selector.includes('translationSource') ? source : null };
+  const row = { scrollIntoView() { scrolled = true; }, querySelector: selector => selector === 'textarea' ? prompt : selector === 'select' ? seconds : selector.includes('sceneDescription') ? description : selector.includes('translatedIdentity') ? identity : selector.includes('translationSource') ? source : selector.includes('promptOnly') ? promptOnly : null };
   let changed = 0, updated = 0;
   const form = { querySelector: selector => selector.includes('[title]') ? title : null, dispatchEvent() { changed++; } };
   const editor = { rows: () => [row], listTarget: { replaceChildren() {}, insertAdjacentHTML() {} }, prototypeTarget: { innerHTML: '' }, update() { updated++; } };
@@ -35,6 +35,7 @@ test('applying a scenario keeps English directions and saves its French explanat
   assert.equal(description.value, 'Milo ouvre la boîte.');
   assert.equal(identity.value, 'A white cat.');
   assert.equal(source.value, 'a'.repeat(64));
+  assert.equal(promptOnly.value, '1');
   assert.equal(updated, 1);
   assert.equal(changed, 1);
   assert.equal(scrolled, true);

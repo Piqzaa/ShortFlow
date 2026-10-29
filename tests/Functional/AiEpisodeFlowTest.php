@@ -330,14 +330,29 @@ final class AiEpisodeFlowTest extends WebTestCase
         $this->flow()->save($episode, $episode->getRevision(), 'Milo', [['prompt' => 'White cat Milo. A static camera frames the cat opening the box.', 'seconds' => 10, 'sceneDescription' => 'Milo ouvre la boîte.', 'translatedIdentity' => 'A white cat in a room with a box.', 'translationSource' => \App\Service\StoryTextChecks::translationSource($episode->getPrompt(), ['characters' => $episode->getSeries()->getCharacters(), 'style' => $episode->getSeries()->getStyle()])]]);
         $quote = $this->flow()->quote($episode);
         self::assertStringNotContainsString('une pièce', $quote['references'][0]['prompt']);
+        $legacyHash = $quote['hash'];
         self::assertStringContainsString('A white cat in a room with a box.', $quote['references'][0]['prompt']);
         $job = new AiGeneration($this->owner, 'Nom de référence', '5 seconds. Reference1="Le chat dans la boîte".'."\nScene: ".$this->flow()->shots($episode)[0]->getPrompt(), 'kling-25', 10, '9:16', 70);
         (new \App\Service\VideoPromptLanguage())->assertGeneration($job, $this->flow()->shots($episode)[0]);
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         self::assertResponseIsSuccessful();
         self::assertInputValueSame('ai_idea[shots][0][translatedIdentity]', 'A white cat in a room with a box.');
-        self::assertSelectorTextContains('details[data-shot-translated-context]:not([open]) summary', 'Contexte avancé');
-        self::assertSelectorTextContains('[data-shot-translated-identity]', 'A white cat in a room with a box.');
+        self::assertSelectorNotExists('[data-shot-translated-context]');
+        self::assertInputValueSame('ai_idea[shots][0][promptOnly]', '1');
+        $crawler = $this->client->getCrawler();
+        $form = $crawler->selectButton('Voir le récapitulatif →')->form();
+        self::assertStringContainsString('A white cat in a room with a box.', $form['ai_idea[shots][0][prompt]']->getValue());
+        $form['ai_idea[shots][0][prompt]'] = 'A blue cat walks across the room in a static wide shot.';
+        $this->client->submit($form);
+        self::assertResponseRedirects();
+        $episode = $this->fresh($episode);
+        $quote = $this->flow()->quote($episode);
+        self::assertStringContainsString('A blue cat walks across the room', $quote['references'][0]['prompt']);
+        self::assertNotSame($legacyHash, $quote['hash']);
+        self::assertStringNotContainsString('A white cat', $quote['references'][0]['prompt']);
+        self::assertStringNotContainsString('Visual identity/style only', $quote['references'][0]['prompt']);
+        self::assertSame('A white cat in a room with a box.', $this->flow()->shots($episode)[0]->getInputs()['translatedIdentity']);
+        self::assertSame(0, $this->submissions);
         $episode->edit('Milo', 'Le sujet a changé.');
         $this->em()->flush();
         try {
@@ -347,23 +362,36 @@ final class AiEpisodeFlowTest extends WebTestCase
             self::assertStringContainsString('contexte source a changé', $error->getMessage());
         }
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
-        $this->client->submit($crawler->selectButton('Détacher ce contexte et reprendre manuellement')->form());
+        $this->client->submit($crawler->selectButton('Utiliser mes prompts relus')->form());
         self::assertResponseRedirects();
-        self::assertArrayNotHasKey('translatedIdentity', $this->flow()->shots($episode)[0]->getInputs());
-        self::assertStringContainsString('opening the box', $this->flow()->shots($episode)[0]->getPrompt());
+        $episode = $this->fresh($episode);
+        $shot = $this->flow()->shots($episode)[0];
+        self::assertSame('manual', $shot->getInputs()['promptOnly']);
+        self::assertSame('A white cat in a room with a box.', $shot->getInputs()['translatedIdentity']);
+        self::assertStringContainsString('A blue cat walks', $this->flow()->quote($episode)['references'][0]['prompt']);
+        self::assertSame(0, $this->submissions);
     }
 
-    public function testIncompleteTranslationContextKeepsItsDetachmentActionAccessible(): void
+    public function testIncompleteArchivedContextCanBeResumedManuallyWithoutInference(): void
     {
         $episode = $this->planned(false, 10);
         // Simulate incomplete stored metadata; the public save path correctly rejects it.
         $shot = $this->flow()->shots($episode)[0];
         $shot->configureInputs(array_replace($shot->getInputs(), ['translatedIdentity' => '', 'translationSource' => str_repeat('a', 64)]));
         $this->em()->flush();
-        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('details[data-shot-translated-context]:not([hidden]) button[value="detach_translation:0"]');
+        self::assertSelectorNotExists('[data-shot-translated-context]');
         self::assertInputValueSame('ai_idea[shots][0][translationSource]', str_repeat('a', 64));
+        $this->client->submit($crawler->selectButton('Voir le récapitulatif →')->form());
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('#ai-idea-form', 'contexte traduit du plan est incomplet');
+        $this->client->submit($this->client->getCrawler()->selectButton('Utiliser mes prompts relus')->form());
+        self::assertResponseRedirects();
+        $episode = $this->fresh($episode);
+        self::assertSame('manual', $this->flow()->shots($episode)[0]->getInputs()['promptOnly']);
+        self::assertSame(str_repeat('a', 64), $this->flow()->shots($episode)[0]->getInputs()['translationSource']);
+        self::assertNotEmpty($this->flow()->quote($episode)['hash']);
         self::assertSame(0, $this->submissions);
     }
 
@@ -850,7 +878,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         $this->client->submit($crawler->selectButton('up:2')->form());
         self::assertResponseStatusCodeSame(303);
-        self::assertSame(['Scene first', 'Scene third', 'Scene second'], array_map(static fn (AiShot $s): string => $s->getPrompt(), $this->flow()->shots($episode)));
+        self::assertSame(["Milo in space\nScene first", "Milo in space\nScene third", "Milo in space\nScene second"], array_map(static fn (AiShot $s): string => $s->getPrompt(), $this->flow()->shots($episode)));
         $crawler = $this->client->followRedirect();
         $this->client->submit($crawler->selectButton('remove:1')->form());
         self::assertResponseStatusCodeSame(303);
@@ -1022,7 +1050,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $this->em()->flush();
         $url = '/studio/series/episodes/'.$episode->getId();
         $crawler = $this->client->request('GET', $url);
-        self::assertSelectorCount(1, '[data-preparation-target="continuityPanel"] button[value="single"]');
+        self::assertSelectorCount(1, '.single-plan-action button[value="single"]');
         $form = $crawler->selectButton('Préparer un plan unique')->form();
         $form['ai_idea[model]'] = 'kling-3';
         $form['ai_idea[target]'] = '15';
@@ -1131,9 +1159,12 @@ final class AiEpisodeFlowTest extends WebTestCase
     public function testSingleClipCanUseAnExplicitlyChosenDurationWithoutChangingItsTextOrModel(): void
     {
         $episode = $this->planned(false, 10);
-        $original = $this->flow()->shots($episode)[0]->getPrompt();
+        $originalScene = $this->flow()->shots($episode)[0]->getPrompt();
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         $form = $crawler->selectButton('Préparer un plan unique')->form();
+        $original = $form['ai_idea[shots][0][prompt]']->getValue();
+        self::assertStringContainsString($originalScene, $original);
+        self::assertStringContainsString('Milo is a ginger cat.', $original);
         $form['ai_idea[target]'] = '5';
         $this->client->submit($form);
         self::assertResponseIsSuccessful();

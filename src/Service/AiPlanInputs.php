@@ -110,17 +110,23 @@ final class AiPlanInputs
     }
 
     /** @param array<string,mixed> $row
-     * @return array{startReference:?string,endReference:?string,referenceFit:string,imagePrompt?:string,sceneDescription?:string,translatedIdentity?:string,translationSource?:string}
+     * @return array{startReference:?string,endReference:?string,referenceFit:string,imagePrompt?:string,sceneDescription?:string,translatedIdentity?:string,translationSource?:string,promptOnly?:string}
      */
     public function row(User $owner, array $row, string $defaultFit): array
     {
         $result = ['startReference' => null, 'endReference' => null, 'referenceFit' => $row['referenceFit'] ?? $defaultFit];
+        if (!in_array($row['promptOnly'] ?? '', ['', '1', 'manual'], true)) {
+            throw new \RuntimeException('Le mode de consignes du plan est invalide. Recharge la préparation.');
+        }
+        if (in_array($row['promptOnly'] ?? '', ['1', 'manual'], true)) {
+            $result['promptOnly'] = $row['promptOnly'];
+        }
         $identity = $row['translatedIdentity'] ?? '';
         $source = $row['translationSource'] ?? '';
-        if (!is_string($identity) || mb_strlen($identity) > 300 || !is_string($source) || ('' !== $source && !preg_match('/^[a-f0-9]{64}$/D', $source)) || (('' !== trim($identity)) !== ('' !== $source))) {
-            throw new \RuntimeException('Le contexte traduit du plan est incomplet. Propose un nouveau scénario ou détache ce contexte pour reprendre manuellement.');
+        if (!is_string($identity) || mb_strlen($identity) > 300 || !is_string($source) || ('' !== $source && !preg_match('/^[a-f0-9]{64}$/D', $source)) || ('manual' !== ($row['promptOnly'] ?? '') && (('' !== trim($identity)) !== ('' !== $source)))) {
+            throw new \RuntimeException('Le contexte traduit du plan est incomplet. Propose un nouveau scénario ou utilise « Reprise manuelle » après relecture de tes prompts.');
         }
-        if ('' !== trim($identity)) {
+        if ('' !== trim($identity) || ('manual' === ($row['promptOnly'] ?? '') && '' !== $source)) {
             $result['translatedIdentity'] = trim($identity);
             $result['translationSource'] = $source;
         }

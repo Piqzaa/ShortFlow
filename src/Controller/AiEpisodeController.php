@@ -77,7 +77,7 @@ final class AiEpisodeController extends AbstractController
             $form = $this->createForm(AiStoryStartType::class, ['duration' => 30, 'continuity' => 'independent', 'mute' => false, 'revision' => (string) $episode->getRevision()], ['csrf_token_id' => 'story_start_'.$id, 'layouts' => array_column($layouts, 'value', 'label')]);
         } elseif ('draft' === $episode->getFlowState()) {
             $rows = array_map(static fn (AiShot $s): array => ['prompt' => $s->getPrompt(), 'seconds' => $s->getSeconds()] + $s->getInputs(), $flow->shots($episode));
-            $form = $this->createForm(AiStoryType::class, ['title' => $episode->getTitle(), 'shots' => $rows, 'revision' => (string) $episode->getRevision()], ['durations' => AiCatalog::MODELS[$episode->getFlowRecipe()['model']]['seconds'], 'csrf_token_id' => 'story_'.$id]);
+            $form = $this->createForm(AiStoryType::class, ['title' => $episode->getTitle(), 'shots' => $rows, 'revision' => (string) $episode->getRevision()], ['durations' => AiCatalog::MODELS[$episode->getFlowRecipe()['model']]['seconds'], 'visual_context' => $episode->getFlowRecipe()['visualContext'] ?? ($episode->isStandalone() ? $episode->getPrompt() : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle()), 'csrf_token_id' => 'story_'.$id]);
         }
         if ($form) {
             $form->handleRequest($request);

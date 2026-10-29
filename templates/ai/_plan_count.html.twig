@@ -1,7 +1,3 @@
-<div data-preparation-target="countPanel">
-  {% if layoutPrepared|default(false) %}<p class="library-note" role="status">Découpage préparé sur cette page. Vérifie les scènes puis ouvre le récapitulatif pour enregistrer la préparation avant de quitter.</p>{% endif %}
-  {{ form_row(ideaForm.planCount,{attr:{'data-preparation-target':'planCount','data-action':'change->preparation#planCountChanged'}}) }}
-  <p class="library-note" data-preparation-target="countStatus" role="status" aria-live="polite">Choisis le nombre de plans pour répartir la durée totale avant de proposer le scénario. Les durées doivent être acceptées par le modèle ; tu peux ensuite les ajuster dans les cartes.</p>
-  <button type="submit" class="account-secondary" name="intent" value="replan" data-preparation-target="countApply" data-action="preparation#redistribute">Appliquer ce découpage</button>
-  <noscript><p class="library-note">Applique ce découpage pour préparer les cartes avant de les écrire. Aucun appel de génération n’est lancé.</p></noscript>
+<div class="preparation-count" data-preparation-target="countPanel">
+  {{ form_row(ideaForm.planCount,{label:'Nombre de plans',attr:{'data-preparation-target':'planCount','data-action':'change->preparation#planCountChanged'}}) }}
 </div>

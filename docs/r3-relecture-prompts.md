@@ -1,5 +1,7 @@
 # Correction de relecture des scènes — 29 octobre 2026
 
+**Ajustement suivant :** le contexte avancé disparaît désormais des cartes ; le prompt complet devient la référence, avec réglages durée/mode/nombre regroupés et reprise manuelle globale. [Comportement actuel, migration de présentation sans perte et preuves](r3-reglages-compacts.md). Ce complément remplace les descriptions historiques de contexte replié ci-dessous.
+
 Complément après essai du propriétaire, avant R3.4. Grand R3 reste en cours.
 
 ## Ajustement suivant — prompt directement visible

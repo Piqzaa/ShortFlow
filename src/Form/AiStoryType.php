@@ -15,7 +15,7 @@ final class AiStoryType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('title', TextType::class, ['label' => 'Nom de la vidéo', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 120)], 'attr' => ['maxlength' => 120]])
-            ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => $options['durations']], 'label' => false, 'allow_add' => true, 'allow_delete' => true, 'constraints' => [new Assert\Count(min: 1, max: 8)]])
+            ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => $options['durations'], 'visual_context' => $options['visual_context']], 'label' => false, 'allow_add' => true, 'allow_delete' => true, 'constraints' => [new Assert\Count(min: 1, max: 8)]])
             ->add('revision', HiddenType::class, ['constraints' => [new Assert\Regex('/^\d+$/D')]]);
     }
 
@@ -23,5 +23,7 @@ final class AiStoryType extends AbstractType
     {
         $resolver->setRequired('durations');
         $resolver->setAllowedTypes('durations', 'array');
+        $resolver->setDefault('visual_context', '');
+        $resolver->setAllowedTypes('visual_context', 'string');
     }
 }
