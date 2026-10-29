@@ -316,6 +316,31 @@ test('choosing a transition enables the ending frame; unchecking requires an exp
   assert.equal(c.endPanelTarget.hidden, true);
 });
 
+test('subject mode hides the whole ending option and preserves its stored image for later', () => {
+  const c = creation();
+  c.modelsValue.subject = {...c.modelsValue.kling, image:true, subjectReference:true};
+  c.modelsValue.image = {...c.modelsValue.kling, image:true, endImageField:'end_image_url'};
+  Object.assign(c, {hasSourceTarget:true,sourceTarget:{value:'subject'},hasUseEndTarget:true,useEndTarget:{checked:true},hasEndOptionTarget:true,endOptionTarget:{},hasReferencePanelTarget:true,referencePanelTarget:{querySelector:()=>null},hasEndPanelTarget:true,endPanelTarget:{},hasImageSettingsTarget:true,imageSettingsTarget:{},endReferenceTarget:{value:'stored-end.jpg'}});
+  c.modelTarget.value='subject'; c.modelTarget.dispatchEvent=()=>{};
+  c.changeSource(); c.changeModel();
+  assert.equal(c.referencePanelTarget.hidden,false);
+  assert.equal(c.endOptionTarget.hidden,true);
+  assert.equal(c.endPanelTarget.hidden,true);
+  assert.equal(c.useEndTarget.checked,false);
+  assert.equal(c.useEndTarget.disabled,true);
+  assert.equal(c.imageSettingsTarget.hidden,true);
+  assert.equal(c.endReferenceTarget.value,'stored-end.jpg');
+  c.sourceTarget.value='image'; c.modelTarget.value='image';
+  c.changeSource(); c.changeModel();
+  assert.equal(c.endOptionTarget.hidden,false);
+  assert.equal(c.useEndTarget.disabled,false);
+  c.useEndTarget.checked=true; c.changeModel();
+  assert.equal(c.endPanelTarget.hidden,false);
+  c.sourceTarget.value='text'; c.changeSource(); c.changeModel();
+  assert.equal(c.endOptionTarget.hidden,true);
+  assert.equal(c.endReferenceTarget.value,'stored-end.jpg');
+});
+
 test('image fees are included in the estimate and price ordering', () => {
   const c = creation();
   assert.equal(c.price({seconds:[5],rateMicros:70000,fixedMicros:2000},5),36);

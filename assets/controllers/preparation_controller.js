@@ -11,7 +11,13 @@ export default class extends Controller {
   get desiredCount() { return this.continuityTarget.value === 'single' ? 1 : this.hasPlanCountTarget ? Number(this.planCountTarget.value) || null : null; }
 
   guardPending(event) {
-    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { event.preventDefault(); this.noticeTarget.textContent = 'Attends la fin de l’import des images avant de préparer la vidéo.'; }
+    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { event.preventDefault(); this.showNotice('Attends la fin de l’import des images avant de préparer la vidéo.'); }
+  }
+
+  showNotice(message) {
+    this.noticeTarget.hidden = false;
+    this.noticeTarget.textContent = message;
+    if (this.hasCountInfoTarget) this.countInfoTarget.hidden = true;
   }
 
   change(event) {
@@ -36,22 +42,26 @@ export default class extends Controller {
     this.noticeTarget.hidden = false;
     const model = this.model;
     if (this.hasCountPanelTarget) this.countPanelTarget.hidden = this.continuityTarget.value === 'single';
-    if (this.hasCountInfoTarget) this.countInfoTarget.hidden = this.continuityTarget.value === 'single';
-    if (this.hasAudioHelpTarget) this.audioHelpTarget.textContent = model?.audio ? 'Ce modèle génère son propre audio pour chaque clip. Le raccord par image ne transmet pas le son précédent. « Couper le son » agit au montage, sans réduire le coût de génération.' : model ? 'Ce modèle produit des clips sans audio. Tu peux ajouter une bande sonore dans le montage. Le réglage ci-dessous concerne uniquement le son conservé à l’export.' : 'Choisis un modèle pour connaître son audio. Couper le son au montage ne réduit pas le coût de génération.';
+    if (this.hasCountInfoTarget) this.countInfoTarget.hidden = this.continuityTarget.value === 'single' || !model;
+    if (this.hasAudioHelpTarget) {
+      this.audioHelpTarget.hidden = !model;
+      this.audioHelpTarget.textContent = model?.audio ? 'Audio généré par clip ; le raccord ne transmet pas le son précédent.' : 'Ce modèle génère des clips sans audio.';
+    }
     const reference = this.element.querySelector('[data-creation-target="reference"]').value;
     const firstFrame = this.editor?.rows()[0]?.querySelector('[name$="[startReference]"]')?.value;
     const possible = Boolean(model?.image && (reference || firstFrame) && !model.subjectReference && !model.requiresEnd);
     const single = !this.editor || this.editor.rows().length <= 1;
     this.continuityPanelTarget.hidden = false;
-    this.singleTarget.hidden = !single;
+    this.singleTarget.hidden = true;
     this.singleTarget.textContent = this.editor?.rows().length === 1 ? 'Un seul clip : aucun enchaînement à régler.' : 'Le découpage sera proposé avec ton modèle.';
     this.fixContinuityTarget.hidden = single || possible || this.continuityTarget.value !== 'linked';
     this.continuityTarget.querySelector('[value="linked"]').disabled = false;
     this.continuityHelpTarget.textContent = this.continuityTarget.value === 'linked' ? (possible ? 'Chaque clip repart de la dernière image du précédent. Cela aide les raccords, sans garantir un plan continu ni un personnage identique.' : 'Le raccord depuis une image exige un premier cadre et un modèle compatible. Il ne transmet ni le mouvement ni le son du clip précédent.') : 'Clips indépendants, assemblés avec des coupes visibles. Sans référence visuelle commune, le personnage peut changer entre les scènes. Pour prolonger une action, choisis un modèle image compatible et une référence.';
     if (this.continuityTarget.value === 'single') this.continuityHelpTarget.textContent = single ? 'Une prise continue demandée en un seul appel. Le modèle peut introduire une coupe ; aucun raccord entre générations.' : 'Le mode est choisi, mais tes scènes ne sont pas encore réunies. Utilise « Préparer un plan unique » ci-dessous ou conserve plusieurs scènes.';
-    if (this.hasSingleActionTarget) this.singleActionTarget.hidden = this.continuityTarget.value !== 'single';
+    if (this.hasSingleActionTarget) this.singleActionTarget.hidden = this.continuityTarget.value !== 'single' || !model;
     if (!model || !this.editor) {
       if (!model) {
+        this.showNotice('Choisis un modèle pour préparer tes plans.');
         for (const option of this.totalTarget.options) { option.hidden = option.disabled = false; if (option.value) option.textContent = `${option.value} s`; }
         if (this.hasSingleActionTarget) {
           this.singleStatusTarget.textContent = 'Choisis un modèle pour connaître les durées possibles en un seul clip. Tes scènes restent conservées.';
@@ -63,6 +73,7 @@ export default class extends Controller {
           this.countStatusTarget.textContent = 'Choisis un modèle avant de répartir la durée et le nombre de plans.';
           for (const option of this.planCountTarget.options) option.hidden = option.disabled = false;
           if (this.hasCountApplyTarget) this.countApplyTarget.disabled = true;
+          if (this.hasCountApplyTarget) this.countApplyTarget.hidden = true;
           if (this.hasRecapTarget) this.recapTarget.disabled = true;
         }
       }
@@ -115,8 +126,8 @@ export default class extends Controller {
       this.countStatusTarget.textContent = !this.desiredCount ? possibleCounts.length ? 'Choisis combien de plans préparer. La durée sera répartie avant la proposition de scénario ; tes scènes actuelles restent conservées.' : `Aucun découpage de ${desired} s en 2 à 8 plans n’est compatible avec ce modèle. Augmente la durée totale ou choisis un plan unique ; tes scènes restent conservées.`
         : !proposal.parts ? `Ce modèle ne répartit pas ${desired} s en ${this.desiredCount} plans. Choisis un autre nombre ou un total proche : ${proposal.nearby.join(' ou ')} s.`
           : loss ? 'Ce nombre retirerait des plans déjà renseignés. Conserve le nombre actuel ou reporte leurs textes et images dans les plans conservés avant de réduire. Rien n’a été effacé.'
-          : ready ? `${this.desiredCount} plans · ${this.editor.rows().map(row => row.querySelector('select').value).join(' + ')} = ${desired} s. Le scénario utilisera ce découpage ; tu peux ajuster les durées dans les cartes.`
-            : `${this.desiredCount} plans proposés : ${proposal.parts.join(' + ')} = ${desired} s, selon les durées du modèle. Applique ce découpage pour préparer les cartes ; les textes et images restent protégés.`;
+          : ready ? `${this.desiredCount} plans · ${this.editor.rows().map(row => row.querySelector('select').value).join(' + ')} = ${desired} s.`
+            : `${this.desiredCount} plans proposés : ${proposal.parts.join(' + ')} = ${desired} s. Applique ce découpage pour préparer les cartes.`;
       if (this.hasRecapTarget) this.recapTarget.disabled = !ready;
       if (this.hasCountApplyTarget) {
         this.countApplyTarget.disabled = !this.desiredCount || !proposal.parts || Boolean(loss);
@@ -124,6 +135,7 @@ export default class extends Controller {
       }
       if (ready) this.noticeTarget.hidden = true;
     }
+    if (this.continuityTarget.value === 'linked' && !possible) this.showNotice('Le raccord demande un modèle image compatible et une image de début.');
   }
 
   planCountChanged(event) { this.redistribute(event); }
@@ -170,14 +182,14 @@ export default class extends Controller {
   redistribute(event) {
     event?.preventDefault();
     if (!this.editor || !this.model) return false;
-    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { this.noticeTarget.textContent = 'Attends la fin de l’import des images avant de modifier le découpage.'; return false; }
+    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { this.showNotice('Attends la fin de l’import des images avant de modifier le découpage.'); return false; }
     if (this.hasPlanCountTarget && this.continuityTarget.value !== 'single' && !this.desiredCount) { this.refresh(); this.planCountTarget.focus(); return false; }
     const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds, this.desiredCount);
     if (!proposal.parts) { this.refresh(); return false; }
     const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt','sceneDescription','translatedIdentity','translationSource','promptOnly'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
-    if (inputs.slice(proposal.parts.length).some(row => row.sceneDescription.trim())) { this.noticeTarget.textContent = 'Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.'; return false; }
+    if (inputs.slice(proposal.parts.length).some(row => row.sceneDescription.trim())) { this.showNotice('Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.'); return false; }
     const prompts = this.editor.rows().map(row => row.querySelector('textarea').value);
-    if (this.editor.rows().slice(proposal.parts.length).some(row => this.rowHasContent(row))) { this.noticeTarget.textContent = 'Ce découpage retirerait un plan déjà renseigné. Conserve le nombre actuel ou réaffecte ses textes et images avant de le réduire. Rien n’a été effacé.'; return false; }
+    if (this.editor.rows().slice(proposal.parts.length).some(row => this.rowHasContent(row))) { this.showNotice('Ce découpage retirerait un plan déjà renseigné. Conserve le nombre actuel ou réaffecte ses textes et images avant de le réduire. Rien n’a été effacé.'); return false; }
     this.editor.listTarget.replaceChildren();
     proposal.parts.forEach((seconds, index) => {
       this.editor.listTarget.insertAdjacentHTML('beforeend', this.editor.prototypeTarget.innerHTML.replaceAll('__name__', String(index)));

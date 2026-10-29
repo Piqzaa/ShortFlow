@@ -1,5 +1,7 @@
 # Réglages compacts et prompt complet — 29 octobre 2026
 
+**Complément suivant :** fin masquée en mode personnage, aide de découpage unique, modèle/connexion rapprochés, nom masqué sans perte et son directement accessible. [État actuel et preuves](r3-studio-simplifie.md). Le bilan ci-dessous décrit le complément précédent.
+
 Complément demandé après essai du Studio, avant R3.4. Le propriétaire souhaite moins de lignes pour durée/mode/nombre de plans et aucun contexte avancé répété dans les cartes. R3.4 reste non commencé ; grand R3 en cours.
 
 ## Comportement livré

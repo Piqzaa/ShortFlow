@@ -211,6 +211,37 @@ final class AiEpisodeFlowTest extends WebTestCase
         return $episode;
     }
 
+    public function testSubjectStudioHasCompactOptionsAndNoEndingFrameSuggestion(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $crawler->selectButton('Voir le récapitulatif →')->form()->getPhpValues();
+        $values['intent'] = 'replan';
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['source' => 'subject', 'model' => 'vidu-q1-subject', 'prompt' => 'A white cat walks across a quiet room.', 'title' => 'Mon nom à conserver', 'target' => 5, 'seconds' => 5, 'ratio' => '9:16', 'continuity' => 'single', 'planCount' => '', 'accessMode' => 'api']);
+        $crawler = $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-creation-target="endOption"][hidden]');
+        self::assertSelectorExists('input[type="hidden"][name="ai_idea[title]"]');
+        self::assertInputValueSame('ai_idea[title]', 'Mon nom à conserver');
+        self::assertSelectorCount(2, '.creation-options-grid > details');
+        self::assertSelectorExists('#ai-idea-form > .creation-audio input[type="checkbox"][name="ai_idea[mute]"]');
+        $summaries = $crawler->filter('summary')->each(static fn ($node): string => trim($node->text()));
+        self::assertNotContains('Comprendre le découpage', $summaries);
+        self::assertNotContains('Personnaliser le nom de cette création', $summaries);
+        self::assertNotContains('Son des clips', $summaries);
+        $values = $crawler->selectButton('Voir le récapitulatif →')->form()->getPhpValues();
+        $values['intent'] = 'replan';
+        $values['ai_idea']['useEnd'] = '1';
+        $crawler = $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('[data-creation-target="endOption"]:not([hidden]) input[name="ai_idea[useEnd]"][checked]');
+        $form = $crawler->selectButton('Appliquer ce découpage')->form();
+        $form['ai_idea[useEnd]'] = false;
+        $this->client->submit($form);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-creation-target="endOption"][hidden]');
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testImageInstructionsSurviveSavingAndStaySeparateFromVideoPrompts(): void
     {
         $episode = $this->planned(false, 10);

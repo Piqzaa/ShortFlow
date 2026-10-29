@@ -33,7 +33,8 @@ test('autosave preserves edits on departure, ignores late replies and never post
   assert.equal(x.requests[1].url, '/studio/creation/idee');
   x.ok(1); await latestSave;
   x.ok(0); await oldSave;
-  assert.match(x.c.statusTarget.textContent, /enregistrés/);
+  assert.equal(x.c.statusTarget.hidden, true);
+  assert.equal(x.c.statusTarget.textContent, '');
   assert.match(x.c.saved, /prompt%5D=C/);
   x.c.submit(); x.edit('D'); await x.c.flush();
   assert.equal(x.requests.length, 2);
@@ -49,6 +50,7 @@ test('reverting while a save is pending still saves the reverted idea; errors al
   x.requests[1].resolve({ ok: false }); await reverted;
   assert.equal(x.c.retryTarget.hidden, false);
   assert.match(x.c.statusTarget.textContent, /impossible/);
+  assert.equal(x.c.statusTarget.hidden, false);
   const retry = x.c.flush(); x.ok(2); await retry;
   assert.equal(x.c.retryTarget.hidden, true);
 });

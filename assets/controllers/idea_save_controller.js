@@ -10,7 +10,7 @@ export default class extends Controller {
     this.saved = this.snapshot();
     this.latest = this.saved;
     this.stopped = false;
-    this.statusTarget.hidden = false;
+    this.statusTarget.hidden = true;
   }
 
   snapshot() {
@@ -23,6 +23,7 @@ export default class extends Controller {
     if (this.stopped || this.snapshot() === this.saved && this.latest === this.saved && !this.failed) return;
     clearTimeout(this.timer);
     this.statusTarget.textContent = 'Enregistrement…';
+    this.statusTarget.hidden = false;
     this.timer = setTimeout(() => this.flush(), event?.type === 'change' ? 0 : 500);
   }
 
@@ -48,13 +49,15 @@ export default class extends Controller {
       this.failed = false;
       this.saved = snapshot;
       if (snapshot === this.snapshot()) {
-        this.statusTarget.textContent = 'Idée et réglages enregistrés pour cette session.';
+        this.statusTarget.textContent = '';
+        this.statusTarget.hidden = true;
       } else {
         this.change();
       }
     } catch {
       if (sequence !== this.sequence || this.stopped) return;
       this.failed = true;
+      this.statusTarget.hidden = false;
       this.statusTarget.textContent = 'Enregistrement impossible. Garde cet onglet ouvert et réessaie avant de partir.';
       this.retryTarget.hidden = false;
     }

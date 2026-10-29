@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult', 'source', 'reference', 'referencePanel', 'useEnd', 'endReference', 'endPanel', 'imageFit', 'imageSettings', 'startFrame', 'endFrame', 'startPreview', 'endPreview', 'framingNotice', 'recommendations', 'recommendation', 'modelDetails', 'selectedModel'];
+  static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult', 'source', 'reference', 'referencePanel', 'useEnd', 'endOption', 'endReference', 'endPanel', 'imageFit', 'imageSettings', 'startFrame', 'endFrame', 'startPreview', 'endPreview', 'framingNotice', 'recommendations', 'recommendation', 'modelDetails', 'selectedModel'];
   static values = { models: Object, connected: Object, providers: Object };
 
   connect() {
@@ -35,9 +35,10 @@ export default class extends Controller {
   changeSource() {
     if (!this.hasSourceTarget) return;
     if (this.sourceMode() !== 'image' && this.hasUseEndTarget) this.useEndTarget.checked = false;
+    if (this.hasEndOptionTarget) this.endOptionTarget.hidden = this.sourceMode() !== 'image';
     const image = this.sourceMode() !== 'text';
     this.referencePanelTarget.hidden = !image;
-    if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = !image;
+    if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = this.sourceMode() !== 'image';
     const allowed = Object.keys(this.modelsValue).filter(id => this.modelMode(this.modelsValue[id]) === this.sourceMode() && (!image || !this.hasUseEndTarget || !this.useEndTarget.checked || this.modelsValue[id].endImageField));
     if (!allowed.includes(this.modelTarget.value)) {
       this.modelTarget.value = '';
@@ -85,7 +86,7 @@ export default class extends Controller {
       frame.style.maxWidth = `calc(var(--reference-height, 300px) * ${a / b})`;
       preview.style.objectFit = fit;
     }
-    if (this.hasFramingNoticeTarget) this.framingNoticeTarget.textContent = subject ? 'Référence de personnage : image entière envoyée pour guider son apparence. Le modèle choisit ses plans ; cette image ne fixe ni le début ni la fin.' : ratio === 'auto'
+    if (this.hasFramingNoticeTarget) this.framingNoticeTarget.textContent = subject ? 'Référence d’apparence : elle ne fixe ni le début ni la fin du clip.' : ratio === 'auto'
       ? 'Format d’origine conservé. L’image de fin est ajustée au même cadre.'
       : `${ratio || 'Choisis un format'} · ${fit === 'contain' ? 'image entière, bandes noires si nécessaire' : 'recadrage centré'}. Cet aperçu sera repris au récapitulatif.`;
     if (event?.type === 'change') this.referenceTarget.dispatchEvent(new Event('change', {bubbles:true}));
@@ -94,13 +95,14 @@ export default class extends Controller {
   changeModel() {
     if (this.hasPickerTarget) this.syncPicker();
     const model = this.modelsValue[this.modelTarget.value];
-    if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = this.sourceMode() === 'text' || Boolean(model?.subjectReference);
+    if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = this.sourceMode() !== 'image' || Boolean(model?.subjectReference);
+    if (this.hasEndOptionTarget) this.endOptionTarget.hidden = this.sourceMode() !== 'image' || Boolean(model?.subjectReference);
     if (model?.requiresEnd && this.hasUseEndTarget && !this.useEndTarget.checked) {
       this.useEndTarget.checked = true;
       this.changeSource();
       return;
     }
-    if (this.hasEndPanelTarget) this.endPanelTarget.hidden = this.sourceMode() === 'text' || !this.useEndTarget.checked;
+    if (this.hasEndPanelTarget) this.endPanelTarget.hidden = this.sourceMode() !== 'image' || !this.useEndTarget.checked;
     if (this.hasReferencePanelTarget) {
       const label = this.referencePanelTarget.querySelector('label');
       if (label) label.textContent = model?.subjectReference || this.sourceMode() === 'subject' ? 'Image principale du sujet' : 'Début du premier plan';
@@ -141,7 +143,8 @@ export default class extends Controller {
       if (name && model) name.textContent = model.name;
     });
     const selected = this.modelsValue[this.modelTarget.value];
-    this.selectedModelTarget.textContent = selected ? `Sélection : ${selected.name} · ${selected.quality === '4k' ? '4K' : selected.quality}` : 'Choisis une option ou explore les autres modèles.';
+    this.selectedModelTarget.hidden = !selected;
+    this.selectedModelTarget.textContent = selected ? `Sélection : ${selected.name} · ${selected.quality === '4k' ? '4K' : selected.quality}` : '';
   }
 
   syncPicker() {
@@ -358,7 +361,7 @@ export default class extends Controller {
     if (this.hasAccessDetailsTarget && !this.accessTarget.value) this.accessDetailsTarget.open = true;
     if (this.hasBillingTarget) {
       const name = this.providersValue?.[model?.provider] || model?.provider || '';
-      this.billingTarget.textContent = model ? `${name} · ${mcp ? 'connexion navigateur' : 'clé API'} ${connected ? 'enregistrée' : 'à connecter'} · facturation chez ${name}` : 'Connexion et facturation';
+      this.billingTarget.textContent = model ? `${name} · ${mcp ? 'connexion navigateur' : 'clé API'} ${connected ? 'enregistrée' : 'à connecter'}` : 'Connexion du fournisseur';
     }
     this.connectTarget.hidden = Boolean(this.hasConnectionTarget || (model && connected));
     this.connectTarget.textContent = mcp ? 'Connecter Fal en gardant l’idée' : 'Ajouter ma clé en gardant l’idée';

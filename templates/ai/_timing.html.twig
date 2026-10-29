@@ -4,8 +4,8 @@
   {% include 'ai/_plan_count.html.twig' %}
 </div>
 {% include 'ai/_plan_count_status.html.twig' %}
-<p class="library-note" data-preparation-target="notice" role="status">Choisis un modèle pour obtenir un découpage compatible. Le coût total sera confirmé avant toute génération.</p>
-<p class="library-note" data-preparation-target="single">Un seul clip : aucun enchaînement à régler.</p>
-<details class="creation-details preparation-timing-help"><summary>Comprendre le découpage</summary><p class="library-note" data-preparation-target="continuityHelp">Plusieurs scènes assemblées, ou une action prolongée avec un modèle image compatible.</p></details>
+<p class="library-note preparation-feedback" data-preparation-target="notice" role="status">Choisis un modèle pour préparer tes plans.</p>
+<p data-preparation-target="single" hidden></p>
+<p data-preparation-target="continuityHelp" hidden></p>
 {% include 'ai/_single_plan.html.twig' %}
 <button type="button" class="account-secondary" data-preparation-target="fixContinuity" data-action="preparation#imageMode">Choisir un modèle image et sa référence</button>

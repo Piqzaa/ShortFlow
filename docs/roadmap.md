@@ -4,6 +4,8 @@ Mise à jour : **29 octobre 2026**. Ce document est la source unique des priorit
 
 ## Repère de reprise immédiat
 
+- **Dernier retour UI avant R3.4 :** référence d'apparence distincte des cadres, fin masquée en personnage/texte avec correction native d'un ancien état coché ; aide unique, modèle/connexion rapprochés, titre conservé caché et son direct. **100 PHP ciblés / 1 881 assertions**, **167 frontend**, 30 Twig/style/check/build et recette de page réelle synthétique desktop/mobile/clavier réussis. [Pédagogie et preuves](r3-studio-simplifie.md). Pas de nouvelle suite complète ; 787 / 8 971 ci-dessous historique avant ce dernier retour. R3.4 non commencé.
+
 - **Dernier complément avant R3.4 :** réglages durée/mode/nombre compacts et prompt complet sans contexte avancé dans les cartes. Provenance conservée, reprise manuelle explicite sans inférence, devis et consentements maintenus. **787 PHP / 8 971 assertions**, puis **7 / 50 ciblés**, **165 frontend**, contrôles statiques et recette synthétique desktop/mobile/clavier verts. [Pédagogie et preuves actuelles](r3-reglages-compacts.md). R3.4 non commencé ; grand R3 en cours.
 
 - **Phase actuelle :** **Grand R3 en cours, R3.1–R3.3 terminés**. Grand R2 terminé, R2.1–R2.7 validés avec limitations explicites et revue globale indépendante. Décision du propriétaire conservée : préparation automatique des scénarios, relecture et confirmation manuelle du devis de chaque vidéo. Anciennes autorisations automatiques bloquées avant nouveau POST ; récupération des demandes déjà transmises conservée. Aucune qualité audiovisuelle ni fiabilité narrative autonome certifiée. [Bilan global R2](r2-revue-cloture.md).
@@ -246,6 +248,13 @@ Après lancement : amélioration fondée sur les retours ; quelques guides/blog 
 Message de reprise suggéré : « Lis AGENTS.md puis docs/roadmap.md, vérifie le journal et l'état Git, résume le prochain point exact puis reprends seulement ce point et ses vérifications, sans action externe réelle non autorisée. »
 
 ## Journal de progression
+
+### 29 octobre 2026 — Référence de personnage et contrôles Studio simplifiés
+
+- Demande explicite du propriétaire avant reprise de roadmap : image de fin non proposée en personnage, moins de textes/clics. Case et import masqués en texte/personnage ; référence enregistrée conservée. Le mode personnage utilise le champ de référence du modèle, sans envoi comme image de fin. Options modèle/connexion sur une ligne desktop, aide unique, titre caché conservé et son directement accessible. Sauvegarde inchangée, succès masqué et erreurs/reprise visibles.
+- [Comportement, fichiers, flux, commandes et recette](r3-studio-simplifie.md). **167 frontend**, **100 PHP / 1 881 assertions ciblés** verts, 30 Twig/style/check/build réussis. Premier passage 100 / 1 874 avec une erreur d'attente du nouveau sélecteur de test, corrigée ; aucun service PHP applicatif ni schéma changé, aucune nouvelle suite complète. Revue indépendante a fait conserver le décochage d'une ancienne fin sans JS, parcours 422 → correction → 200 testé puis constat levé.
+- Recette HTML réel exporté de test, compte temporaire retiré, sauvegarde simulée et aucun POST applicatif/fournisseur ; desktop/mobile/clavier, options alignées, 375/375 sans débordement ni erreur console. Cache/assets et quatre workers actualisés hors traitement actif.
+- Commit local `fix: simplify studio controls and hide unsupported end frames`, aucun push, modèle réel, coût, média, publication, activation ou migration. **R3.4 reste le prochain point**, non commencé ; grand R3 en cours, revue globale R3.7 à faire.
 
 ### 29 octobre 2026 — Réglages compacts et prompt complet
 

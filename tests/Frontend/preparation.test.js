@@ -37,6 +37,29 @@ function setup(count = 3) {
   return { controller, rows };
 }
 
+test('the empty studio shows one model hint and an import refusal always becomes visible', () => {
+  const {controller}=setup(0);
+  controller.selectedModel=null;
+  controller.hasCountInfoTarget=true; controller.countInfoTarget={};
+  controller.hasPlanCountTarget=true; controller.planCountTarget={value:'',options:[]};
+  controller.hasCountPanelTarget=true; controller.countPanelTarget={};
+  controller.countStatusTarget={}; controller.hasCountApplyTarget=true; controller.countApplyTarget={};
+  controller.refresh();
+  assert.equal(controller.noticeTarget.hidden,false);
+  assert.equal(controller.noticeTarget.textContent,'Choisis un modèle pour préparer tes plans.');
+  assert.equal(controller.singleTarget.hidden,true);
+  assert.equal(controller.singleActionTarget.hidden,true);
+  assert.equal(controller.countInfoTarget.hidden,true);
+  assert.equal(controller.countApplyTarget.hidden,true);
+  controller.noticeTarget.hidden=true;
+  controller.element.querySelector=()=>({dataset:{planReferenceBusy:'true'}});
+  let prevented=false;
+  controller.guardPending({preventDefault(){prevented=true;}});
+  assert.equal(prevented,true);
+  assert.equal(controller.noticeTarget.hidden,false);
+  assert.match(controller.noticeTarget.textContent,/fin de l’import/);
+});
+
 test('choosing single exposes conversion and native duration choices without changing scenes', () => {
   const {controller,rows} = setup();
   controller.refresh();
