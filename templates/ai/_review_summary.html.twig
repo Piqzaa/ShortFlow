@@ -1,0 +1,4 @@
+<section class="review-summary" aria-labelledby="review-summary-title">
+  <div><h2 id="review-summary-title">Avant de générer</h2><p>{{ reviewCount }} plan(s) · {{ reviewSeconds }} s · {{ model.name }} · {{ model.quality == '4k' ? '4K' : model.quality }} · {{ reviewRatio == 'auto' ? 'Format de l’image' : reviewRatio }}</p><p>{{ providerName }} · {{ reviewAccess == 'mcp' ? 'connexion navigateur' : 'clé API' }} {{ hasKey ? 'enregistrée' : 'à connecter' }}{% if reviewAccess == 'mcp' and mcpAccount|default(null) %} · compte {{ mcpAccount }}{% endif %}</p></div>
+  <div class="review-summary-action"><strong>{{ (reviewCents / 100)|number_format(2,',',' ') }} $ US estimés</strong><a class="account-secondary" href="#{{ reviewConfirmation }}">{{ hasKey ? 'Vérifier et confirmer ↓' : 'Connecter le fournisseur ↓' }}</a><a href="#{{ reviewDetails }}">Relire les plans et références ↓</a></div>
+</section>

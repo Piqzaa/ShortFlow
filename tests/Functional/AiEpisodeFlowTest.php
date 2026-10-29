@@ -147,6 +147,87 @@ final class AiEpisodeFlowTest extends WebTestCase
         return static::getContainer()->get(AiEpisodeFlow::class);
     }
 
+    public function testReviewKeepsCostConnectionAndActualReferencesAccessibleWithoutSubmitting(): void
+    {
+        $episode = $this->planned(true);
+        $quote = $this->flow()->quote($episode);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?review=1');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.review-summary', '3 plan(s) · 30 s');
+        self::assertSelectorTextContains('.review-summary', '2,10 $ US estimés');
+        self::assertSelectorTextContains('.review-summary', 'Fal · clé API enregistrée');
+        self::assertSelectorExists('.review-summary a[href="#story-quote"]');
+        self::assertSelectorExists('.review-summary a[href="#review-plans"]');
+        self::assertSelectorCount(3, '#review-plans .review-plan-details:not([open])');
+        self::assertSelectorTextContains('#review-plans', 'sera extrait du clip précédent');
+        self::assertSame($quote['references'][0]['prompt'], $this->client->getCrawler()->filter('#review-plans .review-plan-details .ai-prompt')->first()->text(null, false));
+        self::assertSelectorExists('#story-quote input[name="confirm"][required]:not([disabled])');
+        self::assertSelectorTextContains('#story-quote', 'clé API du fournisseur');
+        self::assertSame(0, $this->submissions);
+        self::assertSame($quote['hash'], $this->flow()->quote($this->fresh($episode))['hash']);
+        static::getContainer()->get(AiKeys::class)->remove($this->em()->find(User::class, $this->owner->getId()), 'fal');
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?review=1');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.review-summary', 'clé API à connecter');
+        self::assertSelectorExists('#story-quote input[name="confirm"][disabled]');
+        self::assertSelectorExists('#story-quote a[href*="/studio/connexions/ia"]');
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testRejectedRemainingCorrectionKeepsBothHumanInputsWithoutSavingThem(): void
+    {
+        $episode = $this->planned(false, 10);
+        $episode->flow('review');
+        $this->em()->flush();
+        $shot = $this->flow()->shots($episode)[0];
+        $original = $shot->getPrompt();
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $form = $crawler->selectButton('Enregistrer le plan 1 et revoir le devis')->form();
+        $form['revision'] = '0';
+        $form['remaining_prompt'] = 'Mon texte humain refusé <script>alert("synthetic")</script>';
+        $form['translated_identity'] = 'Mon identité à corriger';
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('textarea[name="remaining_prompt"][aria-invalid="true"]', 'Mon texte humain refusé <script>');
+        self::assertInputValueSame('translated_identity', 'Mon identité à corriger');
+        self::assertSelectorExists('[data-unsaved-initial="true"] textarea[aria-describedby="episode-error"]');
+        self::assertSelectorNotExists('textarea script');
+        self::assertSame($original, $this->flow()->shots($this->fresh($episode))[0]->getPrompt());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testBrowserQuoteDoesNotTreatAnApiKeyAsTheChosenConnection(): void
+    {
+        $series = new AiSeries($this->owner, 'MCP synthetic', 'Milo walks across the room.', '', '', ['model' => 'kling-25', 'seconds' => 10, 'ratio' => '9:16', 'accessMode' => 'mcp', 'reference' => null, 'endReference' => null, 'imageFit' => 'crop']);
+        $episode = new AiEpisode($series, 1);
+        $this->em()->persist($series);
+        $this->em()->persist($episode);
+        $this->em()->flush();
+        $this->flow()->initialize($episode, $episode->getRevision(), 10, 'independent', false);
+        $this->flow()->save($episode, $episode->getRevision(), 'Milo', [['seconds' => 10, 'prompt' => 'Milo walks slowly across the room.']]);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?review=1');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.review-summary', 'Fal · connexion navigateur à connecter');
+        self::assertSelectorTextContains('#story-quote', 'connexion navigateur Fal');
+        self::assertSelectorExists('#story-quote input[name="confirm"][disabled]');
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testRejectedRepairCanBeRecoveredEvenWhenItsQuoteIsUnavailable(): void
+    {
+        $episode = $this->planned(false, 10);
+        $shot = $this->flow()->shots($episode)[0];
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?review=1');
+        $this->client->request('POST', '/studio/series/episodes/'.$episode->getId(), ['_token' => $crawler->filter('input[name="_token"]')->first()->attr('value'), 'intent' => 'repair_prompt', 'redo' => $shot->getId(), 'revision' => $episode->getRevision(), 'repair_prompt' => 'My unsubmitted correction must remain recoverable.']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorNotExists('.review-summary');
+        self::assertSelectorTextContains('textarea[name="repair_prompt"][aria-invalid="true"]', 'My unsubmitted correction must remain recoverable.');
+        self::assertSelectorExists('[data-unsaved-initial="true"] textarea[aria-describedby="episode-error"]');
+        self::assertSelectorExists('#episode-error[role="alert"]');
+        self::assertSame(0, $this->submissions);
+        self::assertArrayNotHasKey('repairPrompt', $this->flow()->shots($this->fresh($episode))[0]->getInputs());
+    }
+
     private function fresh(AiEpisode $episode): AiEpisode
     {
         $found = $this->em()->find(AiEpisode::class, $episode->getId());
@@ -633,7 +714,18 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('#story-quote [data-speech-notice]', 'pas encore prises en charge');
         self::assertSelectorExists('#story-quote input[name="confirm"][required]');
+        self::assertSelectorExists('#review-plans .review-plan-details');
+        self::assertSelectorTextContains('.review-summary', '1 plan(s)');
         $originalPrompt = $shots[1]->getPrompt();
+        $rejected = 'Mon prompt refusé <script>synthetic</script>';
+        $this->client->request('POST', '/studio/series/episodes/'.$episode->getId(), ['_token' => $this->client->getCrawler()->filter('input[name="_token"]')->first()->attr('value'), 'intent' => 'repair_prompt', 'redo' => $shots[1]->getId(), 'revision' => 0, 'repair_prompt' => $rejected]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('textarea[name="repair_prompt"][aria-invalid="true"]', $rejected);
+        self::assertSelectorExists('[data-unsaved-initial="true"] textarea[aria-describedby="episode-error"]');
+        self::assertSame($quote['hash'], $this->flow()->quote($this->fresh($episode), $shots[1]->getId())['hash']);
+        self::assertSame(3, $this->submissions);
+        $episode = $this->fresh($episode);
+        $shots = $this->flow()->shots($episode);
         $this->flow()->stageRepair($episode, $shots[1]->getId(), $episode->getRevision(), 'Scene 2: Milo opens the door slowly, then holds it open.');
         self::assertSame($originalPrompt, $shots[1]->getPrompt());
         self::assertNotNull($episode->getApprovedVideo());

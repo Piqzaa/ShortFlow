@@ -10,7 +10,9 @@ use App\Repository\VideoAssetRepository;
 use App\Service\AiCatalog;
 use App\Service\AiEpisodeFlow;
 use App\Service\AiGenerations;
+use App\Service\AiKeys;
 use App\Service\EpisodePublications;
+use App\Service\FalOAuth;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -43,7 +45,7 @@ final class AiEpisodeController extends AbstractController
     }
 
     #[Route('/studio/series/episodes/{id}', name: 'app_series_episode', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiGenerations $generations, EntityManagerInterface $em, VideoAssetRepository $videos, EpisodePublications $publications, \App\Service\SeriesGenerationConsent $seriesConsent, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiGenerations $generations, EntityManagerInterface $em, VideoAssetRepository $videos, EpisodePublications $publications, AiKeys $keys, FalOAuth $falOAuth, \App\Service\SeriesGenerationConsent $seriesConsent, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
         $episode = $flow->owned($id, $user) ?? throw $this->createNotFoundException();
         if (!$episode->getFlowState() && $episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus()) {
@@ -66,6 +68,7 @@ final class AiEpisodeController extends AbstractController
         $form = null;
         $quote = null;
         $error = null;
+        $rejectedCorrection = null;
         $invalid = false;
         $layouts = [];
         if (null === $episode->getFlowState()) {
@@ -185,21 +188,27 @@ final class AiEpisodeController extends AbstractController
                     $form->addError(new FormError($failure->getMessage()));
                 } else {
                     $error = $failure->getMessage();
+                    $intent = $request->request->getString('intent');
+                    if (in_array($intent, ['repair_prompt', 'correct_unsent'], true)) {
+                        $rejectedCorrection = ['intent' => $intent, 'shot' => $request->request->getInt('repair_prompt' === $intent ? 'redo' : 'shot'), 'prompt' => $request->request->getString('repair_prompt' === $intent ? 'repair_prompt' : 'remaining_prompt'), 'identity' => $request->request->getString('translated_identity')];
+                    }
                 }
                 $invalid = true;
             }
         }
-        if ('review' === $episode->getFlowState() || $request->query->getBoolean('review') || $request->query->getInt('redo')) {
+        $redo = $request->query->getInt('redo') ?: ('repair_prompt' === ($rejectedCorrection['intent'] ?? null) ? $rejectedCorrection['shot'] : 0);
+        if ('review' === $episode->getFlowState() || $request->query->getBoolean('review') || $redo) {
             try {
-                $quote = $flow->quote($episode, $request->query->getInt('redo'));
+                $quote = $flow->quote($episode, $redo);
             } catch (\RuntimeException|\InvalidArgumentException $failure) {
-                $error = $failure->getMessage();
+                $error ??= $failure->getMessage();
             }
         }
         $recipe = $episode->getPreparationRecipe();
+        $model = AiCatalog::MODELS[$recipe['model']];
         $library = 'ready' === $episode->getFlowState() ? $videos->findBy(['owner' => $user], ['createdAt' => 'DESC'], 100) : [];
 
-        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'error' => $error, 'model' => AiCatalog::MODELS[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'automaticOccurrence' => $em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode])?->isAutomatic() ?? false, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'error' => $error, 'rejectedCorrection' => $rejectedCorrection, 'providerName' => AiCatalog::PROVIDERS[$model['provider']], 'hasKey' => $keys->hasAccess($user, $model['provider'], $recipe['accessMode']), 'mcpAccount' => 'mcp' === $recipe['accessMode'] && $quote ? $falOAuth->accountId($user) : null, 'model' => $model, 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'automaticOccurrence' => $em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode])?->isAutomatic() ?? false, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/episodes/{id}/etat', name: 'app_series_episode_state', requirements: ['id' => '\d+'], methods: ['GET'])]

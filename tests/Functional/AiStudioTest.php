@@ -668,6 +668,11 @@ final class AiStudioTest extends WebTestCase
         $job = $this->job();
         $id = $job->getId();
         $crawler = $this->client->request('GET', '/studio/ia/generations/'.$id);
+        self::assertSelectorTextContains('.review-summary', '1 plan(s)');
+        self::assertSelectorTextContains('.review-summary', 'Fal · clé API à connecter');
+        self::assertSelectorExists('.review-summary a[href="#ai-state-title"]');
+        self::assertSelectorExists('.review-summary a[href="#generation-inputs"]');
+        self::assertSelectorExists('.ai-status input[name="confirm"][disabled]');
         $token = $crawler->filter('.ai-status form.account-form input[name="_token"]')->first()->attr('value');
         $this->client->request('POST', '/studio/ia/generations/'.$id, ['confirm' => '1']);
         self::assertResponseStatusCodeSame(403);
