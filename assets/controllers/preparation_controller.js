@@ -11,7 +11,7 @@ export default class extends Controller {
   get desiredCount() { return this.continuityTarget.value === 'single' ? 1 : this.hasPlanCountTarget ? Number(this.planCountTarget.value) || null : null; }
 
   guardPending(event) {
-    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { event.preventDefault(); this.showNotice('Attends la fin de l’import des images avant de préparer la vidéo.'); }
+    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { event.preventDefault(); event.stopImmediatePropagation(); this.showNotice('Attends la fin de l’import des images avant de préparer la vidéo.'); }
   }
 
   showNotice(message) {

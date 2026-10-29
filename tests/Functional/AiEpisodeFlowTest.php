@@ -976,6 +976,69 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame(0, $this->submissions);
     }
 
+    public function testCompletedFrenchPlanCanBeCorrectedBeforeItsReplacementQuote(): void
+    {
+        $episode = $this->planned(false, 10);
+        $shots = $this->flow()->shots($episode);
+        $shots[0]->revise('Milo marche dans la chambre puis regarde la porte.', 10);
+        $video = new VideoAsset($this->owner, 'Historical clip', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 100, 10, 360, 640, 'h264');
+        $job = new AiGeneration($this->owner, 'Historical plan', $shots[0]->getPrompt(), 'kling-25', 10, '9:16', 70);
+        $job->complete($video);
+        $shots[0]->bind($job);
+        $this->em()->persist($video);
+        $this->em()->persist($job);
+        $episode->flow('ready');
+        $this->em()->flush();
+        $original = $shots[0]->getPrompt();
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?redo='.$shots[0]->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#episode-error');
+        self::assertSelectorNotExists('input[name="confirm"]');
+        self::assertSelectorTextContains('textarea[name="repair_prompt"]', $original);
+        $this->client->submit($crawler->selectButton('Enregistrer la correction et revoir le devis')->form(['repair_prompt' => 'Milo walks across the room and looks toward the door.']));
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#story-quote input[name="confirm"]');
+        self::assertSelectorNotExists('#episode-error');
+        self::assertSame($original, $this->flow()->shots($this->fresh($episode))[0]->getPrompt());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testRepairValidatesTheCandidateSpeechAndKeepsRejectedChangesUnstored(): void
+    {
+        $episode = $this->planned(false, 10);
+        $episode->edit($episode->getTitle(), 'Milo says "Bonjour".');
+        $shot = $this->flow()->shots($episode)[0];
+        $shot->revise('Milo walks across the room and says "Bonjour".', 10);
+        $video = new VideoAsset($this->owner, 'Historical clip', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 100, 10, 360, 640, 'h264');
+        $job = new AiGeneration($this->owner, 'Historical plan', $shot->getPrompt(), 'kling-25', 10, '9:16', 70);
+        $job->complete($video);
+        $shot->bind($job);
+        $this->em()->persist($video);
+        $this->em()->persist($job);
+        $episode->flow('ready');
+        $this->em()->flush();
+        $oldHash = $this->flow()->quote($episode, $shot->getId())['hash'];
+        $revision = $episode->getRevision();
+        try {
+            $this->flow()->stageRepair($episode, $shot->getId(), $revision, 'Milo walks across the room and opens the door.');
+            self::fail('A replacement must preserve requested speech before being stored.');
+        } catch (\App\Service\VideoPromptReviewRequired) {
+            self::assertArrayNotHasKey('repairPrompt', $shot->getInputs());
+            self::assertSame($revision, $this->fresh($episode)->getRevision());
+        }
+        $shot->stageRepair('Milo walks across the room and opens the door.');
+        $this->em()->flush();
+        $candidate = 'Milo stands near the door and says "Bonjour".';
+        $this->flow()->stageRepair($episode, $shot->getId(), $revision, $candidate);
+        self::assertSame($candidate, $shot->getInputs()['repairPrompt']);
+        self::assertNotSame($oldHash, $this->flow()->quote($episode, $shot->getId())['hash']);
+        self::assertSame($revision + 1, $episode->getRevision());
+        self::assertSame($job->getId(), $shot->getGeneration()->getId());
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testRepairCannotBreakFollowingLinkedShotWithoutAnEndFrameCapability(): void
     {
         $episode = $this->episode(true);

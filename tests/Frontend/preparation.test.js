@@ -53,11 +53,28 @@ test('the empty studio shows one model hint and an import refusal always becomes
   assert.equal(controller.countApplyTarget.hidden,true);
   controller.noticeTarget.hidden=true;
   controller.element.querySelector=()=>({dataset:{planReferenceBusy:'true'}});
-  let prevented=false;
-  controller.guardPending({preventDefault(){prevented=true;}});
+  let prevented=false, stopped=false;
+  controller.guardPending({preventDefault(){prevented=true;},stopImmediatePropagation(){stopped=true;}});
   assert.equal(prevented,true);
+  assert.equal(stopped,true);
   assert.equal(controller.noticeTarget.hidden,false);
   assert.match(controller.noticeTarget.textContent,/fin de l’import/);
+});
+
+test('an image import cancels submission before save and departure handlers run', () => {
+  const {controller} = setup();
+  const form = new EventTarget();
+  let importing = true, submitted = 0;
+  controller.element.querySelector = () => importing ? {} : null;
+  form.addEventListener('submit', event => controller.guardPending(event));
+  form.addEventListener('submit', () => { submitted++; });
+  assert.equal(form.dispatchEvent(new Event('submit', {cancelable:true})), false);
+  assert.equal(submitted, 0);
+  importing = false;
+  assert.equal(form.dispatchEvent(new Event('submit', {cancelable:true})), true);
+  assert.equal(submitted, 1);
+  const template = readFileSync(new URL('../../templates/ai/studio.html.twig', import.meta.url), 'utf8');
+  assert.match(template, /submit->preparation#guardPending:capture/);
 });
 
 test('pending single conversion keeps the original cards until the server accepts them', () => {

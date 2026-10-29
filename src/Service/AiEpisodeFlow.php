@@ -299,7 +299,7 @@ final class AiEpisodeFlow
     }
 
     /** @return array{hash:string,cents:int,seconds:int,count:int,redo:int,references:list<array<string,mixed>>} */
-    public function quote(AiEpisode $episode, int $redo = 0): array
+    public function quote(AiEpisode $episode, int $redo = 0, ?string $repairPrompt = null): array
     {
         $recipe = $episode->getFlowRecipe() ?? throw new \RuntimeException('Prépare les plans avant de continuer.');
         if ('auto' === $recipe['ratio']) {
@@ -310,7 +310,7 @@ final class AiEpisodeFlow
             $this->em->refresh($episode->getSeries());
         }
         $data = [];
-        (new VideoPromptLanguage())->assertSpeech($episode, array_map(static fn (AiShot $shot): string => $redo && $shot->getId() === $redo ? ($shot->getInputs()['repairPrompt'] ?? $shot->getPrompt()) : $shot->getPrompt(), $shots));
+        (new VideoPromptLanguage())->assertSpeech($episode, array_map(static fn (AiShot $shot): string => $redo && $shot->getId() === $redo ? ($repairPrompt ?? $shot->getInputs()['repairPrompt'] ?? $shot->getPrompt()) : $shot->getPrompt(), $shots));
         $cents = $seconds = 0;
         $references = [];
         foreach ($shots as $index => $shot) {
@@ -320,7 +320,7 @@ final class AiEpisodeFlow
             if ($redo && $shot->getId() !== $redo) {
                 continue;
             }
-            $scene = $redo ? ($shot->getInputs()['repairPrompt'] ?? $shot->getPrompt()) : $shot->getPrompt();
+            $scene = $redo ? ($repairPrompt ?? $shot->getInputs()['repairPrompt'] ?? $shot->getPrompt()) : $shot->getPrompt();
             if ('' === trim($scene) || mb_strlen($scene) > 1500) {
                 throw new \RuntimeException('Complète le prompt de chaque plan avant de vérifier l’estimation.');
             }
@@ -432,8 +432,7 @@ final class AiEpisodeFlow
             if ('' === trim($prompt) || mb_strlen($prompt) > 1500) {
                 throw new \RuntimeException('Décris la réparation en 1 à 1 500 caractères.');
             }
-            $this->quote($episode, $shotId);
-            $this->catalog->validatePrompt($episode->getFlowRecipe()['model'], $this->prompt($episode, $shot, $prompt));
+            $this->quote($episode, $shotId, $prompt);
             $shot->stageRepair($prompt);
             $episode->touchRepair();
         });
