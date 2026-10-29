@@ -1,5 +1,9 @@
 # VydFlow — bêta, studio IA et publication
 
+**Relecture des scènes ajustée, 29 octobre :** résumé français conservé en lecture seule, prompt vidéo explicitement modifiable ; contrôles de langue harmonisés et copie des scènes annoncée. [Pédagogie, diagnostic et limites de vérification](docs/r3-relecture-prompts.md). Le refus exact dans l'onglet propriétaire reste non reproduit ; ancienne proposition conservée. Prochain point **R3.4**, après résolution de ces détails.
+
+Contrôles finaux de ce complément : **59 PHP / 261 assertions ciblés**, **164 frontend**, analyse/style/lints/check/build réussis. Cache test/dev et workers actualisés. Aucun nouvel appel modèle, vidéo, coût ou push.
+
 **Nombre de plans R3.3 livré, 29 octobre :** choix deux à huit en plusieurs scènes/raccord, durée totale répartie avant scénario, réglages manuels et données conservés. **780 PHP / 8 926 assertions**, **163 frontend**, contrôles statiques et recette synthétique desktop/mobile/clavier verts. [Bilan pédagogique et vérifications](docs/r3-nombre-plans.md). Contrats historiques stabilisés au passage de date sans réactiver de modèle retiré. **Prochain point inchangé : R3.4**, grand R3 en cours. Commits locaux, aucun push.
 
 **Guidage des durées R3.3 ajusté après essai :** en plan unique, liste et limites suivent le modèle, ancienne durée incompatible conservée à corriger, reprise du total des scènes et synchronisation explicite d'un clip unique. **776 PHP / 8 891 assertions**, **159 frontend**, contrôles statiques et recette synthétique desktop/mobile/clavier verts. [Comportement et limites sans JS](docs/r3-plan-unique.md). Prochain point inchangé **R3.4**, grand R3 en cours. Commit local `fix: guide single clip duration choices`, aucun push.

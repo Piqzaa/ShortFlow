@@ -18,14 +18,24 @@ final class StoryTextChecks
     /** @param array<string,mixed> $context */
     public function directionIssue(string $prompt, string $idea = '', array $context = []): ?string
     {
+        return match ($this->directionLanguage($prompt, $idea, $context)) {
+            'fr' => 'Traduction à corriger : des consignes vidéo semblent encore en français. Corrige le prompt et son identité en anglais, en conservant les citations demandées. Aucun nouvel envoi vidéo ne sera effectué.',
+            'unknown' => 'Traduction à vérifier : la langue des consignes vidéo est indéterminée. Précise les directions en anglais, sans traduire les citations demandées. Aucun nouvel envoi vidéo ne sera effectué.',
+            default => null,
+        };
+    }
+
+    /** @param array<string,mixed> $context */
+    private function directionLanguage(string $prompt, string $idea, array $context): ?string
+    {
         $directions = $this->withoutAllowedQuotes($prompt, array_column($this->quotes($this->source($idea, $context)), 'text'));
         $french = $this->markers($directions, [...self::FRENCH, 'blanc', 'blanche', 'jaune', 'mûre', 'courbée', 'peau', 'debout']);
         $english = $this->markers($directions, [...self::ENGLISH, 'and', 'are', 'yellow', 'red', 'white', 'skin', 'characters', 'wearing', 'named', 'background', 'light', 'door', 'banana', 'strawberry']);
         if ($french >= 3 || ($french >= 2 && $english < 2)) {
-            return 'Traduction à corriger : des consignes vidéo semblent encore en français. Corrige le prompt et son identité en anglais, en conservant les citations demandées. Aucun nouvel envoi vidéo ne sera effectué.';
+            return 'fr';
         }
         if ('' === trim($directions) || ($english < 2 && preg_match_all('/\p{L}+/u', $directions) >= 8)) {
-            return 'Traduction à vérifier : la langue des consignes vidéo est indéterminée. Précise les directions en anglais, sans traduire les citations demandées. Aucun nouvel envoi vidéo ne sera effectué.';
+            return 'unknown';
         }
 
         return null;
@@ -83,10 +93,10 @@ final class StoryTextChecks
         $warnings = [];
         $prompts = array_column($proposal['shots'], 'prompt');
         foreach ($prompts as $prompt) {
-            $directions = $this->withoutAllowedQuotes($prompt, $allowed);
-            if ($this->markers($directions, self::FRENCH) >= 3) {
+            $language = $this->directionLanguage($prompt, $idea, $context);
+            if ('fr' === $language) {
                 $warnings['prompts'] = 'Certains prompts semblent contenir des consignes en français. Vérifie leur traduction en anglais, sans traduire les citations explicitement demandées.';
-            } elseif ('' === trim($directions) || ($this->markers($directions, self::ENGLISH) < 2 && preg_match_all('/\p{L}+/u', $directions) >= 8)) {
+            } elseif ('unknown' === $language) {
                 $warnings['promptLanguageUnknown'] = 'La langue de certaines consignes vidéo est difficile à identifier. Vérifie les prompts ; ce contrôle ne confirme pas leur traduction.';
             }
         }

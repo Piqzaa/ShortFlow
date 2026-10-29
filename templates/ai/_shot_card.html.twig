@@ -6,11 +6,11 @@
   {% include 'ai/_shot_description.html.twig' %}
   <p class="library-note shot-reference-summary" data-shot-reference-summary>{% if shotForm.startReference.vars.value or shotForm.endReference.vars.value %}Cadres renseignés : {{ shotForm.startReference.vars.value ? 'début' : '' }}{{ shotForm.startReference.vars.value and shotForm.endReference.vars.value ? ' et ' : '' }}{{ shotForm.endReference.vars.value ? 'fin' : '' }}. {% endif %}Références communes selon le mode ; envoi exact à vérifier au récapitulatif.</p>
   <details class="shot-card-details" data-shot-details{% if not shotForm.vars.valid or not shotForm.prompt.vars.value or not shotForm.sceneDescription.vars.value %} open{% endif %}>
-    <summary>Modifier le résumé, le prompt et les images</summary>
-    {{ form_row(shotForm.sceneDescription) }}
+    <summary>Modifier le prompt vidéo et les images</summary>
+    {{ form_widget(shotForm.sceneDescription) }}{{ form_errors(shotForm.sceneDescription) }}
     <div class="library-note" data-shot-translated-context{% if not shotForm.translatedIdentity.vars.value %} hidden{% endif %}><strong>Identité et style proposés</strong><p data-shot-translated-identity>{{ shotForm.translatedIdentity.vars.value }}</p><p>Ce contexte accompagne ce plan. Vérifie sa traduction et sa fidélité. Le brief français reste enregistré ; ses détails utiles doivent être repris dans le prompt et ce contexte.</p><button type="submit" name="plan_action" value="detach_translation:{{ shotIndex|default(0) }}" class="account-secondary" data-action="shot-editor#detachTranslation">Détacher ce contexte et reprendre manuellement</button></div>
     {{ form_row(shotForm.prompt) }}
-    <p class="library-note">Le prompt vidéo est envoyé au modèle. Le résumé français sert à ta relecture ; le modifier ne réécrit pas le prompt.</p>
+    <p class="library-note">Pour modifier la vidéo, édite ce prompt. Dans ce parcours, écris les consignes en anglais ; conserve les paroles et textes demandés dans leur langue. Le résumé français est un repère de lecture et ne se met pas à jour automatiquement.</p>
     {% include 'ai/_shot_references.html.twig' %}
     <div class="story-row-actions">
       <button type="submit" class="account-secondary" name="plan_action" value="up:{{ shotIndex|default(0) }}" data-action="shot-editor#act">Monter</button>

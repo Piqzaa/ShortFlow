@@ -21,14 +21,15 @@ test('applying a scenario keeps English directions and saves its French explanat
   const writer = setup(() => assert.fail('Applying must not request generation'));
   const prompt = { value: '', focus() {} }, seconds = { value: '' }, description = { value: '' }, title = { value: '' };
   const identity = { value: '' }, source = { value: '' };
-  const row = { querySelector: selector => selector === 'textarea' ? prompt : selector === 'select' ? seconds : selector.includes('sceneDescription') ? description : selector.includes('translatedIdentity') ? identity : selector.includes('translationSource') ? source : null };
+  let scrolled = false;
+  const row = { scrollIntoView() { scrolled = true; }, querySelector: selector => selector === 'textarea' ? prompt : selector === 'select' ? seconds : selector.includes('sceneDescription') ? description : selector.includes('translatedIdentity') ? identity : selector.includes('translationSource') ? source : null };
   let changed = 0, updated = 0;
   const form = { querySelector: selector => selector.includes('[title]') ? title : null, dispatchEvent() { changed++; } };
   const editor = { rows: () => [row], listTarget: { replaceChildren() {}, insertAdjacentHTML() {} }, prototypeTarget: { innerHTML: '' }, update() { updated++; } };
   writer.element = { querySelector: () => form };
   writer.application = { getControllerForElementAndIdentifier: () => editor };
   writer.requestFingerprint = 'original';
-  writer.proposal = { title: 'Milo', shots: [{ description: 'Milo ouvre la boîte.', prompt: 'Milo opens the box in a wide shot.', seconds: 5, translatedIdentity: 'A white cat.', translationSource: 'a'.repeat(64) }] };
+  writer.proposal = { title: 'Milo', translationReady: true, warnings: ['La langue de certaines consignes vidéo est difficile à identifier.'], shots: [{ description: 'Milo ouvre la boîte.', prompt: 'Milo opens the box in a wide shot.', seconds: 5, translatedIdentity: 'A white cat.', translationSource: 'a'.repeat(64) }] };
   writer.apply();
   assert.equal(prompt.value, 'Milo opens the box in a wide shot.');
   assert.equal(description.value, 'Milo ouvre la boîte.');
@@ -36,6 +37,21 @@ test('applying a scenario keeps English directions and saves its French explanat
   assert.equal(source.value, 'a'.repeat(64));
   assert.equal(updated, 1);
   assert.equal(changed, 1);
+  assert.equal(scrolled, true);
+  assert.equal(writer.previewTarget.hidden, true);
+  assert.match(writer.statusTarget.textContent, /1 scène\(s\) copiée/);
+});
+
+test('an image import keeps the proposal and existing scenes until it finishes', () => {
+  const writer = setup(() => assert.fail('Applying must not request generation'));
+  writer.element = { querySelector: () => ({ querySelector: () => ({ dataset: { planReferenceBusy: 'true' } }) }) };
+  writer.application = { getControllerForElementAndIdentifier: () => assert.fail('Existing rows must remain untouched') };
+  writer.requestFingerprint = 'original';
+  const proposal = { shots: [{ prompt: 'A wide shot.', seconds: 5 }] };
+  writer.proposal = proposal;
+  writer.apply();
+  assert.equal(writer.proposal, proposal);
+  assert.match(writer.statusTarget.textContent, /fin de l’import/);
 });
 
 test('changing a subject or a per-shot frame invalidates an earlier story preview', () => {
@@ -158,7 +174,7 @@ test('quality warnings stay visible as plain text and disappear on the next clea
   writer.render({ title: 'Milo', summary: 'Une histoire', shots: [], warnings: [warning] });
   assert.equal(writer.warningsTarget.hidden, false);
   assert.equal(writer.warningsTarget.children[0].textContent, warning);
-  assert.match(writer.statusTarget.textContent, /à vérifier/);
+  assert.match(writer.statusTarget.textContent, /copier ces scènes/);
   assert.equal(writer.previewTarget.hidden, false);
   writer.render({ title: 'Milo', summary: 'Brouillon à corriger', shots: [], warnings: [warning], translationReady: false });
   assert.match(writer.statusTarget.textContent, /Traduction à corriger/);

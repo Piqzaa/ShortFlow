@@ -1,3 +1,3 @@
-<p class="shot-description" data-shot-description-text>{{ shotForm.sceneDescription.vars.value ?: 'Résumé à compléter' }}</p>
-<p class="library-note shot-summary-status" data-shot-summary-status role="status">{{ shotForm.sceneDescription.vars.value ? 'Résumé à relire avec le prompt vidéo.' : 'Résumé à compléter. Tu peux écrire directement le prompt vidéo dans les détails.' }}</p>
+<p class="shot-description" data-shot-description-text>{{ shotForm.sceneDescription.vars.value ?: 'Résumé non disponible' }}</p>
+<p class="library-note shot-summary-status" data-shot-summary-status role="status">{{ shotForm.sceneDescription.vars.value ? 'Résumé à relire avec le prompt vidéo. Repère en lecture seule.' : 'Résumé non disponible. Écris directement le prompt vidéo dans les détails.' }}</p>
 <button type="button" class="account-secondary shot-summary-review" data-shot-summary-review data-action="shot-editor#review" hidden>J’ai relu ce résumé avec le prompt</button>

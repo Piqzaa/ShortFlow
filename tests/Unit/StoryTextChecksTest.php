@@ -11,6 +11,15 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class StoryTextChecksTest extends TestCase
 {
+    public function testDescriptiveEnglishGetsTheSameLanguageVerdictBeforeAndAfterProductionReview(): void
+    {
+        $prompt = 'Yellow robot, rounded shape and white skin, no eyes or face. Red robot, rounded shape and white skin, no eyes or face.';
+        self::assertNull((new StoryTextChecks())->directionIssue($prompt));
+        $warnings = $this->check('Deux robots se rencontrent.', [$prompt]);
+        self::assertArrayNotHasKey('prompts', $warnings);
+        self::assertArrayNotHasKey('promptLanguageUnknown', $warnings);
+    }
+
     public function testProductionGateChecksFrenchIdentityAndDoesNotTreatDirectionsAsTheirOwnQuoteSource(): void
     {
         $checks = new StoryTextChecks();

@@ -7,7 +7,7 @@ function setup() {
   const source = readFileSync(new URL('../../assets/controllers/shot_editor_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Editor');
   const Editor = runInNewContext(`${source}\nEditor`, { Controller: class {} });
   const editor = new Editor();
-  const prompt = { value: 'Milo opens a box.' };
+  const prompt = { value: 'Milo opens a box.', focus() { this.focused = true; } };
   const description = { value: 'Milo ouvre une boîte.', focus() { this.focused = true; } };
   const status = { textContent: '' }, review = { hidden: true }, references = { textContent: '' };
   const row = { dataset: {}, querySelector(selector) {
@@ -32,7 +32,8 @@ test('reviewing a summary preserves keyboard focus and becomes stale after a pro
   const { editor, row, prompt, description, status, review } = setup();
   editor.update();
   editor.review({ currentTarget: { closest: () => row } });
-  assert.equal(description.focused, true);
+  assert.equal(prompt.focused, true);
+  assert.equal(description.focused, undefined);
   assert.equal(review.hidden, true);
   prompt.value = 'Milo closes the box.';
   editor.update();
@@ -49,7 +50,7 @@ test('an old scene without summary keeps its prompt and does not invent a summar
   const { editor, description, prompt, status, review, references } = setup();
   description.value = '';
   editor.update();
-  assert.match(status.textContent, /à compléter/);
+  assert.match(status.textContent, /non disponible/);
   assert.equal(description.value, '');
   assert.equal(prompt.value, 'Milo opens a box.');
   assert.equal(review.hidden, true);

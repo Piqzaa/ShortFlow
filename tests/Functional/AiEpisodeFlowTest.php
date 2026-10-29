@@ -229,6 +229,8 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('textarea[name="ai_idea[shots][0][imagePrompt]"]', 'Mon costume <script>privé</script>');
         self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', 'Milo ouvre une boîte <privée>.');
+        self::assertSelectorExists('input[type="hidden"][name="ai_idea[shots][0][sceneDescription]"]');
+        self::assertSelectorTextContains('[data-shot-details] summary', 'Modifier le prompt vidéo et les images');
         self::assertSelectorExists('[data-shot-editor-target="list"] .shot-card [data-shot-details]:not([open])');
         self::assertSelectorTextContains('[data-shot-summary-status]', 'Résumé à relire');
         self::assertStringContainsString('&lt;script&gt;privé&lt;/script&gt;', $this->client->getResponse()->getContent());
@@ -241,7 +243,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         self::assertResponseIsSuccessful();
         self::assertInputValueSame('ai_idea[shots][0][sceneDescription]', '');
-        self::assertSelectorTextContains('[data-shot-summary-status]', 'Résumé à compléter');
+        self::assertSelectorTextContains('[data-shot-summary-status]', 'Résumé non disponible');
         self::assertSelectorExists('[data-shot-editor-target="list"] [data-shot-details][open] textarea[name="ai_idea[shots][0][prompt]"]');
         self::assertSelectorExists('[data-shot-reference-summary]');
         self::assertSame(0, $this->submissions);

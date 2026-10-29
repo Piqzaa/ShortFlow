@@ -20,7 +20,7 @@ export default class extends Controller {
   }
 
   focusRow(row) {
-    const field = row?.querySelector('[name$="[sceneDescription]"]');
+    const field = row?.querySelector('textarea');
     if (field) { this.reveal(field); field.focus(); }
     else row?.querySelector('textarea')?.focus();
   }
@@ -73,7 +73,7 @@ export default class extends Controller {
     rows.forEach((row, index) => {
       const description = row.querySelector('[name$="[sceneDescription]"]')?.value || '';
       const descriptionText = row.querySelector('[data-shot-description-text]');
-      if (descriptionText) descriptionText.textContent = description.trim() || 'Résumé à compléter';
+      if (descriptionText) descriptionText.textContent = description.trim() || 'Résumé non disponible';
       const translated = row.querySelector('[data-shot-translated-context]');
       if (translated) {
         const identity = row.querySelector('[name$="[translatedIdentity]"]').value;
@@ -85,9 +85,9 @@ export default class extends Controller {
       if (status) {
         row.dataset.originalPrompt ??= prompt;
         const reviewed = row.dataset.reviewedPrompt === prompt && row.dataset.reviewedDescription === description;
-        status.textContent = !description.trim() ? 'Résumé à compléter. Le prompt vidéo reste accessible dans les détails.'
+        status.textContent = !description.trim() ? 'Résumé non disponible. Le prompt vidéo reste accessible dans les détails.'
           : reviewed ? 'Résumé relu pour cette saisie. Vérifie aussi les références au récapitulatif.'
-            : prompt !== row.dataset.originalPrompt || row.dataset.reviewedPrompt !== undefined ? 'Prompt ou résumé modifié : résumé à revérifier avec le prompt vidéo.' : 'Résumé à relire avec le prompt vidéo.';
+            : prompt !== row.dataset.originalPrompt || row.dataset.reviewedPrompt !== undefined ? 'Prompt modifié : résumé à revérifier, il ne se met pas à jour automatiquement.' : 'Résumé à relire avec le prompt vidéo. Repère en lecture seule.';
         row.querySelector('[data-shot-summary-review]').hidden = !description.trim() || reviewed;
       }
       const references = row.querySelector('[data-shot-reference-summary]');

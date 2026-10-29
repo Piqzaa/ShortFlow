@@ -202,13 +202,18 @@ export default class extends Controller {
       this.scenesTarget.append(scene);
     });
     this.previewTarget.hidden = false;
-    this.statusTarget.textContent = data.translationReady === false ? 'Traduction à corriger. Le scénario français est conservé. Tu peux appliquer ce brouillon pour corriger les prompts ; la génération vidéo reste bloquée jusqu’à correction des points signalés.' : warnings.length ? 'Proposition à vérifier : des points demandent ta relecture avant d’utiliser ces scènes.' : 'Proposition prête. Relis-la puis utilise ces scènes si elles te conviennent. L’absence d’alerte ne garantit pas sa fidélité.';
+    this.statusTarget.textContent = data.translationReady === false ? 'Traduction à corriger. Le scénario français est conservé. Tu peux appliquer ce brouillon pour corriger les prompts ; la génération vidéo reste bloquée jusqu’à correction des points signalés.' : warnings.length ? 'Proposition à relire. Tu peux copier ces scènes dans ton brouillon malgré les alertes ; le récapitulatif contrôlera les consignes avant génération.' : 'Proposition prête. Relis-la puis utilise ces scènes si elles te conviennent. L’absence d’alerte ne garantit pas sa fidélité.';
   }
   apply() {
     if (!this.proposal) return;
+    const appliedCount = this.proposal.shots.length;
     const correctionNotice = this.proposal.translationReady === false ? 'Brouillon appliqué. Corrige les points signalés avant de demander le devis. Alertes de la proposition initiale : '+(this.proposal.warnings || []).join(' ') : null;
     if (this.requestFingerprint !== this.fingerprint()) {
       this.statusTarget.textContent = 'Ta préparation a changé. Demande une nouvelle proposition avant de remplacer tes scènes.';
+      return;
+    }
+    if (this.form.querySelector('[data-plan-reference-busy="true"]')) {
+      this.statusTarget.textContent = 'Attends la fin de l’import des images avant d’utiliser ces scènes. Ta proposition reste disponible.';
       return;
     }
     const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
@@ -241,9 +246,10 @@ export default class extends Controller {
       if (panel) panel.open = true;
       firstPrompt.focus();
     }
+    this.editor.rows()[0]?.scrollIntoView?.({ block: 'start' });
     this.previewTarget.hidden = true;
     this.proposal = null;
-    this.statusTarget.textContent = correctionNotice || 'Scènes appliquées. Tu peux les personnaliser puis vérifier le coût au récapitulatif.';
+    this.statusTarget.textContent = correctionNotice || `${appliedCount} scène(s) copiée(s) dans ton brouillon ci-dessous. Tu peux les modifier puis ouvrir le récapitulatif. Aucune vidéo n’a été lancée.`;
   }
   disconnect() {
     this.active = false; this.pending = false;
