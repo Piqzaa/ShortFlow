@@ -63,6 +63,7 @@ export default class extends Controller {
     if (action === 'add') this.focusRow(this.rows().at(-1));
     if (action === 'up' || action === 'down') this.focusRow(event.currentTarget.closest('[data-shot-editor-row]'));
     if (action === 'remove') this.focusRow(this.rows()[Math.min(index, this.rows().length - 1)]);
+    if (action === 'add' || action === 'remove') this.element.dispatchEvent(new Event('shot-editor:count-changed', { bubbles: true }));
     this.element.dispatchEvent(new Event('input', { bubbles: true }));
   }
 

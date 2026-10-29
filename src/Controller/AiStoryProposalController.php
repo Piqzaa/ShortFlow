@@ -46,14 +46,18 @@ final class AiStoryProposalController extends AbstractController
             if ('' === $idea || mb_strlen($idea) > 1500 || $target < 1 || $target > 60 || !in_array($continuity, ['single', 'independent', 'linked'], true) || !in_array($tone, ['auto', 'humour', 'aventure', 'calme'], true)) {
                 throw new \InvalidArgumentException('Décris ton idée et choisis une durée entre 1 et 60 secondes.');
             }
-            $durations = $flow->durations($request->request->getString('model'), $target);
+            $planCount = $request->request->has('planCount') ? $request->request->getInt('planCount') : null;
+            if (null !== $planCount && ($planCount < ('single' === $continuity ? 1 : 2) || $planCount > ('single' === $continuity ? 1 : 8))) {
+                throw new \InvalidArgumentException('Choisis le nombre de plans avant de proposer le scénario.');
+            }
+            $durations = $flow->durations($request->request->getString('model'), $target, $planCount);
             $layout = $request->request->getString('layout');
             if ('' !== $layout) {
                 if (!preg_match('/^\d{1,2}(\+\d{1,2}){0,7}$/D', $layout)) {
                     throw new \InvalidArgumentException('Le découpage doit contenir de 1 à 8 clips compatibles.');
                 }
                 $durations = array_map('intval', explode('+', $layout));
-                if (array_sum($durations) !== $target || array_diff($durations, $catalog->model($request->request->getString('model'))['seconds'])) {
+                if (array_sum($durations) !== $target || array_diff($durations, $catalog->model($request->request->getString('model'))['seconds']) || (null !== $planCount && count($durations) !== $planCount)) {
                     throw new \InvalidArgumentException('Ajuste les durées des scènes pour respecter le modèle et le total souhaité.');
                 }
             }

@@ -2,6 +2,8 @@
 
 28 octobre 2026. R3.3 terminé dans le parcours commun Studio/épisodes. Grand R3 en cours ; prochaine étape R3.4, revue globale en R3.7.
 
+Complément du 29 octobre : [choisir le nombre de plans avant le scénario](r3-nombre-plans.md), répartition native exacte, conservation des données et contrôles finaux **780 / 8 926**, **163 frontend**. Les preuves initiales ci-dessous restent datées du 28 octobre.
+
 ## Complément après essai du propriétaire : guider les durées avant soumission
 
 Le propriétaire a trouvé les refus trop tardifs. La durée finale devient une liste. En mode unique avec JavaScript, les choix suivent les secondes du modèle : 3–15 s pour Kling 3, 5 ou 10 s pour Kling 2.5. Les limites sont affichées près du champ. En plusieurs scènes, les choix reviennent à 1–60 s ; le découpage reste vérifié par le mécanisme existant.

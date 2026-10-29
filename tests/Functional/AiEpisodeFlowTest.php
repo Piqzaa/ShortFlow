@@ -356,6 +356,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
         $form = $crawler->selectButton('Répartir la durée')->form();
         $form['ai_idea[target]'] = '10';
+        $form['ai_idea[planCount]'] = '2';
         $form['ai_idea[shots][2][sceneDescription]'] = 'Ma conclusion à conserver.';
         $crawler = $this->client->submit($form);
         self::assertResponseStatusCodeSame(422);
@@ -1126,6 +1127,55 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertResponseRedirects();
         self::assertSame(5, $this->flow()->shots($this->fresh($episode))[0]->getSeconds());
         self::assertSame('kling-25', $episode->getFlowRecipe()['model']);
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testChosenPlanCountPreparesBalancedCardsWithoutDroppingExistingTextOrImageInstructions(): void
+    {
+        self::assertSame([10, 10, 10], $this->flow()->durations('kling-3', 30, 3));
+        self::assertSame([8, 8, 7, 7], $this->flow()->durations('kling-3', 30, 4));
+        self::assertSame([10, 10, 5, 5], $this->flow()->durations('kling-25', 30, 4));
+        $episode = $this->planned();
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $form = $crawler->selectButton('Appliquer ce découpage')->form();
+        $form['ai_idea[model]'] = 'kling-3';
+        $form['ai_idea[planCount]'] = '4';
+        $form['ai_idea[shots][2][sceneDescription]'] = 'Mon troisième résumé.';
+        $form['ai_idea[shots][2][imagePrompt]'] = 'Image à conserver.';
+        $crawler = $this->client->submit($form);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(4, '[data-shot-editor-target="list"] [data-shot-editor-row]');
+        self::assertSelectorExists('#ai-idea-form[data-unsaved-initial="true"]');
+        $form = $crawler->selectButton('Voir le récapitulatif →')->form();
+        $values = $form->getValues();
+        self::assertSame('Mon troisième résumé.', $values['ai_idea[shots][2][sceneDescription]']);
+        self::assertSame('Image à conserver.', $values['ai_idea[shots][2][imagePrompt]']);
+        self::assertSame(['8', '8', '7', '7'], array_map(static fn (int $i): string => $values['ai_idea[shots]['.$i.'][seconds]'], range(0, 3)));
+        $form = $crawler->selectButton('Appliquer ce découpage')->form();
+        $form['ai_idea[planCount]'] = '2';
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorCount(4, '[data-shot-editor-target="list"] [data-shot-editor-row]');
+        self::assertInputValueSame('ai_idea[shots][2][sceneDescription]', 'Mon troisième résumé.');
+        self::assertCount(3, $this->flow()->shots($this->fresh($episode)));
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testPlanCountReductionPreservesAContainFramingChoiceEvenWithoutImagesOrText(): void
+    {
+        $episode = $this->planned();
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $form = $crawler->selectButton('Appliquer ce découpage')->form();
+        $form['ai_idea[model]'] = 'kling-3';
+        $form['ai_idea[planCount]'] = '2';
+        for ($i = 0; $i < 3; ++$i) {
+            $form['ai_idea[shots]['.$i.'][prompt]'] = '';
+        }
+        $form['ai_idea[shots][2][referenceFit]'] = 'contain';
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertInputValueSame('ai_idea[shots][2][referenceFit]', 'contain');
+        self::assertSelectorCount(3, '[data-shot-editor-target="list"] [data-shot-editor-row]');
         self::assertSame(0, $this->submissions);
     }
 

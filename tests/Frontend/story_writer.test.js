@@ -76,6 +76,30 @@ test('a text engine error leaves the current scenes untouched and permits retry'
   assert.equal(writer.proposal, null);
 });
 
+test('requesting a scenario prepares the chosen count before sending its exact layout', async () => {
+  let calls=0, parts=[10,10,10];
+  const writer=setup(async (url,options)=>{
+    calls++;
+    const body=options.body;
+    assert.equal(body.get('planCount'),'4');
+    assert.equal(body.get('layout'),'8+8+7+7');
+    return {ok:true,json:async()=>({shots:[]})};
+  });
+  delete writer.payload;
+  const fields={prompt:'Milo the white cat enters a room.',model:'kling-3',target:'30',continuity:'independent',planCount:'4'};
+  const form={querySelector:selector=>({value:fields[selector.match(/ai_idea\[([^\]]+)/)?.[1]]}),querySelectorAll:()=>[]};
+  writer.element={querySelector:()=>form};
+  writer.application={getControllerForElementAndIdentifier:(element,id)=>id==='preparation'?{prepareStory(){parts=[8,8,7,7];return true;}}:{rows:()=>parts.map(seconds=>({querySelector:()=>({value:String(seconds)})})),modelValue:{seconds:Array.from({length:13},(_,i)=>i+3)}}};
+  writer.toneTarget={value:'auto'};
+  writer.render=()=>{};
+  await writer.propose();
+  assert.equal(calls,1);
+  writer.application.getControllerForElementAndIdentifier=()=>({prepareStory:()=>false});
+  await writer.propose();
+  assert.equal(calls,1);
+  assert.match(writer.statusTarget.textContent,/nombre de plans/);
+});
+
 test('the local writer receives subject names and roles without photo identifiers or views', () => {
   const writer = setup(() => assert.fail('No request expected'));
   delete writer.payload;

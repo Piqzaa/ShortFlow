@@ -18,7 +18,7 @@ function setup(count = 3) {
   Object.defineProperty(controller, 'editor', { value: { rows: () => rows, update() {} } });
   controller.selectedModel = { name: 'Kling 3', seconds: Array.from({length:13},(_,i)=>i+3) };
   Object.defineProperty(controller, 'model', { get() { return this.selectedModel; } });
-  controller.element = { querySelector: () => ({ value: '' }) };
+  controller.element = { querySelector: selector => selector.includes('data-plan-reference-busy') ? null : ({ value: '' }) };
   controller.continuityPanelTarget = {};
   controller.singleTarget = {};
   controller.fixContinuityTarget = {};
@@ -101,4 +101,33 @@ test('explicit final duration changes update the existing single clip without lo
   controller.duration();
   assert.equal(rows[0].querySelector('select').value,'10');
   assert.equal(controller.singleButtonTarget.disabled,true);
+});
+
+test('count guidance keeps the precise loss warning when a duration change cannot remove written scenes', () => {
+  const {controller}=setup();
+  controller.hasPlanCountTarget=true;
+  controller.planCountTarget={value:'2',options:[]};
+  controller.countStatusTarget={};
+  controller.hasCountApplyTarget=true;
+  controller.countApplyTarget={};
+  controller.refresh();
+  assert.match(controller.countStatusTarget.textContent,/plans déjà renseignés/);
+  assert.equal(controller.countApplyTarget.disabled,true);
+  controller.duration();
+  assert.match(controller.noticeTarget.textContent,/plan déjà renseigné/);
+  controller.refresh();
+  assert.match(controller.countStatusTarget.textContent,/plans déjà renseignés/);
+  assert.equal(controller.prepareStory(),false);
+});
+
+test('a contain framing choice alone prevents deleting a plan', () => {
+  const {controller,rows}=setup();
+  controller.hasPlanCountTarget=true;
+  controller.planCountTarget={value:'2',options:[]};
+  controller.countStatusTarget={};
+  for (const row of rows) row.querySelector('textarea').value='';
+  const original=rows[2].querySelector;
+  rows[2].querySelector=selector=>selector.includes('[referenceFit]')?{value:'contain'}:original(selector);
+  assert.equal(controller.redistribute(),false);
+  assert.match(controller.noticeTarget.textContent,/plan déjà renseigné/);
 });

@@ -13,6 +13,46 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class AiStoryProposalTest extends WebTestCase
 {
+    public function testRequestedCountAndManualLayoutAreValidatedBeforeAnyInference(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $db = static::getContainer()->get(Connection::class);
+        self::assertSame('shortflow_test', $db->fetchOne('SELECT current_database()'));
+        $user = new User(bin2hex(random_bytes(5)).'@example.test');
+        $user->verify();
+        $user->setPassword('unused');
+        $em->persist($user);
+        $em->flush();
+        $client->loginUser($user);
+        static::getContainer()->get('cache.rate_limiter')->clear();
+        static::getContainer()->set('story.http', new MockHttpClient(static function (): MockResponse {
+            self::fail('Preparing the requested count must not infer text synchronously.');
+        }));
+        static::getContainer()->set(\App\Service\LocalStoryWriter::class, new \App\Service\LocalStoryWriter(static::getContainer()->get('story.http'), true, 'http://host.docker.internal:11434', 'synthetic'));
+        $crawler = $client->request('GET', '/studio/creation');
+        $payload = ['_token' => $crawler->filter('[data-story-writer-token-value]')->attr('data-story-writer-token-value'), 'idea' => 'Milo est un chat blanc qui ouvre une boîte puis traverse la pièce.', 'model' => 'kling-3', 'target' => 30, 'tone' => 'auto', 'fingerprint' => 'chosen-count'];
+        $before = $db->fetchOne('SELECT count(*) FROM ai_generation');
+        foreach ([['independent', 3, [10, 10, 10]], ['linked', 4, [8, 8, 7, 7]]] as [$continuity, $count, $expected]) {
+            $client->request('POST', '/studio/creation/scenario', $payload + ['continuity' => $continuity, 'planCount' => $count]);
+            self::assertResponseStatusCodeSame(202);
+            $result = json_decode($client->getResponse()->getContent(), true, 32, JSON_THROW_ON_ERROR);
+            $job = $em->find(\App\Entity\StoryProposal::class, $result['id']);
+            self::assertSame($expected, $job->getInput()['durations']);
+            self::assertSame($continuity, $job->getInput()['continuity']);
+            $job->fail('Synthetic test completed without inference.');
+            $em->flush();
+        }
+        foreach ([['planCount' => 3, 'layout' => '15+15'], ['planCount' => 0], ['planCount' => 9], ['planCount' => 7, 'model' => 'kling-25']] as $invalid) {
+            $client->request('POST', '/studio/creation/scenario', array_replace($payload + ['continuity' => 'independent'], $invalid));
+            self::assertResponseStatusCodeSame(422);
+        }
+        self::assertSame($before, $db->fetchOne('SELECT count(*) FROM ai_generation'));
+        $db->executeStatement("DELETE FROM messenger_messages WHERE queue_name = 'story_writing'");
+        $db->executeStatement('DELETE FROM app_user WHERE id = ?', [$user->getId()]);
+    }
+
     /** @param array<string,mixed>|null $queued
      * @return array<string,mixed>
      */

@@ -78,6 +78,9 @@ final class AiEpisodeFlow
             }
         }
         $continuity = $data['continuity'] ?: 'independent';
+        if ('single' !== $continuity && isset($data['planCount']) && count($rows) !== $data['planCount']) {
+            throw new \RuntimeException('Applique le nombre de plans choisi avant le récapitulatif ; les cartes actuelles sont conservées.');
+        }
         if (!in_array($continuity, ['single', 'independent', 'linked'], true) || ('single' === $continuity && 1 !== count($rows))) {
             throw new \RuntimeException('Le plan unique exige un seul clip de durée native. Utilise « Préparer un plan unique » ou choisis plusieurs scènes.');
         }
@@ -197,8 +200,36 @@ final class AiEpisodeFlow
     }
 
     /** @return list<int> */
-    public function durations(string $model, int $target): array
+    public function durations(string $model, int $target, ?int $planCount = null): array
     {
+        if (null !== $planCount) {
+            if ($target < 1 || $target > 60 || $planCount < 1 || $planCount > 8) {
+                throw new \RuntimeException('Choisis de 1 à 8 plans et une durée totale de 1 à 60 secondes.');
+            }
+            $states = [0 => []];
+            foreach (range(1, $planCount) as $count) {
+                $next = [];
+                foreach ($states as $total => $parts) {
+                    foreach ($this->catalog->model($model)['seconds'] as $seconds) {
+                        $sum = $total + $seconds;
+                        if ($sum > 60) {
+                            continue;
+                        }
+                        $candidate = [...$parts, $seconds];
+                        if (!isset($next[$sum]) || max($candidate) - min($candidate) < max($next[$sum]) - min($next[$sum])) {
+                            $next[$sum] = $candidate;
+                        }
+                    }
+                }
+                $states = $next;
+            }
+            if (isset($states[$target])) {
+                rsort($states[$target]);
+
+                return $states[$target];
+            }
+            throw new \RuntimeException('Impossible de répartir le total exact de '.$target.' s en '.$planCount.' plans avec ce modèle (clips de '.implode(', ', $this->catalog->model($model)['seconds']).' s). Choisis un autre nombre de plans ou une autre durée totale ; rien n’a été raccourci.');
+        }
         foreach ($this->suggestions($model, $target) as $suggestion) {
             if ($suggestion['seconds'] === $target) {
                 return array_map('intval', explode(',', $suggestion['value']));

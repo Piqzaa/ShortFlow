@@ -18,3 +18,18 @@ test('every proposed plan respects the target, native durations and eight-source
     assert.ok(parts.every(s => allowed.includes(s)));
   }
 });
+
+test('an explicit plan count divides the exact total using supported clip durations', () => {
+  const seconds = Array.from({length:13}, (_,i)=>i+3);
+  assert.deepEqual(proposePlan(30, seconds, 3).parts, [10,10,10]);
+  assert.deepEqual(proposePlan(30, seconds, 4).parts, [8,8,7,7]);
+  assert.deepEqual(proposePlan(30, [5,10], 4).parts, [10,10,5,5]);
+  assert.equal(proposePlan(30, [5,10], 7).parts, null);
+  for (const count of [2,3,4,5,6,7,8]) for (let target=1;target<=60;target++) {
+    const {parts}=proposePlan(target,seconds,count);
+    if (!parts) continue;
+    assert.equal(parts.length,count);
+    assert.equal(parts.reduce((sum,s)=>sum+s,0),target);
+    assert.ok(parts.every(s=>seconds.includes(s)));
+  }
+});

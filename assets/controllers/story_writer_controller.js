@@ -15,7 +15,7 @@ export default class extends Controller {
       .filter(profile => !profile.querySelector('[data-subject-profile-reference]')?.disabled)
       .map(profile => ({ name: profile.querySelector('[data-subject-name]')?.value.trim() || '', role: profile.querySelector('[name$="[role]"]')?.value || 'character', presence: profile.querySelector('[name$="[presence]"]')?.value || 'unspecified' }))
       .filter(subject => subject.name);
-    return { idea: field('prompt'), model: field('model'), target: field('target'), layout, continuity: field('continuity'), tone: this.toneTarget.value, episode: String(this.episodeValue), subjectHints: JSON.stringify(subjectHints) };
+    return { idea: field('prompt'), model: field('model'), target: field('target'), layout, planCount: field('continuity') === 'single' ? '1' : this.form.querySelector('[name="ai_idea[planCount]"]')?.value || '', continuity: field('continuity'), tone: this.toneTarget.value, episode: String(this.episodeValue), subjectHints: JSON.stringify(subjectHints) };
   }
   fingerprint() {
     return JSON.stringify({
@@ -103,6 +103,11 @@ export default class extends Controller {
     if (this.pending) return;
     this.active = true;
     try {
+      const preparation = this.application?.getControllerForElementAndIdentifier(this.element, 'preparation');
+      if (preparation?.prepareStory && !preparation.prepareStory()) {
+        this.statusTarget.textContent = 'Vérifie le nombre de plans et leur répartition près du mode de tournage avant de proposer le scénario.';
+        return;
+      }
       const payload = this.payload();
       if (!payload.idea.trim() || !payload.model || !payload.target) {
         this.statusTarget.textContent = 'Ajoute une idée, une durée et un modèle vidéo pour proposer des scènes compatibles.';

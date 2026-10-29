@@ -60,6 +60,7 @@ final class AiStudioController extends AbstractController
                 // An incompatible total remains visible until explicitly adjusted.
             }
         }
+        $idea['planCount'] ??= count($idea['shots']) > 1 ? count($idea['shots']) : null;
         $connected = [];
         foreach (AiCatalog::PROVIDERS as $id => $name) {
             $connected[$id] = $apiConnections[$id] || ('fal' === $id && null !== $falConnection);
@@ -67,6 +68,7 @@ final class AiStudioController extends AbstractController
         $connected['fal-api'] = $apiConnections['fal'];
         $connected['fal-mcp'] = null !== $falConnection;
         $singlePrepared = false;
+        $layoutPrepared = false;
         $connecting = $request->isMethod('POST') && 'connect' === $request->request->getString('intent');
         $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => in_array($request->request->getString('intent'), ['compose', 'replan', 'single'], true) || $request->request->has('plan_action'), 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea'])->handleRequest($request);
         $referenceUrl = $endReferenceUrl = null;
@@ -120,6 +122,7 @@ final class AiStudioController extends AbstractController
                             }
                         }
                         $data['shots'] = $rows;
+                        $data['planCount'] = count($rows) > 1 ? count($rows) : null;
                         $data['target'] = array_sum(array_column($rows, 'seconds'));
                         $saved = $flow->prepare($user, $data, $episode);
 
@@ -127,11 +130,12 @@ final class AiStudioController extends AbstractController
                     }
                     if (in_array($request->request->getString('intent'), ['replan', 'single'], true)) {
                         $single = 'single' === $request->request->getString('intent');
-                        $durations = $single ? [(int) $data['target']] : $flow->durations($data['model'], (int) $data['target']);
+                        $durations = $single ? [(int) $data['target']] : $flow->durations($data['model'], (int) $data['target'], $data['planCount'] ?? null);
                         $old = array_values($data['shots']);
                         if ($single) {
                             $data['shots'] = $flow->singlePlan($data['model'], (int) $data['target'], $old);
                             $data['continuity'] = 'single';
+                            $data['planCount'] = null;
                             $singlePrepared = true;
                             if (!$episode) {
                                 $request->getSession()->set('ai_idea', $data);
@@ -140,14 +144,19 @@ final class AiStudioController extends AbstractController
                             if (array_filter(array_slice($old, count($durations)), static fn (array $row): bool => '' !== trim($row['sceneDescription'] ?? ''))) {
                                 throw new \RuntimeException('Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.');
                             }
-                            if (count($old) !== count($durations) && array_filter($old, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? ''))) {
-                                throw new \RuntimeException('Déplace ou retire les cadres et les consignes d’images avant de changer automatiquement le nombre de plans. Tes textes et images restent conservés.');
+                            if (array_filter(array_slice($old, count($durations)), static fn (array $row): bool => '' !== trim($row['prompt'] ?? '') || !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? '') || !empty($row['translatedIdentity']) || !empty($row['translationSource']) || 'contain' === ($row['referenceFit'] ?? 'crop'))) {
+                                throw new \RuntimeException('Ce découpage retirerait un plan déjà renseigné. Conserve le nombre actuel ou réaffecte ses textes et images avant de le réduire. Rien n’a été effacé.');
                             }
                             $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds] + array_intersect_key($old[$i] ?? [], array_flip(['startReference', 'endReference', 'referenceFit', 'imagePrompt', 'sceneDescription', 'translatedIdentity', 'translationSource'])), $durations, array_keys($durations));
                             if (count($old) > count($durations)) {
                                 $last = count($durations) - 1;
                                 $data['shots'][$last]['prompt'] .= "\n".implode("\n", array_column(array_slice($old, count($durations)), 'prompt'));
                             }
+                        }
+                        $layoutPrepared = !$single;
+                        $data['planCount'] = !$single && count($data['shots']) > 1 ? count($data['shots']) : null;
+                        if (!$episode) {
+                            $request->getSession()->set('ai_idea', $data);
                         }
                         $form = $this->createForm(AiIdeaType::class, $data, ['connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => true, 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea']);
                     } else {
@@ -229,7 +238,7 @@ final class AiStudioController extends AbstractController
 
         $projects = $episode ? [] : $em->getRepository(AiEpisode::class)->findBy(['owner' => $user], ['id' => 'DESC'], 4);
 
-        return $this->render('ai/studio.html.twig', ['singlePrepared' => $singlePrepared, 'projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/studio.html.twig', ['layoutPrepared' => $layoutPrepared, 'singlePrepared' => $singlePrepared, 'projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/creation/idee', name: 'app_ai_save_idea', methods: ['POST'])]

@@ -2,36 +2,39 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'planCount', 'countStatus', 'countApply'];
   static values = { models: Object };
 
-  connect() { queueMicrotask(() => { if (this.element.isConnected) this.refresh(); }); }
+  connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
   get editor() { return this.application.getControllerForElementAndIdentifier(this.element.querySelector('#ai-idea-form'), 'shot-editor'); }
   get model() { return this.modelsValue[this.element.querySelector('[data-creation-target="model"]').value]; }
+  get desiredCount() { return this.continuityTarget.value === 'single' ? 1 : this.hasPlanCountTarget ? Number(this.planCountTarget.value) || null : null; }
 
   guardPending(event) {
     if (this.element.querySelector('[data-plan-reference-busy="true"]')) { event.preventDefault(); this.noticeTarget.textContent = 'Attends la fin de l’import des images avant de préparer la vidéo.'; }
   }
 
   change(event) {
+    if (this.hasPlanCountTarget && event.target.matches('[data-preparation-target="continuity"]') && this.continuityTarget.value !== 'single' && this.editor?.rows().length === 1) this.planCountTarget.value = '';
     if (this.continuityTarget.value === 'single' && this.editor?.rows().length === 1 && event.target.matches('[name*="[shots]"][name$="[seconds]"]') && this.model?.seconds.includes(Number(event.target.value))) this.totalTarget.value = event.target.value;
     this.refresh();
     if (this.continuityTarget.value !== 'single' && event.target.matches('[data-creation-target="model"]') && this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) this.redistribute();
   }
   input() { this.refresh(); }
-  duration() {
+  duration(event) {
     if (this.continuityTarget.value === 'single') {
       const row = this.editor?.rows().length === 1 ? this.editor.rows()[0] : null;
       if (row && this.model?.seconds.includes(Number(this.totalTarget.value))) row.querySelector('select').value = this.totalTarget.value;
       this.refresh();
       return;
     }
-    if (this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) this.redistribute();
+    if (this.hasPlanCountTarget && this.desiredCount || this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) { this.redistribute(event); return; }
     this.refresh();
   }
 
   refresh() {
     const model = this.model;
+    if (this.hasCountPanelTarget) this.countPanelTarget.hidden = this.continuityTarget.value === 'single';
     if (this.hasAudioHelpTarget) this.audioHelpTarget.textContent = model?.audio ? 'Ce modèle génère son propre audio pour chaque clip. Le raccord par image ne transmet pas le son précédent. « Couper le son » agit au montage, sans réduire le coût de génération.' : model ? 'Ce modèle produit des clips sans audio. Tu peux ajouter une bande sonore dans le montage. Le réglage ci-dessous concerne uniquement le son conservé à l’export.' : 'Choisis un modèle pour connaître son audio. Couper le son au montage ne réduit pas le coût de génération.';
     const reference = this.element.querySelector('[data-creation-target="reference"]').value;
     const firstFrame = this.editor?.rows()[0]?.querySelector('[name$="[startReference]"]')?.value;
@@ -53,6 +56,12 @@ export default class extends Controller {
           this.singleButtonTarget.disabled = true;
           this.useTotalTarget.hidden = true;
           if (this.hasRecapTarget) this.recapTarget.disabled = this.continuityTarget.value === 'single';
+        }
+        if (this.hasPlanCountTarget) {
+          this.countStatusTarget.textContent = 'Choisis un modèle avant de répartir la durée et le nombre de plans.';
+          for (const option of this.planCountTarget.options) option.hidden = option.disabled = false;
+          if (this.hasCountApplyTarget) this.countApplyTarget.disabled = true;
+          if (this.hasRecapTarget) this.recapTarget.disabled = true;
         }
       }
       return;
@@ -87,9 +96,50 @@ export default class extends Controller {
       if (this.hasRecapTarget) this.recapTarget.disabled = singleMode && (!native || this.editor.rows().length !== 1 || total !== desired);
     }
     const invalid = this.editor.rows().some(row => !model.seconds.includes(Number(row.querySelector('select').value)));
-    const proposal = proposePlan(Number(this.totalTarget.value), model.seconds);
+    const proposal = proposePlan(Number(this.totalTarget.value), model.seconds, this.desiredCount);
     this.noticeTarget.textContent = !proposal.parts ? `Ce modèle ne produit pas ce total exact en huit plans maximum. Totaux proches : ${proposal.nearby.join(' ou ')} s. Choisis explicitement la durée souhaitée.` : invalid ? 'Certaines durées ne sont pas compatibles avec ce modèle. Utilise « Répartir la durée » ou ajuste les plans ; tes textes sont conservés.' : total !== Number(this.totalTarget.value) ? `Tes plans totalisent ${total} s pour ${this.totalTarget.value} s souhaitées. Ajuste les plans ou utilise « Répartir la durée ».` : `${total} s réparties en ${this.editor.rows().length} plan(s). Le modèle et les références restent modifiables avant confirmation.`;
     if (singleMode) this.noticeTarget.textContent = `${model.name || 'Ce modèle'} · un seul clip : ${allowed} (maximum ${Math.max(...model.seconds)} s). Seules ces durées sont proposées. Tes scènes actuelles totalisent ${total} s.`;
+    if (this.hasPlanCountTarget && !singleMode) {
+      const possibleCounts = [];
+      for (const option of this.planCountTarget.options) {
+        if (!option.value) continue;
+        const valid = Boolean(proposePlan(desired, model.seconds, Number(option.value)).parts);
+        if (valid) possibleCounts.push(Number(option.value));
+        option.hidden = option.disabled = !valid && !option.selected;
+        option.textContent = `${option.value} plans${!valid && option.selected ? ' · à ajuster' : ''}`;
+      }
+      const ready = this.desiredCount && this.editor.rows().length === this.desiredCount && total === desired && !invalid;
+      const loss = proposal.parts && this.editor.rows().slice(proposal.parts.length).some(row => this.rowHasContent(row));
+      this.countStatusTarget.textContent = !this.desiredCount ? possibleCounts.length ? 'Choisis combien de plans préparer. La durée sera répartie avant la proposition de scénario ; tes scènes actuelles restent conservées.' : `Aucun découpage de ${desired} s en 2 à 8 plans n’est compatible avec ce modèle. Augmente la durée totale ou choisis un plan unique ; tes scènes restent conservées.`
+        : !proposal.parts ? `Ce modèle ne répartit pas ${desired} s en ${this.desiredCount} plans. Choisis un autre nombre ou un total proche : ${proposal.nearby.join(' ou ')} s.`
+          : loss ? 'Ce nombre retirerait des plans déjà renseignés. Conserve le nombre actuel ou reporte leurs textes et images dans les plans conservés avant de réduire. Rien n’a été effacé.'
+          : ready ? `${this.desiredCount} plans · ${this.editor.rows().map(row => row.querySelector('select').value).join(' + ')} = ${desired} s. Le scénario utilisera ce découpage ; tu peux ajuster les durées dans les cartes.`
+            : `${this.desiredCount} plans proposés : ${proposal.parts.join(' + ')} = ${desired} s, selon les durées du modèle. Applique ce découpage pour préparer les cartes ; les textes et images restent protégés.`;
+      if (this.hasRecapTarget) this.recapTarget.disabled = !ready;
+      if (this.hasCountApplyTarget) this.countApplyTarget.disabled = !this.desiredCount || !proposal.parts || Boolean(loss);
+    }
+  }
+
+  planCountChanged(event) { this.redistribute(event); }
+
+  rowHasContent(row) {
+    return Boolean(row.querySelector('textarea').value.trim() || row.querySelector('[name$="[referenceFit]"]')?.value === 'contain' || ['startReference', 'endReference', 'imagePrompt', 'sceneDescription', 'translatedIdentity', 'translationSource'].some(name => row.querySelector(`[name$="[${name}]"]`)?.value.trim()));
+  }
+
+  countFromCards() {
+    if (this.hasPlanCountTarget) this.planCountTarget.value = this.editor.rows().length > 1 ? String(this.editor.rows().length) : '';
+    this.refresh();
+  }
+
+  prepareStory() {
+    if (!this.model || !this.editor) return false;
+    const rows = this.editor.rows();
+    const total = rows.reduce((sum, row) => sum + Number(row.querySelector('select').value), 0);
+    const ready = rows.length === this.desiredCount && total === Number(this.totalTarget.value) && rows.every(row => this.model.seconds.includes(Number(row.querySelector('select').value)));
+    if (ready) return true;
+    if (this.continuityTarget.value === 'single') { this.singleButtonTarget.focus(); return false; }
+    if (!this.desiredCount) { this.refresh(); this.planCountTarget.focus(); return false; }
+    return this.redistribute();
   }
 
   usePlanTotal(event) {
@@ -113,13 +163,15 @@ export default class extends Controller {
 
   redistribute(event) {
     event?.preventDefault();
-    if (!this.editor || !this.model) return;
-    const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds);
-    if (!proposal.parts) { this.refresh(); return; }
+    if (!this.editor || !this.model) return false;
+    if (this.element.querySelector('[data-plan-reference-busy="true"]')) { this.noticeTarget.textContent = 'Attends la fin de l’import des images avant de modifier le découpage.'; return false; }
+    if (this.hasPlanCountTarget && this.continuityTarget.value !== 'single' && !this.desiredCount) { this.refresh(); this.planCountTarget.focus(); return false; }
+    const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds, this.desiredCount);
+    if (!proposal.parts) { this.refresh(); return false; }
     const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt','sceneDescription','translatedIdentity','translationSource'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
-    if (inputs.slice(proposal.parts.length).some(row => row.sceneDescription.trim())) { this.noticeTarget.textContent = 'Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.'; return; }
-    if (inputs.length !== proposal.parts.length && inputs.some(row=>row.startReference || row.endReference || row.imagePrompt?.trim())) { this.noticeTarget.textContent = 'Déplace ou retire les cadres et les consignes d’images avant de changer le nombre de plans. Tes textes restent conservés.'; return; }
+    if (inputs.slice(proposal.parts.length).some(row => row.sceneDescription.trim())) { this.noticeTarget.textContent = 'Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.'; return false; }
     const prompts = this.editor.rows().map(row => row.querySelector('textarea').value);
+    if (this.editor.rows().slice(proposal.parts.length).some(row => this.rowHasContent(row))) { this.noticeTarget.textContent = 'Ce découpage retirerait un plan déjà renseigné. Conserve le nombre actuel ou réaffecte ses textes et images avant de le réduire. Rien n’a été effacé.'; return false; }
     this.editor.listTarget.replaceChildren();
     proposal.parts.forEach((seconds, index) => {
       this.editor.listTarget.insertAdjacentHTML('beforeend', this.editor.prototypeTarget.innerHTML.replaceAll('__name__', String(index)));
@@ -130,6 +182,7 @@ export default class extends Controller {
     });
     if (prompts.length > proposal.parts.length) this.editor.rows().at(-1).querySelector('textarea').value += '\n' + prompts.slice(proposal.parts.length).join('\n');
     this.refresh();
-    if (event) this.editor.element.dispatchEvent(new Event('input', { bubbles: true }));
+    this.editor.element.dispatchEvent(new Event('input', { bubbles: true }));
+    return true;
   }
 }

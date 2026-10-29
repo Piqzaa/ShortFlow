@@ -38,6 +38,7 @@ final class AiIdeaType extends AbstractType
         }
         $builder->add('target', ChoiceType::class, ['label' => 'Durée finale souhaitée (secondes)', 'required' => false, 'placeholder' => 'Choisir une durée', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' s', range(1, 60)), range(1, 60)), 'constraints' => [new Assert\Range(min: 1, max: 60)]])
             ->add('continuity', ChoiceType::class, ['label' => 'Comment filmer cette vidéo ?', 'required' => true, 'placeholder' => false, 'empty_data' => 'independent', 'choices' => ['Plan unique · un seul appel' => 'single', 'Plusieurs scènes' => 'independent', 'Raccord depuis la dernière image · génération séparée' => 'linked']])
+            ->add('planCount', ChoiceType::class, ['label' => 'Combien de plans ?', 'required' => false, 'placeholder' => 'Choisir le nombre de plans', 'choices' => array_combine(array_map(static fn (int $n): string => $n.' plans', range(2, 8)), range(2, 8))])
             ->add('mute', CheckboxType::class, ['label' => 'Couper le son des plans au montage', 'required' => false])
             ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])
             ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations()], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
