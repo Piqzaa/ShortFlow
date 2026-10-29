@@ -19,9 +19,20 @@ final class AiFrameExtractor
             throw new \RuntimeException('Le raccord visuel est indisponible.');
         }
         try {
-            $process = new Process(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-protocol_whitelist', 'file,pipe', '-threads', '1', '-ss', sprintf('%.3F', max(0, $video->getDuration() - 0.15)), '-i', $this->videos->path($video->getStorageName()), '-frames:v', '1', '-map_metadata', '-1', '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease', '-c:v', 'mjpeg', '-threads', '1', '-f', 'image2', $file]);
-            $process->setTimeout(20);
-            $process->mustRun();
+            // Decode the tail through EOF and overwrite the image for each frame:
+            // the resulting file is the final decoded frame, not a time estimate.
+            $deadline = microtime(true) + 20;
+            foreach ([true, false] as $tail) {
+                $process = new Process(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-protocol_whitelist', 'file,pipe', '-threads', '1', ...($tail ? ['-sseof', '-1'] : []), '-i', $this->videos->path($video->getStorageName()), '-map', '0:v:0', '-an', '-map_metadata', '-1', '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease', '-c:v', 'mjpeg', '-threads', '1', '-f', 'image2', '-update', '1', $file]);
+                $process->setTimeout(max(0.01, $deadline - microtime(true)));
+                $process->mustRun();
+                clearstatcache(true, $file);
+                if (filesize($file) > 0) {
+                    break;
+                }
+                // A longer audio track can put container EOF after all video
+                // frames. Retry without seeking, within the same time budget.
+            }
 
             return $this->references->store($video->getOwner(), new UploadedFile($file, 'raccord.jpg', 'image/jpeg', null, true));
         } catch (\Throwable) {

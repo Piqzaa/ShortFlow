@@ -80,6 +80,21 @@ test('pending single conversion keeps the original cards until the server accept
   assert.equal(controller.recapTarget.disabled,false);
 });
 
+test('choosing a frame bridge explains its image requirement without changing a text or subject source', () => {
+  for (const mode of ['text','subject']) {
+    const {controller}=setup();
+    const source={value:mode};
+    controller.selectedModel={name:'Chosen model',seconds:[5,10,15],image:mode==='subject',subjectReference:mode==='subject'};
+    controller.element.querySelector=selector=>selector.includes('data-plan-reference-busy')?null:selector.includes('data-creation-target="source"')?source:{value:''};
+    controller.continuityTarget.value='linked';
+    controller.change({target:{matches:selector=>selector==='[data-preparation-target="continuity"]'}});
+    assert.equal(source.value,mode);
+    assert.equal(controller.continuityHelpTarget.hidden,false);
+    assert.match(controller.continuityHelpTarget.textContent,/exige un modèle image et un premier cadre/);
+    assert.match(controller.noticeTarget.textContent,/modèle image compatible/);
+  }
+});
+
 test('choosing single submits only the existing safe conversion intent with all three cards intact', () => {
   const {controller,rows}=setup();
   let submitted;

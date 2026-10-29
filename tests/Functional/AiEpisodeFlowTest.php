@@ -617,6 +617,63 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame(1, $this->submissions);
     }
 
+    public function testFrameExtractionUsesTheLastDecodedFrame(): void
+    {
+        foreach ([false, true] as $longAudio) {
+            $name = bin2hex(random_bytes(24)).'.mp4';
+            $path = static::getContainer()->get(\App\Service\PrivateVideoStorage::class)->path($name);
+            $this->files[] = $path;
+            (new Process(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=red:s=360x640:r=30:d=2', ...($longAudio ? ['-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono:d=5', '-c:a', 'aac'] : []), '-vf', "drawbox=x=0:y=0:w=iw:h=ih:color=blue:t=fill:enable='gte(n,59)'", '-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', $path]))->mustRun();
+            $video = new VideoAsset($this->owner, 'Synthetic final blue frame', $name, 'video/mp4', filesize($path), $longAudio ? 5 : 2, 360, 640, 'h264');
+            $reference = static::getContainer()->get(\App\Service\AiFrameExtractor::class)->lastFrame($video);
+            $imagePath = static::getContainer()->get(AiReferenceStorage::class)->path($this->owner, $reference);
+            $this->files[] = $imagePath;
+            $pixel = (new Process(['ffmpeg', '-nostdin', '-v', 'error', '-i', $imagePath, '-vf', 'scale=1:1', '-frames:v', '1', '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1']))->mustRun()->getOutput();
+            self::assertSame(3, strlen($pixel));
+            self::assertGreaterThan(ord($pixel[0]) + 100, ord($pixel[2]), 'Only the last decoded frame is blue; earlier frames are red.');
+            self::assertSame(0, $this->submissions);
+        }
+    }
+
+    public function testThreeLinkedPlansUsePreviousFinalImagesAndOnlyTheLastUsesTheCommonEnding(): void
+    {
+        $episode = $this->episode(true);
+        $storage = static::getContainer()->get(AiReferenceStorage::class);
+        $first = $episode->getSeries()->getRecipe()['reference'];
+        $ending = bin2hex(random_bytes(24)).'.jpg';
+        $endingPath = dirname($storage->path($this->owner, $first)).'/'.$ending;
+        copy($storage->path($this->owner, $first), $endingPath);
+        $this->files[] = $endingPath;
+        $this->flow()->prepare($this->owner, ['model' => 'kling-3-image', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => $first, 'endReference' => $ending, 'useEnd' => true, 'imageFit' => 'crop', 'prompt' => 'Milo walks across a room.', 'title' => 'Three linked plans', 'target' => 15, 'mute' => false, 'continuity' => 'linked', 'revision' => $episode->getRevision(), 'shots' => array_map(static fn (int $i): array => ['prompt' => 'Scene '.$i.': Milo walks forward.', 'seconds' => 5], [1, 2, 3])], $episode);
+        $quote = $this->flow()->quote($episode);
+        self::assertSame($first, $quote['references'][0]['start']);
+        self::assertFalse($quote['references'][0]['fromPrevious']);
+        self::assertTrue($quote['references'][1]['fromPrevious']);
+        self::assertTrue($quote['references'][2]['fromPrevious']);
+        self::assertNull($quote['references'][0]['end']);
+        self::assertNull($quote['references'][1]['end']);
+        self::assertSame($ending, $quote['references'][2]['end']);
+        $this->flow()->confirm($episode, $quote['hash']);
+        $this->flow()->advance($episode->getId());
+        $shots = $this->flow()->shots($episode);
+        self::assertSame($first, $shots[0]->getGeneration()->getReferenceImage());
+        foreach ([0, 1] as $index) {
+            self::assertNull($shots[$index + 1]->getGeneration());
+            $this->completeShot($shots[$index]);
+            $expected = static::getContainer()->get(\App\Service\AiFrameExtractor::class)->lastFrame($shots[$index]->getGeneration()->getVideo());
+            $expectedPath = $storage->path($this->owner, $expected);
+            $this->files[] = $expectedPath;
+            $this->flow()->advance($episode->getId());
+            $next = $shots[$index + 1]->getGeneration();
+            self::assertNotNull($next);
+            $actualPath = $storage->path($this->owner, $next->getReferenceImage());
+            $this->files[] = $actualPath;
+            self::assertSame(hash_file('sha256', $expectedPath), hash_file('sha256', $actualPath));
+            self::assertSame(1 === $index ? $ending : null, $next->getEndReferenceImage());
+        }
+        self::assertSame(2, $this->submissions, 'The third plan is queued, not submitted before its turn.');
+    }
+
     public function testAmbiguousSubmissionPausesWithoutResendingAndDoesNotStartFollowingPlan(): void
     {
         $episode = $this->planned();
