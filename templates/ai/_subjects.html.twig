@@ -9,3 +9,5 @@
 {% if subjectForm.removeSubjects is defined %}<div class="subject-legacy-removal" data-subject-list-target="legacy">{{ form_row(subjectForm.removeSubjects) }}</div>{% endif %}
 <noscript><p class="library-note">Les cartes et imports détaillés nécessitent JavaScript. Les références déjà enregistrées restent conservées ; tu peux les nommer avant de vérifier ton devis.</p></noscript>
 </section>
+{{ form_errors(subjectForm.subjects) }}{{ form_errors(subjectForm.subjectDetails) }}
+{% do subjectForm.subjects.setRendered() %}{% do subjectForm.subjectDetails.setRendered() %}

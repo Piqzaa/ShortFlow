@@ -105,6 +105,26 @@ final class SeriesRecurrencesTest extends WebTestCase
         return static::getContainer()->get(SeriesRecurrences::class);
     }
 
+    public function testOccurrenceWithoutPublicationShowsItsOwnSavedDestination(): void
+    {
+        $id = 'UC'.str_repeat('a', 22);
+        $this->em->persist(new \App\Entity\YouTubeConnection($this->owner, $id, 'Original destination', 'synthetic', 'synthetic', 86400));
+        $this->em->persist(new \App\Entity\YouTubeConnection($this->owner, 'UC'.str_repeat('b', 22), 'Other destination', 'synthetic', 'synthetic', 86400));
+        $this->em->flush();
+        $recurrence = $this->service()->activate($this->series, $this->data());
+        $episode = new AiEpisode($this->series, 1);
+        $occurrence = new SeriesOccurrence($recurrence, $recurrence->getNextAt(), 'Europe/Paris', ['youtube'], $this->clock->now(), $episode, ['youtube' => $id]);
+        $this->em->persist($episode);
+        $this->em->persist($occurrence);
+        $this->em->flush();
+        $this->client->request('GET', '/studio/series/'.$this->series->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#episode-'.$episode->getId(), 'Original destination · '.$id);
+        self::assertSelectorTextNotContains('#episode-'.$episode->getId(), 'Other destination');
+        self::assertSame(0, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
+    }
+
     private function confirmReviewed(AiEpisode $episode): void
     {
         $flow = static::getContainer()->get(AiEpisodeFlow::class);
@@ -414,6 +434,15 @@ final class SeriesRecurrencesTest extends WebTestCase
         self::assertSame(0, $this->paidCalls);
         self::assertSame(0, $this->em->getRepository(AiEpisode::class)->count([]));
         self::assertCount(1, $this->em->getRepository(SeriesOccurrence::class)->findAll());
+        $before = (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages');
+        $this->client->request('GET', '/studio/series/'.$this->series->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.recurrence-missed a[href="#add-episodes"]');
+        self::assertSelectorExists('form#add-episodes');
+        self::assertSelectorTextContains('.recurrence-missed', 'Aucune génération ni publication n’est relancée ici.');
+        self::assertSame(0, $this->textCalls);
+        self::assertSame(0, $this->paidCalls);
+        self::assertSame($before, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
     public function testChangedSeriesRequiresANewAuthorizationBeforeWriting(): void

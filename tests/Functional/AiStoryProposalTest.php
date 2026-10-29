@@ -13,6 +13,45 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class AiStoryProposalTest extends WebTestCase
 {
+    public function testDisabledLocalWritingIsExplainedWithoutHttpAndManualPreparationRemainsAvailable(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $db = $em->getConnection();
+        self::assertSame('shortflow_test', $db->fetchOne('SELECT current_database()'));
+        $user = new User('disabled-writer-'.bin2hex(random_bytes(5)).'@example.test');
+        $user->verify();
+        $user->setPassword('unused');
+        $em->persist($user);
+        $em->flush();
+        $http = new MockHttpClient(static fn () => throw new \LogicException('Rendering must never probe or infer with the local writer.'));
+        static::getContainer()->set('ai.http', $http);
+        static::getContainer()->set(\App\Service\LocalStoryWriter::class, new \App\Service\LocalStoryWriter($http, false, 'http://localhost:11434', 'synthetic'));
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-story-writer-enabled-value="false"]');
+        self::assertSelectorExists('button[data-story-writer-target="generate"][disabled]');
+        self::assertSelectorTextContains('.story-assistant', 'pas activée sur ce poste');
+        self::assertSelectorExists('[data-shot-editor-target="add"]');
+        $before = $db->fetchOne('SELECT COUNT(*) FROM messenger_messages');
+        $client->request('POST', '/studio/creation/scenario', ['_token' => $crawler->filter('[data-story-writer-token-value]')->attr('data-story-writer-token-value')]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame($before, $db->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $series = new AiSeries($em->find(User::class, $user->getId()), 'Disabled local preparation', 'Milo walks across a room.', '', '', ['model' => 'kling-25', 'totalSeconds' => 30, 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => null, 'endReference' => null, 'imageFit' => 'crop']);
+        $em->persist($series);
+        $em->flush();
+        $client->request('GET', '/studio/series/'.$series->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.series-recurrence', 'pas activée sur ce poste');
+        self::assertSelectorExists('.series-recurrence button[type="submit"][disabled]');
+        self::assertSelectorExists('form#add-episodes button:not([disabled])');
+        self::assertSame($before, $db->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+        $db->executeStatement('DELETE FROM app_user WHERE id = ?', [$user->getId()]);
+    }
+
     public function testRequestedCountAndManualLayoutAreValidatedBeforeAnyInference(): void
     {
         $client = static::createClient();
@@ -90,14 +129,6 @@ final class AiStoryProposalTest extends WebTestCase
         $em->flush();
         $client->loginUser($user);
         static::getContainer()->get('cache.rate_limiter')->clear();
-        $client->request('GET', '/studio/creation');
-        $crawler = $client->getCrawler();
-        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM ai_credential WHERE owner_id = ?', [$user->getId()]));
-        self::assertSelectorExists('[data-guided-model-picker][data-creation-target="picker"]');
-        self::assertSelectorTextContains('[data-creation-target="accessDetails"]', 'sans clé vidéo');
-        self::assertSelectorExists('[data-story-writer-target="elapsed"][aria-live="off"]');
-        self::assertSelectorNotExists('progress[data-story-writer-target="progress"]');
-        $token = $crawler->filter('[data-story-writer-token-value]')->attr('data-story-writer-token-value');
         $calls = 0;
         $suspicious = false;
         static::getContainer()->set('story.http', new MockHttpClient(function (string $method, string $url, array $options) use (&$calls, &$suspicious): MockResponse {
@@ -124,6 +155,14 @@ final class AiStoryProposalTest extends WebTestCase
             return new MockResponse(json_encode(['done' => true, 'done_reason' => 'stop', 'message' => ['content' => json_encode($data, JSON_THROW_ON_ERROR)]], JSON_THROW_ON_ERROR));
         }));
         static::getContainer()->set(\App\Service\LocalStoryWriter::class, new \App\Service\LocalStoryWriter(static::getContainer()->get('story.http'), true, 'http://host.docker.internal:11434', 'synthetic'));
+        $client->request('GET', '/studio/creation');
+        $crawler = $client->getCrawler();
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM ai_credential WHERE owner_id = ?', [$user->getId()]));
+        self::assertSelectorExists('[data-guided-model-picker][data-creation-target="picker"]');
+        self::assertSelectorTextContains('[data-creation-target="accessDetails"]', 'sans clé vidéo');
+        self::assertSelectorExists('[data-story-writer-target="elapsed"][aria-live="off"]');
+        self::assertSelectorNotExists('progress[data-story-writer-target="progress"]');
+        $token = $crawler->filter('[data-story-writer-token-value]')->attr('data-story-writer-token-value');
         $payload = ['_token' => $token, 'idea' => 'Milo mon chat blanc joueur', 'model' => 'kling-25', 'target' => '30', 'continuity' => 'independent', 'tone' => 'auto'];
         $before = static::getContainer()->get(Connection::class)->fetchOne('SELECT count(*) FROM ai_generation');
         $queuedBefore = (int) static::getContainer()->get(Connection::class)->fetchOne("SELECT count(*) FROM messenger_messages WHERE queue_name = 'story_writing'");

@@ -147,6 +147,55 @@ final class AiEpisodeFlowTest extends WebTestCase
         return static::getContainer()->get(AiEpisodeFlow::class);
     }
 
+    public function testForwardedPreparationKeepsSeriesNavigationOnGetAndInvalidPost(): void
+    {
+        $episode = $this->planned();
+        $url = '/studio/series/episodes/'.$episode->getId();
+        $crawler = $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(3, 'a[aria-current="page"][href="/studio/series"]');
+        self::assertSelectorNotExists('a[aria-current="page"][href="/studio"]');
+        self::assertStringNotContainsString('>Subjects<', $this->client->getResponse()->getContent());
+        $values = $crawler->selectButton('Voir le récapitulatif →')->form()->getPhpValues();
+        $values['ai_idea']['title'] = str_repeat('x', 121);
+        $this->client->request('POST', $url, $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorCount(3, 'a[aria-current="page"][href="/studio/series"]');
+        self::assertInputValueSame('ai_idea[title]', str_repeat('x', 121));
+        self::assertStringNotContainsString('>Subjects<', $this->client->getResponse()->getContent());
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testStandalonePreparationKeepsStudioNavigationAfterForward(): void
+    {
+        $episode = $this->flow()->prepare($this->owner, ['model' => 'kling-25', 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => '', 'imageFit' => 'crop', 'prompt' => 'Milo walks across a room.', 'title' => 'Standalone navigation', 'target' => 10, 'mute' => false, 'continuity' => 'independent', 'shots' => [['seconds' => 5, 'prompt' => 'Milo opens a door.'], ['seconds' => 5, 'prompt' => 'Milo enters the room.']]]);
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(3, 'a[aria-current="page"][href="/studio/creation"]');
+        self::assertSelectorNotExists('a[aria-current="page"][href="/studio/series"]');
+        self::assertSelectorExists('input[name="ai_idea[_token]"]');
+        self::assertSame(0, $this->submissions);
+    }
+
+    public function testSubjectCollectionErrorsStayVisibleWithoutTheResidualEnglishLabel(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $crawler->selectButton('Répartir la durée')->form()->getPhpValues();
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'A white cat walks across the room.', 'source' => 'subject', 'model' => 'vidu-q1-subject', 'seconds' => 5, 'target' => 5, 'continuity' => 'single', 'subjects' => array_fill(0, 8, str_repeat('a', 48).'.jpg')]);
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('#ai-idea-form ul li');
+        self::assertSelectorCount(8, 'input[name^="ai_idea[subjects]"]:not([name*="__name__"])');
+        self::assertSelectorExists('[data-reference-picker-image-value$="'.str_repeat('a', 48).'.jpg"]');
+        self::assertStringNotContainsString('>Subjects<', $this->client->getResponse()->getContent());
+        $values['ai_idea']['subjects'] = ['invalid-reference'];
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertInputValueSame('ai_idea[subjects][0]', 'invalid-reference');
+        self::assertSelectorExists('#ai-idea-form ul li');
+        self::assertSame(0, $this->submissions);
+    }
+
     public function testReviewKeepsCostConnectionAndActualReferencesAccessibleWithoutSubmitting(): void
     {
         $episode = $this->planned(true);

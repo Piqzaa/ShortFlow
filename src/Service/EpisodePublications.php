@@ -10,7 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class EpisodePublications
 {
-    public function __construct(private EntityManagerInterface $em, private PublicationDrafts $drafts, private PublicationCalendar $calendar, private PublicationLock $lock, private \Symfony\Component\Clock\ClockInterface $clock, private PublicationEditorial $editorial)
+    public function __construct(private EntityManagerInterface $em, private PublicationDrafts $drafts, private PublicationCalendar $calendar, private PublicationLock $lock, private \Symfony\Component\Clock\ClockInterface $clock, private PublicationEditorial $editorial, private SocialAccounts $accounts)
     {
     }
 
@@ -83,6 +83,7 @@ final class EpisodePublications
             ->setParameter('owner', $episodes[0]->getOwner())->setParameter('episodes', $episodes)
             ->orderBy('d.id', 'DESC')->getQuery()->getResult();
         $snapshot = $this->calendar->snapshot($drafts);
+        $accountNames = $drafts ? array_map('array_flip', $this->accounts->choices($episodes[0]->getOwner())) : [];
         $states = $snapshot['states'];
         $result = [];
         $labels = ['queued' => 'En attente', 'uploading' => 'Envoi en cours', 'processing' => 'Traitement en cours', 'published' => 'Publiée', 'failed' => 'Échec', 'paused' => 'En pause', 'review' => 'À vérifier', 'cancelled' => 'Annulée'];
@@ -92,7 +93,8 @@ final class EpisodePublications
             foreach ($draft->getNetworks() as $network) {
                 $jobStatus = $snapshot['destinations'][$draft->getSubmissionKey()][$network] ?? null;
                 $status = $jobStatus ? ($labels[$jobStatus] ?? 'En cours') : PublicationCalendar::LABELS[$states[$draft->getId()]];
-                $destinations[] = ['name' => MultiNetworkPublishing::LABELS[$network], 'status' => $status];
+                $identity = $draft->getAccounts()[$network] ?? null;
+                $destinations[] = ['name' => MultiNetworkPublishing::LABELS[$network], 'status' => $status, 'account' => $identity ? ($accountNames[$network][$identity] ?? 'Compte enregistré indisponible · '.$identity) : ('draft' === $draft->getStatus() ? 'Compte à choisir' : 'Compte non renseigné dans la préparation')];
             }
             $result[$episode->getId()][] = ['draft' => $draft, 'label' => PublicationCalendar::LABELS[$states[$draft->getId()]], 'current' => $draft->videoIds() === [$episode->getApprovedVideo()?->getId()], 'destinations' => $destinations];
         }

@@ -3,7 +3,7 @@ import { writingProgress } from '../writing-progress.js';
 
 export default class extends Controller {
   static targets = ['tone', 'generate', 'status', 'preview', 'title', 'summary', 'scenes', 'loading', 'progress', 'elapsed', 'retry', 'warnings'];
-  static values = { url: String, latest: String, token: String, episode: Number };
+  static values = { url: String, latest: String, token: String, episode: Number, enabled: {type: Boolean, default: true} };
 
   get form() { return this.element.querySelector('#ai-idea-form'); }
   get editor() { return this.application.getControllerForElementAndIdentifier(this.form, 'shot-editor'); }
@@ -44,7 +44,7 @@ export default class extends Controller {
 
   busy(value) {
     this.pending = value;
-    this.generateTarget.disabled = value;
+    this.generateTarget.disabled = value || this.enabledValue === false;
     this.generateTarget.textContent = value ? 'Envoi de la demande…' : '✨ Proposer mon scénario';
     if (this.hasLoadingTarget) this.loadingTarget.hidden = !value;
     if (this.hasRetryTarget) this.retryTarget.hidden = true;
@@ -77,7 +77,7 @@ export default class extends Controller {
       if (!this.active || this.pending || !job) return;
       if (job.status === 'none') {
         this.busy(false);
-        if (event) this.statusTarget.textContent = 'Aucune demande à retrouver pour cette préparation. Tu peux proposer un scénario.';
+        if (event) this.statusTarget.textContent = this.enabledValue === false ? 'Aucune demande à retrouver. Tu peux écrire tes scènes directement.' : 'Aucune demande à retrouver pour cette préparation. Tu peux proposer un scénario.';
         return;
       }
       this.recoverTone(job);
@@ -100,6 +100,7 @@ export default class extends Controller {
   }
 
   async propose() {
+    if (this.enabledValue === false) { this.statusTarget.textContent = 'La proposition automatique n’est pas activée sur ce poste. Tu peux écrire tes scènes directement.'; return; }
     if (this.pending) return;
     this.active = true;
     try {

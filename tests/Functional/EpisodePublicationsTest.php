@@ -75,6 +75,37 @@ final class EpisodePublicationsTest extends WebTestCase
         return static::getContainer()->get(EpisodePublications::class);
     }
 
+    public function testAccountSummaryKeepsTheSavedDestinationAndNeverUsesAnotherOwnersOrCurrentDefault(): void
+    {
+        $id = 'UC'.str_repeat('a', 22);
+        $saved = new YouTubeConnection($this->owner, $id, 'Saved channel <script>', 'synthetic', 'synthetic', 86400);
+        $current = new YouTubeConnection($this->owner, 'UC'.str_repeat('b', 22), 'New current channel', 'synthetic', 'synthetic', 86400);
+        $other = new User('other-summary@example.test');
+        $other->verify();
+        $other->setPassword('unused');
+        $this->em->persist($other);
+        $this->em->persist($saved);
+        $this->em->persist($current);
+        $this->em->persist(new YouTubeConnection($other, $id, 'Foreign private label', 'synthetic', 'synthetic', 86400));
+        $this->em->flush();
+        $draft = $this->service()->prepare($this->owner, $this->episode, $this->episode->getRevision());
+        $draft->edit('Saved destination', ['youtube'], ['youtube' => $id], new \DateTimeImmutable());
+        $this->em->flush();
+        $summary = $this->service()->summaries([$this->episode])[$this->episode->getId()][0];
+        self::assertSame('Saved channel <script> · '.$id, $summary['destinations'][0]['account']);
+        $this->em->remove($saved);
+        $this->em->flush();
+        $summary = $this->service()->summaries([$this->episode])[$this->episode->getId()][0];
+        self::assertSame('Compte enregistré indisponible · '.$id, $summary['destinations'][0]['account']);
+        self::assertSame(['youtube' => $id], $draft->getAccounts());
+        $this->client->request('GET', '/studio/series/'.$this->episode->getSeries()->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.episode-publications', 'Compte enregistré indisponible · '.$id);
+        self::assertSelectorTextNotContains('.episode-publications', 'New current channel');
+        self::assertStringNotContainsString('Foreign private label', $this->client->getResponse()->getContent());
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
+    }
+
     public function testAddingANetworkToAnAiEpisodeDefaultsToSyntheticWithoutSending(): void
     {
         $draft = $this->service()->prepare($this->owner, $this->episode, $this->episode->getRevision());
@@ -211,7 +242,7 @@ final class EpisodePublicationsTest extends WebTestCase
         $this->em->flush();
         $summary = $this->service()->summaries([$this->episode])[$this->episode->getId()][0];
         self::assertSame('Réussite partielle', $summary['label']);
-        self::assertSame([['name' => 'YouTube', 'status' => 'Publiée'], ['name' => 'Instagram Reels', 'status' => 'Échec']], $summary['destinations']);
+        self::assertSame([['name' => 'YouTube', 'status' => 'Publiée', 'account' => 'Compte non renseigné dans la préparation'], ['name' => 'Instagram Reels', 'status' => 'Échec', 'account' => 'Compte non renseigné dans la préparation']], $summary['destinations']);
         $this->client->request('GET', '/studio/series/'.$this->episode->getSeries()->getId());
         self::assertSelectorTextContains('.episode-publications', 'YouTube · Publiée');
         self::assertSelectorTextContains('.episode-publications', 'Instagram Reels · Échec');

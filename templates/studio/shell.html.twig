@@ -2,6 +2,7 @@
 {% block title %}Mon studio — VydFlow{% endblock %}
 {% block body %}
 {% set route = app.request.attributes.get('_route') %}
+{% if not route and episode|default(null) %}{% set route = 'app_series_episode' %}{% endif %}
 {% set calendarActive = route == 'app_calendar' %}
 {% set publicationsActive = route == 'app_publications' or route == 'app_publication_statistics' %}
 {% set accountActive = route == 'app_profile' %}

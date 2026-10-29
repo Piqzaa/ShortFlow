@@ -17,6 +17,19 @@ function setup(fetch, document = {}) {
   return writer;
 }
 
+test('disabled local writing stays disabled after restore and never posts a new proposal', async () => {
+  const writer = setup(async () => ({ok:true,json:async()=>({status:'none'})}));
+  writer.enabledValue=false;
+  writer.active=true;
+  writer.latestValue='/latest';
+  await writer.restore({});
+  assert.equal(writer.generateTarget.disabled,true);
+  assert.match(writer.statusTarget.textContent,/écrire tes scènes/);
+  writer.request=()=>assert.fail('Disabled writing must not submit a new request');
+  await writer.propose();
+  assert.match(writer.statusTarget.textContent,/pas activée/);
+});
+
 test('applying a scenario keeps English directions and saves its French explanation separately', () => {
   const writer = setup(() => assert.fail('Applying must not request generation'));
   const prompt = { value: '', focus() {} }, seconds = { value: '' }, description = { value: '' }, title = { value: '' };
