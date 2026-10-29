@@ -93,8 +93,12 @@ final class AiSeriesTest extends WebTestCase
 
         $this->client->request('GET', '/studio/series/nouvelle');
         self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="mcp"][selected]');
+        self::assertSelectorTextContains('[data-series-settings-target="billing"]', 'navigateur enregistrée');
         $this->client->request('GET', '/studio/series/'.$series->getId().'/configuration');
         self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="api"][selected]');
+        self::assertSelectorTextContains('[data-series-settings-target="billing"]', 'clé API à connecter');
+        self::assertStringNotContainsString('synthetic-unread-credential', $this->client->getResponse()->getContent());
+        self::assertStringNotContainsString('synthetic-other-key', $this->client->getResponse()->getContent());
         $this->open($series);
         self::assertSelectorTextContains('.series-recurrence', 'Elle n’est pas nécessaire pour préparer les scénarios');
         self::assertSelectorTextContains('.series-recurrence', 'clé API Fal');
@@ -104,6 +108,56 @@ final class AiSeriesTest extends WebTestCase
         $this->client->request('GET', '/studio/series/nouvelle');
         self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="api"][selected]');
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testSharedGuidedChoiceKeepsUnconnectedSeriesConfigurationAndDoesNotGenerate(): void
+    {
+        $series = $this->createSeries(['ai_series[episodeCount]' => 0, 'ai_series[model]' => 'kling-3', 'ai_series[seconds]' => 10, 'ai_series[totalSeconds]' => 40, 'ai_series[ratio]' => '16:9']);
+        $crawler = $this->client->request('GET', '/studio/series/'.$series->getId().'/configuration');
+        self::assertSelectorExists('[data-guided-model-picker][data-series-settings-target="picker"]');
+        self::assertSelectorExists('select[name="ai_series[model]"] option[value="kling-3"][selected]');
+        self::assertSelectorExists('select[name="ai_series[seconds]"] option[value="10"][selected]');
+        self::assertSelectorExists('select[name="ai_series[ratio]"] option[value="16:9"][selected]');
+        self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="api"][selected]');
+        self::assertSelectorTextContains('[data-series-settings-target="billing"]', 'clé API à connecter');
+        self::assertSelectorTextContains('[data-series-settings-target="accessDetails"]', 'sans clé vidéo');
+        $this->client->submit($crawler->selectButton('Enregistrer la configuration')->form());
+        self::assertResponseRedirects();
+        $saved = $this->em()->find(AiSeries::class, $series->getId());
+        self::assertSame('kling-3', $saved->getRecipe()['model']);
+        self::assertSame(10, $saved->getRecipe()['seconds']);
+        self::assertSame(40, $saved->getRecipe()['totalSeconds']);
+        self::assertSame('16:9', $saved->getRecipe()['ratio']);
+        self::assertSame('api', $saved->getRecipe()['accessMode']);
+        self::assertCount(0, $this->episodes($saved));
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM ai_generation'));
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testGuidedChoiceErrorsKeepNativeInputsAndOpenTheConnectionToCorrect(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/series/nouvelle');
+        $values = $crawler->selectButton('Créer ma série →')->form(['ai_series[episodeCount]' => 0, 'ai_series[name]' => 'Mon nom', 'ai_series[theme]' => 'Mon contexte humain conservé.'])->getPhpValues();
+        $values['ai_series']['model'] = '';
+        $this->client->request('POST', '/studio/series/nouvelle', $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('textarea[name="ai_series[theme]"]', 'Mon contexte humain conservé.');
+        self::assertSelectorExists('[data-series-settings-target="modelDetails"][data-picker-invalid="true"][open]');
+        self::assertSelectorTextContains('[data-series-settings-target="modelDetails"]', 'Choisis un modèle vidéo.');
+        $values['ai_series']['model'] = 'wan-25-replicate';
+        $this->em()->persist(new \App\Entity\AiCredential($this->em()->find(User::class, $this->owner->getId()), 'synthetic-replicate-key', 'replicate'));
+        $this->em()->flush();
+        $values['ai_series']['accessMode'] = 'mcp';
+        $values['ai_series']['ratio'] = '9:16';
+        $values['ai_series']['seconds'] = '5';
+        $this->client->request('POST', '/studio/series/nouvelle', $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('select[name="ai_series[model]"] option[value="wan-25-replicate"][selected]');
+        self::assertSelectorExists('select[name="ai_series[accessMode]"] option[value="mcp"][selected]');
+        self::assertSelectorExists('[data-series-settings-target="accessDetails"][open]');
+        self::assertSelectorTextContains('[data-series-settings-target="billing"]', 'navigateur à connecter');
+        self::assertSelectorTextContains('[data-series-settings-target="accessDetails"]', 'La connexion navigateur est réservée à Fal');
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM ai_series'));
     }
 
     public function testDeletionRequiresOwnershipConsentAndFreshCsrfAndKeepsVideosAndScheduledDrafts(): void

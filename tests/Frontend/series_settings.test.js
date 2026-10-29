@@ -1,3 +1,4 @@
+import { GuidedModelPicker } from '../../assets/guided-model-picker.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -5,8 +6,8 @@ import { runInNewContext } from 'node:vm';
 
 test('changing a series model only retains supported duration and ratio and explains image requirements', () => {
     const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8')
-        .replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class SeriesSettings');
-    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {} });
+        .replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { GuidedModelPicker } from '../guided-model-picker.js';", '').replace('export default class', 'class SeriesSettings');
+    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {}, GuidedModelPicker });
     const controller = new Settings();
     controller.modelsValue = { image: { seconds: [6, 8], ratios: ['16:9'], image: true, requiresEnd: true }, text: { seconds: [5], ratios: ['9:16'], image: false } };
     controller.modelTarget = { value: 'image' };
@@ -34,8 +35,8 @@ test('changing a series model only retains supported duration and ratio and expl
 });
 
 test('requesting an image reference clears an incompatible text model without silently choosing a paid model', () => {
-    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class SeriesSettings');
-    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {} });
+    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { GuidedModelPicker } from '../guided-model-picker.js';", '').replace('export default class', 'class SeriesSettings');
+    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {}, GuidedModelPicker });
     const controller = new Settings();
     controller.modelsValue = { text: {image:false}, image: {image:true} };
     controller.sourceTarget = {value:'image'};
@@ -49,8 +50,8 @@ test('requesting an image reference clears an incompatible text model without si
 });
 
 test('series exposes the same subject and frame capabilities and refuses unsupported legacy subject uploads', () => {
-    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class SeriesSettings');
-    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {} });
+    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { GuidedModelPicker } from '../guided-model-picker.js';", '').replace('export default class', 'class SeriesSettings');
+    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {}, GuidedModelPicker });
     const controller = new Settings();
     const options = ['kling', 'wan'].map(value => ({value,dataset:{}}));
     controller.modelTarget = {value:'kling',options};
@@ -69,8 +70,8 @@ test('series exposes the same subject and frame capabilities and refuses unsuppo
 });
 
 test('a pending private reference upload keeps the series form unsaved and blocks submission', () => {
-    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class SeriesSettings');
-    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {} });
+    const source = readFileSync(new URL('../../assets/controllers/series_settings_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { GuidedModelPicker } from '../guided-model-picker.js';", '').replace('export default class', 'class SeriesSettings');
+    const Settings = runInNewContext(`${source}\nSeriesSettings`, { Controller: class {}, GuidedModelPicker });
     const controller = new Settings();
     controller.element = {querySelector:()=>({})}; controller.hintTarget = {focus(){this.focused=true;}};
     let prevented = false, stopped = false;

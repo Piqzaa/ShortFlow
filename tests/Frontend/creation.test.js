@@ -1,3 +1,4 @@
+import { GuidedModelPicker } from '../../assets/guided-model-picker.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -5,8 +6,8 @@ import { runInNewContext } from 'node:vm';
 
 function creation() {
   const source = readFileSync(new URL('../../assets/controllers/creation_controller.js', import.meta.url), 'utf8')
-    .replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class CreationController');
-  const Creation = runInNewContext(`${source}\nCreationController;`, { Controller: class {}, Intl, Event: class {} });
+    .replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { GuidedModelPicker } from '../guided-model-picker.js';", '').replace('export default class', 'class CreationController');
+  const Creation = runInNewContext(`${source}\nCreationController;`, { Controller: class {}, GuidedModelPicker, Intl, Event: class {} });
   const controller = new Creation();
   controller.modelsValue = { kling: { name: 'Kling', maker: 'Kling', rateMicros: 70000, audio: false, seconds: [5, 10], ratios: ['9:16','16:9','1:1'], provider: 'fal', quality: 'Pro' }, wan: { name: 'Wan', maker: 'Alibaba', rateMicros: 100000, audio: true, seconds: [5, 10], ratios: ['9:16','16:9'], provider: 'replicate', quality: '720p' }, long: { name: 'Kling 3', maker: 'Kling', rateMicros: 168000, audio: true, seconds: [3,5,10,15], ratios: ['9:16','16:9'], provider: 'fal', quality: 'Pro' } };
   controller.connectedValue = { fal: true, replicate: false };
@@ -352,8 +353,8 @@ test('recommendations follow image/end-frame capabilities and keep the chosen ac
   const c = creation();
   c.modelsValue.image = {...c.modelsValue.kling, name:'Kling Image', image:true, endImageField:'tail_image_url'};
   c.modelsValue.frames = {...c.modelsValue.kling, name:'Pika Frames', image:true, requiresEnd:true, endImageField:'image_urls'};
-  const button = {dataset:{textModel:'kling', imageModel:'image', framesModel:'frames'},attrs:{},setAttribute(k,v){this.attrs[k]=v;},querySelector(){return this.label ||= {};}};
-  Object.assign(c,{hasRecommendationsTarget:true,recommendationsTarget:{hidden:true},recommendationTargets:[button],selectedModelTarget:{},hasSourceTarget:true,sourceTarget:{value:'text'},useEndTarget:{checked:false},accessTarget:{value:'mcp'}});
+  const button = {dataset:{textModel:'kling', imageModel:'image', framesModel:'frames'},attrs:{},setAttribute(k,v){this.attrs[k]=v;},querySelector(selector){return selector === '[data-recommendation-access]' ? (this.access ||= {}) : (this.label ||= {});}};
+  Object.assign(c,{hasRecommendationsTarget:true,recommendationsTarget:{hidden:true},recommendationTargets:[button],selectedModelTarget:{},hasSourceTarget:true,sourceTarget:{value:'text'},hasUseEndTarget:true,useEndTarget:{checked:false},accessTarget:{value:'mcp'}});
   c.updateRecommendations(); assert.equal(button.dataset.modelId, 'kling'); assert.equal(button.attrs['aria-pressed'], 'true');
   c.sourceTarget.value='image'; c.useEndTarget.checked=true; c.modelTarget.value='frames';
   c.updateRecommendations(); assert.equal(button.dataset.modelId, 'frames'); assert.equal(button.label.textContent, 'Pika Frames');

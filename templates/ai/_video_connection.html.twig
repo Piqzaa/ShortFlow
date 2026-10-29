@@ -1,0 +1,10 @@
+{% set pickerPrefix = pickerPrefix|default('creation') %}
+{% set selected = models[modelForm.vars.value]|default(null) %}
+{% set browserAccess = accessForm.vars.value == 'mcp' %}
+{% set ready = selected ? (selected.provider == 'fal' ? connected[browserAccess ? 'fal-mcp' : 'fal-api']|default(false) : (not browserAccess and connected[selected.provider]|default(false))) : false %}
+<details class="creation-details{{ seriesContext|default(false) ? ' series-access' : '' }}" data-{{ pickerPrefix }}-target="accessDetails"{% if not accessForm.vars.valid %} open{% endif %}>
+  <summary data-{{ pickerPrefix }}-target="billing">{% if selected %}{{ providers[selected.provider] }} · {{ browserAccess ? 'connexion navigateur' : 'clé API' }} {{ ready ? 'enregistrée' : 'à connecter' }}{% else %}Connexion du fournisseur{% endif %}</summary>
+  {{ form_row(accessForm,{attr:{('data-' ~ pickerPrefix ~ '-target'):'access','data-action':accessChange}}) }}
+  <p class="library-note">La proposition de scénario est locale, sans clé vidéo ; cette connexion sert à générer la vidéo.</p>
+  {% if seriesContext|default(false) %}<p class="library-note">Tu peux enregistrer ta série sans connexion vidéo. Enregistre tes modifications avant de gérer tes connexions.</p><a class="account-secondary" href="{{ path('app_ai_keys') }}">Gérer mes connexions ↗</a>{% else %}<p class="library-note">Le coût sera confirmé avant chaque génération, puis facturé par ton fournisseur.</p>{% endif %}
+</details>

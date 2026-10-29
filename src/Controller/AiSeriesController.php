@@ -61,7 +61,7 @@ final class AiSeriesController extends AbstractController
 
     #[Route('/studio/series/nouvelle', name: 'app_series_new', methods: ['GET', 'POST'])]
     #[Route('/studio/series/{id}/configuration', name: 'app_series_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function configure(Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, AiKeys $keys, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, ?int $id = null): Response
+    public function configure(Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, AiKeys $keys, AiCatalog $catalog, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, ?int $id = null): Response
     {
         $series = null === $id ? null : ($studio->owned($id, $user) ?? throw $this->createNotFoundException());
         $data = $series ? ['name' => $series->getName(), 'theme' => $series->getTheme(), 'style' => $series->getStyle(), 'characters' => $series->getCharacters(), 'revision' => (string) $series->getRevision()] + $series->getRecipe() : ['model' => 'kling-25', 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'imageFit' => 'crop', 'revision' => '0'];
@@ -74,7 +74,11 @@ final class AiSeriesController extends AbstractController
         if (!$series) {
             $data['episodeCount'] = 1;
         }
-        $form = $this->createForm(AiSeriesType::class, $data, ['creating' => null === $series, 'subjects' => $series?->getRecipe()['subjects'] ?? []]);
+        $connected = $keys->connectedProviders($user);
+        $connected['fal-api'] = $connected['fal'];
+        $connected['fal-mcp'] = $keys->hasAccess($user, 'fal', 'mcp');
+        $connected['fal'] = $connected['fal-api'] || $connected['fal-mcp'];
+        $form = $this->createForm(AiSeriesType::class, $data, ['creating' => null === $series, 'subjects' => $series?->getRecipe()['subjects'] ?? [], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites()]);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             try {
@@ -89,13 +93,8 @@ final class AiSeriesController extends AbstractController
                 $form->addError(new FormError($error->getMessage()));
             }
         }
-        $access = [];
-        foreach (AiCatalog::PROVIDERS as $provider => $name) {
-            $access[$name] = $keys->hasAccess($user, $provider, 'api');
-        }
-        $access['Fal par navigateur'] = $keys->hasAccess($user, 'fal', 'mcp');
 
-        return $this->render('series/configure.html.twig', ['series' => $series, 'seriesForm' => $form, 'models' => AiCatalog::MODELS, 'access' => $access], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/configure.html.twig', ['series' => $series, 'seriesForm' => $form, 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/{id}/episodes', name: 'app_series_add_episodes', requirements: ['id' => '\d+'], methods: ['POST'])]

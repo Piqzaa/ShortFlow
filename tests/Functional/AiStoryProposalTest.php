@@ -92,6 +92,9 @@ final class AiStoryProposalTest extends WebTestCase
         static::getContainer()->get('cache.rate_limiter')->clear();
         $client->request('GET', '/studio/creation');
         $crawler = $client->getCrawler();
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM ai_credential WHERE owner_id = ?', [$user->getId()]));
+        self::assertSelectorExists('[data-guided-model-picker][data-creation-target="picker"]');
+        self::assertSelectorTextContains('[data-creation-target="accessDetails"]', 'sans clé vidéo');
         self::assertSelectorExists('[data-story-writer-target="elapsed"][aria-live="off"]');
         self::assertSelectorNotExists('progress[data-story-writer-target="progress"]');
         $token = $crawler->filter('[data-story-writer-token-value]')->attr('data-story-writer-token-value');

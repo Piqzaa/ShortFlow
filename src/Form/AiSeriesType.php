@@ -24,12 +24,22 @@ final class AiSeriesType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $models = [];
+        $favorites = [];
+        foreach ((new AiCatalog())->groups() as $id => $group) {
+            if (in_array($id, $options['favorite_models'], true)) {
+                $favorites = array_merge($favorites, $group['variants']);
+            }
+        }
         foreach (AiCatalog::MODELS as $id => $model) {
             if (isset($model['operation'])) {
                 continue;
             }
             $resolution = str_contains(strtolower($model['name']), strtolower($model['quality'])) ? '' : ' · '.('4k' === $model['quality'] ? '4K' : $model['quality']);
-            $models[AiCatalog::PROVIDERS[$model['provider']]][$model['name'].$resolution] = $id;
+            $hint = $options['connected_providers'][$model['provider']] ?? true;
+            if ('fal' === $model['provider']) {
+                $hint = $options['connected_providers']['mcp' === ($builder->getData()['accessMode'] ?? 'api') ? 'fal-mcp' : 'fal-api'] ?? $hint;
+            }
+            $models[AiCatalog::PROVIDERS[$model['provider']]][(in_array($id, $favorites, true) ? '★ ' : '').$model['name'].$resolution.(!$hint ? ' · à connecter' : '')] = $id;
         }
         $catalog = new AiCatalog();
         if ($options['creating']) {
@@ -41,7 +51,7 @@ final class AiSeriesType extends AbstractType
             ->add('style', TextareaType::class, ['label' => 'Style visuel', 'required' => false, 'constraints' => [new Assert\Length(max: 300)], 'attr' => ['rows' => 2, 'maxlength' => 300]])
             ->add('characters', TextareaType::class, ['label' => 'Description textuelle des personnages', 'required' => false, 'help' => 'Ce texte guide les prompts. Il ne remplace pas une image et ne garantit pas une apparence identique entre les clips.', 'constraints' => [new Assert\Length(max: 300)], 'attr' => ['rows' => 2, 'maxlength' => 300]])
             ->add('source', ChoiceType::class, ['mapped' => false, 'label' => 'Point de départ des vidéos', 'choices' => ['Décrire avec du texte' => 'text', 'Animer une image de début' => 'image', 'Garder un personnage de référence' => 'subject'], 'data' => (AiCatalog::MODELS[$builder->getData()['model'] ?? '']['subjectReference'] ?? false) ? 'subject' : ((AiCatalog::MODELS[$builder->getData()['model'] ?? '']['image'] ?? false) ? 'image' : 'text'), 'help' => 'Le texte seul suffit pour commencer. Pour retrouver les mêmes personnages sur plusieurs plans, privilégie un mode avec images de référence. Elles aident la cohérence visuelle, sans garantir les mouvements ni les voix. Le modèle choisi détermine les références envoyées.', 'attr' => ['data-series-settings-target' => 'source', 'data-action' => 'change->series-settings#changeSource']])
-            ->add('model', ChoiceType::class, ['label' => 'Modèle et fournisseur', 'placeholder' => 'Choisir un modèle compatible', 'choices' => $models, 'attr' => ['data-series-settings-target' => 'model', 'data-action' => 'series-settings#change']])
+            ->add('model', ChoiceType::class, ['label' => 'Modèle et fournisseur', 'placeholder' => 'Choisir un modèle compatible', 'choices' => $models, 'constraints' => [new Assert\NotBlank(message: 'Choisis un modèle vidéo.')], 'attr' => ['data-series-settings-target' => 'model', 'data-action' => 'series-settings#change']])
             ->add('totalSeconds', IntegerType::class, ['label' => 'Durée finale des prochains épisodes (secondes)', 'constraints' => [new Assert\NotBlank(), new Assert\Range(min: 1, max: 60)], 'attr' => ['min' => 1, 'max' => 60]])
             ->add('seconds', ChoiceType::class, ['label' => 'Durée d’un clip par défaut', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', $catalog->durations()), $catalog->durations()), 'attr' => ['data-series-settings-target' => 'seconds']])
             ->add('ratio', ChoiceType::class, ['label' => 'Format', 'choices' => ['Vertical · 9:16' => '9:16', 'Paysage · 16:9' => '16:9', 'Carré · 1:1' => '1:1', 'Format de l’image' => 'auto'], 'attr' => ['data-series-settings-target' => 'ratio']])
@@ -70,7 +80,7 @@ final class AiSeriesType extends AbstractType
             try {
                 $catalog->validate($data['model'], $data['seconds'] ?? 0, $data['ratio'] ?? '');
                 if ('mcp' === ($data['accessMode'] ?? '') && 'fal' !== $catalog->model($data['model'])['provider']) {
-                    throw new \InvalidArgumentException('La connexion navigateur est réservée à Fal. Choisis la clé API pour ce fournisseur.');
+                    $event->getForm()->get('accessMode')->addError(new FormError('La connexion navigateur est réservée à Fal. Choisis la clé API pour ce fournisseur.'));
                 }
             } catch (\InvalidArgumentException $error) {
                 $event->getForm()->addError(new FormError($error->getMessage()));
@@ -80,6 +90,9 @@ final class AiSeriesType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
+        $resolver->setDefaults(['connected_providers' => [], 'favorite_models' => []]);
+        $resolver->setAllowedTypes('connected_providers', 'array');
+        $resolver->setAllowedTypes('favorite_models', 'array');
         $resolver->setDefault('creating', false);
         $resolver->setAllowedTypes('creating', 'bool');
         $resolver->setDefault('subjects', []);

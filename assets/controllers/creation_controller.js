@@ -1,6 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
+import { GuidedModelPicker } from '../guided-model-picker.js';
 
-export default class extends Controller {
+export default class extends GuidedModelPicker(Controller) {
   static targets = ['model', 'duration', 'ratio', 'cost', 'description', 'connect', 'filters', 'search', 'provider', 'audio', 'minimum', 'onlyConnected', 'card', 'count', 'empty', 'choose', 'grid', 'quality', 'sort', 'comparison', 'access', 'connection', 'connectionMessage', 'connectionButton', 'onlyFavorites', 'catalog', 'fourK', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'billing', 'accessDetails', 'pickerResults', 'pickerResult', 'source', 'reference', 'referencePanel', 'useEnd', 'endOption', 'endReference', 'endPanel', 'imageFit', 'imageSettings', 'startFrame', 'endFrame', 'startPreview', 'endPreview', 'framingNotice', 'recommendations', 'recommendation', 'modelDetails', 'selectedModel'];
   static values = { models: Object, connected: Object, providers: Object };
 
@@ -25,7 +26,7 @@ export default class extends Controller {
     this.changeSource();
     this.changeModel();
     this.filter();
-    if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = Boolean(this.modelTarget.value && !this.recommendationTargets.some(button => button.dataset.modelId === this.modelTarget.value));
+    if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = this.modelDetailsTarget.dataset.pickerInvalid === 'true' || Boolean(this.modelTarget.value && !this.recommendationTargets.some(button => button.dataset.modelId === this.modelTarget.value));
   }
 
   modelMode(model) { return model?.subjectReference ? 'subject' : model?.image ? 'image' : 'text'; }
@@ -129,78 +130,6 @@ export default class extends Controller {
     });
   }
 
-  updateRecommendations() {
-    if (!this.hasRecommendationsTarget) return;
-    this.recommendationsTarget.hidden = false;
-    const image = this.sourceMode() !== 'text';
-    this.recommendationTargets.forEach(button => {
-      const id = this.sourceMode() === 'subject' ? button.dataset.subjectModel : image ? (this.useEndTarget.checked ? button.dataset.framesModel : button.dataset.imageModel) : button.dataset.textModel;
-      const model = this.modelsValue[id];
-      button.hidden = !model;
-      button.dataset.modelId = id;
-      button.setAttribute('aria-pressed', String(this.modelTarget.value === id));
-      const name = button.querySelector('[data-recommendation-name]');
-      if (name && model) name.textContent = model.name;
-    });
-    const selected = this.modelsValue[this.modelTarget.value];
-    this.selectedModelTarget.hidden = !selected;
-    this.selectedModelTarget.textContent = selected ? `Sélection : ${selected.name} · ${selected.quality === '4k' ? '4K' : selected.quality}` : '';
-  }
-
-  syncPicker() {
-    const card = this.cardTargets.find(card => this.variantIds(card).includes(this.modelTarget.value));
-    this.groupTarget.value = card?.dataset.groupId || '';
-    this.restrict(this.resolutionTarget, card ? this.variantIds(card) : []);
-    this.resolutionTarget.disabled = !card;
-    this.resolutionTarget.value = this.modelTarget.value;
-  }
-
-  selectGroup() {
-    const card = this.cardTargets.find(card => card.dataset.groupId === this.groupTarget.value);
-    this.modelTarget.value = card ? this.variantIds(card)[0] : '';
-    this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
-  }
-
-  selectResolution() {
-    const card = this.cardTargets.find(card => card.dataset.groupId === this.groupTarget.value);
-    if (!card || !this.variantIds(card).includes(this.resolutionTarget.value)) return;
-    this.modelTarget.value = this.resolutionTarget.value;
-    this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
-  }
-
-  searchPicker(event) {
-    event?.stopPropagation();
-    const query = this.pickerSearchTarget.value.trim().toLocaleLowerCase('fr');
-    let count = 0;
-    if (this.hasPickerResultsTarget) {
-      this.pickerResultsTarget.hidden = !query;
-      this.pickerResultTargets.forEach(button => {
-        const option = Array.from(this.groupTarget.options).find(option => option.value === button.dataset.groupId);
-        const matches = Boolean(option?.textContent.toLocaleLowerCase('fr').includes(query)) && (!this.hasSourceTarget || button.dataset.source === this.sourceMode()) && (!this.hasUseEndTarget || !this.useEndTarget.checked || this.sourceMode() === 'text' || this.cardTargets.some(card => card.dataset.groupId === button.dataset.groupId && this.variantIds(card).some(id => this.modelsValue[id]?.endImageField)));
-        button.hidden = !matches;
-        if (matches) count++;
-      });
-    }
-    this.pickerCountTarget.textContent = !query ? 'Tes favoris sont marqués d’une étoile ★.' : count ? `${count} modèle${count > 1 ? 's' : ''} : clique sur un résultat pour le sélectionner.` : 'Aucun modèle trouvé. Modifie la recherche ; ta sélection est conservée.';
-  }
-
-  pickResult(event) {
-    const id = event.currentTarget.dataset.groupId;
-    if (!this.cardTargets.some(card => card.dataset.groupId === id)) return;
-    this.groupTarget.value = id;
-    this.selectGroup();
-    this.pickerSearchTarget.value = '';
-    this.searchPicker();
-    this.resolutionTarget.focus();
-  }
-
-  preventPickerSubmit(event) { event.preventDefault(); }
-
-  variantIds(card) {
-    try { return card.dataset.variants ? JSON.parse(card.dataset.variants) : [card.dataset.modelId]; }
-    catch { return [card.dataset.modelId]; }
-  }
-
   renderVariant(card, id) {
     if (card.dataset.modelId === id) return;
     card.dataset.modelId = id;
@@ -254,14 +183,6 @@ export default class extends Controller {
       this.filter();
     } catch { status.textContent = 'Enregistrement impossible. Réessaie.'; }
     finally { button.disabled = false; }
-  }
-
-  restrict(select, allowed) {
-    Array.from(select.options).forEach(option => {
-      option.disabled = Boolean(option.value && allowed && !allowed.map(String).includes(option.value));
-      option.hidden = option.disabled;
-    });
-    if (allowed && !allowed.map(String).includes(select.value)) select.value = '';
   }
 
   markFavoriteOptions(card, favorite) {
@@ -354,21 +275,21 @@ export default class extends Controller {
   }
 
   estimate() {
+    if (this.hasPickerTarget) this.refreshPickerConnections();
     const model = this.modelsValue[this.modelTarget.value];
     const seconds = Number(this.durationTarget.value);
     const mcp = this.hasAccessTarget && this.accessTarget.value === 'mcp';
     const connected = model?.provider === 'fal' ? (mcp ? this.connectedValue['fal-mcp'] : this.connectedValue['fal-api'] ?? this.connectedValue.fal) : this.connectedValue[model?.provider];
     if (this.hasAccessDetailsTarget && !this.accessTarget.value) this.accessDetailsTarget.open = true;
     if (this.hasBillingTarget) {
-      const name = this.providersValue?.[model?.provider] || model?.provider || '';
-      this.billingTarget.textContent = model ? `${name} · ${mcp ? 'connexion navigateur' : 'clé API'} ${connected ? 'enregistrée' : 'à connecter'}` : 'Connexion du fournisseur';
+      this.billingTarget.textContent = this.connectionCaption();
     }
     this.connectTarget.hidden = Boolean(this.hasConnectionTarget || (model && connected));
     this.connectTarget.textContent = mcp ? 'Connecter Fal en gardant l’idée' : 'Ajouter ma clé en gardant l’idée';
     if (this.hasConnectionTarget) {
       this.connectionTarget.hidden = !model || Boolean(connected);
       const name = this.providersValue?.[model?.provider] || model?.provider || '';
-      this.connectionMessageTarget.textContent = mcp ? 'Connecte ton compte Fal par navigateur pour utiliser ce modèle avec cet accès.' : `Ajoute ta clé ${name} pour utiliser ce modèle. Ton idée sera conservée.`;
+      this.connectionMessageTarget.textContent = mcp ? 'Pour générer la vidéo, connecte ton compte Fal. La proposition de texte reste locale.' : `Pour générer la vidéo, ajoute ta clé ${name}. La proposition de texte reste locale.`;
       this.connectionButtonTarget.textContent = mcp ? 'Connecter mon compte Fal' : `Connecter ${name}`;
     }
     if (!model || !Number.isSafeInteger(model.rateMicros) || model.rateMicros < 0 || !model.seconds.includes(seconds)) {
