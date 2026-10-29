@@ -227,6 +227,7 @@ final class FalOAuthTest extends WebTestCase
 
     public function testPikaVerticalSettingsReachTheMcpSubmitCallWithoutFallingBackToLandscapeDefaults(): void
     {
+        static::getContainer()->set(\App\Service\AiCatalog::class, new \App\Service\AiCatalog(new \Symfony\Component\Clock\MockClock('2026-10-28T12:00:00Z')));
         $this->expectedModel = 'pika-22';
         $this->connect();
         $job = new AiGeneration($this->owner, 'Vertical test', 'One short action.', 'pika-22', 5, '9:16', 20);

@@ -125,7 +125,8 @@ final class AiImageInputsTest extends TestCase
     #[DataProvider('configurations')]
     public function testEveryImageConfigurationMatchesItsProviderContract(string $id, int $seconds, bool $withEnd): void
     {
-        $catalog = new AiCatalog();
+        // Historical provider schemas, before Pika's configured retirement.
+        $catalog = new AiCatalog(new \Symfony\Component\Clock\MockClock('2026-10-28T12:00:00Z'));
         $model = $catalog->model($id);
         $ratio = $model['ratios'][0];
         $job = new AiGeneration($this->owner, 'Image', 'A slow camera move', $id, $seconds, $ratio, $catalog->estimate($id, $seconds));

@@ -7,6 +7,16 @@ use PHPUnit\Framework\TestCase;
 
 final class AiCapabilitiesTest extends TestCase
 {
+    public function testInjectedClockKeepsRetirementActiveAtTheConfiguredBoundary(): void
+    {
+        $clock = new \Symfony\Component\Clock\MockClock('2026-10-28T23:59:59Z');
+        $catalog = new AiCatalog($clock);
+        $catalog->validate('pika-22', 5, '9:16');
+        $clock->sleep(1);
+        $this->expectException(\RuntimeException::class);
+        $catalog->validate('pika-22', 5, '9:16');
+    }
+
     public function testSeedanceUsIsAnExplicitChoiceAndDoesNotRebindExistingPreparations(): void
     {
         $catalog = new AiCatalog();

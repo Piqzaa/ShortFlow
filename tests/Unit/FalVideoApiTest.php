@@ -75,7 +75,7 @@ final class FalVideoApiTest extends TestCase
             }
 
             return new MockResponse(json_encode(['status_url' => $base.'/status', 'response_url' => $base], JSON_THROW_ON_ERROR));
-        }), new AiCatalog(), new AiReferenceStorage(sys_get_temp_dir().'/vydflow-ai-unit'));
+        }), new AiCatalog(new \Symfony\Component\Clock\MockClock('2026-10-28T12:00:00Z')), new AiReferenceStorage(sys_get_temp_dir().'/vydflow-ai-unit'));
         self::assertSame(['status_url' => $base.'/status', 'response_url' => $base], $api->submit($job, 'synthetic-key'));
         self::assertSame(1, $calls);
     }

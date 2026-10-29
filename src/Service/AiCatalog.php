@@ -2,8 +2,15 @@
 
 namespace App\Service;
 
+use Symfony\Component\Clock\ClockInterface;
+use Symfony\Component\Clock\NativeClock;
+
 final class AiCatalog
 {
+    public function __construct(private ClockInterface $clock = new NativeClock('UTC'))
+    {
+    }
+
     public const CHECKED = '2026-10-19';
     public const PROVIDERS = ['fal' => 'Fal', 'replicate' => 'Replicate', 'ltx' => 'LTX'];
     // IDs are durable execution choices: never rebind one to another provider/schema.
@@ -124,7 +131,7 @@ final class AiCatalog
     public function assertAvailable(string $id, ?\DateTimeImmutable $now = null): void
     {
         $retireOn = $this->model($id)['retireOn'] ?? null;
-        if ($retireOn && ($now ?? new \DateTimeImmutable()) >= new \DateTimeImmutable($retireOn.'T00:00:00Z')) {
+        if ($retireOn && ($now ?? $this->clock->now()) >= new \DateTimeImmutable($retireOn.'T00:00:00Z')) {
             throw new \RuntimeException('Ce modèle a été retiré par son fournisseur. Choisis explicitement un autre modèle et vérifie un nouveau devis. Les résultats existants restent disponibles.');
         }
     }

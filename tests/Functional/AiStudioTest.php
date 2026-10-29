@@ -1104,6 +1104,8 @@ final class AiStudioTest extends WebTestCase
 
     public function testExtendedFalFamiliesReachThePrivateLibraryWithoutDuplicateSubmissions(): void
     {
+        // Exercise captured provider contracts before their configured retirement.
+        static::getContainer()->set(AiCatalog::class, new AiCatalog(new \Symfony\Component\Clock\MockClock('2026-10-28T12:00:00Z')));
         $this->key();
         $catalog = new AiCatalog();
         $cases = [
