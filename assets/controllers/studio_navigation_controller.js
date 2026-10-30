@@ -4,9 +4,21 @@ export default class extends Controller {
   static targets = ['status'];
 
   connect() {
-    this.restore = () => this.reset();
+    this.restore = () => { this.reset(); this.findEpisode(); };
     window.addEventListener('pageshow', this.restore);
-    this.reset();
+    this.restore();
+  }
+
+  findEpisode() {
+    if (this.element.querySelector?.('[data-series-navigation-blocked="true"]')) return;
+    if (this.element.querySelector?.('.legacy-episode-correction')) return;
+    if (!this.element.querySelector?.('[data-series-page]')) return;
+    const target = /^#episode-([1-9]\d*)$/.exec(window.location.hash);
+    if (!target || this.element.querySelector(`#episode-${target[1]}`)) return;
+    const destination = new URL(window.location.href);
+    if (destination.searchParams.get('episode') === target[1]) return;
+    destination.searchParams.set('episode', target[1]);
+    window.location.replace(destination.href);
   }
 
   navigate(event) {

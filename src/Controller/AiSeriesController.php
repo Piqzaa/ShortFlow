@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\AiEpisode;
 use App\Entity\AiSeries;
 use App\Entity\User;
 use App\Form\AiEpisodeBatchType;
@@ -116,7 +117,7 @@ final class AiSeriesController extends AbstractController
             $this->addFlash('error', $error->getMessage());
         }
 
-        return $this->redirectToRoute('app_series_show', ['id' => $id], 303);
+        return $this->redirectToRoute('app_series_show', ['id' => $id, 'page' => $studio->episodePage($series, PHP_INT_MAX)['page'], '_fragment' => 'episodes-title'], 303);
     }
 
     #[Route('/studio/series/{id}/recurrence/pause', name: 'app_series_recurrence_pause', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -141,7 +142,19 @@ final class AiSeriesController extends AbstractController
     public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EntityManagerInterface $em, \App\Service\SeriesRecurrences $recurrences, EpisodePublications $publications, \App\Service\EpisodeCovers $covers, \App\Service\SocialAccounts $social, \App\Service\LocalStoryWriter $writer): Response
     {
         $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
-        $episodes = $studio->episodes($series);
+        $legacyEpisode = null;
+        if ($request->isMethod('POST')) {
+            $legacyKeys = array_values(array_filter(array_keys($request->request->all()), static fn (string $key): bool => str_starts_with($key, 'episode_')));
+            if ($legacyKeys) {
+                if (1 !== count($legacyKeys) || !preg_match('/^episode_([1-9][0-9]*)$/D', $legacyKeys[0], $match) || $request->request->has('series_recurrence')) {
+                    throw $this->createAccessDeniedException();
+                }
+                $legacyId = $this->positiveNumber($match[1], 0);
+                $legacyEpisode = $em->getRepository(AiEpisode::class)->findOneBy(['id' => $legacyId, 'series' => $series]) ?? throw $this->createNotFoundException();
+            }
+        }
+        $pagination = $studio->episodePage($series, $this->positiveNumber($request->query->all()['page'] ?? null), $legacyEpisode?->getId() ?? $this->positiveNumber($request->query->all()['episode'] ?? null, 0));
+        $episodes = $pagination['items'];
         $recurrence = $recurrences->find($series);
         $recurrenceError = null;
         $recurrencePreview = null;
@@ -177,22 +190,22 @@ final class AiSeriesController extends AbstractController
                 }
             }
         }
-        $occurrences = $recurrence ? $em->getRepository(\App\Entity\SeriesOccurrence::class)->findBy(['recurrence' => $recurrence], ['scheduledAt' => 'DESC']) : [];
+        $occurrences = $recurrence && $episodes ? $em->getRepository(\App\Entity\SeriesOccurrence::class)->findBy(['recurrence' => $recurrence, 'episode' => $episodes], ['scheduledAt' => 'DESC'], 12) : [];
+        $occurrenceHistory = $recurrence ? $recurrences->historyPage($recurrence, $this->positiveNumber($request->query->all()['occurrencePage'] ?? null)) : ['items' => [], 'total' => 0, 'page' => 1, 'pages' => 1];
         $occurrenceByEpisode = [];
-        $missed = [];
+        $missed = $recurrence ? $em->getRepository(\App\Entity\SeriesOccurrence::class)->findBy(['recurrence' => $recurrence, 'episode' => null], ['scheduledAt' => 'DESC'], 3) : [];
         foreach ($occurrences as $occurrence) {
             if ($occurrence->getEpisode()) {
                 $occurrenceByEpisode[$occurrence->getEpisode()->getId()] = $occurrence;
-            } elseif (count($missed) < 3) {
-                $missed[] = $occurrence;
             }
         }
         $episodeForms = [];
-        foreach ($episodes as $episode) {
-            if ($episode->getFlowState() || ($episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus())) {
-                continue;
+        foreach ($legacyEpisode ? [$legacyEpisode] : [] as $episode) {
+            $submitted = $request->request->all('episode_'.$episode->getId());
+            if ($episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus() && 'prepare' === $request->request->getString('intent') && is_string($submitted['_token'] ?? null) && $this->isCsrfTokenValid('episode_'.$episode->getId(), $submitted['_token'])) {
+                return $this->redirectToRoute('app_ai_generation', ['id' => $episode->getGeneration()->getId()], 303);
             }
-            $form = $forms->createNamed('episode_'.$episode->getId(), AiEpisodeType::class, ['title' => $episode->getTitle(), 'prompt' => $episode->getPrompt(), 'revision' => (string) $episode->getRevision(), 'seriesRevision' => (string) $series->getRevision()], ['csrf_token_id' => 'episode_'.$episode->getId()]);
+            $form = $forms->createNamed('episode_'.$episode->getId(), AiEpisodeType::class, ['title' => $episode->getTitle(), 'prompt' => $episode->getPrompt(), 'revision' => (string) $episode->getRevision(), 'seriesRevision' => (string) $series->getRevision()], ['csrf_token_id' => 'episode_'.$episode->getId(), 'csrf_message' => 'La validation de la session a échoué. Réessaie depuis ce formulaire ; tes textes restent affichés.']);
             $form->handleRequest($request);
             if ($form->isSubmitted()) {
                 $invalid = true;
@@ -204,7 +217,7 @@ final class AiSeriesController extends AbstractController
                         }
                         $this->addFlash('success', 'Le prompt de '.$episode->getTitle().' est enregistré.');
 
-                        return $this->redirectToRoute('app_series_show', ['id' => $id, '_fragment' => 'episode-'.$episode->getId()], 303);
+                        return $this->redirectToRoute('app_series_show', ['id' => $id, 'episode' => $episode->getId(), '_fragment' => 'episode-'.$episode->getId()], 303);
                     } catch (\RuntimeException|\InvalidArgumentException $error) {
                         $form->addError(new FormError($error->getMessage()));
                     }
@@ -212,18 +225,18 @@ final class AiSeriesController extends AbstractController
             }
             $episodeForms[$episode->getId()] = $form->createView();
         }
-        // A repeated POST after a successful preparation follows the existing result.
         if ($request->isMethod('POST') && !$invalid) {
-            foreach ($episodes as $episode) {
-                $submitted = $request->request->all('episode_'.$episode->getId());
-                if ($episode->getGeneration() && $submitted && 'prepare' === $request->request->getString('intent') && $this->isCsrfTokenValid('episode_'.$episode->getId(), $submitted['_token'] ?? '')) {
-                    return $this->redirectToRoute('app_ai_generation', ['id' => $episode->getGeneration()->getId()], 303);
-                }
-            }
             throw $this->createAccessDeniedException();
         }
         $model = AiCatalog::MODELS[$series->getRecipe()['model']];
 
-        return $this->render('series/show.html.twig', ['writerAvailable' => $writer->available(), 'accountNames' => array_map('array_flip', $accountChoices), 'episodeCovers' => $covers->episodes($user, $episodes), 'recurrenceTotalCents' => ($recurrencePreview['cents'] ?? 0) * (is_int($recurrenceForm->get('limit')->getData()) ? $recurrenceForm->get('limit')->getData() : 0), 'recurrence' => $recurrence, 'recurrenceForm' => $recurrencePreview ? $recurrenceForm->createView() : null, 'recurrencePreview' => $recurrencePreview, 'recurrenceError' => $recurrenceError, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/show.html.twig', ['writerAvailable' => $writer->available(), 'accountNames' => array_map('array_flip', $accountChoices), 'episodeCovers' => $covers->episodes($user, $episodes), 'recurrenceTotalCents' => ($recurrencePreview['cents'] ?? 0) * (is_int($recurrenceForm->get('limit')->getData()) ? $recurrenceForm->get('limit')->getData() : 0), 'recurrence' => $recurrence, 'recurrenceForm' => $recurrencePreview ? $recurrenceForm->createView() : null, 'recurrencePreview' => $recurrencePreview, 'recurrenceError' => $recurrenceError, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'pagination' => $pagination, 'navigationBlocked' => $invalid, 'occurrenceHistory' => $occurrenceHistory, 'historyOpen' => $request->query->has('occurrencePage'), 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+    }
+
+    private function positiveNumber(mixed $value, int $fallback = 1): int
+    {
+        $number = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+
+        return false === $number ? $fallback : $number;
     }
 }

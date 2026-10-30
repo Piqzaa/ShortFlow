@@ -16,8 +16,54 @@ function setup() {
   const Navigation = runInNewContext(`${source}\nStudioNavigationController;`, { Controller: class {}, window: browser, URL });
   const controller = new Navigation();
   controller.statusTarget = { hidden: true, textContent: '' };
-  return { controller, listeners };
+  return { controller, listeners, browser };
 }
+
+test('old episode fragment links open the containing page without redirect loops', () => {
+  const { controller, browser } = setup();
+  const redirects = [];
+  browser.location.href = 'http://localhost/studio/series/9?page=2&occurrencePage=3#episode-123';
+  browser.location.hash = '#episode-123';
+  browser.location.replace = url => { redirects.push(url); browser.location.href = url; };
+  controller.element = { querySelector: selector => selector === '[data-series-page]' ? {} : null };
+  controller.findEpisode();
+  assert.equal(redirects.length, 1);
+  const destination = new URL(redirects[0]);
+  assert.equal(destination.origin, 'http://localhost');
+  assert.equal(destination.pathname, '/studio/series/9');
+  assert.equal(destination.searchParams.get('episode'), '123');
+  assert.equal(destination.searchParams.get('occurrencePage'), '3');
+  controller.findEpisode();
+  assert.equal(redirects.length, 1);
+});
+
+test('an existing target or a page without series pagination keeps native anchors', () => {
+  const { controller, browser } = setup();
+  browser.location.hash = '#episode-123';
+  browser.location.replace = () => assert.fail('No redirect for an existing target or another screen.');
+  controller.element = { querySelector: selector => ['[data-series-page]', '#episode-123'].includes(selector) ? {} : null };
+  controller.findEpisode();
+  controller.element = { querySelector: () => null };
+  controller.findEpisode();
+});
+
+test('an old fragment cannot redirect away from a rejected human submission', () => {
+  const { controller, browser } = setup();
+  browser.location.href = 'http://localhost/studio/series/9#episode-1';
+  browser.location.hash = '#episode-1';
+  browser.location.replace = () => assert.fail('A rejected form must remain visible even with an older fragment.');
+  controller.element = { querySelector: selector => ['[data-series-page]', '.legacy-episode-correction'].includes(selector) ? {} : null };
+  controller.findEpisode();
+});
+
+test('a rejected recurrence form also blocks old-fragment redirects', () => {
+  const { controller, browser } = setup();
+  browser.location.href = 'http://localhost/studio/series/9#episode-25';
+  browser.location.hash = '#episode-25';
+  browser.location.replace = () => assert.fail('Submitted recurrence values must remain on the response.');
+  controller.element = { querySelector: selector => ['[data-series-page]', '[data-series-navigation-blocked="true"]'].includes(selector) ? {} : null };
+  controller.findEpisode();
+});
 
 test('modified clicks, external links and local anchors keep their native behavior', () => {
   const { controller } = setup();

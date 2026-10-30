@@ -27,6 +27,17 @@ final class SeriesRecurrences
         return $this->em->getRepository(SeriesRecurrence::class)->findOneBy(['series' => $series]);
     }
 
+    /** @return array{items:list<SeriesOccurrence>,total:int,page:int,pages:int} */
+    public function historyPage(SeriesRecurrence $recurrence, int $page = 1): array
+    {
+        $total = $this->em->getRepository(SeriesOccurrence::class)->count(['recurrence' => $recurrence]);
+        $pages = max(1, (int) ceil($total / 12));
+        $page = max(1, min($page, $pages));
+        $items = $this->em->createQueryBuilder()->select('o', 'e')->from(SeriesOccurrence::class, 'o')->leftJoin('o.episode', 'e')->where('o.recurrence = :recurrence')->setParameter('recurrence', $recurrence)->orderBy('o.scheduledAt', 'DESC')->addOrderBy('o.id', 'DESC')->setFirstResult(($page - 1) * 12)->setMaxResults(12)->getQuery()->getResult();
+
+        return ['items' => $items, 'total' => $total, 'page' => $page, 'pages' => $pages];
+    }
+
     /** @return array<string,mixed> */
     public function preview(AiSeries $series): array
     {

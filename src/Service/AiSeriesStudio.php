@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 final class AiSeriesStudio
 {
+    public const EPISODES_PER_PAGE = 12;
+
     public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiReferenceStorage $references)
     {
     }
@@ -25,6 +27,23 @@ final class AiSeriesStudio
     public function episodes(AiSeries $series): array
     {
         return $this->em->createQueryBuilder()->select('e', 'g')->from(AiEpisode::class, 'e')->leftJoin('e.generation', 'g')->where('e.series = :series')->setParameter('series', $series)->orderBy('e.number', 'ASC')->getQuery()->getResult();
+    }
+
+    /** @return array{items:list<AiEpisode>,total:int,page:int,pages:int,first:int,last:int} */
+    public function episodePage(AiSeries $series, int $page = 1, int $focus = 0): array
+    {
+        $repository = $this->em->getRepository(AiEpisode::class);
+        $total = $repository->count(['series' => $series]);
+        $pages = max(1, (int) ceil($total / self::EPISODES_PER_PAGE));
+        if ($focus && $target = $repository->findOneBy(['id' => $focus, 'series' => $series])) {
+            $before = (int) $this->em->createQuery('SELECT COUNT(e.id) FROM App\Entity\AiEpisode e WHERE e.series = :series AND e.number < :number')->setParameter('series', $series)->setParameter('number', $target->getNumber())->getSingleScalarResult();
+            $page = intdiv($before, self::EPISODES_PER_PAGE) + 1;
+        }
+        $page = max(1, min($page, $pages));
+        $offset = ($page - 1) * self::EPISODES_PER_PAGE;
+        $items = $this->em->createQueryBuilder()->select('e', 'g')->from(AiEpisode::class, 'e')->leftJoin('e.generation', 'g')->where('e.series = :series')->setParameter('series', $series)->orderBy('e.number', 'ASC')->addOrderBy('e.id', 'ASC')->setFirstResult($offset)->setMaxResults(self::EPISODES_PER_PAGE)->getQuery()->getResult();
+
+        return ['items' => $items, 'total' => $total, 'page' => $page, 'pages' => $pages, 'first' => $total ? $offset + 1 : 0, 'last' => min($offset + self::EPISODES_PER_PAGE, $total)];
     }
 
     public function episodeFor(AiGeneration $job): ?AiEpisode

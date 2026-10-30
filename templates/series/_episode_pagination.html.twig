@@ -1,0 +1,7 @@
+{% if pagination.total %}<p class="library-note">Épisodes {{ pagination.first }} à {{ pagination.last }} sur {{ pagination.total }}</p>{% endif %}
+{% if pagination.pages > 1 %}<nav class="series-pagination" aria-label="{{ pagerLabel }}">
+{% if pagination.page > 1 %}<a class="account-secondary" rel="prev" href="{{ path('app_series_show',{id:series.id,page:pagination.page - 1,occurrencePage:historyOpen ? occurrenceHistory.page : null,'_fragment':'episodes-title'}) }}">← Précédents</a>{% endif %}
+<span>Page {{ pagination.page }} / {{ pagination.pages }}</span>
+{% if pagination.page < pagination.pages %}<a class="account-secondary" rel="next" href="{{ path('app_series_show',{id:series.id,page:pagination.page + 1,occurrencePage:historyOpen ? occurrenceHistory.page : null,'_fragment':'episodes-title'}) }}">Suivants →</a>{% endif %}
+{% if pagination.page < pagination.pages - 1 %}<a class="account-secondary" href="{{ path('app_series_show',{id:series.id,page:pagination.pages,occurrencePage:historyOpen ? occurrenceHistory.page : null,'_fragment':'episodes-title'}) }}">Derniers épisodes ↗</a>{% endif %}
+</nav>{% endif %}

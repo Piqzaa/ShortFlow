@@ -2,7 +2,7 @@
 {% block title %}{{ episode.title }} · Les plans — VydFlow
 {% endblock %}
 {% block studio_content %}
-{% if episode.standalone %}<a class="account-secondary composer-back" href="{{ path('app_studio') }}">← Studio</a>{% else %}<a class="account-secondary composer-back" href="{{ path('app_series_show',{id:episode.series.id,'_fragment':'episode-' ~ episode.id}) }}">← {{ episode.series.name }}</a>{% endif %}
+{% if episode.standalone %}<a class="account-secondary composer-back" href="{{ path('app_studio') }}">← Studio</a>{% else %}<a class="account-secondary composer-back" href="{{ path('app_series_show',{id:episode.series.id,episode:episode.id,'_fragment':'episode-' ~ episode.id}) }}">← {{ episode.series.name }}</a>{% endif %}
 <div class="workspace-heading"><div><span class="eyebrow">TA VIDÉO, TES PLANS</span><h1>{{ episode.title }}</h1><p>{{ model.name }} · {{ recipe.ratio == 'auto' ? 'Format de l’image' : recipe.ratio }} · Facturé sur ton compte fournisseur</p></div><span class="series-status">{{ episode.statusLabel }}</span></div>
 {% if episode.flowState in ['running','assembling','paused'] %}{% include 'series/_progress.html.twig' %}{% endif %}
 {% if error %}<p class="account-notice error" id="episode-error" role="alert">{{ error }}</p>{% endif %}
