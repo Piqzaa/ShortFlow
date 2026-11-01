@@ -1,0 +1,622 @@
+{
+  "sourceBase": "40a05adc8532f76ff64aea5ad1dedb224b6b1261",
+  "date": "2026-11-01",
+  "recipe": [
+    {
+      "width": 320,
+      "height": 740,
+      "javaScript": true,
+      "bottom": [
+        {
+          "text": "▦Vidéos",
+          "name": "Vidéos",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio"
+        },
+        {
+          "text": "✦Studio",
+          "name": "Studio",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/creation"
+        },
+        {
+          "text": "↻Séries",
+          "name": "Séries",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/series"
+        },
+        {
+          "text": "▤Agenda",
+          "name": "Agenda · Calendrier",
+          "width": 51.34375,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/calendrier"
+        },
+        {
+          "text": "↗Envois",
+          "name": "Envois · Publications",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/publications"
+        },
+        {
+          "text": "↔Comptes",
+          "name": "Comptes · Connexions",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/connexions"
+        }
+      ],
+      "consoleExceptions": 0
+    },
+    {
+      "width": 320,
+      "height": 740,
+      "javaScript": false,
+      "bottom": [
+        {
+          "text": "▦Vidéos",
+          "name": "Vidéos",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio"
+        },
+        {
+          "text": "✦Studio",
+          "name": "Studio",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/creation"
+        },
+        {
+          "text": "↻Séries",
+          "name": "Séries",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/series"
+        },
+        {
+          "text": "▤Agenda",
+          "name": "Agenda · Calendrier",
+          "width": 51.34375,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/calendrier"
+        },
+        {
+          "text": "↗Envois",
+          "name": "Envois · Publications",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/publications"
+        },
+        {
+          "text": "↔Comptes",
+          "name": "Comptes · Connexions",
+          "width": 51.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/connexions"
+        }
+      ],
+      "consoleExceptions": 0
+    },
+    {
+      "width": 390,
+      "height": 780,
+      "javaScript": true,
+      "bottom": [
+        {
+          "text": "▦Vidéos",
+          "name": "Vidéos",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio"
+        },
+        {
+          "text": "✦Studio",
+          "name": "Studio",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/creation"
+        },
+        {
+          "text": "↻Séries",
+          "name": "Séries",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/series"
+        },
+        {
+          "text": "▤Agenda",
+          "name": "Agenda · Calendrier",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/calendrier"
+        },
+        {
+          "text": "↗Envois",
+          "name": "Envois · Publications",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/publications"
+        },
+        {
+          "text": "↔Comptes",
+          "name": "Comptes · Connexions",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/connexions"
+        }
+      ],
+      "consoleExceptions": 0
+    },
+    {
+      "width": 390,
+      "height": 780,
+      "javaScript": false,
+      "bottom": [
+        {
+          "text": "▦Vidéos",
+          "name": "Vidéos",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio"
+        },
+        {
+          "text": "✦Studio",
+          "name": "Studio",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/creation"
+        },
+        {
+          "text": "↻Séries",
+          "name": "Séries",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/series"
+        },
+        {
+          "text": "▤Agenda",
+          "name": "Agenda · Calendrier",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/calendrier"
+        },
+        {
+          "text": "↗Envois",
+          "name": "Envois · Publications",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/publications"
+        },
+        {
+          "text": "↔Comptes",
+          "name": "Comptes · Connexions",
+          "width": 63,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/connexions"
+        }
+      ],
+      "consoleExceptions": 0
+    },
+    {
+      "width": 768,
+      "height": 900,
+      "javaScript": true,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 768,
+      "height": 900,
+      "javaScript": false,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 1000,
+      "height": 900,
+      "javaScript": true,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 1000,
+      "height": 900,
+      "javaScript": false,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 1001,
+      "height": 900,
+      "javaScript": true,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 1001,
+      "height": 900,
+      "javaScript": false,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 1280,
+      "height": 900,
+      "javaScript": true,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 1280,
+      "height": 900,
+      "javaScript": false,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "javaScript": true,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "javaScript": false,
+      "bottom": null,
+      "consoleExceptions": 0
+    },
+    {
+      "width": 740,
+      "height": 320,
+      "javaScript": true,
+      "bottom": [
+        {
+          "text": "▦Vidéos",
+          "name": "Vidéos",
+          "width": 121.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio"
+        },
+        {
+          "text": "✦Studio",
+          "name": "Studio",
+          "width": 121.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/creation"
+        },
+        {
+          "text": "↻Séries",
+          "name": "Séries",
+          "width": 121.34375,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/series"
+        },
+        {
+          "text": "▤Agenda",
+          "name": "Agenda · Calendrier",
+          "width": 121.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/calendrier"
+        },
+        {
+          "text": "↗Envois",
+          "name": "Envois · Publications",
+          "width": 121.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/publications"
+        },
+        {
+          "text": "↔Comptes",
+          "name": "Comptes · Connexions",
+          "width": 121.34375,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/connexions"
+        }
+      ],
+      "consoleExceptions": 0
+    },
+    {
+      "width": 740,
+      "height": 320,
+      "javaScript": false,
+      "bottom": [
+        {
+          "text": "▦Vidéos",
+          "name": "Vidéos",
+          "width": 121.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio"
+        },
+        {
+          "text": "✦Studio",
+          "name": "Studio",
+          "width": 121.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/creation"
+        },
+        {
+          "text": "↻Séries",
+          "name": "Séries",
+          "width": 121.34375,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/series"
+        },
+        {
+          "text": "▤Agenda",
+          "name": "Agenda · Calendrier",
+          "width": 121.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/calendrier"
+        },
+        {
+          "text": "↗Envois",
+          "name": "Envois · Publications",
+          "width": 121.328125,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/publications"
+        },
+        {
+          "text": "↔Comptes",
+          "name": "Comptes · Connexions",
+          "width": 121.34375,
+          "height": 58,
+          "fontSize": "11px",
+          "href": "/studio/connexions"
+        }
+      ],
+      "consoleExceptions": 0
+    }
+  ],
+  "extras": {
+    "outsideClose": true,
+    "landscapePanel": {
+      "x": 440,
+      "y": 69.5,
+      "width": 280,
+      "height": 220
+    },
+    "shortViewport": {
+      "width": 390,
+      "height": 400,
+      "focused": {
+        "x": 20,
+        "y": 144.375,
+        "width": 350,
+        "height": 51
+      },
+      "bar": {
+        "x": 0,
+        "y": 329,
+        "width": 390,
+        "height": 71
+      }
+    },
+    "physicalKeyboardTest": false
+  },
+  "exports": {
+    "pages": {
+      "landing": {
+        "url": "/",
+        "status": 200,
+        "bytes": 16962
+      },
+      "login": {
+        "url": "/connexion",
+        "status": 200,
+        "bytes": 2788
+      },
+      "register": {
+        "url": "/inscription",
+        "status": 200,
+        "bytes": 3618
+      },
+      "landing-auth": {
+        "url": "/",
+        "status": 200,
+        "bytes": 6525
+      },
+      "library-empty": {
+        "url": "/studio",
+        "status": 200,
+        "bytes": 6525
+      },
+      "studio-empty": {
+        "url": "/studio/creation",
+        "status": 200,
+        "bytes": 221649
+      },
+      "series-empty": {
+        "url": "/studio/series",
+        "status": 200,
+        "bytes": 5272
+      },
+      "calendar-empty": {
+        "url": "/studio/calendrier",
+        "status": 200,
+        "bytes": 27734
+      },
+      "publications-empty": {
+        "url": "/studio/publications",
+        "status": 200,
+        "bytes": 5740
+      },
+      "connections-disconnected": {
+        "url": "/studio/connexions",
+        "status": 200,
+        "bytes": 7096
+      },
+      "edit-empty": {
+        "url": "/studio/montage",
+        "status": 200,
+        "bytes": 5657
+      },
+      "history-empty": {
+        "url": "/studio/creation/historique",
+        "status": 200,
+        "bytes": 5688
+      },
+      "profile": {
+        "url": "/studio/mon-compte",
+        "status": 200,
+        "bytes": 35561
+      },
+      "library-filled": {
+        "url": "/studio",
+        "status": 200,
+        "bytes": 9672
+      },
+      "series-filled": {
+        "url": "/studio/series",
+        "status": 200,
+        "bytes": 5299
+      },
+      "series-last": {
+        "url": "/studio/series/4673?page=3",
+        "status": 200,
+        "bytes": 40124
+      },
+      "episode-old": {
+        "url": "/studio/series/episodes/12742",
+        "status": 200,
+        "bytes": 242113
+      },
+      "history-filled": {
+        "url": "/studio/creation/historique",
+        "status": 200,
+        "bytes": 6613
+      },
+      "calendar-draft": {
+        "url": "/studio/calendrier",
+        "status": 200,
+        "bytes": 39728
+      },
+      "publications-active": {
+        "url": "/studio/publications",
+        "status": 200,
+        "bytes": 6954
+      },
+      "edit-filled": {
+        "url": "/studio/montage",
+        "status": 200,
+        "bytes": 6430
+      },
+      "edit-draft": {
+        "url": "/studio/montage/3235",
+        "status": 200,
+        "bytes": 51280
+      },
+      "generation-active": {
+        "url": "/studio/ia/generations/8664",
+        "status": 200,
+        "bytes": 8141
+      },
+      "composer-draft": {
+        "url": "/studio/composer?draft=6217",
+        "status": 200,
+        "bytes": 37116
+      },
+      "edit-export": {
+        "url": "/studio/montage/3235",
+        "status": 200,
+        "bytes": 5149
+      },
+      "edit-error": {
+        "url": "/studio/montage/3235",
+        "status": 200,
+        "bytes": 51439
+      },
+      "generation-error": {
+        "url": "/studio/ia/generations/8664",
+        "status": 200,
+        "bytes": 6439
+      },
+      "publications-error": {
+        "url": "/studio/publications",
+        "status": 200,
+        "bytes": 7070
+      },
+      "series-error": {
+        "url": "synthetic rejected POST",
+        "status": 422
+      }
+    },
+    "rollback": true,
+    "forbiddenHttpCalls": 0
+  },
+  "physicalPhoneTest": {
+    "performed": false,
+    "reason": "User confirmed access from this PC only; no private phone access."
+  },
+  "screenshots": {
+    "composer-short-viewport.png": "aa84895e257edabad490ba800de07ad3fbb687fb002149b50a112e65d21dc5e1",
+    "public-1000x900-js.png": "9ec5e62a7fb20577a86603df55f44d3a8590356b72df80b98ee9f6c7762f1616",
+    "public-1000x900-native.png": "1dcddbb5e3ceefa28d9c99a58410378a01d937e4b3265bfd617c0b482189a6f4",
+    "public-320x740-js.png": "b099c29ebef204281337d25bc6a7fc35ac4e1af75650b8faaa1a3819f9ffc0d4",
+    "public-320x740-native.png": "b099c29ebef204281337d25bc6a7fc35ac4e1af75650b8faaa1a3819f9ffc0d4",
+    "public-390x780-js.png": "7ca8af85e108b5b5b07e5687215f19cb22253e4599df647035f16a7f8ea5aab4",
+    "public-390x780-native.png": "50dd3db6c0907452e3356c6aa0d14df1276100b07bae8f002d8d6f8b3302d121",
+    "public-740x320-js.png": "1cd1b972716fef8883780f82c5be6c00c4bad5721778c5966c651d87632cf160",
+    "public-740x320-native.png": "1cd1b972716fef8883780f82c5be6c00c4bad5721778c5966c651d87632cf160",
+    "public-768x900-js.png": "5c4f67744b285aaed0ad6553e866bdb1b91c51f90f8bbbf9e7ffbbf4af5652ec",
+    "public-768x900-native.png": "37f1b2c240d071a5d5b221faa8c186158496ba4f3758e7483007a22074b66867",
+    "public-844x390-js.png": "1b39df4080ceadde977359c72fe9c92b06767af715a25c299a2049f5595e3396",
+    "public-844x390-native.png": "3a314f71737c2ae56ef280295416ca50c73fc9abd7c5eb258b36dd87f2f108d6",
+    "studio-320x740-js.png": "91a94c25224e90e39ce051338c4654c40f1a2ea0c11051e431b3b4d645176918",
+    "studio-320x740-native.png": "db4cf337f03c92eb828758d477437700282a993b7f1713477f7f253a9b82993c",
+    "studio-390x780-js.png": "9706a6ede6cdf75c598c9959e57d039d3de31f541d4dabc7f9af90aa0112c46f",
+    "studio-390x780-native.png": "b6beeb769ffcc3e985ddb5837beec0ea4108fbf93dd4f0b20596179ace8e92a6",
+    "studio-740x320-js.png": "d380dbc47e120f5b10f9598bf87835bf9d1752f62a7caa74050974e013938b6b",
+    "studio-740x320-native.png": "e1e832098ec466d17b9ec68a9cb5f137be31d8d0aa5ce1e4d9c8e49ba315235e"
+  },
+  "functionalCommit": "e6628f857f5b952cff7c1d2f40d299e26963155d",
+  "sourceSha256": {
+    "templates/landing/index.html.twig": "1701850adb674a9c8e3740ab81747da0c30a2bf7c8ecf6c290a8e5099c68013e",
+    "templates/studio/shell.html.twig": "fae31caf8450868689830a12f0e7aa616ce8a08475f55916e20a3b7c1cb5d497",
+    "assets/styles/experience.css": "6397629e4587a8e299b09fbd12ae916c100606e03d902c4929dc41404eac8ceb",
+    "assets/styles/workspace-responsive.css": "8591d5e52d5289a9ecedb3c00c7891f426e194718575ff1b5cffdc8fd5770160",
+    "tests/Functional/AccountTest.php": "5bf14376b84e029086701a4ff67d41f677fb02b2a306b540b420b61c042f0942",
+    "tests/Functional/ValidationQueueTest.php": "6d6271fd4c8c0be02265de03c82446bc0d1a8d9c633dedcf21aeb5536bbfe39c"
+  }
+}
