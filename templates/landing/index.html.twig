@@ -6,6 +6,13 @@
   <a href="/" class="wordmark" aria-label="VydFlow, accueil"><span class="brand-symbol" aria-hidden="true">∨</span>vydflow<span class="brand-dot">/</span></a>
   <nav aria-label="Navigation principale"><a href="#studio">L’expérience</a><a href="#organisation">Le studio</a><a href="#vision">La vision</a><a href="{{ path('app_login') }}">Se connecter</a></nav>
   <a class="button small" href="{{ path(entry_route) }}">{{ entry_label }} <span aria-hidden="true">↗</span></a>
+  <details class="public-menu" data-controller="options" data-action="click@window->options#outside keydown@window->options#escape">
+    <summary><span aria-hidden="true">☰</span> Menu</summary>
+    <nav aria-label="Menu principal mobile">
+      <a href="#studio">L’expérience</a><a href="#organisation">Le studio</a><a href="#vision">La vision</a>
+      {% if is_granted('ROLE_VERIFIED') %}<a class="public-menu-entry" href="{{ path(entry_route) }}">{{ entry_label }}</a>{% else %}<a href="{{ path('app_login') }}">Se connecter</a><a class="public-menu-entry" href="{{ path('app_register') }}">Créer mon compte</a>{% endif %}
+    </nav>
+  </details>
 </header>
 <main id="contenu">
 <div class="story" data-controller="studio" data-video-src="/media/films/hero-v4.webm">

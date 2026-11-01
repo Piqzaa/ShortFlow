@@ -31,6 +31,22 @@ final class AccountTest extends WebTestCase
         self::assertResponseRedirects('http://localhost/connexion');
     }
 
+    public function testPublicMobileMenuKeepsNativeLoginAndRegistrationLinks(): void
+    {
+        $this->client->request('GET', '/');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('details.public-menu > summary', 'Menu');
+        self::assertSelectorExists('.public-menu nav a[href="/connexion"]');
+        self::assertSelectorExists('.public-menu nav a[href="/inscription"]');
+        $this->client->click($this->client->getCrawler()->filter('.public-menu a[href="/connexion"]')->link());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[type="password"]');
+        $this->client->request('GET', '/');
+        $this->client->click($this->client->getCrawler()->filter('.public-menu a[href="/inscription"]')->link());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[type="email"]');
+    }
+
     public function testRegistrationHashesPasswordAndDuplicateIsNeutral(): void
     {
         foreach (['Creator@example.fr', 'creator@example.fr'] as $email) {

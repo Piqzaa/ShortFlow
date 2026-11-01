@@ -217,6 +217,9 @@ final class ValidationQueueTest extends WebTestCase
             self::assertSelectorCount(6, '.studio-bottom-nav > a');
             self::assertSelectorCount(7, '.studio-menu nav > a');
             self::assertSelectorTextContains('.studio-menu > summary', 'Menu');
+            self::assertSelectorTextContains('.studio-bottom-nav a[href="/studio/calendrier"]', 'Agenda');
+            self::assertSelectorExists('.studio-bottom-nav a[aria-label="Envois · Publications"][href="/studio/publications"]');
+            self::assertSelectorExists('.studio-bottom-nav a[aria-label="Comptes · Connexions"][href="/studio/connexions"]');
             self::assertSelectorNotExists('.studio-sidebar a[href="/studio/a-valider"]');
         }
     }
