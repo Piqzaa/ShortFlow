@@ -5,9 +5,17 @@ namespace App\Tests\Functional;
 use App\Entity\AiEpisode;
 use App\Entity\AiGeneration;
 use App\Entity\AiSeries;
+use App\Entity\InstagramConnection;
+use App\Entity\InstagramPublication;
+use App\Entity\PublicationDraft;
+use App\Entity\PublicationDraftItem;
 use App\Entity\SeriesOccurrence;
 use App\Entity\SeriesRecurrence;
 use App\Entity\User;
+use App\Entity\VideoAsset;
+use App\Entity\YouTubeConnection;
+use App\Entity\YouTubePublication;
+use App\Service\PublicationCalendar;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -199,5 +207,143 @@ final class SeriesPaginationTest extends WebTestCase
         $this->client->request('POST', $url, ['intent' => 'save', 'episode_'.$episode->getId() => $fields]);
         self::assertResponseStatusCodeSame(404);
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT count(*) FROM messenger_messages'));
+    }
+
+    /** @return array<string,list<array<string,mixed>>> */
+    private function storedState(): array
+    {
+        $state = [];
+        foreach ([AiSeries::class, AiEpisode::class, SeriesRecurrence::class, SeriesOccurrence::class, AiGeneration::class, VideoAsset::class, PublicationDraft::class, PublicationDraftItem::class, YouTubePublication::class, InstagramPublication::class, \App\Entity\TikTokPublication::class] as $entity) {
+            $table = $this->em()->getClassMetadata($entity)->getTableName();
+            $state[$table] = $this->em()->getConnection()->fetchAllAssociative('SELECT * FROM '.$table.' ORDER BY id');
+        }
+        $state['messenger_messages'] = $this->em()->getConnection()->fetchAllAssociative('SELECT * FROM messenger_messages ORDER BY id');
+
+        return $state;
+    }
+
+    public function testLongHistoryKeepsOldAndUnassignedSlotsWithoutMutatingStoredWork(): void
+    {
+        [$series, $episodes] = $this->seed(500);
+        [$foreignSeries, $foreignEpisodes] = $this->seed(1, $this->other);
+        $now = new \DateTimeImmutable('2026-01-01T00:00:00Z');
+        $recurrence = new SeriesRecurrence($series);
+        $recurrence->activate(['mode' => 'preparation', 'weekday' => 2, 'hour' => '18:00', 'timezone' => 'Europe/Paris', 'networks' => ['youtube'], 'accounts' => ['youtube' => null], 'limit' => 12, 'tone' => 'auto', 'continuity' => 'independent'], $now->modify('+7 days'), $now);
+        $recurrence->pause('Long synthetic history');
+        $this->em()->persist($recurrence);
+        for ($i = 1; $i <= 505; ++$i) {
+            $slot = new SeriesOccurrence($recurrence, $now->modify('+'.$i.' days'), 'Europe/Paris', ['youtube'], $now, $episodes[$i - 1] ?? null, ['youtube' => null]);
+            $slot->fail('Créneau synthétique '.$i);
+            $this->em()->persist($slot);
+        }
+        $foreignJob = new AiGeneration($this->other, 'Foreign generation secret', 'Foreign prompt secret', 'kling-25', 5, '9:16', 350000);
+        $this->em()->persist($foreignJob);
+        $this->em()->flush();
+        $before = $this->storedState();
+        $url = '/studio/series/'.$series->getId();
+        foreach ([1, 2, 21, 42, 999999] as $page) {
+            $this->client->request('GET', $url.'?page='.$page.'&occurrencePage=43');
+            self::assertResponseIsSuccessful();
+            self::assertSelectorCount($page >= 42 ? 8 : 12, '.series-episode');
+            self::assertSelectorCount(1, '#occurrence-history-content li');
+            self::assertSelectorTextContains('.series-overview', '500 épisodes');
+            self::assertSelectorTextContains('#occurrence-history', '505');
+            self::assertSelectorTextContains('.recurrence-missed', 'Créneau synthétique 505');
+            self::assertSelectorTextNotContains('.recurrence-missed', 'Créneau synthétique 502');
+        }
+        $crawler = $this->client->request('GET', $url.'?episode='.$episodes[499]->getId().'&occurrencePage=43');
+        self::assertSelectorExists('#episode-'.$episodes[499]->getId());
+        $this->client->click($crawler->selectLink('Retrouver l’épisode 1 ↗')->link());
+        self::assertSelectorExists('#episode-'.$episodes[0]->getId());
+        self::assertSelectorCount(1, '#occurrence-history-content li');
+        $this->client->request('GET', $url.'?page=42&occurrencePage=1');
+        self::assertSelectorCount(12, '#occurrence-history-content li');
+        self::assertSelectorTextContains('#occurrence-history-content', 'Créneau synthétique 501');
+        foreach (['/studio/series/'.$foreignSeries->getId(), '/studio/series/episodes/'.$foreignEpisodes[0]->getId(), '/studio/ia/generations/'.$foreignJob->getId(), '/studio/ia/generations/'.$foreignJob->getId().'/etat'] as $foreignUrl) {
+            $this->client->request('GET', $foreignUrl);
+            self::assertResponseStatusCodeSame(404);
+            self::assertStringNotContainsString('Foreign prompt secret', $this->client->getResponse()->getContent());
+        }
+        self::assertSame($before, $this->storedState());
+    }
+
+    public function testPublicationStatesAndPreviousVersionsSurviveOffPageReadsWithoutMutation(): void
+    {
+        [$series, $episodes] = $this->seed(25);
+        $now = new \DateTimeImmutable('2026-10-24T08:00:00Z');
+        static::getContainer()->set('app.publication_clock', new \Symfony\Component\Clock\MockClock($now));
+        $youtube = new YouTubeConnection($this->owner, 'saved-youtube', 'Saved YouTube', 'synthetic', 'synthetic', 86400);
+        $instagram = new InstagramConnection($this->owner, 'saved-instagram', 'saved_instagram', 'MEDIA_CREATOR', 'synthetic', 86400);
+        $this->em()->persist($youtube);
+        $this->em()->persist($instagram);
+        $cases = [
+            ['draft', 'Brouillon', null, null],
+            ['scheduled', 'Programmée', null, null],
+            ['missed', 'À reprogrammer', null, null],
+            ['cancelled', 'Annulée', null, null],
+            ['dispatched', 'Réussite partielle', 'published', 'failed'],
+            ['dispatched', 'En cours', 'processing', 'queued'],
+            ['dispatched', 'À traiter', 'failed', 'paused'],
+            ['dispatched', 'Publiée', 'published', 'published'],
+        ];
+        $drafts = [];
+        foreach ($cases as $i => [$state, $label, $youtubeState, $instagramState]) {
+            $episode = $episodes[12 + $i];
+            $video = new VideoAsset($this->owner, 'Version '.$i, bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 10, 720, 1280, 'h264');
+            $this->em()->persist($video);
+            $this->em()->flush();
+            $episode->flow('ready');
+            $episode->approve($video);
+            $draft = new PublicationDraft($this->owner, 'Publication '.$i, $now);
+            $draft->addItem(new PublicationDraftItem($draft, $video, 0));
+            $draft->attachEpisode($episode);
+            $draft->edit('Publication '.$i, ['youtube', 'instagram'], ['youtube' => 'saved-youtube', 'instagram' => 'saved-instagram'], $now);
+            if (in_array($state, ['scheduled', 'missed'], true)) {
+                $date = $now->modify('missed' === $state ? '-1 day' : '+1 day');
+                $draft->plan($date, 'Europe/Paris', $date->format('Y-m-d\TH:i'), $now);
+                $draft->arm($now);
+            } elseif ('dispatched' === $state) {
+                $draft->beginImmediate($now);
+                $draft->dispatched($now);
+                $one = new YouTubePublication($this->owner, $video, $youtube, $draft->getSubmissionKey(), 'Synthetic', '', 'private', false, true);
+                $one->change($youtubeState);
+                $two = new InstagramPublication($this->owner, $video, $instagram, $draft->getSubmissionKey(), 'Synthetic', false, true);
+                $two->change($instagramState);
+                $this->em()->persist($one);
+                $this->em()->persist($two);
+            } elseif ('cancelled' === $state) {
+                $draft->change('cancelled', 'Synthetic cancellation', $now);
+            }
+            $drafts[] = $draft;
+            $this->em()->persist($draft);
+        }
+        $oldVideo = new VideoAsset($this->owner, 'Old version', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 1234, 10, 720, 1280, 'h264');
+        $this->em()->persist($oldVideo);
+        $this->em()->flush();
+        $currentVideo = $episodes[12]->getApprovedVideo();
+        $episodes[12]->approve($oldVideo);
+        $old = new PublicationDraft($this->owner, 'Old draft', $now);
+        $old->addItem(new PublicationDraftItem($old, $oldVideo, 0));
+        $old->attachEpisode($episodes[12]);
+        $episodes[12]->approve($currentVideo);
+        $this->em()->persist($old);
+        $this->em()->flush();
+        $before = $this->storedState();
+        $states = static::getContainer()->get(PublicationCalendar::class)->states($drafts);
+        $url = '/studio/series/'.$series->getId();
+        $this->client->request('GET', $url);
+        self::assertSelectorNotExists('.episode-publications');
+        $this->client->request('GET', $url.'?page=2');
+        self::assertResponseIsSuccessful();
+        foreach ($cases as $i => [, $label]) {
+            self::assertSame($label, PublicationCalendar::LABELS[$states[$drafts[$i]->getId()]]);
+            self::assertSelectorTextContains('#episode-'.$episodes[12 + $i]->getId().' .episode-publications', $label);
+        }
+        self::assertSelectorTextContains('#episode-'.$episodes[16]->getId(), 'YouTube · Publiée · Saved YouTube');
+        self::assertSelectorTextContains('#episode-'.$episodes[16]->getId(), 'Instagram Reels · Échec · @saved_instagram');
+        self::assertSelectorTextContains('#episode-'.$episodes[12]->getId(), 'Version antérieure');
+        $this->client->request('GET', $url.'?episode='.$episodes[16]->getId());
+        self::assertSelectorTextContains('#episode-'.$episodes[16]->getId(), 'Réussite partielle');
+        self::assertSame($before, $this->storedState());
     }
 }
