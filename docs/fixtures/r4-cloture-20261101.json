@@ -1,0 +1,52 @@
+{
+  "reviewedHead": "ac3bcacc1b63e983f15669a32a075313c16dd671",
+  "runnerSha256": "ef01ebf11c2a209aa7cf009376b4c4c877633c0a7bd61eb637b3b797a56cfb66",
+  "fixtures": [
+    {
+      "file": "r4-baseline-20261030.json",
+      "sha256": "aceae255fba6fffce974c0390b869457f945907292e15da1904fe7a46d0f6e2b",
+      "campaigns": 2
+    },
+    {
+      "file": "r4-pagination-20261030.json",
+      "sha256": "46b1dd7b63bb099cfb547f96e7cdb88768ebba0fab0b56221d0eb337a1005c9d",
+      "campaigns": 2
+    },
+    {
+      "file": "r4-catalogue-20261101.json",
+      "sha256": "17c86933414c4d50a86c84e99d12943686c408bc914e52447e398b743cb6e113",
+      "campaigns": 4
+    }
+  ],
+  "campaigns": 8,
+  "measuredGets": 240,
+  "warmupGets": 80,
+  "verifiedSourceHashes": 80,
+  "newDatabaseOrHttpCalls": false,
+  "reviewedSourceSha256": {
+    "assets/controllers/preparation_controller.js": "f9fa0897f6757d7877af0ffd1981df0cf5d559d5ad5953abedd47bfda1208897",
+    "assets/controllers/studio_navigation_controller.js": "9aa2f4792aec56d3a9c5f5cb3e859b4c211e022d281618490c4f994e3454a888",
+    "assets/styles/series.css": "6b2c29b0332a33582179aa16dd5d358764ec91e7c5fd3ceb300fa2841d9aaede",
+    "scripts/benchmark-studio.php": "ef01ebf11c2a209aa7cf009376b4c4c877633c0a7bd61eb637b3b797a56cfb66",
+    "src/Controller/AiSeriesController.php": "2e6c763853dd552937d7c781f6cf48ee52cc4531da334c0a7d874720459011a4",
+    "src/Service/AiSeriesStudio.php": "ac2e0f19eb701a31353400f2d4008b463d34685e4c3f1d3ae8219fe2a31817ff",
+    "src/Service/SeriesRecurrences.php": "f36722c2747f2f8c0973a41cbaf9a63be52d7e2f64159d662ea1fbc1410a127f",
+    "templates/ai/generation.html.twig": "6950dfe5293e82f083115355c3a46429f3403b737815635231336f2324b32624",
+    "templates/ai/studio.html.twig": "dae97a160027b870a78359f7d496e73241dc9afad97af3f3724137a6a4493857",
+    "templates/series/_episode_pagination.html.twig": "015a60ba68d0598418a063007d0b0ae6280c2d8c6ef1d8bdf2eb105ad0b1ebcc",
+    "templates/series/_occurrence_history.html.twig": "a99a2ae807f037eda9b422882b5c3447ef87b96486c135b028fc6c592c7ca4f3",
+    "templates/series/episode.html.twig": "2ef83296aeaff658046d4543c611f7bcd8eff50e9539043b5587b2b1a4ac7d67",
+    "templates/series/show.html.twig": "727fef460a3e5131e8b70b011293538754d4ad324994e526853fd11786fca85a",
+    "tests/Frontend/preparation.test.js": "bb525d1c8e1fab108183085138e23753023682ddc4d935151e5053a066800004",
+    "tests/Frontend/studio_navigation.test.js": "1c66d1b973940096640351aacb62b6e7f40777299ee70c284a2dddc68386a30b",
+    "tests/Functional/AiStudioTest.php": "de9ddd5e69388b96a5bc7f8b7b99634ff60e8824bb30499ab00ce4d19056cb40",
+    "tests/Functional/SeriesPaginationTest.php": "124b44d98d307cfd0630c4b1545b8434d2a125eab8f679e9fdb1be7776942b5f"
+  },
+  "appSourceUnchangedSinceR44": true,
+  "sourceHashComparison": {
+    "exactGitBlobs": 64,
+    "lineEndingDifferencesOnly": 16,
+    "note": "Raw measured file hashes checked against Git source content; uniform LF/CRLF variants or current mixed-EOL bytes with identical normalized content."
+  },
+  "statisticsTripletsVerified": 80
+}
