@@ -55,6 +55,8 @@ final class AiStudioTest extends WebTestCase
         $this->em()->flush();
         $this->client->request('GET', '/studio/creation');
         self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-creation-models-value]');
+        self::assertSelectorNotExists('[data-preparation-models-value]');
         self::assertSelectorExists('aside.creation-preview[hidden] video[preload="none"]');
         self::assertSelectorNotExists('aside.creation-preview[hidden] video[preload="metadata"]');
         self::assertSame(0, $this->submissions);

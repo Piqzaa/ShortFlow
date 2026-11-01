@@ -7,7 +7,11 @@ export default class extends Controller {
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
   get editor() { return this.application.getControllerForElementAndIdentifier(this.element.querySelector('#ai-idea-form'), 'shot-editor'); }
-  get model() { return this.modelsValue[this.element.querySelector('[data-creation-target="model"]').value]; }
+  get model() {
+    // Both controllers share this section. Keep support for older rendered pages.
+    const models = this.hasModelsValue ? this.modelsValue : this.application.getControllerForElementAndIdentifier(this.element, 'creation')?.modelsValue;
+    return models?.[this.element.querySelector('[data-creation-target="model"]').value];
+  }
   get desiredCount() { return this.continuityTarget.value === 'single' ? 1 : this.hasPlanCountTarget ? Number(this.planCountTarget.value) || null : null; }
 
   guardPending(event) {

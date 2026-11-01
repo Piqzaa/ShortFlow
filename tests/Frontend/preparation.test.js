@@ -4,6 +4,37 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { proposePlan } from '../../assets/preparation-plan.js';
 
+test('preparation reads the current shared catalog and supports older page attributes', () => {
+  const source = readFileSync(new URL('../../assets/controllers/preparation_controller.js', import.meta.url), 'utf8')
+    .replace("import { Controller } from '@hotwired/stimulus';", '')
+    .replace("import { proposePlan } from '../preparation-plan.js';", '')
+    .replace('export default class', 'class Preparation');
+  const Preparation = runInNewContext(`${source}\nPreparation`, { Controller: class {}, proposePlan, Event });
+  const controller = new Preparation();
+  const model = { value: 'first' }, first = { seconds: [5] }, second = { seconds: [10] };
+  const creation = { modelsValue: { first, second } };
+  controller.element = { querySelector: () => model };
+  controller.application = { getControllerForElementAndIdentifier(element, identifier) {
+    assert.equal(element, controller.element);
+    assert.equal(identifier, 'creation');
+    return creation;
+  } };
+  controller.hasModelsValue = false;
+  assert.equal(controller.model, first);
+  model.value = 'second';
+  assert.equal(controller.model, second);
+  creation.modelsValue = { second: first };
+  assert.equal(controller.model, first);
+  model.value = 'unknown';
+  assert.equal(controller.model, undefined);
+  controller.hasModelsValue = true;
+  controller.modelsValue = { unknown: second };
+  assert.equal(controller.model, second);
+  controller.hasModelsValue = false;
+  controller.application.getControllerForElementAndIdentifier = () => null;
+  assert.equal(controller.model, undefined);
+});
+
 function setup(count = 3) {
   const source = readFileSync(new URL('../../assets/controllers/preparation_controller.js', import.meta.url), 'utf8')
     .replace("import { Controller } from '@hotwired/stimulus';", '')
