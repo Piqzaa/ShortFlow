@@ -1,0 +1,204 @@
+{
+  "date": "2026-11-02",
+  "baseCommit": "54423f8",
+  "status": "R5.3 / R5.5 open; description ordering improved; owner corrected initial missing-announcement report",
+  "ownerFeedback": {
+    "validEmailErrorHeard": true,
+    "passwordMismatchHeardLater": true,
+    "missingAnnouncementProven": false,
+    "exactFieldUnspecified": true,
+    "modifiedVersionListeningValidated": false
+  },
+  "change": {
+    "errorsBeforeHelp": true,
+    "repeatedPairBothInputsDescribeSharedErrors": true,
+    "helpPreserved": true,
+    "validationUnchanged": true
+  },
+  "sourceSha256": {
+    "templates/form/accessibility.html.twig": "cdd6813f4c345135724bbc8726a17f16365e0f86afd03a630bd47bbe18114c2e",
+    "tests/Functional/AccessibilityTest.php": "c5f4841136641571d348b0a657e6f88e662f34bc42ae5f4770b0525973f48039"
+  },
+  "passwordAttributes": {
+    "registration_password_first": {
+      "aria-describedby": "registration_password_first_error1 registration_password_first_help",
+      "aria-invalid": "true"
+    },
+    "registration_password_second": {
+      "aria-invalid": "true",
+      "aria-describedby": "registration_password_first_error1"
+    }
+  },
+  "checks": {
+    "red": {
+      "tests": 2,
+      "assertions": 4,
+      "failures": 2
+    },
+    "finalPhp": {
+      "tests": 20,
+      "assertions": 205,
+      "passed": true
+    },
+    "phpStylePassed": true,
+    "twigTemplates": 115,
+    "twigPassed": true,
+    "fullPhpRerun": false,
+    "frontendRerun": false,
+    "buildRerun": false
+  },
+  "exports": {
+    "routes": {
+      "landing": {
+        "url": "/",
+        "sha256": "bfc1d99df5826689a5559f27a3542da97b5374cb2dc3aa8ac73b14bec0341eb9"
+      },
+      "login": {
+        "url": "/connexion",
+        "sha256": "0b5cfe3766ef51d96e684be802626a31246b3a67b7d6611935f1b83919160f6d"
+      },
+      "register": {
+        "url": "/inscription",
+        "sha256": "6e09bfc3c89fe47929130b4a81a4de55f8e91d173dd3162658c02d5f5111f870"
+      },
+      "legal": {
+        "url": "/informations-legales",
+        "sha256": "786df6f7d7bab2a88fd6ef8ea9b1dec0491fa628dd6997bbe5992f2d08a76947"
+      },
+      "register-error": {
+        "url": "/inscription?error",
+        "sha256": "f7ddea01a1c1fe619854ba22260164f76792c6c5882c526b91d0486f68b12d20"
+      },
+      "videos": {
+        "url": "/studio",
+        "sha256": "7936d8e562b121e87f92355eb0e1a2cd8b95d4c8dcd5edab963916fecee6bc63"
+      },
+      "creation": {
+        "url": "/studio/creation",
+        "sha256": "abee8eda52d0ceb8a804364b31b4abb73d3cfdb2870a9237351cfcb7c64182d0"
+      },
+      "series-new": {
+        "url": "/studio/series/nouvelle",
+        "sha256": "fec3addea0ae12640e4649f924dc3fdba3ca28a9d19c758928675bab6e260681"
+      },
+      "calendar": {
+        "url": "/studio/calendrier",
+        "sha256": "7b2ea6fd9700406bd8bbc6f562ae92068e820a538635d61f376dc35e4cd61cb3"
+      },
+      "connections": {
+        "url": "/studio/connexions",
+        "sha256": "3d485044b6ec13d6c165573aca000f0c5b2a9ff866ea2f47ffdb789dfe36b507"
+      },
+      "publications": {
+        "url": "/studio/publications",
+        "sha256": "70da49804435efb1674fa5e35aa1768494e8f4046a59fb18e4b9451e4746b356"
+      },
+      "profile": {
+        "url": "/studio/mon-compte",
+        "sha256": "899d9cd1fdb4dd732b5c5d1963dec2528f9e5bfbffa4d7938cda136d862c0504"
+      },
+      "upload": {
+        "url": "/studio/bibliotheque/importer",
+        "sha256": "e0a17462896da0bba8f8108627ecdeccda3954f65d4e2d0793afb2c196725099"
+      },
+      "series": {
+        "url": "/studio/series/2596",
+        "sha256": "5dfa31f4b2415fed7a52783bf3e0df3a3d3636f62ce7b9ca97f7561b79477835"
+      },
+      "episode": {
+        "url": "/studio/series/episodes/5983",
+        "sha256": "55e895ab3cd7bfd338fe279e12e09c1ade271652fe9274969ac1ff6acd50bf62"
+      },
+      "edit": {
+        "url": "/studio/montage/987",
+        "sha256": "59aa2815b66cbf7e858b1fc2d1a83d72a359d0c6743314d564ce545bae7b90eb"
+      },
+      "videos-filled": {
+        "url": "/studio",
+        "sha256": "50147881300e9a9d454915bf0eec420b81c8e2bd10afeda8df14b563c1e8835c"
+      },
+      "generation": {
+        "url": "/studio/ia/generations/3179",
+        "sha256": "c20674b4abfd373a091817b1ee8839193194132cabbecc87e26e81bd6d79b51a"
+      },
+      "generation-review": {
+        "url": "/studio/ia/generations/3179",
+        "sha256": "5f966070a52eeb7f6bce04ebd951f09f596408a50170cc3698255b69be5e76f7"
+      },
+      "edit-export": {
+        "url": "/studio/montage/988",
+        "sha256": "1198ff25a7d81924a32d56a594eea9a8b2c24a5bcb8ff875222e6b6a9577684d"
+      },
+      "composer": {
+        "url": "/studio/composer/a6c3775b71f81dd2cab9ded4abab11a10d883add6aeb755d",
+        "sha256": "cc366a08e7a99a8a9ce8a983976f918b7b739d4fd23d32399434f060c379a671"
+      }
+    },
+    "before": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0
+  },
+  "exportCount": 21,
+  "logSha256": {
+    "artifacts/r53-password-red.log": "8b2f9a6b6f42e5ec4e2330ed3a83553fd3cbd66358b2ba5e958c3d11d897fecf",
+    "artifacts/r53-password-final.log": "3a8e2c7dfd4f7bbc2dd1df7c7c8b973e0d887cc7b54f331eb6ad0e8ea774514d"
+  },
+  "browser": {
+    "newControlTabLoadedCorrectedPage": true,
+    "ownerTabNotReloaded": true,
+    "soundValidatedByAgent": false
+  },
+  "cleanup": {
+    "privateEnvCopied": false,
+    "isolatedCopyRemoved": true,
+    "temporaryArchiveRemoved": true,
+    "gitDiffCheckPassed": true
+  },
+  "safety": {
+    "providerHTTP": 0,
+    "cost": false,
+    "realInference": false,
+    "publication": false,
+    "activation": false,
+    "applicationMigration": false,
+    "workerRestart": false,
+    "commit": false,
+    "push": false
+  },
+  "subsequentOwnerAcceptanceAndGit": {
+    "date": "2026-11-02",
+    "registrationNarratorAcceptedByOwner": true,
+    "scope": "modified registration error page",
+    "dynamicStatusListeningValidated": false,
+    "actualSystemReducedMotionValidated": false,
+    "phoneHardwareValidated": false,
+    "applicationCommit": "5fe6f0d",
+    "evidenceAndToolsCommittedSeparately": true,
+    "push": false,
+    "newSuiteRunForCommit": false
+  }
+}

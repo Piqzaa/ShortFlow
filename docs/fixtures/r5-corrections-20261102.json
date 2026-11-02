@@ -1,0 +1,792 @@
+{
+  "date": "2026-11-02",
+  "baseCommit": "54423f8",
+  "status": "R5.5 open; D1 and D3 corrected in bounded PC recipe; manual hardware and accessibility checks remain",
+  "inheritsUncommittedR53R54": true,
+  "sourceSha256": {
+    "templates/landing/index.html.twig": "0b973bc677054c75e9185e04d41b7f759751274ff69446134c73daae36e93c8a",
+    "assets/styles/experience.css": "4478a68e6521f6d9105d98164d277985e6da8b74a3b5abdd32ef981e9a3c90c1",
+    "assets/styles/workspace-responsive.css": "302dac8a218dec6a6b91d2d415027ba432503231b2d8cfb0260cf150ba68eb83",
+    "templates/ai/_timing.html.twig": "7fa0535bcf80b12d54613425896330c071552c3374942a4e8e2305bf7209266a",
+    "scripts/export-accessibility-fixtures.php": "1c266022bf22a6659b94452895cc59558ea32a970202bd15bddf9817c3c96dd4",
+    "scripts/resilience-router.php": "bfde2d9d967ba0981fa33260e615036cd9a64b99d2772418a0bff395478b10c6",
+    "scripts/responsive-router.php": "c74953daecafe391cccde4e4bbea06a4b641ea8c7858f19b28c15baa21b2b4da"
+  },
+  "exports": {
+    "routes": {
+      "landing": {
+        "url": "/",
+        "sha256": "bfc1d99df5826689a5559f27a3542da97b5374cb2dc3aa8ac73b14bec0341eb9"
+      },
+      "login": {
+        "url": "/connexion",
+        "sha256": "0b5cfe3766ef51d96e684be802626a31246b3a67b7d6611935f1b83919160f6d"
+      },
+      "register": {
+        "url": "/inscription",
+        "sha256": "6e09bfc3c89fe47929130b4a81a4de55f8e91d173dd3162658c02d5f5111f870"
+      },
+      "legal": {
+        "url": "/informations-legales",
+        "sha256": "786df6f7d7bab2a88fd6ef8ea9b1dec0491fa628dd6997bbe5992f2d08a76947"
+      },
+      "register-error": {
+        "url": "/inscription?error",
+        "sha256": "172b64858d5b266eea88c1670cd5739c7b5a50ed174f6166af30fadd9f22bfc6"
+      },
+      "videos": {
+        "url": "/studio",
+        "sha256": "54d381e04483e9f1d9da65d83dcb095bebd83c67f3d85d3ea951029ef77fac52"
+      },
+      "creation": {
+        "url": "/studio/creation",
+        "sha256": "4b7374759d17fcdaf0215d0cb687bf6e8d856e2f5d184ac4166acff9b18b4065"
+      },
+      "series-new": {
+        "url": "/studio/series/nouvelle",
+        "sha256": "d7e6a64702d7a440201758754f1b5f4ebeda1321930744dfe1e5de8d4abf4e43"
+      },
+      "calendar": {
+        "url": "/studio/calendrier",
+        "sha256": "892d266d65d72d2071a2bf026facdd997304af59ddaaed34baf63882cde2554e"
+      },
+      "connections": {
+        "url": "/studio/connexions",
+        "sha256": "f511801050df620bb3f2261d0367452f382f07c3258b7f8f32eb5d26bca5f57b"
+      },
+      "publications": {
+        "url": "/studio/publications",
+        "sha256": "c84b698feb989ee9b2e49240254e0d285a72328c96ee004e1c296dd663f169a9"
+      },
+      "profile": {
+        "url": "/studio/mon-compte",
+        "sha256": "deea6ceed7e07391a4436828a8dda731087a2a96481bd3593c4bf91710715472"
+      },
+      "upload": {
+        "url": "/studio/bibliotheque/importer",
+        "sha256": "4f3686a0893912937c93f72952eced0a035587e994ccd500dc3f730b4a60e672"
+      },
+      "series": {
+        "url": "/studio/series/2595",
+        "sha256": "f8fc52c41035dcce0d1aeda670f924c0149249ccfd041158d4a6ab3cf48c188e"
+      },
+      "episode": {
+        "url": "/studio/series/episodes/5979",
+        "sha256": "e7def67092a125fedf281bfabe7d5d9c33d098c8d86895d9f138495727efc335"
+      },
+      "edit": {
+        "url": "/studio/montage/985",
+        "sha256": "70ffcd0fbd879e7b38a5c9b447a329c66e8ee092757dbb3610190bb4ce23344c"
+      },
+      "videos-filled": {
+        "url": "/studio",
+        "sha256": "1a3083bfcd6b6d6e950465ff5d018af6778ed4923c7b8af0ed48d2e1c9f4dcec"
+      },
+      "generation": {
+        "url": "/studio/ia/generations/3175",
+        "sha256": "11de54ac9774420fab60bf57849444781c8b5d90d334df09367bb339ac9d9ffc"
+      },
+      "generation-review": {
+        "url": "/studio/ia/generations/3175",
+        "sha256": "169a9fafcf283b9eca1857a7b099260068f8a5436841596d37bbf5f0ae1ac70b"
+      },
+      "edit-export": {
+        "url": "/studio/montage/986",
+        "sha256": "f319c20e4b60f451e28fd3f56b622da455d42a589184187f9aec339a376eed9e"
+      },
+      "composer": {
+        "url": "/studio/composer/d542eb0facdef4e8a5e2f381cbc5a7d4a2b1e94cf4906345",
+        "sha256": "47fa50861ad13350d69c30b5db168efd3762cd6f30c69920366dc1b41c5ded9b"
+      }
+    },
+    "before": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 2,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 1,
+      "video_edit": 1,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 2,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 1,
+      "video_edit": 1,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0
+  },
+  "exportCount": 21,
+  "matrix": [
+    {
+      "view": "landing",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "login",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        320,
+        390,
+        768,
+        1280
+      ]
+    },
+    {
+      "view": "register",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        390,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "legal",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "register-error",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "videos",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1280
+      ]
+    },
+    {
+      "view": "creation",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "series-new",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "calendar",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "connections",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "publications",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        768,
+        1280
+      ]
+    },
+    {
+      "view": "profile",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "upload",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "series",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "episode",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "edit",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        768,
+        1280
+      ]
+    },
+    {
+      "view": "videos-filled",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "generation",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "generation-review",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    },
+    {
+      "view": "edit-export",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        390,
+        768,
+        1280
+      ]
+    },
+    {
+      "view": "composer",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "viewportHeight": 900,
+      "documentWidths": [
+        305,
+        375,
+        753,
+        1265
+      ]
+    }
+  ],
+  "matrixCases": 84,
+  "documentOverflows": 0,
+  "matrixBeforeFinalStimulusTargetAttributeMerge": true,
+  "finalExportsAfterMerge": true,
+  "duplicateHtmlAttributes": 0,
+  "longTitle": {
+    "value": "Titre LongSansEspaceLongSansEspaceLongSansEspaceLongSansEspaceLongSansEspaceLongSansEspaceLongSansEspaceLongSansEspace",
+    "length": 118,
+    "unbrokenSegmentLength": 112,
+    "preserved": true,
+    "returnLinkWithinViewportAtAllFourWidths": true
+  },
+  "landing": [
+    {
+      "size": [
+        320,
+        740
+      ],
+      "mode": "normal",
+      "phoneToCopyGap": 25.026,
+      "documentWidth": 305,
+      "state": "mobile"
+    },
+    {
+      "size": [
+        320,
+        740
+      ],
+      "mode": "paused",
+      "phoneToCopyGap": 25.026,
+      "documentWidth": 305,
+      "state": "static"
+    },
+    {
+      "size": [
+        320,
+        740
+      ],
+      "mode": "scripts-absent",
+      "phoneToCopyGap": 25.026,
+      "documentWidth": 305,
+      "state": "scripts-absent"
+    },
+    {
+      "size": [
+        390,
+        780
+      ],
+      "mode": "normal",
+      "phoneToCopyGap": 23.466,
+      "documentWidth": 375,
+      "state": "mobile"
+    },
+    {
+      "size": [
+        390,
+        780
+      ],
+      "mode": "paused",
+      "phoneToCopyGap": 23.466,
+      "documentWidth": 375,
+      "state": "static"
+    },
+    {
+      "size": [
+        390,
+        780
+      ],
+      "mode": "scripts-absent",
+      "phoneToCopyGap": 23.466,
+      "documentWidth": 375,
+      "state": "scripts-absent"
+    },
+    {
+      "size": [
+        768,
+        900
+      ],
+      "mode": "normal",
+      "phoneToCopyGap": 23.028,
+      "documentWidth": 753,
+      "state": "mobile"
+    },
+    {
+      "size": [
+        768,
+        900
+      ],
+      "mode": "paused",
+      "phoneToCopyGap": 23.028,
+      "documentWidth": 753,
+      "state": "static"
+    },
+    {
+      "size": [
+        768,
+        900
+      ],
+      "mode": "scripts-absent",
+      "phoneToCopyGap": 23.028,
+      "documentWidth": 753,
+      "state": "scripts-absent"
+    },
+    {
+      "size": [
+        1280,
+        900
+      ],
+      "mode": "normal",
+      "phoneToCopyGap": null,
+      "documentWidth": 1265,
+      "state": "loading"
+    },
+    {
+      "size": [
+        1280,
+        900
+      ],
+      "mode": "paused",
+      "phoneToCopyGap": null,
+      "documentWidth": 1265,
+      "state": "static"
+    },
+    {
+      "size": [
+        1280,
+        900
+      ],
+      "mode": "scripts-absent",
+      "phoneToCopyGap": null,
+      "documentWidth": 1265,
+      "state": "scripts-absent"
+    },
+    {
+      "size": [
+        844,
+        390
+      ],
+      "mode": "normal",
+      "phoneToCopyGap": 23.028,
+      "documentWidth": 829,
+      "state": "loading"
+    },
+    {
+      "size": [
+        844,
+        390
+      ],
+      "mode": "paused",
+      "phoneToCopyGap": 23.028,
+      "documentWidth": 829,
+      "state": "static"
+    },
+    {
+      "size": [
+        844,
+        390
+      ],
+      "mode": "scripts-absent",
+      "phoneToCopyGap": 23.028,
+      "documentWidth": 829,
+      "state": "scripts-absent"
+    },
+    {
+      "size": [
+        740,
+        320
+      ],
+      "mode": "normal",
+      "phoneToCopyGap": 23.466,
+      "documentWidth": 725,
+      "state": "mobile"
+    },
+    {
+      "size": [
+        740,
+        320
+      ],
+      "mode": "paused",
+      "phoneToCopyGap": 23.466,
+      "documentWidth": 725,
+      "state": "static"
+    },
+    {
+      "size": [
+        740,
+        320
+      ],
+      "mode": "scripts-absent",
+      "phoneToCopyGap": 23.466,
+      "documentWidth": 725,
+      "state": "scripts-absent"
+    }
+  ],
+  "webglFollowup": {
+    "viewport": [
+      1280,
+      900
+    ],
+    "state": "webgl",
+    "canvasOpacity": 1,
+    "fallbackOpacity": 0,
+    "afterPause": {
+      "state": "static",
+      "canvasOpacity": 0,
+      "fallbackOpacity": 1
+    },
+    "warningAndErrorLogs": []
+  },
+  "visualInspection": [
+    {
+      "view": "landing",
+      "viewport": [
+        390,
+        780
+      ],
+      "scriptsAbsent": true,
+      "overlap": false
+    },
+    {
+      "view": "edit-export",
+      "viewport": [
+        768,
+        900
+      ],
+      "fullTitle": true,
+      "returnVisible": true,
+      "tabFromReturnReachesRefresh": true
+    }
+  ],
+  "checks": {
+    "frontendTests": 186,
+    "frontendPassed": true,
+    "syntaxAndBuildPassed": true,
+    "targetedPhpBeforeFinalTargetMerge": {
+      "tests": 34,
+      "assertions": 376,
+      "passed": true
+    },
+    "targetedPhpAfterFinalMerge": {
+      "tests": 3,
+      "assertions": 31,
+      "passed": true
+    },
+    "twigTemplates": 115,
+    "containerLintPassed": true,
+    "routerAndExporterSyntaxPassed": true,
+    "fullPhpRerun": false,
+    "lastFullPhpHistoricalR54": {
+      "tests": 820,
+      "assertions": 9019,
+      "errors": 35,
+      "failures": 2,
+      "sameCasesAsBaseline": true
+    }
+  },
+  "logSha256": {
+    "artifacts/r55-ui.log": "c5ae00ced577abe428de0d4ef0d6c4a57a59ab27d0072b75828c79f047b82ba8",
+    "artifacts/r55-check.log": "e50903972b142f2ae477d54e23c54bb4abd05719368dff5d75624c9eeb2c7aab",
+    "artifacts/r55-build.log": "e98753d6a7f83b2331b6e434ffee07c50fcac3c4fe57e1c049d5c87c5725fe4c",
+    "artifacts/r55-final-php.log": "c258cf1eacfee518cbb4cfbc3edd3911481acc62c4f172244b0432a41c8f9b82",
+    "artifacts/r55-final-review.log": "2f0ac375f7ba671f69998ca7c723072dc2cdaab043e3d4bde8895356391a6927"
+  },
+  "review": {
+    "localSelfReview": true,
+    "newIndependentReview": false,
+    "fixedFinding": "duplicate data-preparation-target attributes merged into one target list"
+  },
+  "limitations": [
+    "21 states rather than all 28 historical R5.1 states",
+    "Scriptless means script tags removed, browser engine stays active",
+    "Normal landing records in loading state are geometry-only",
+    "Pause clicks scroll the page; viewport coordinates may be negative",
+    "No phone hardware, safe areas or virtual keyboard test",
+    "No targeted narrator error/status listening or actual system preference test",
+    "No new exhaustive contrast/keyboard/zoom campaign",
+    "No archived screenshots"
+  ],
+  "safety": {
+    "providerHTTP": 0,
+    "realInference": false,
+    "cost": false,
+    "activation": false,
+    "publication": false,
+    "applicationMigration": false,
+    "workerRestart": false,
+    "privateEnvCopied": false,
+    "initialPrivateEnvArchiveCommandRejectedAndNotExecuted": true,
+    "testCopyUsesTrackedSyntheticEnvironment": true,
+    "commit": false,
+    "push": false
+  },
+  "manualRecipe": "docs/r5-revue-responsive.md",
+  "remaining": [
+    "R5.2 phone hardware",
+    "R5.3 targeted narrator errors/status",
+    "R5.3 actual system reduced motion",
+    "R5.5 final review and closure commit"
+  ],
+  "server": {
+    "port": 8023,
+    "GETOnly": true,
+    "preservedForManualRecipe": true
+  },
+  "cleanup": {
+    "viewportReset": true,
+    "isolatedLinuxCopyRemoved": true,
+    "temporaryArchiveRemoved": true,
+    "gitDiffCheckPassed": true,
+    "server8021Preserved": true
+  },
+  "subsequentOwnerAcceptanceAndGit": {
+    "date": "2026-11-02",
+    "registrationNarratorAcceptedByOwner": true,
+    "scope": "modified registration error page",
+    "dynamicStatusListeningValidated": false,
+    "actualSystemReducedMotionValidated": false,
+    "phoneHardwareValidated": false,
+    "applicationCommit": "5fe6f0d",
+    "evidenceAndToolsCommittedSeparately": true,
+    "push": false,
+    "newSuiteRunForCommit": false
+  }
+}

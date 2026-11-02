@@ -1,0 +1,884 @@
+{
+  "date": "2026-11-02",
+  "baseCommit": "54423f8",
+  "status": "R5.3 open: bounded keyboard/contrast and native zoom observations completed; screen-reader listening and system preference remain unvalidated",
+  "codeChecks": {
+    "frontendTests": 184,
+    "frontendPassed": true,
+    "syntaxCheckPassed": true,
+    "buildPassed": true,
+    "yamlTwigContainerPhpstanStylePassed": true,
+    "twigTemplates": 115,
+    "fullPhp": {
+      "tests": 815,
+      "assertions": 8975,
+      "errors": 35,
+      "failures": 2,
+      "includesOnlyFirstAccessibilityTest": true
+    },
+    "baselinePhp": {
+      "tests": 814,
+      "assertions": 8953,
+      "errors": 35,
+      "failures": 2
+    },
+    "identicalFailingTestNames": [
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testConfirmedTranslationKeepsItsSourceWhenSeriesSettingsChange",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testQuoteMustMatchAndConfirmationIsIdempotentWithoutProviderCall",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testWrongProviderFramingKeepsTheClipAndStopsBeforeTheNextBillableShotOrAssembly",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testAmbiguousSubmissionPausesWithoutResendingAndDoesNotStartFollowingPlan",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testManualPauseRetainsConsentAndResumeDoesNotDuplicateFirstPlan",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testCompleteEpisodeIsAssembledOnceAndRequiresEditorialValidation",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testOneMinuteEpisodeUsesSixClipsAndTheExistingRenderer",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testStopReleasesFutureReservationsAndPreventsQueuedBillablePost",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testRepairOnlyRegeneratesChosenShotAndInvalidatesApproval",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testConfirmedPromptsKeepThePreparedIdentityAfterSeriesEdits",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testSeriesMontageIsFrozenAndAppliedByTheExistingAssembler",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testLegacyUnsentJobRequiresNewQuoteWithoutDiscardingHistory",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testCapacityIncludesAllFuturePlansAndExportAndProtectsOtherGenerations",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testOwnerCsrfMissingConsentAndDirectPlanSubmissionAreProtected",
+      "App\\Tests\\Functional\\AiEpisodeFlowTest::testStudioCreatesPrivateReusableProjectWithoutSeriesAndCompletesTwentyFiveSeconds",
+      "App\\Tests\\Functional\\AiStudioTest::testBothModelsGeneratePrivatelyAndRedeliveryDoesNotDuplicateAssets",
+      "App\\Tests\\Functional\\AiStudioTest::testAmbiguousSubmissionNeverAutomaticallySubmitsAgain",
+      "App\\Tests\\Functional\\AiStudioTest::testResultDomainIsCheckedBeforeDownloadAndRecoveryDoesNotRegenerate",
+      "App\\Tests\\Functional\\AiStudioTest::testWaitingAndInvalidVideoRemainRecoverableWithoutAnotherBillableRequest",
+      "App\\Tests\\Functional\\AiStudioTest::testQuotaRollbackExposesAnIssueAndCanResumeAfterSpaceIsFreed",
+      "App\\Tests\\Functional\\AiStudioTest::testTooManyActiveJobsBlockBeforeSubmission",
+      "App\\Tests\\Functional\\AiStudioTest::testRemovedKeyBeforeDepartureRequiresConsentAgainAndCanResume",
+      "App\\Tests\\Functional\\AiStudioTest::testReplicatePollingAndSafeDownloadResumeNeverResubmit",
+      "App\\Tests\\Functional\\AiStudioTest::testKlingThreeUsesFifteenSecondsAndAnExplicitAudioSetting",
+      "App\\Tests\\Functional\\AiStudioTest::testVeoUsesItsOwnSchemaAndTerminalFailureNeverResubmits",
+      "App\\Tests\\Functional\\AiStudioTest::testExtendedFalFamiliesReachThePrivateLibraryWithoutDuplicateSubmissions",
+      "App\\Tests\\Functional\\AiStudioTest::testLtxFourKUsesItsOwnKeyAndReachesThePrivateLibrary",
+      "App\\Tests\\Functional\\AiStudioTest::testGuideWorkerChecksCapacityAgainBeforeAnyBillablePost",
+      "App\\Tests\\Functional\\FalOAuthTest::testMcpRefreshAndPrivateImportKeepTheOriginalReceiptAndNeverResubmit",
+      "App\\Tests\\Functional\\FalOAuthTest::testChangedActiveAccountBlocksBeforeThePaidCall",
+      "App\\Tests\\Functional\\FalOAuthTest::testPikaVerticalSettingsReachTheMcpSubmitCallWithoutFallingBackToLandscapeDefaults",
+      "App\\Tests\\Functional\\FalOAuthTest::testRevokedRefreshStopsQueuedWorkWithoutLosingTheEntityManager",
+      "App\\Tests\\Functional\\SeriesRecurrencesTest::testKeyChangedAfterQueueingCannotTriggerAProviderPost",
+      "App\\Tests\\Functional\\SeriesRecurrencesTest::testLastPreparedEpisodeCanBeGeneratedManuallyIndependentlyOfPreparationPause",
+      "App\\Tests\\Functional\\SeriesRecurrencesTest::testLegacyQueuedGenerationCannotPostButAnAlreadySubmittedClipCanStillBePolled",
+      "App\\Tests\\Functional\\AiStudioTest::testConfirmationRequiresCsrfConsentKeyAndIsIdempotent",
+      "App\\Tests\\Functional\\AiStudioTest::testGuideCapacityIncludesOtherActiveGenerationsBeforeConfirmation"
+    ],
+    "finalTargetedPhp": {
+      "tests": 15,
+      "assertions": 161,
+      "passed": true,
+      "scope": [
+        "AccessibilityTest",
+        "AccountTest"
+      ]
+    },
+    "priceDate": "2026-10-19",
+    "priceGuardDays": 14
+  },
+  "browserObservations": [
+    {
+      "url": "http://127.0.0.1:8000/connexion",
+      "action": "Enter on Aller au contenu",
+      "before": {
+        "activeElement": "BODY",
+        "id": ""
+      },
+      "after": {
+        "activeElement": "MAIN",
+        "id": "contenu",
+        "tabIndex": -1
+      },
+      "tool": "CUA in-app browser",
+      "screenshots": []
+    }
+  ],
+  "contrastMethod": "sRGB relative luminance for five opaque CSS color pairs; not a rendered-page audit",
+  "contrast": [
+    {
+      "element": "Texte principal",
+      "foreground": "#f4f2fa",
+      "background": "#08090c",
+      "ratio": 17.95
+    },
+    {
+      "element": "Texte secondaire",
+      "foreground": "#a3a3b3",
+      "background": "#13141a",
+      "ratio": 7.39
+    },
+    {
+      "element": "Navigation Studio",
+      "foreground": "#b9b3c9",
+      "background": "#101017",
+      "ratio": 9.34
+    },
+    {
+      "element": "Bouton principal",
+      "foreground": "#130b25",
+      "background": "#b59aff",
+      "ratio": 8.19
+    },
+    {
+      "element": "Contour focus",
+      "foreground": "#cab7ff",
+      "background": "#14131d",
+      "ratio": 10.28
+    }
+  ],
+  "exports": {
+    "routes": {
+      "landing": {
+        "url": "/",
+        "sha256": "58d8e6b8548fa80a8ff57f0a9b9d33fde986caab00e286389e74ca62e96d89d3"
+      },
+      "login": {
+        "url": "/connexion",
+        "sha256": "d284763f9dcafbf2e200e6f494400c5d940338c0a2ee9908af3bf4d2b69a5f11"
+      },
+      "register": {
+        "url": "/inscription",
+        "sha256": "678883db9657f2e8eefc646f21b6a19ca1fabaceec35da0858b2c6fa167a0762"
+      },
+      "legal": {
+        "url": "/informations-legales",
+        "sha256": "317693cb385625eb30bd77e255522cf3ac6ae4a04b23596200f9420139939cb5"
+      },
+      "register-error": {
+        "url": "/inscription?error",
+        "sha256": "a60f0d2f58d3c655612de1c0d07885dec8009b71a372dabb4e9d87f04f58d20d"
+      },
+      "videos": {
+        "url": "/studio",
+        "sha256": "608d1c7daa0dd59df674e3cb41b5d6a870d78beacfd4213354fb8c611041d976"
+      },
+      "creation": {
+        "url": "/studio/creation",
+        "sha256": "8d1648a78a67e97f9116ba176760ba630b474ed974f5facc313ad3d5a00c1194"
+      },
+      "series-new": {
+        "url": "/studio/series/nouvelle",
+        "sha256": "99f776b9b6b6c06b3d62789a57d76faac36eae82fe13c3cacb9b6e0d70b916a2"
+      },
+      "calendar": {
+        "url": "/studio/calendrier",
+        "sha256": "03b0ee27ce6bacd3beb666ae93547f977a44252028edb38ee9d6c558a8787f46"
+      },
+      "connections": {
+        "url": "/studio/connexions",
+        "sha256": "025a6aac1b9f475d190b48bc1422a1791d5c0b9f764331a7b7392decdc41c541"
+      },
+      "publications": {
+        "url": "/studio/publications",
+        "sha256": "136d784bafb8ed9e396b94defaca2df69fcf90c5e57f986a203178027cdd70b9"
+      },
+      "profile": {
+        "url": "/studio/mon-compte",
+        "sha256": "13569f3c26d72fcaeaf20dd199538333ee9d2b3b441d177ed975d967fa978236"
+      },
+      "upload": {
+        "url": "/studio/bibliotheque/importer",
+        "sha256": "7a7484ce4c32c131354c62d380cbe090c093a9029918c1fa019a44d045befa86"
+      },
+      "series": {
+        "url": "/studio/series/2455",
+        "sha256": "21dd2c210cd97c356f073e30eb8fffc6313576e977f3520c05e4539df0c28415"
+      },
+      "episode": {
+        "url": "/studio/series/episodes/5100",
+        "sha256": "40f7d8d0329b12d0b5607c97bc0fc4b90281d4a2d8af86d07c96ab243d4373b8"
+      },
+      "edit": {
+        "url": "/studio/montage/867",
+        "sha256": "044b36daac0fa5778e79a900ec05db4156cadf3a41658a291764285f01541f89"
+      },
+      "generation": {
+        "url": "/studio/ia/generations/2998",
+        "sha256": "c709fd631e58b4ba6789a03ec5376252d18a1a82fdf0771ef9377d8efc7b289c"
+      },
+      "composer": {
+        "url": "/studio/composer/a90521335c885eaa4eb2beaf9f86a321d6653705924cbb91",
+        "sha256": "98cdd3986ff4236cdc200bf166a9fda5f5030d02fcf37acc13b3fbcceebfadd6"
+      }
+    },
+    "before": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0
+  },
+  "exportCount": 18,
+  "exportLimitations": [
+    "test database sequences consumed",
+    "fixture counts compared, not full row fingerprints",
+    "exports not a full browser recipe",
+    "initial export rolled back after detached-owner fixture error, then fixed and rerun"
+  ],
+  "routerCheck": {
+    "get": 200,
+    "post": 405,
+    "nojsScripts": 0,
+    "serverStoppedInFinally": true
+  },
+  "pending": [
+    "targeted screen-reader listening for names/errors/status updates",
+    "system reduced-motion preference change",
+    "remaining zoom/native media/complex contrast states before global R5 closure"
+  ],
+  "blocker": "Computer Use stopped native Chrome control because current URL could not be determined confidently; no further browser control attempted",
+  "initialCheck": "Interrupted PHPUnit when shared vendor symlink resolved project sources to Windows mount; rerun with copied vendor",
+  "localRuntime": {
+    "devCacheCleared": true,
+    "workersRestarted": false,
+    "applicationMigrations": false,
+    "realProviderCalls": false,
+    "push": false
+  },
+  "sourceSha256": {
+    "assets/controllers/accessibility_controller.js": "a5cddb2bd2217d242aa6ce0b23381d7ea559c74101977fa522a4669cb7d059fa",
+    "assets/styles/app.css": "b58a7a4f7483256b87a221a965e1fe3c659f2a667490735f7eaddc7845e148b7",
+    "assets/styles/editor-desk.css": "18ba353778d8d99e63ff2a1f738eef45b49e28fa67f58590b1cea185514b6a89",
+    "assets/app.js": "e2b7a74ecc18463e923513e1bdcfc36d865fc58d66681872d65625e877ccba5a",
+    "config/packages/twig.yaml": "a8d4d9e0845c279f76133fd81f540a3280c533dcb7dc89ff7744d96f05cd94d8",
+    "templates/form/accessibility.html.twig": "2500231ee3d1094fd195790504a62a7d4f26f8739bd861b1600a8c5bd48d9b78",
+    "templates/ai/_model_picker.html.twig": "0bfe4278d0690305d8bac2d99953c2870c9cd0384c85581690eff00d44ba3b61",
+    "templates/account/login.html.twig": "2077931dd5af65a1276b91c7af5b88204c43f5b40bc2d55712eabe3aae40f97f",
+    "tests/Functional/AccessibilityTest.php": "5bbd75e13fe1947f1988f34850d36b9bca0f2e987c74cca7fcf48e8bb31709cc",
+    "tests/Frontend/accessibility.test.js": "2510c5e9271d0aa0e77b9f9fa2326d61c6856a879ed0615cbbc6c00b076b667c",
+    "scripts/export-accessibility-fixtures.php": "8c28863adf8cf0b51ad5c45a22abad7084d95772e015d3deac6f620be29dc3d9",
+    "scripts/accessibility-router.php": "63d1dbd56e2584f664e765a0524614d9f51a77e15cb45c312883605a30806d7f",
+    "templates/studio/shell.html.twig": "dc09656a08f84edf9abf4a2cc4ef030239aff194ff8a7eb5e5f91ddce553525a"
+  },
+  "resume": {
+    "date": "2026-11-02",
+    "applicationChanges": false,
+    "interactiveRecipeCompleted": false,
+    "staticStructureMethod": "HTMLParser over the 18 existing exports; checks unique ids, aria-describedby/labelledby/controls and label-for targets, main#contenu tabindex=-1",
+    "staticStructure": [
+      {
+        "view": "calendar",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "composer",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "connections",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "creation",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "edit",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "episode",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "generation",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "landing",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "legal",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "login",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "profile",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "publications",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "register-error",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "register",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "series-new",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "series",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "upload",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      },
+      {
+        "view": "videos",
+        "duplicateIds": {},
+        "brokenReferences": [],
+        "focusableMain": true
+      }
+    ],
+    "devContainerLintPassed": true,
+    "writerServiceResolved": true,
+    "opcacheCliEnabled": false,
+    "live500Resolved": false,
+    "live500Note": "Historical Chrome page showed unresolved writer argument. Current dev container lint and service inspection pass; no authenticated live replay was completed.",
+    "server": {
+      "url": "http://127.0.0.1:8021/qa/creation",
+      "method": "PHP built-in server on host, hidden background process",
+      "getStatus": 200,
+      "postPolicy": "405 as verified previously",
+      "leftRunningForHandoff": true
+    },
+    "browserBlocker": "Native Chrome restored and URL read; Computer Use stopped again at navigation because URL could not be determined confidently. No subsequent app input.",
+    "suiteRerun": false,
+    "requiredHandoff": "Open the local export in Chrome and confirm the visible page before another turn of UI control."
+  },
+  "initialExports": {
+    "routes": {
+      "landing": {
+        "url": "/",
+        "sha256": "58d8e6b8548fa80a8ff57f0a9b9d33fde986caab00e286389e74ca62e96d89d3"
+      },
+      "login": {
+        "url": "/connexion",
+        "sha256": "d284763f9dcafbf2e200e6f494400c5d940338c0a2ee9908af3bf4d2b69a5f11"
+      },
+      "register": {
+        "url": "/inscription",
+        "sha256": "678883db9657f2e8eefc646f21b6a19ca1fabaceec35da0858b2c6fa167a0762"
+      },
+      "legal": {
+        "url": "/informations-legales",
+        "sha256": "317693cb385625eb30bd77e255522cf3ac6ae4a04b23596200f9420139939cb5"
+      },
+      "register-error": {
+        "url": "/inscription?error",
+        "sha256": "a60f0d2f58d3c655612de1c0d07885dec8009b71a372dabb4e9d87f04f58d20d"
+      },
+      "videos": {
+        "url": "/studio",
+        "sha256": "acf797d41317e412647d34e7f3d73a7c149e43c711459b485c68a0532c04049a"
+      },
+      "creation": {
+        "url": "/studio/creation",
+        "sha256": "47d1151bb1c5407414a2cde8afec51a418ee56c79d39f20f64e6f979ee03049d"
+      },
+      "series-new": {
+        "url": "/studio/series/nouvelle",
+        "sha256": "6e289613955faaf7a183ae6ba5de1021821c4942bb7a04032f3e88eed9d5d73c"
+      },
+      "calendar": {
+        "url": "/studio/calendrier",
+        "sha256": "1605ccdf97794e75dcb83100559ca62cd57edaaa57a8902b59712ef052560db8"
+      },
+      "connections": {
+        "url": "/studio/connexions",
+        "sha256": "6ec6eb5e04d764b29a41ac5302efea97084518c8dd6eccc123f304a21f3dc2df"
+      },
+      "publications": {
+        "url": "/studio/publications",
+        "sha256": "900c18600895a56ca82c84ac2209467179c662a2266e1f2856993eae9517c4ec"
+      },
+      "profile": {
+        "url": "/studio/mon-compte",
+        "sha256": "f6c485f822d0552ea249e7bae35d1f23cd4cdd3d591540024839af4a3147bb69"
+      },
+      "upload": {
+        "url": "/studio/bibliotheque/importer",
+        "sha256": "074f22272e2d9c33f637f96026173bb73f0f6e477c0d1863a0cd73d5b338d9af"
+      },
+      "series": {
+        "url": "/studio/series/2453",
+        "sha256": "5ae6c662928aa2d540fac2be62b5ff2e9993c86a6a84b3399b7dde6d6792c09b"
+      },
+      "episode": {
+        "url": "/studio/series/episodes/5091",
+        "sha256": "3b17a165483b25bfeb2f995745c30979a1029f94a783b93bf6bcd622df107670"
+      },
+      "edit": {
+        "url": "/studio/montage/866",
+        "sha256": "45eb6e73d846e38d11475789af9b36841d7a42d659a4c77af0bbd27fd2fbcb17"
+      },
+      "generation": {
+        "url": "/studio/ia/generations/2997",
+        "sha256": "945568eeed0592c95867f56f8c1bc897d13edbd1c101c3a36e4aa25b1cc2b289"
+      },
+      "composer": {
+        "url": "/studio/composer/74b9dec83f4f79cdb82ffa8bfefe039aea7a3fcd3edffe78",
+        "sha256": "48f100477c77f3e0b62b2024e77f506d9a0ea6be16543ad5f4c32c4ed1f2d778"
+      }
+    },
+    "before": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0
+  },
+  "sourceSha256BeforeInteractive": {
+    "assets/controllers/accessibility_controller.js": "a5cddb2bd2217d242aa6ce0b23381d7ea559c74101977fa522a4669cb7d059fa",
+    "assets/styles/app.css": "b58a7a4f7483256b87a221a965e1fe3c659f2a667490735f7eaddc7845e148b7",
+    "assets/styles/editor-desk.css": "18ba353778d8d99e63ff2a1f738eef45b49e28fa67f58590b1cea185514b6a89",
+    "assets/app.js": "e2b7a74ecc18463e923513e1bdcfc36d865fc58d66681872d65625e877ccba5a",
+    "config/packages/twig.yaml": "a8d4d9e0845c279f76133fd81f540a3280c533dcb7dc89ff7744d96f05cd94d8",
+    "templates/form/accessibility.html.twig": "2500231ee3d1094fd195790504a62a7d4f26f8739bd861b1600a8c5bd48d9b78",
+    "templates/ai/_model_picker.html.twig": "0bfe4278d0690305d8bac2d99953c2870c9cd0384c85581690eff00d44ba3b61",
+    "templates/account/login.html.twig": "2077931dd5af65a1276b91c7af5b88204c43f5b40bc2d55712eabe3aae40f97f",
+    "tests/Functional/AccessibilityTest.php": "9cac7622aed2209ead4068f5788861cdfeb68bc04b4a1269e11780262416df1b",
+    "tests/Frontend/accessibility.test.js": "2510c5e9271d0aa0e77b9f9fa2326d61c6856a879ed0615cbbc6c00b076b667c",
+    "scripts/export-accessibility-fixtures.php": "8c28863adf8cf0b51ad5c45a22abad7084d95772e015d3deac6f620be29dc3d9",
+    "scripts/accessibility-router.php": "63d1dbd56e2584f664e765a0524614d9f51a77e15cb45c312883605a30806d7f"
+  },
+  "interactive": {
+    "date": "2026-11-02",
+    "newDefectFixed": {
+      "severity": "P2",
+      "description": "Compact sidebar hides profile text and leaves link without an accessible name",
+      "file": "templates/studio/shell.html.twig",
+      "fix": "Explicit account label including visible display name or email",
+      "browserProof": {
+        "width": 900,
+        "profileTextDisplay": "none",
+        "ariaLabelPresent": true
+      }
+    },
+    "desktopKeyboard": {
+      "width": 1280,
+      "height": 720,
+      "method": "Skip link then Tab until browser boundary; read actual focused DOM node and computed outline; no action submission",
+      "views": [
+        {
+          "view": "edit",
+          "focusStops": 43,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "calendar",
+          "focusStops": 57,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "creation",
+          "focusStops": 31,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "episode",
+          "focusStops": 50,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "series-new",
+          "focusStops": 26,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "register-error",
+          "focusStops": 10,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "upload",
+          "focusStops": 14,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "profile",
+          "focusStops": 22,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "connections",
+          "focusStops": 14,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "generation",
+          "focusStops": 15,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "videos",
+          "focusStops": 20,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "publications",
+          "focusStops": 16,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        }
+      ]
+    },
+    "composerDesktop": {
+      "applicationFocusStops": 21,
+      "nativeMediaFocusStops": 5,
+      "applicationControlsWithoutOutline": 0,
+      "note": "Native media internals retain VIDEO as document.activeElement. Repeated-host exploration excluded from cycle verdict; native UA controls are not certified by host outline."
+    },
+    "mobileKeyboard": {
+      "width": 390,
+      "height": 780,
+      "views": [
+        {
+          "view": "creation",
+          "focusStops": 29,
+          "documentWidth": 375,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "episode",
+          "focusStops": 48,
+          "documentWidth": 375,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "calendar",
+          "focusStops": 55,
+          "documentWidth": 375,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "edit",
+          "focusStops": 36,
+          "documentWidth": 375,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        },
+        {
+          "view": "register-error",
+          "focusStops": 10,
+          "documentWidth": 375,
+          "reachedBrowserBoundary": true,
+          "namelessApplicationControls": 0,
+          "applicationControlsWithoutOutline": 0
+        }
+      ],
+      "composer": "Partial: repeated native video host; no complete cycle claimed"
+    },
+    "dialogs": {
+      "calendar": {
+        "openedByEnter": true,
+        "initialFocus": "Fermer",
+        "escapeCloses": true,
+        "returnFocus": "Préparer une publication le 03/11/2026"
+      },
+      "editExport": {
+        "openedByEnter": true,
+        "initialFocus": "Fermer",
+        "escapeCloses": true,
+        "returnFocus": "Exporter ↗",
+        "exportSubmitted": false
+      },
+      "editProject": {
+        "openedByEnter": true,
+        "initialFocus": "Fermer les actions du projet",
+        "escapeCloses": true
+      },
+      "focusBoundaryNote": "Native dialog Tab may briefly move focus to browser chrome (BODY), not background page controls."
+    },
+    "mobileMenu": {
+      "enterOpens": true,
+      "tabFirstDestination": "Vidéos",
+      "escapeCloses": true,
+      "returnFocus": "SUMMARY Menu"
+    },
+    "dynamicPreparation": {
+      "model": "kling-25",
+      "seconds": 15,
+      "plans": 3,
+      "layout": [
+        5,
+        5,
+        5
+      ],
+      "paidCall": false,
+      "recapPost": "405 from read-only router; not a successful native-invalid-field reveal test"
+    },
+    "nativeZoom": {
+      "browser": "Chrome Windows",
+      "percent": 200,
+      "proof": "Toolbar and zoom popup explicitly reported 200%; native screenshots visually inspected in narrow and maximized window",
+      "scope": "Preparation page; no exhaustive zoom matrix claimed",
+      "viewportEmulationIsZoom": false,
+      "restoredPercent": 100,
+      "screenshotsPersisted": false
+    },
+    "renderedContrast": {
+      "method": "sRGB from computed text and ancestor solid backgrounds, alpha composited. Excludes disabled controls, native options, hidden or closed details, images/gradients and group opacity. Text node groups, not unique strings. Not a global WCAG audit.",
+      "views": [
+        {
+          "view": "creation",
+          "testedTextElements": 65,
+          "minimumRatio": 6.89,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "episode",
+          "testedTextElements": 97,
+          "minimumRatio": 6.89,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "composer",
+          "testedTextElements": 42,
+          "minimumRatio": 7.79,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "series-new",
+          "testedTextElements": 62,
+          "minimumRatio": 7.19,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "register-error",
+          "testedTextElements": 25,
+          "minimumRatio": 7.14,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "upload",
+          "testedTextElements": 31,
+          "minimumRatio": 7.25,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "profile",
+          "testedTextElements": 43,
+          "minimumRatio": 7.79,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "connections",
+          "testedTextElements": 32,
+          "minimumRatio": 7.79,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "generation",
+          "testedTextElements": 44,
+          "minimumRatio": 7.41,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "videos",
+          "testedTextElements": 39,
+          "minimumRatio": 7.41,
+          "complexSkipped": 0,
+          "belowThreshold": 0
+        },
+        {
+          "view": "publications",
+          "testedTextElements": 19,
+          "minimumRatio": 7.79,
+          "complexSkipped": 3,
+          "belowThreshold": 0
+        }
+      ],
+      "testedTotal": 499,
+      "complexSkipped": 3
+    },
+    "systemReducedMotion": {
+      "settingsTargetable": false,
+      "preferenceChanged": false,
+      "validated": false,
+      "controlExeOpened": "Outils Windows, not the required visual settings"
+    },
+    "screenReader": {
+      "reader": "Windows Narrator",
+      "launchedAfterDelay": true,
+      "welcomeDismissed": true,
+      "targetedSpeechValidated": false,
+      "ownerReply": "Je sais pas je suis sensé faire un truc pour l’entendre ?",
+      "audioCaptureAvailable": false,
+      "homeProcessStopped": true,
+      "readerStopAttempt": "Windows access denied for process started by recipe",
+      "manualStop": "Ctrl + Windows + Entrée"
+    },
+    "checks": {
+      "targetedPhp": {
+        "tests": 22,
+        "assertions": 285,
+        "passed": true,
+        "classes": [
+          "AccessibilityTest",
+          "AccountTest",
+          "ValidationQueueTest"
+        ]
+      },
+      "twigTemplates": 115,
+      "twigLintPassed": true,
+      "phpStylePassed": true,
+      "fullSuiteRerun": false,
+      "frontendChangesThisPass": false,
+      "newProviderHTTP": 0
+    },
+    "limitations": [
+      "No phone hardware test",
+      "No complete native screen-reader/error/status listening",
+      "No actual system reduced-motion preference toggle",
+      "Native media shadow controls not certified",
+      "Native zoom observations bounded to preparation page",
+      "Initial fast focus geometry and repeated media-host traversals excluded from pass/fail conclusions"
+    ],
+    "newLogs": [
+      "artifacts/r53-interactive-targeted.log",
+      "artifacts/r53-interactive-export.log"
+    ]
+  },
+  "subsequentOwnerFeedback": {
+    "date": "2026-11-02",
+    "narratorGenerallyHeardAndWorking": true,
+    "targetedErrorsAndStatusListeningValidated": false,
+    "systemMotionPreferenceValidated": false,
+    "narratorStoppedConfirmed": false,
+    "sourceHashesAreHistoricalAfterR54": true,
+    "nextEvidence": "r5-resilience-20261102.json"
+  },
+  "registrationListeningFollowup": {
+    "validEmailErrorHeard": true,
+    "passwordMismatchHeardLater": true,
+    "initialReportCorrectedByOwner": true,
+    "modifiedVersionListeningStillPending": true,
+    "manifest": "r5-erreurs-formulaire-20261102.json"
+  },
+  "subsequentOwnerAcceptanceAndGit": {
+    "date": "2026-11-02",
+    "registrationNarratorAcceptedByOwner": true,
+    "scope": "modified registration error page",
+    "dynamicStatusListeningValidated": false,
+    "actualSystemReducedMotionValidated": false,
+    "phoneHardwareValidated": false,
+    "applicationCommit": "5fe6f0d",
+    "evidenceAndToolsCommittedSeparately": true,
+    "push": false,
+    "newSuiteRunForCommit": false
+  }
+}

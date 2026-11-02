@@ -1,0 +1,339 @@
+{
+  "date": "2026-11-02",
+  "baseCommit": "54423f8",
+  "status": "R5.4 locally verified; R5 remains open",
+  "inheritsUncommittedR53": true,
+  "sourceSha256": {
+    "assets/app.js": "e2b7a74ecc18463e923513e1bdcfc36d865fc58d66681872d65625e877ccba5a",
+    "assets/controllers/preparation_controller.js": "ecec2fb8045222216c061e07e06c2842110b0b43721aae6eb219c18235a87815",
+    "assets/controllers/reference_picker_controller.js": "8f84b3b49745b3e868535912320e36b12072cf331fa79235d1677f96f82dd74b",
+    "assets/controllers/selection_controller.js": "c5e3e27ff295a109552c7e3e1a4d5ca8d5e64937fdf1fca9bc9a5e06ba9fe91f",
+    "assets/controllers/story_writer_controller.js": "c0f1411b20167ff57caa23f68a44f8b48ba48f21038a8a50201cfcab12953a13",
+    "assets/controllers/subject_list_controller.js": "4ed175649be05ccaa860ababd0b2cfdbc93a5955bb339f2b5431f511824ac9aa",
+    "assets/styles/app.css": "b58a7a4f7483256b87a221a965e1fe3c659f2a667490735f7eaddc7845e148b7",
+    "assets/styles/editor-desk.css": "a238867a843bc7766b4a0dfab6c6677d18e6adedeef764a61fc762140861f09b",
+    "assets/styles/series.css": "8e6baecc16286b5b64133f1d68ce83b913cd4e9499162263eebaaa7643db8602",
+    "scripts/export-accessibility-fixtures.php": "57b49a65033ececc0ede02160fb1c18d2fc8accaba3aa4ba89d244c854c07f0b",
+    "scripts/resilience-router.php": "063d4acb2402b44e98f4b0f5f22c8fe990a4aa37a753cbee80c8baeed459c555",
+    "templates/account/base.html.twig": "86cb07968611f5e7004312f9b41df3eee74c202b2664f5fbcf8a2090776b3266",
+    "templates/account/login.html.twig": "2077931dd5af65a1276b91c7af5b88204c43f5b40bc2d55712eabe3aae40f97f",
+    "templates/ai/_model_picker.html.twig": "0bfe4278d0690305d8bac2d99953c2870c9cd0384c85581690eff00d44ba3b61",
+    "templates/ai/_reference_picker.html.twig": "1fc9b6018725abba5863fb232c94b65785f91f74b72255cca26246ed97e6e3a5",
+    "templates/ai/_story_proposal.html.twig": "b6ff335a5bd41fbcfc15979b22fefa830cfeba3746d6c83200ba2d8ae2c2335d",
+    "templates/ai/_subjects.html.twig": "44fb547b4ae488d01fbe33f3d5b98de9bc8adb591adf26c1813dd9424366b75c",
+    "templates/ai/_timing.html.twig": "a2a5dfc79e633af5dfd8a903b834551ae75fbac3264d3c0468f24c9a0cc18195",
+    "templates/base.html.twig": "1df9619889f1f8cff60944af9785dd2b727ddb3993d37e7c14166a6cc767e68b",
+    "templates/landing/index.html.twig": "9891cd2804f26f8f6e52aa75d94f553513889ddbaf05ec4a7c10f7b0f08c9881",
+    "templates/landing/waitlist.html.twig": "df34fd16e6885094d8b77d065f81522d3dcc53e0bbef5a3c75d27e1d84573cc7",
+    "templates/legal/base.html.twig": "5ac4d8e036c0a9a227654e2d1964497dba5b9149a97971e1253ec227d157ad5f",
+    "templates/library/index.html.twig": "9718ff0c8d8e03699ee21b346f5a42304d8825b46840c8a168e9d52df2cdf03b",
+    "templates/studio/shell.html.twig": "dc09656a08f84edf9abf4a2cc4ef030239aff194ff8a7eb5e5f91ddce553525a",
+    "templates/studio/workspace.html.twig": "2ffd5ef26811c11ba5c06dafba3d05f4b7ee8f71a07e3e74f621473e06da4fc2",
+    "tests/Frontend/reference_picker.test.js": "d295ef9a291940a682624c4f186ba19d062d939f90c31aede369068c48563535",
+    "tests/Frontend/story_writer.test.js": "baf7f8ce2b0dc5498d28ad0184cafe7758b82c9b9e8f9e4cb6ced7990865fc05",
+    "tests/Frontend/studio_navigation.test.js": "4f3b94a64a0b046fd21c2ccd7417b320d7a98176ae4f9feae975219b5028031a",
+    "tests/Functional/ResilienceTest.php": "0bb78dc9e9b3e2a2700ddc8bd97904a6355902e6fc57e6e397fe27b4aa82499b"
+  },
+  "exports": {
+    "routes": {
+      "landing": {
+        "url": "/",
+        "sha256": "58d8e6b8548fa80a8ff57f0a9b9d33fde986caab00e286389e74ca62e96d89d3"
+      },
+      "login": {
+        "url": "/connexion",
+        "sha256": "d284763f9dcafbf2e200e6f494400c5d940338c0a2ee9908af3bf4d2b69a5f11"
+      },
+      "register": {
+        "url": "/inscription",
+        "sha256": "678883db9657f2e8eefc646f21b6a19ca1fabaceec35da0858b2c6fa167a0762"
+      },
+      "legal": {
+        "url": "/informations-legales",
+        "sha256": "317693cb385625eb30bd77e255522cf3ac6ae4a04b23596200f9420139939cb5"
+      },
+      "register-error": {
+        "url": "/inscription?error",
+        "sha256": "a60f0d2f58d3c655612de1c0d07885dec8009b71a372dabb4e9d87f04f58d20d"
+      },
+      "videos": {
+        "url": "/studio",
+        "sha256": "b078d4c04da378d1cb38090892c237a1bca9d6fefe7bb64c752d785349e2febf"
+      },
+      "creation": {
+        "url": "/studio/creation",
+        "sha256": "00b27ce54ef2567c3d09f103735e1637a27bbfe74b6f9966aad8f8f6842bf768"
+      },
+      "series-new": {
+        "url": "/studio/series/nouvelle",
+        "sha256": "c55bedc00dab3ad224a496c2bfdafa870f3deaf00fdaf3ac95dfc25d84986d8c"
+      },
+      "calendar": {
+        "url": "/studio/calendrier",
+        "sha256": "5c637870b16311895263776847355272c4af6e4ea11bc8386464dbd9c50d1607"
+      },
+      "connections": {
+        "url": "/studio/connexions",
+        "sha256": "7d8465738471c1e2a72a730504086cd7b2d16fca1f45c82079b7e7709d0d716e"
+      },
+      "publications": {
+        "url": "/studio/publications",
+        "sha256": "9a43035dabfe1423ed4424f275b963e9a4688e60119f96b1ff31280ec3978d9f"
+      },
+      "profile": {
+        "url": "/studio/mon-compte",
+        "sha256": "da39db700fc422d96f0f5187867fab939b536354304973af11f04d87cd591c20"
+      },
+      "upload": {
+        "url": "/studio/bibliotheque/importer",
+        "sha256": "e3de991cd6d113cb03f3f0f009a0cc7f88cfb76a62a4edbf29f5eea7cb8244f7"
+      },
+      "series": {
+        "url": "/studio/series/2591",
+        "sha256": "3141df5547157337c2e77d91822d37eaa27cd3221c1a81183cd4e40c56404ece"
+      },
+      "episode": {
+        "url": "/studio/series/episodes/5974",
+        "sha256": "381335e0056da3cf8f4f5ba8c5d3f89937733c0d0d85c437f457116e6ef4d195"
+      },
+      "edit": {
+        "url": "/studio/montage/943",
+        "sha256": "fb4a2dd62610e2da971202dfc0039f4b5e57823d740296b676f6e654001912ae"
+      },
+      "videos-filled": {
+        "url": "/studio",
+        "sha256": "03a89ac26134aa29f18b0fb3c9325532020352ea597452151b3d3b0d921395b0"
+      },
+      "generation": {
+        "url": "/studio/ia/generations/3143",
+        "sha256": "e6f655a7bb9f0628a7fa574957f5d7e3f5a7fc35be17c0ca22117a6fe9a7f33c"
+      },
+      "composer": {
+        "url": "/studio/composer/be2c28dbdf3d7e7788d045b17f66787c17b52fa7c4ca1f24",
+        "sha256": "364e2b2464aaf3253849a24c49f370df0eab15a85bc3199f384c769cdacafcaa"
+      }
+    },
+    "before": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 2,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 1,
+      "video_edit": 1,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 2,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 1,
+      "video_edit": 1,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0
+  },
+  "exportCount": 19,
+  "browser": {
+    "method": "application script tags removed; browser scripting engine remains enabled; noscript is not rendered",
+    "desktop": {
+      "viewport": [
+        1280,
+        720
+      ],
+      "documentWidth": 1265,
+      "views": [
+        "landing",
+        "login",
+        "register",
+        "legal",
+        "register-error",
+        "videos",
+        "creation",
+        "series-new",
+        "calendar",
+        "connections",
+        "publications",
+        "profile",
+        "upload",
+        "series",
+        "episode",
+        "edit",
+        "videos-filled",
+        "generation",
+        "composer"
+      ],
+      "scripts": 0,
+      "visibleActiveUncontrolledTypeButtons": 0
+    },
+    "mobile": {
+      "viewport": [
+        390,
+        780
+      ],
+      "documentWidth": 375,
+      "views": [
+        "edit",
+        "creation",
+        "episode",
+        "videos-filled"
+      ],
+      "scripts": 0,
+      "visibleActiveUncontrolledTypeButtons": 0
+    },
+    "exclusions": [
+      "First mobile attempt remained at 1280 and was excluded",
+      "Hidden ancestors and closed details excluded",
+      "Native shadow media controls not audited",
+      "No archived screenshot campaign",
+      "No real phone or native JavaScript-disable setting tested"
+    ],
+    "withScripts": [
+      "writer enabled only when fixture available",
+      "writer script requirement hidden",
+      "bulk selection checks item and enables preparation",
+      "editor enhanced, dialogs closed and Clip tab visible"
+    ],
+    "mediaMissing": {
+      "nativePlayerErrorObserved": true,
+      "titleAndMetadataRemain": true,
+      "dateFieldsCanOpen": true,
+      "saveDraftEnabled": true,
+      "submitted": false
+    },
+    "mediaSlow": {
+      "nativeBufferingObserved": true,
+      "formExposed": true,
+      "saveDraftEnabled": true
+    },
+    "pollError": {
+      "fallbackMessageObserved": true,
+      "manualRefreshAvailable": true
+    }
+  },
+  "httpProbes": {
+    "scriptlessPage": 200,
+    "scriptTagCount": 0,
+    "noscriptMarkupPreservedButNotRendered": true,
+    "post": 405,
+    "missingMedia": 404,
+    "pollError": 503,
+    "slowMedia": {
+      "status": 200,
+      "bytes": 3638,
+      "elapsedSeconds": 1.813
+    }
+  },
+  "checks": {
+    "frontendFinal": {
+      "tests": 186,
+      "passed": true
+    },
+    "syntaxAndBuildFinalPassed": true,
+    "targetedPhpFinal": {
+      "tests": 53,
+      "assertions": 626,
+      "passed": true,
+      "suites": [
+        "ResilienceTest",
+        "AccessibilityTest",
+        "AccountTest",
+        "ValidationQueueTest",
+        "VideoEditTest"
+      ]
+    },
+    "twigFinalTemplates": 115,
+    "phpStyleAndRouterSyntaxFinalPassed": true,
+    "fullPhpBeforeLastUIAdjustments": {
+      "tests": 820,
+      "assertions": 9019,
+      "errors": 35,
+      "failures": 2,
+      "same37FailingTestNamesAsBaseline": true,
+      "failingTestNames": [
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testConfirmedTranslationKeepsItsSourceWhenSeriesSettingsChange",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testQuoteMustMatchAndConfirmationIsIdempotentWithoutProviderCall",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testWrongProviderFramingKeepsTheClipAndStopsBeforeTheNextBillableShotOrAssembly",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testAmbiguousSubmissionPausesWithoutResendingAndDoesNotStartFollowingPlan",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testManualPauseRetainsConsentAndResumeDoesNotDuplicateFirstPlan",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testCompleteEpisodeIsAssembledOnceAndRequiresEditorialValidation",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testOneMinuteEpisodeUsesSixClipsAndTheExistingRenderer",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testStopReleasesFutureReservationsAndPreventsQueuedBillablePost",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testRepairOnlyRegeneratesChosenShotAndInvalidatesApproval",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testConfirmedPromptsKeepThePreparedIdentityAfterSeriesEdits",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testSeriesMontageIsFrozenAndAppliedByTheExistingAssembler",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testLegacyUnsentJobRequiresNewQuoteWithoutDiscardingHistory",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testCapacityIncludesAllFuturePlansAndExportAndProtectsOtherGenerations",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testOwnerCsrfMissingConsentAndDirectPlanSubmissionAreProtected",
+        "App\\Tests\\Functional\\AiEpisodeFlowTest::testStudioCreatesPrivateReusableProjectWithoutSeriesAndCompletesTwentyFiveSeconds",
+        "App\\Tests\\Functional\\AiStudioTest::testBothModelsGeneratePrivatelyAndRedeliveryDoesNotDuplicateAssets",
+        "App\\Tests\\Functional\\AiStudioTest::testAmbiguousSubmissionNeverAutomaticallySubmitsAgain",
+        "App\\Tests\\Functional\\AiStudioTest::testResultDomainIsCheckedBeforeDownloadAndRecoveryDoesNotRegenerate",
+        "App\\Tests\\Functional\\AiStudioTest::testWaitingAndInvalidVideoRemainRecoverableWithoutAnotherBillableRequest",
+        "App\\Tests\\Functional\\AiStudioTest::testQuotaRollbackExposesAnIssueAndCanResumeAfterSpaceIsFreed",
+        "App\\Tests\\Functional\\AiStudioTest::testTooManyActiveJobsBlockBeforeSubmission",
+        "App\\Tests\\Functional\\AiStudioTest::testRemovedKeyBeforeDepartureRequiresConsentAgainAndCanResume",
+        "App\\Tests\\Functional\\AiStudioTest::testReplicatePollingAndSafeDownloadResumeNeverResubmit",
+        "App\\Tests\\Functional\\AiStudioTest::testKlingThreeUsesFifteenSecondsAndAnExplicitAudioSetting",
+        "App\\Tests\\Functional\\AiStudioTest::testVeoUsesItsOwnSchemaAndTerminalFailureNeverResubmits",
+        "App\\Tests\\Functional\\AiStudioTest::testExtendedFalFamiliesReachThePrivateLibraryWithoutDuplicateSubmissions",
+        "App\\Tests\\Functional\\AiStudioTest::testLtxFourKUsesItsOwnKeyAndReachesThePrivateLibrary",
+        "App\\Tests\\Functional\\AiStudioTest::testGuideWorkerChecksCapacityAgainBeforeAnyBillablePost",
+        "App\\Tests\\Functional\\FalOAuthTest::testMcpRefreshAndPrivateImportKeepTheOriginalReceiptAndNeverResubmit",
+        "App\\Tests\\Functional\\FalOAuthTest::testChangedActiveAccountBlocksBeforeThePaidCall",
+        "App\\Tests\\Functional\\FalOAuthTest::testPikaVerticalSettingsReachTheMcpSubmitCallWithoutFallingBackToLandscapeDefaults",
+        "App\\Tests\\Functional\\FalOAuthTest::testRevokedRefreshStopsQueuedWorkWithoutLosingTheEntityManager",
+        "App\\Tests\\Functional\\SeriesRecurrencesTest::testKeyChangedAfterQueueingCannotTriggerAProviderPost",
+        "App\\Tests\\Functional\\SeriesRecurrencesTest::testLastPreparedEpisodeCanBeGeneratedManuallyIndependentlyOfPreparationPause",
+        "App\\Tests\\Functional\\SeriesRecurrencesTest::testLegacyQueuedGenerationCannotPostButAnAlreadySubmittedClipCanStillBePolled",
+        "App\\Tests\\Functional\\AiStudioTest::testConfirmationRequiresCsrfConsentKeyAndIsIdempotent",
+        "App\\Tests\\Functional\\AiStudioTest::testGuideCapacityIncludesOtherActiveGenerationsBeforeConfirmation"
+      ],
+      "tariffGuardUnchanged": true
+    },
+    "schemaYamlContainerPhpstanStylePassedAtFullSnapshot": true
+  },
+  "logSha256": {
+    "artifacts/r54-ui-final.log": "7ff00775e6af10b5d516f305998194dcec189cf95de4a558ea4d63e8366cadd3",
+    "artifacts/r54-check-final.log": "e50903972b142f2ae477d54e23c54bb4abd05719368dff5d75624c9eeb2c7aab",
+    "artifacts/r54-build-final.log": "2e87f4e049d021ecfcb8a85298cf17a6784f8dc8ba134b0b8bc5a39ce4127fbf",
+    "artifacts/r54-final-targeted.log": "a0e3071393409a100dc8a0458dd5239cfd9d0c9da11a0ae37c5b9e431198023d",
+    "artifacts/r54-final-static.log": "4c80a784808e1c690d9f8799b6ba2b495876d0ad49f18a19d5c1648f360643f4",
+    "artifacts/r54-export-final.log": "373fdf61209a487d41f1a0018384cc359ba1247e84fbab700a7438dfd2b43abf",
+    "artifacts/r54-full.log": "bf1429c0278d9c2ff948a923c4e82e72b0003049044702dd5e9a51cd59d5fc98",
+    "artifacts/r53-baseline.log": "0da39d404ca368fd1a5f626364ea8c3e255740f330514d15d6426b9ffbf15461"
+  },
+  "remaining": [
+    "R5.2 actual phone",
+    "R5.3 targeted screen-reader errors/status and actual system reduced motion",
+    "R5-D1 landing overlap",
+    "R5-D3 long titles",
+    "R5.5 global review"
+  ],
+  "next": "R5.5",
+  "providerHTTP": 0,
+  "realInference": false,
+  "cost": false,
+  "socialPublication": false,
+  "activation": false,
+  "applicationMigration": false,
+  "workerRestart": false,
+  "commit": false,
+  "push": false,
+  "cleanup": {
+    "isolatedLinuxCopyRemoved": true,
+    "temporaryArchiveRemoved": true,
+    "server8022StoppedAfterCommandMatch": true,
+    "server8021Preserved": true,
+    "viewportReset": true,
+    "gitDiffCheckPassed": true
+  }
+}
