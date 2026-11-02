@@ -217,3 +217,5 @@
 .beta-guide-copy p{font-size:14px;line-height:1.8;color:var(--muted);margin:0 0 16px}
 .beta-guide-copy .beta-guide-note{font-size:12px;border-top:1px solid var(--line);padding-top:20px;margin-top:24px}
 @media(max-width:1000px){.beta-guide{grid-template-columns:1fr;gap:28px;padding-block:56px}.beta-guide h2{font-size:32px}.product-steps p{max-width:48ch}}
+/* The fixed pause control belongs to the hero; later scenes must not cover it. */
+@media(min-width:1001px){.story .scene.hero{z-index:3}}

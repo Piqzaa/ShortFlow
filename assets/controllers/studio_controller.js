@@ -8,8 +8,8 @@ export default class extends Controller {
   connect() {
     this.element.dataset.studioState = 'connecting';
     this.connected = true;
-    this.paused = false;
-    this.generation = 0;
+    this.paused ??= false;
+    this.generation ??= 0;
     this.controlsVisible = false; this.controlsAvailable = false;
     this.controlsObserver = new IntersectionObserver(entries => {
       this.controlsVisible = entries[0].isIntersecting;
@@ -29,9 +29,10 @@ export default class extends Controller {
     if (!this.connected || this.paused || this.motion.matches || navigator.connection?.saveData) { this.element.dataset.studioState = 'static'; return; }
     this.element.dataset.studioState = 'observing';
     const generation = this.generation;
-    this.observer = new IntersectionObserver(entries => {
+    const observer = this.observer = new IntersectionObserver(entries => {
+      if (!this.connected || generation !== this.generation) return;
       if (entries.some(entry => entry.isIntersecting)) {
-        this.observer.disconnect();
+        observer.disconnect();
         this.load(generation);
       }
     }, { rootMargin: '200px' });
@@ -39,6 +40,8 @@ export default class extends Controller {
   }
 
   async load(generation) {
+    if (!this.connected || generation !== this.generation || this.loadingGeneration === generation) return;
+    this.loadingGeneration = generation;
     this.element.dataset.studioState = 'loading';
     try {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([import('gsap'), import('gsap/ScrollTrigger')]);
@@ -51,12 +54,12 @@ export default class extends Controller {
       this.toggleTarget.hidden = !this.controlsVisible;
       const scenes = [...this.element.querySelectorAll('[data-scene]')];
       this.animationContext = gsap.context(() => {
-        this.element.querySelectorAll('.destination').forEach((card, index) => {
-          gsap.from(card, { x: this.mobile.matches ? 0 : -280 - index * 90, y: this.mobile.matches ? 12 : 100 + index * 35,
-            rotationY: this.mobile.matches ? 0 : -55, rotationZ: this.mobile.matches ? 0 : -20,
-            scale: this.mobile.matches ? .99 : .72, opacity: this.mobile.matches ? .8 : .15,
-            ease: 'power2.out', scrollTrigger: { trigger: this.mobile.matches ? card : '.destinations',
-              start: 'top 92%', end: this.mobile.matches ? 'top 55%' : 'center 53%', scrub: .65 } });
+        this.element.querySelectorAll('.destination').forEach(card => {
+          // Readable before the trigger, during entry and when scrolling back.
+          gsap.from(card, { y: this.mobile.matches ? 12 : 18, duration: .5,
+            immediateRender: false, ease: 'power2.out',
+            scrollTrigger: { trigger: card, start: 'top 92%', once: true,
+              toggleActions: 'play none none none' } });
         });
         if (!this.mobile.matches) gsap.from('.studio-preview', { y: 180, rotationX: 24, rotationY: -16, scale: .86,
           ease: 'power2.out', scrollTrigger: { trigger: '.studio-preview', start: 'top 95%', end: 'center 66%', scrub: .8 } });
@@ -77,9 +80,11 @@ export default class extends Controller {
         this.element.dataset.studioState = 'mobile'; ScrollTrigger.refresh(); return;
       }
       const [THREE, { RoomEnvironment }, composer] = await Promise.all([import('three'), import('three/addons/environments/RoomEnvironment.js'), import('../screen-composer.js')]);
-      this.composer = composer;
-      this.screenAssets = await composer.loadMedia();
       if (generation !== this.generation) return;
+      const screenAssets = await composer.loadMedia();
+      if (generation !== this.generation) return;
+      this.composer = composer;
+      this.screenAssets = screenAssets;
       this.createWorld(THREE, RoomEnvironment);
       this.element.classList.add('is-immersive');
       this.element.dataset.studioState = 'webgl';
@@ -129,6 +134,7 @@ export default class extends Controller {
       this.render();
       this.playVideo(generation);
     } catch (error) {
+      if (generation !== this.generation) return;
       this.cleanup();
       this.element.dataset.studioState = 'fallback';
       console.info('VydFlow : aperçu statique activé.', error.message);
@@ -311,9 +317,10 @@ export default class extends Controller {
         start: this.mobile.matches ? 'top 65%' : 'top 15%',
         end: this.mobile.matches ? 'bottom 85%' : 'bottom 75%', scrub: .35 } });
     }, this.element);
-    this.editObserver = new IntersectionObserver(entries => {
+    const observer = this.editObserver = new IntersectionObserver(entries => {
+      if (generation !== this.generation) return;
       if (!entries.some(entry => entry.isIntersecting)) return;
-      this.editObserver.disconnect();
+      observer.disconnect();
       loadEditFrames().then(frames => {
         if (generation !== this.generation) return;
         this.editFrames = frames; this.drawEdit(); this.render();
@@ -347,9 +354,10 @@ export default class extends Controller {
         this.render();
       }, scrollTrigger: { trigger: '.horizon-runway', start: 'top 65%', end: 'bottom 85%', scrub: .35 } });
     }, this.element);
-    this.horizonObserver = new IntersectionObserver(entries => {
+    const observer = this.horizonObserver = new IntersectionObserver(entries => {
+      if (generation !== this.generation) return;
       if (!entries.some(entry => entry.isIntersecting)) return;
-      this.horizonObserver.disconnect();
+      observer.disconnect();
       loadFrames().then(frames => {
         if (generation !== this.generation) return;
         this.horizonFrames = frames;
@@ -373,12 +381,14 @@ export default class extends Controller {
   async setupMobileHero(gsap, generation) {
     if (!this.hasHeroTarget) return;
     const { HERO_MEDIA, loadMedia, drawFilm } = await import('../screen-composer.js');
+    if (generation !== this.generation) return;
     const images = await loadMedia(HERO_MEDIA);
     if (generation !== this.generation || !HERO_MEDIA.every(name => images[name])) return;
     const context = this.heroTarget.getContext('2d');
     if (!context) return;
     let elapsed = 0, drawn = -1;
     this.heroTick = (_time, delta) => {
+      if (generation !== this.generation) return;
       elapsed += Math.min(delta, 100) / 1000;
       if (elapsed - drawn < 1 / 15) return;
       drawn = elapsed;
@@ -397,6 +407,7 @@ export default class extends Controller {
     };
     document.addEventListener('visibilitychange', this.syncHero);
     this.heroObserver = new IntersectionObserver(entries => {
+      if (generation !== this.generation) return;
       this.heroVisible = entries[0].isIntersecting;
       this.syncHero();
     }, { threshold: .1 });
@@ -414,9 +425,12 @@ export default class extends Controller {
         video.classList.add('is-playing');
       }).catch(() => video.classList.remove('is-playing'));
     };
-    this.previewObserver = new IntersectionObserver(entries => entries.forEach(entry => {
-      entry.target.dataset.inView = String(entry.isIntersecting); update(entry.target);
-    }), { threshold: .25 });
+    this.previewObserver = new IntersectionObserver(entries => {
+      if (generation !== this.generation) return;
+      entries.forEach(entry => {
+        entry.target.dataset.inView = String(entry.isIntersecting); update(entry.target);
+      });
+    }, { threshold: .25 });
     this.previewVideos.forEach(video => this.previewObserver.observe(video));
     this.onPreviewVisibility = () => this.previewVideos?.forEach(update);
     document.addEventListener('visibilitychange', this.onPreviewVisibility);
@@ -447,6 +461,7 @@ export default class extends Controller {
     this.onVisibility = () => this.syncFilm?.();
     document.addEventListener('visibilitychange', this.onVisibility);
     this.visibilityObserver = new IntersectionObserver(entries => {
+      if (generation !== this.generation) return;
       this.visible = entries[0].isIntersecting; this.syncFilm?.();
     });
     this.visibilityObserver.observe(this.element);
@@ -470,6 +485,7 @@ export default class extends Controller {
 
   cleanup() {
     this.generation++;
+    this.loadingGeneration = null;
     this.clearMobileHero();
     this.controlsAvailable = this.paused;
     this.toggleTarget.hidden = !this.controlsVisible || !this.controlsAvailable;

@@ -1,0 +1,1252 @@
+{
+  "date": "2026-11-03",
+  "ownerReport": "Cartes Résonance absentes en descente et visibles en remontée",
+  "deviceConfirmed": "PC",
+  "before": {
+    "entryUrls": [
+      "http://127.0.0.1:8000/build/app.js?v=16cb6538a5cfcee4",
+      "http://127.0.0.1:8000/build/app.js"
+    ],
+    "triggers": 26,
+    "observers": 12,
+    "scroll": [
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 1760,
+        "parentTop": 648.90625,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 1920,
+        "parentTop": 488.90625,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2080,
+        "parentTop": 328.90625,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2240,
+        "parentTop": 168.90625,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2400,
+        "parentTop": 8.90625,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2560,
+        "parentTop": -151.09375,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2720,
+        "parentTop": -311.09375,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2880,
+        "parentTop": -471.09375,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2880,
+        "parentTop": -471.09375,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2720,
+        "parentTop": -311.09375,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2560,
+        "parentTop": -151.09375,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2400,
+        "parentTop": 8.90625,
+        "opacities": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "cardLeft": [
+          243.38925170898438,
+          393.1107482910156,
+          542.8322143554688
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2240,
+        "parentTop": 168.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6681213378906,
+          736.1887817382812,
+          955.6671142578125
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2080,
+        "parentTop": 328.90625,
+        "opacities": [
+          0.9949,
+          0.9949,
+          0.9949
+        ],
+        "cardLeft": [
+          458.05859375,
+          734.8165893554688,
+          953.8187255859375
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 1920,
+        "parentTop": 488.90625,
+        "opacities": [
+          0.9452,
+          0.9452,
+          0.9452
+        ],
+        "cardLeft": [
+          442.5626525878906,
+          721.5308837890625,
+          935.9185791015625
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 1760,
+        "parentTop": 648.90625,
+        "opacities": [
+          0.8149,
+          0.8149,
+          0.8149
+        ],
+        "cardLeft": [
+          404.5057373046875,
+          669.7101440429688,
+          890.9529418945312
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 1920,
+        "parentTop": 717.96875,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2080,
+        "parentTop": 557.96875,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2240,
+        "parentTop": 397.96875,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2400,
+        "parentTop": 237.96875,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2560,
+        "parentTop": 77.96875,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2720,
+        "parentTop": -82.03125,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2880,
+        "parentTop": -242.03125,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 3040,
+        "parentTop": -402.03125,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 3200,
+        "parentTop": -562.03125,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 3200,
+        "parentTop": -562.03125,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 3040,
+        "parentTop": -402.03125,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2880,
+        "parentTop": -242.03125,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2720,
+        "parentTop": -82.03125,
+        "opacities": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          21.764999389648438
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2560,
+        "parentTop": 77.96875,
+        "opacities": [
+          0.8,
+          0.8,
+          0.9998
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          21.764999389648438,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2400,
+        "parentTop": 237.96875,
+        "opacities": [
+          0.8,
+          1.0,
+          0.984
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          20,
+          20.141204833984375
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2240,
+        "parentTop": 397.96875,
+        "opacities": [
+          0.8,
+          0.9952,
+          0.9099
+        ],
+        "cardLeft": [
+          21.764999389648438,
+          20.035293579101562,
+          20.79425048828125
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2080,
+        "parentTop": 557.96875,
+        "opacities": [
+          0.9991,
+          0.9418,
+          0.8542
+        ],
+        "cardLeft": [
+          20,
+          20.511856079101562,
+          21.2884521484375
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 1920,
+        "parentTop": 717.96875,
+        "opacities": [
+          0.9731,
+          0.8751,
+          0.8232
+        ],
+        "cardLeft": [
+          20.229446411132812,
+          21.09429931640625,
+          21.553207397460938
+        ]
+      }
+    ]
+  },
+  "after": {
+    "triggers": 13,
+    "observers": 6,
+    "scroll": [
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 1760,
+        "parentTop": 648.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 1920,
+        "parentTop": 488.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2080,
+        "parentTop": 328.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2240,
+        "parentTop": 168.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2400,
+        "parentTop": 8.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2560,
+        "parentTop": -151.09375,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2720,
+        "parentTop": -311.09375,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "down",
+        "scroll": 2880,
+        "parentTop": -471.09375,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2880,
+        "parentTop": -471.09375,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2720,
+        "parentTop": -311.09375,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2560,
+        "parentTop": -151.09375,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2400,
+        "parentTop": 8.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2240,
+        "parentTop": 168.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 2080,
+        "parentTop": 328.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 1920,
+        "parentTop": 488.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 1280,
+        "direction": "up",
+        "scroll": 1760,
+        "parentTop": 648.90625,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          459.6753845214844,
+          736.1947631835938,
+          955.6753540039062
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 1920,
+        "parentTop": 717.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2080,
+        "parentTop": 557.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2240,
+        "parentTop": 397.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2400,
+        "parentTop": 237.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2560,
+        "parentTop": 77.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2720,
+        "parentTop": -82.03125,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 2880,
+        "parentTop": -242.03125,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 3040,
+        "parentTop": -402.03125,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "down",
+        "scroll": 3200,
+        "parentTop": -562.03125,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 3200,
+        "parentTop": -562.03125,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 3040,
+        "parentTop": -402.03125,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2880,
+        "parentTop": -242.03125,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2720,
+        "parentTop": -82.03125,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2560,
+        "parentTop": 77.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2400,
+        "parentTop": 237.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2240,
+        "parentTop": 397.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 2080,
+        "parentTop": 557.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "width": 393,
+        "direction": "up",
+        "scroll": 1920,
+        "parentTop": 717.96875,
+        "opacities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "cardLeft": [
+          20,
+          20,
+          20
+        ]
+      }
+    ],
+    "states": [
+      {
+        "label": "direct-desktop",
+        "state": "webgl",
+        "opacities": [
+          1,
+          1,
+          1
+        ],
+        "width": 1280,
+        "scrollWidth": 1280,
+        "entries": [
+          "http://127.0.0.1:8000/build/app.js?v=86c19be91fe54b60"
+        ]
+      },
+      {
+        "label": "resize-mobile",
+        "state": "mobile",
+        "opacities": [
+          1,
+          1,
+          1
+        ],
+        "width": 393,
+        "scrollWidth": 393,
+        "entries": [
+          "http://127.0.0.1:8000/build/app.js?v=86c19be91fe54b60"
+        ]
+      },
+      {
+        "label": "resize-desktop",
+        "state": "webgl",
+        "opacities": [
+          1,
+          1,
+          1
+        ],
+        "width": 1280,
+        "scrollWidth": 1280,
+        "entries": [
+          "http://127.0.0.1:8000/build/app.js?v=86c19be91fe54b60"
+        ]
+      },
+      {
+        "label": "paused",
+        "state": "static",
+        "opacities": [
+          1,
+          1,
+          1
+        ],
+        "width": 1280,
+        "scrollWidth": 1280,
+        "entries": [
+          "http://127.0.0.1:8000/build/app.js?v=86c19be91fe54b60"
+        ]
+      },
+      {
+        "label": "resumed",
+        "state": "webgl",
+        "opacities": [
+          1,
+          1,
+          1
+        ],
+        "width": 1280,
+        "scrollWidth": 1280,
+        "entries": [
+          "http://127.0.0.1:8000/build/app.js?v=86c19be91fe54b60"
+        ]
+      },
+      {
+        "label": "reduced",
+        "state": "static",
+        "opacities": [
+          1,
+          1,
+          1
+        ],
+        "width": 1280,
+        "scrollWidth": 1280,
+        "entries": [
+          "http://127.0.0.1:8000/build/app.js?v=86c19be91fe54b60"
+        ]
+      },
+      {
+        "label": "motion-restored",
+        "state": "webgl",
+        "opacities": [
+          1,
+          1,
+          1
+        ],
+        "width": 1280,
+        "scrollWidth": 1280,
+        "entries": [
+          "http://127.0.0.1:8000/build/app.js?v=86c19be91fe54b60"
+        ]
+      },
+      {
+        "label": "no-js",
+        "opacities": [
+          1,
+          1,
+          1
+        ],
+        "width": 1280,
+        "scrollWidth": 1280
+      }
+    ],
+    "controlExit": {
+      "storyBottom": -40.234375,
+      "pauseHidden": true,
+      "entries": [
+        "http://127.0.0.1:8000/build/app.js?v=86c19be91fe54b60"
+      ]
+    }
+  },
+  "tests": {
+    "build": "pass",
+    "databaseUsed": false,
+    "check": "pass",
+    "frontend": 195,
+    "phpRerun": false
+  },
+  "captures": [
+    {
+      "path": "output/playwright/resonance-before-desktop-settled.png",
+      "sha256": "e3bae170047a62514f621549d2e3a4d8b67e8fdf1047d003fe4f84d0d00a1e33"
+    },
+    {
+      "path": "output/playwright/resonance-after-1280-down.png",
+      "sha256": "ba2ea3a13e766ef5f42c01f032ee7f0fea755a5c0526a8de0447e911e60462b4"
+    },
+    {
+      "path": "output/playwright/resonance-after-393-down.png",
+      "sha256": "872988944a6fb776b93e980ec41333c2ed6067ac6ee49986d2d23654a532216b"
+    }
+  ],
+  "limits": [
+    "Recette Chromium PC et largeur mobile, pas de nouvel essai iPhone",
+    "Validation propriétaire du correctif PC encore attendue",
+    "Warnings WebGL connus, pas de garantie tous GPU"
+  ]
+}
