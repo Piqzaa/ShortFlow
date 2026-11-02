@@ -205,5 +205,13 @@
       "sha256": "27db815fd55c529dfb63c580d18415a3c356f080b11c07a62966181685f4d36f",
       "path": "output/playwright/iphone-studio-final.png"
     }
-  ]
+  ],
+  "ownerAcceptance": {
+    "date": "2026-11-02",
+    "device": "iPhone 14 Pro",
+    "threeCorrectionsAccepted": true,
+    "keyboardLandscapeSafeAreasExplicitlyValidated": false,
+    "actualLowPowerStateConfirmed": false,
+    "newTestRun": false
+  }
 }

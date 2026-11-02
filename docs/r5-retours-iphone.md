@@ -24,3 +24,6 @@ Le propriétaire rapporte un rendu responsive correct sur iPhone 14 Pro, avec tr
 Recharger sur l’iPhone les liens déjà accessibles : `/qa/landing` puis `/qa/creation` sur le serveur local port 8025. Vérifier flèches monochromes, changement des images/textes après quelques secondes, léger mouvement et cartes compactes. Réduction des animations activée : une hero statique reste attendue. Conserver la recette clavier virtuel, portrait/paysage et zones de la barre basse avant clôture R5.2/R5.5. Ne pas soumettre les formulaires synthétiques.
 
 Aucun coût, appel réel, activation, publication, migration applicative, redémarrage worker, déploiement ou push. Le serveur LAN existant est conservé ; aucune nouvelle règle de pare-feu ni exposition supplémentaire.
+## Validation propriétaire des trois correctifs
+
+Après demande de rechargement sur son iPhone 14 Pro, le propriétaire répond « Ok oui la c’est supp ». Les trois corrections (flèches, hero, cartes) sont acceptées sur ce périmètre. Aucun état système de batterie/réduction des animations n’a été mesuré : pas de certification générale du mode économie d’énergie. Les essais ciblés clavier virtuel, portrait/paysage et zones basses restent à confirmer avant clôture R5.2/R5.5. Aucun code changé ni test rejoué pour cette validation ; compteurs précédents historiques. Commit applicatif `30f6aba`, aucun push.

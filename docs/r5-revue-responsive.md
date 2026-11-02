@@ -93,3 +93,6 @@ Le propriétaire confirme que `dev@alexbuild.fr` fonctionne. Cela valide sa boî
 ## Retours iPhone après ouverture LAN
 
 Le propriétaire indique un rendu responsive correct sur iPhone 14 Pro, mais signale la flèche en emoji, la hero statique et les cartes de distribution trop hautes. Correctifs et recette PC livrés, [bilan iPhone](r5-retours-iphone.md) et [manifeste](fixtures/r5-iphone-20261102.json). Ce premier retour matériel ne clôture pas les essais téléphone : revalider les corrections et les cas clavier/zones basses. R5.2/R5.5 restent ouverts ; R5.3 reste validé. Dernier passage : 24 PHP ciblés / 336 assertions, 189 frontend, 119 Twig/check/build ; suite complète 825 / 9 596 historique, non rejouée.
+## Validation propriétaire des trois correctifs
+
+Après demande de rechargement sur son iPhone 14 Pro, le propriétaire répond « Ok oui la c’est supp ». Les trois corrections (flèches, hero, cartes) sont acceptées sur ce périmètre. Aucun état système de batterie/réduction des animations n’a été mesuré : pas de certification générale du mode économie d’énergie. Les essais ciblés clavier virtuel, portrait/paysage et zones basses restent à confirmer avant clôture R5.2/R5.5. Aucun code changé ni test rejoué pour cette validation ; compteurs précédents historiques. Commit applicatif `30f6aba`, aucun push.
