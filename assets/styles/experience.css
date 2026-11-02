@@ -175,3 +175,12 @@
   .hero-heading{margin-top:20px}
   .hero h1{font-size:clamp(56px,9.5svh,80px)}
 }
+
+/* Let the mobile illustration reserve its own space before the copy and CTA. */
+.world.ready~.hero .fallback-phone{opacity:0}
+@media(max-width:1000px){
+  .scene.hero,.story.is-immersive .hero{height:auto;min-height:100svh;padding-bottom:24px}
+  .hero .fallback-phone{position:relative;left:auto;top:auto;margin:36px auto 32px;transform:rotate(-6deg)}
+  .hero-mobile-cta{position:static;margin:0 20px}
+  .hero .motion-toggle:not([hidden]){position:static;transform:none;margin:24px auto 0}
+}

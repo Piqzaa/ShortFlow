@@ -6,6 +6,8 @@ export default class extends Controller {
 
   connect() {
     this.form = this.element.closest('form');
+    this.removeTarget.disabled = false;
+    if (this.hasFitTarget) this.fitTarget.disabled = false;
     this.active = true;
     this.serial = 0;
     this.refresh = () => this.render();

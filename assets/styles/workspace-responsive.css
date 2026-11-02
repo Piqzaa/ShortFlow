@@ -2,6 +2,8 @@
 /* Studio layouts: desktop workspace, tablet rail, phone navigation. */
 .studio-mobile-brand,.studio-mobile-session,.studio-bottom-nav,.calendar-mobile-agenda{display:none}
 .studio-v2 .studio-main{min-width:0}
+.studio-heading>div{min-width:0;max-width:100%;flex:1}
+.studio-heading h1{overflow-wrap:anywhere}
 .studio-v2 button,.studio-v2 input,.studio-v2 select,.studio-v2 textarea{touch-action:manipulation}
 
 @media (min-width:768px) and (max-width:1199px){

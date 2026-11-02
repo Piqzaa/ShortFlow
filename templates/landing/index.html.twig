@@ -14,19 +14,19 @@
     </nav>
   </details>
 </header>
-<main id="contenu">
+<main id="contenu" tabindex="-1">
 <div class="story" data-controller="studio" data-video-src="/media/films/hero-v4.webm">
   <div class="world" data-studio-target="stage" aria-hidden="true">
     <div class="world-grid"></div><div class="world-orbit orbit-one"></div><div class="world-orbit orbit-two"></div>
     <div class="world-type">CREATE<br>IN FLOW.</div>
-    <div class="fallback-phone" data-studio-target="fallback"><div class="phone-screen"><img src="/media/screens/screen-0.webp" alt="" width="540" height="960"><video class="preview-video hero-native" data-mobile-only data-preview-src="/media/films/hero-v4.webm" muted loop playsinline preload="none" aria-hidden="true"></video><span class="island"></span></div></div>
     <canvas data-studio-target="canvas"></canvas><span class="capture-caption" data-studio-target="framing">TON IDÉE, PLEIN CADRE · 9:16</span>
   </div>
-  <button class="motion-toggle" data-studio-target="toggle" data-action="studio#toggleMotion" aria-pressed="false" hidden>Mettre les animations en pause</button>
   <section class="scene hero" data-scene="hero" aria-labelledby="hero-title">
     <div class="hero-top wrap"><span class="eyebrow"><i></i> LE STUDIO DES CRÉATEURS · BÊTA</span><span class="edition">IMPORTE · PRÉPARE · PUBLIE</span></div>
     <div class="hero-heading"><p class="micro-label">UN SEUL STUDIO POUR TES VIDÉOS COURTES.</p><h1 id="hero-title">Tes vidéos.<br><span>Trois réseaux.</span></h1></div>
+    <div class="fallback-phone" data-studio-target="fallback" aria-hidden="true"><div class="phone-screen"><img src="/media/screens/screen-0.webp" alt="" width="540" height="960"><video class="preview-video hero-native" data-mobile-only data-preview-src="/media/films/hero-v4.webm" muted loop playsinline preload="none" aria-hidden="true"></video><span class="island"></span></div></div>
     <div class="hero-mobile-cta"><p>Importe ou génère tes vidéos, puis prépare-les<br>pour Reels, Shorts et TikTok.</p><a class="button" href="{{ path(entry_route) }}">{{ entry_label }} <span aria-hidden="true">↗</span></a><a class="mobile-explore" href="#studio">Explorer le studio ↓</a></div>
+    <button class="motion-toggle" data-studio-target="toggle" data-action="studio#toggleMotion" aria-pressed="false" hidden>Mettre les animations en pause</button>
     <div class="hero-bottom wrap"><div><p>Importe ou génère tes vidéos, prépare leurs textes<br>et programme leur publication depuis un seul studio.</p><a class="text-link" href="#studio">Explorer l’expérience <span aria-hidden="true">↘</span></a></div><div class="hero-note"><span class="cross" aria-hidden="true">✳</span><p>TikTok · Instagram Reels<br>YouTube Shorts</p></div></div>
   </section>
   <section class="scene transformation wrap" id="studio" data-scene="transform" aria-labelledby="transform-title">

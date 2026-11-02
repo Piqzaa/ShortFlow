@@ -17,6 +17,21 @@ function setup(fetch, document = {}) {
   return writer;
 }
 
+test('script startup enables available writing and hides its script requirement without posting', () => {
+  for (const enabled of [true, false]) {
+    const writer = setup(() => assert.fail('Startup without a latest URL must not request inference'));
+    writer.enabledValue = enabled;
+    writer.generateTarget.disabled = true;
+    writer.hasJavascriptTarget = true;
+    writer.javascriptTarget = { hidden: false };
+    writer.element = { querySelector: () => ({ addEventListener() {}, removeEventListener() {} }) };
+    writer.connect();
+    assert.equal(writer.generateTarget.disabled, !enabled);
+    assert.equal(writer.javascriptTarget.hidden, true);
+    writer.disconnect();
+  }
+});
+
 test('disabled local writing stays disabled after restore and never posts a new proposal', async () => {
   const writer = setup(async () => ({ok:true,json:async()=>({status:'none'})}));
   writer.enabledValue=false;

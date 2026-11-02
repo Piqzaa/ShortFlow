@@ -105,8 +105,10 @@ test('history restoration synchronizes checked videos with the counter and prepa
   controller.submitTarget = {};
   controller.submitTargets = [controller.submitTarget, {}];
   controller.allTarget = {};
+  controller.allControlTargets = [{hidden:true}];
   controller.connect();
   assert.equal(controller.submitTarget.disabled, true);
+  assert.equal(controller.allControlTargets[0].hidden, false);
   controller.itemTargets.forEach(input => { input.checked = true; });
   listeners.get('pageshow')();
   assert.equal(controller.countTarget.textContent, '2 vidéos sélectionnées');

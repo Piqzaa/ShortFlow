@@ -1,0 +1,33 @@
+{% extends 'form_div_layout.html.twig' %}
+
+{# form_widget is also used directly by the model/reference and destination pickers. #}
+{% block widget_attributes %}
+{% set errorIds = [] %}
+{% for error in errors %}
+{% set errorIds = errorIds|merge([id ~ '_error' ~ loop.index]) %}
+{% endfor %}
+{# Symfony maps repeated-field errors to the first child; both inputs form the pair. #}
+{% if form.parent and 'repeated' in form.parent.vars.block_prefixes %}
+{% set repeatedFirst = form.parent.children|first %}
+{% for error in repeatedFirst.vars.errors %}
+{% set errorId = repeatedFirst.vars.id ~ '_error' ~ loop.index %}
+{% if errorId not in errorIds %}{% set errorIds = errorIds|merge([errorId]) %}{% endif %}
+{% endfor %}
+{% endif %}
+{% if errorIds|length > 0 %}
+{% set descriptions = errorIds %}
+{% for description in attr['aria-describedby']|default('')|split(' ')|filter(value => value != '') %}
+{% if description not in descriptions %}{% set descriptions = descriptions|merge([description]) %}{% endif %}
+{% endfor %}
+{% set attr = attr|merge({'aria-invalid':'true','aria-describedby':descriptions|join(' ')}) %}
+{% endif %}
+{{ parent() }}
+{% endblock %}
+
+{% block form_errors %}
+{% if errors|length > 0 %}
+<ul class="form-errors" role="alert">
+{% for error in errors %}<li id="{{ id ~ '_error' ~ loop.index }}">{{ error.message }}</li>{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

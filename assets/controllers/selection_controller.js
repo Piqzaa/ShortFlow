@@ -1,10 +1,11 @@
 import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
-  static targets = ['item', 'count', 'submit', 'all'];
+  static targets = ['item', 'count', 'submit', 'all', 'allControl'];
   connect() {
     this.restore = () => this.update();
     window.addEventListener('pageshow', this.restore);
     this.update();
+    this.allControlTargets.forEach(control => { control.hidden = false; });
   }
   disconnect() { window.removeEventListener('pageshow', this.restore); }
   update() {

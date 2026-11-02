@@ -285,7 +285,7 @@
  .editor-desk .editor-canvas{height:auto;width:min(100%,calc(max(40px,100cqh - 54px)*var(--editor-ratio,.5625)));max-height:none;aspect-ratio:var(--editor-ratio,.5625)}
 }
 
-.editor-canvas.is-previewing .editor-overlay{border-color:transparent!important;outline:none!important}
+.editor-canvas.is-previewing .editor-overlay:not(:focus-visible){border-color:transparent!important;outline:none!important}
 .editor-canvas.is-previewing .editor-text-resize{display:none!important}
 
 @media(min-width:1100px){
@@ -299,3 +299,7 @@
 .editor-desk input[type=color]{padding:4px!important;min-height:38px;cursor:pointer}
 
 .edit-enhanced .editor-caption-legacy{display:none}
+
+/* Keep native forms in document flow when the editor enhancement is absent. */
+.editor-desk:not(.edit-enhanced) button[type="button"]{display:none}
+.editor-desk:not(.edit-enhanced) dialog[open]{position:static;margin:24px 0;width:100%;max-width:none;max-height:none}

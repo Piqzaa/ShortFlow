@@ -10,3 +10,6 @@
 body{overflow-x:clip}.hero-heading{text-shadow:0 4px 36px #08090c}.scene-copy{position:relative;isolation:isolate}.scene-copy:before{content:"";position:absolute;inset:-45px -60px;z-index:-1;pointer-events:none;background:radial-gradient(ellipse,#08090ce8 20%,#08090caa 45%,transparent 73%)}.frame-marks{background:url("/media/studio-poster.svg") center/contain no-repeat}.is-immersive .frame-marks{background:none}@media(max-width:760px){.scene-copy:before{display:none}.motion-toggle{display:none}.story{overflow-x:clip}}
 
 .world{min-height:800px}.fallback-phone{top:410px;width:190px;height:365px;transform:translateX(-50%) rotate(-9deg)}@media(min-width:1600px){.fallback-phone{top:460px}}@media(max-width:760px){.world{min-height:0}.fallback-phone{top:345px;width:215px;height:405px;transform:translateX(-50%) rotate(-8deg)}}
+
+/* Consistent keyboard focus for native controls and skip-link destinations. */
+select:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex="-1"]:focus-visible{outline:2px solid #cab7ff;outline-offset:3px}

@@ -11,6 +11,7 @@ export default class extends Controller {
     this.next = this.nextIndex('subjects');
     this.profileNext = this.nextIndex('subjectDetails');
     this.element.classList.add('subject-list-enhanced');
+    this.addTarget.hidden = false;
     if (this.hasLegacyTarget) this.legacyTargets.forEach(target => { target.hidden = true; });
     this.update();
   }

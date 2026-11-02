@@ -15,14 +15,23 @@ function picker(fetch) {
   controller.kindValue = 'frame';
   controller.imageValue = '';
   controller.valueTarget = { value: '', dispatchEvent() {} };
-  controller.fileTarget = { files: [{ type: 'image/png', size: 100 }], value: 'selected' };
+  controller.fileTarget = { files: [{ type: 'image/png', size: 100 }], value: 'selected', disabled: true };
   controller.previewTarget = { style: {}, getAttribute() { return this.src; }, removeAttribute() { this.src = ''; } };
-  controller.frameTarget = { style: {} }; controller.removeTarget = {}; controller.statusTarget = {};
+  controller.frameTarget = { style: {} }; controller.removeTarget = { disabled: true }; controller.statusTarget = {};
+  controller.hasFitTarget = true; controller.fitTarget = { disabled: true };
   const form = { querySelector() { return null; }, addEventListener() {}, removeEventListener() {} };
   controller.element = { dataset: {}, closest: selector => selector === 'form' ? form : null };
   controller.connect();
   return { controller, revoked };
 }
+
+test('connected reference controls become usable without sending an upload', () => {
+  const { controller } = picker(() => assert.fail('Connecting an empty reference must not upload'));
+  assert.equal(controller.fileTarget.disabled, false);
+  assert.equal(controller.fitTarget.disabled, false);
+  assert.equal(controller.removeTarget.disabled, false);
+  assert.equal(controller.removeTarget.hidden, true);
+});
 
 test('removal aborts an upload and a late response cannot restore its image', async () => {
   let finish;

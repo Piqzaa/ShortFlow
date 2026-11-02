@@ -2,10 +2,10 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton'];
   static values = { models: Object };
 
-  connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
+  connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasImageModeButtonTarget) this.imageModeButtonTarget.hidden = false; if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
   get editor() { return this.application.getControllerForElementAndIdentifier(this.element.querySelector('#ai-idea-form'), 'shot-editor'); }
   get model() {
     // Both controllers share this section. Keep support for older rendered pages.

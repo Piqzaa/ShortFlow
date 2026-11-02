@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { writingProgress } from '../writing-progress.js';
 
 export default class extends Controller {
-  static targets = ['tone', 'generate', 'status', 'preview', 'title', 'summary', 'scenes', 'loading', 'progress', 'elapsed', 'retry', 'warnings'];
+  static targets = ['tone', 'generate', 'status', 'preview', 'title', 'summary', 'scenes', 'loading', 'progress', 'elapsed', 'retry', 'warnings', 'javascript'];
   static values = { url: String, latest: String, token: String, episode: Number, enabled: {type: Boolean, default: true} };
 
   get form() { return this.element.querySelector('#ai-idea-form'); }
@@ -39,6 +39,8 @@ export default class extends Controller {
     this.changed = event => { if (event.isTrusted) this.restoreChanged = true; };
     this.connectedForm?.addEventListener('input', this.changed);
     this.connectedForm?.addEventListener('change', this.changed);
+    this.busy(false);
+    if (this.hasJavascriptTarget) this.javascriptTarget.hidden = true;
     this.restore();
   }
 
