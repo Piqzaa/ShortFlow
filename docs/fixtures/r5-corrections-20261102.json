@@ -1,7 +1,7 @@
 {
   "date": "2026-11-02",
   "baseCommit": "54423f8",
-  "status": "R5.5 open; D1 and D3 corrected in bounded PC recipe; manual hardware and accessibility checks remain",
+  "status": "R5 open: owner accepts registration screen-reader errors and Windows effects-off landing; dynamic announcements and phone remain",
   "inheritsUncommittedR53R54": true,
   "sourceSha256": {
     "templates/landing/index.html.twig": "0b973bc677054c75e9185e04d41b7f759751274ff69446134c73daae36e93c8a",
@@ -788,5 +788,15 @@
     "evidenceAndToolsCommittedSeparately": true,
     "push": false,
     "newSuiteRunForCommit": false
+  },
+  "subsequentWindowsMotionAcceptance": {
+    "date": "2026-11-02",
+    "windowsAnimationEffectsDisabledByOwner": true,
+    "staticLandingAndLinksAcceptedByOwner": true,
+    "ownerReport": "sans les effets c’est tout de suite plus fade, mais ça fonctionne ; RAS, liens OK",
+    "basis": "owner followed the Windows effects-off recipe; no automated OS-state measurement",
+    "settingRestoredConfirmed": false,
+    "dynamicStatusListeningValidated": false,
+    "phoneHardwareValidated": false
   }
 }

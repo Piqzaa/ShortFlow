@@ -1,7 +1,7 @@
 {
   "date": "2026-11-02",
   "baseCommit": "54423f8",
-  "status": "R5.3 open: bounded keyboard/contrast and native zoom observations completed; screen-reader listening and system preference remain unvalidated",
+  "status": "R5 open: owner accepts registration screen-reader errors and Windows effects-off landing; dynamic announcements and phone remain",
   "codeChecks": {
     "frontendTests": 184,
     "frontendPassed": true,
@@ -880,5 +880,15 @@
     "evidenceAndToolsCommittedSeparately": true,
     "push": false,
     "newSuiteRunForCommit": false
+  },
+  "subsequentWindowsMotionAcceptance": {
+    "date": "2026-11-02",
+    "windowsAnimationEffectsDisabledByOwner": true,
+    "staticLandingAndLinksAcceptedByOwner": true,
+    "ownerReport": "sans les effets c’est tout de suite plus fade, mais ça fonctionne ; RAS, liens OK",
+    "basis": "owner followed the Windows effects-off recipe; no automated OS-state measurement",
+    "settingRestoredConfirmed": false,
+    "dynamicStatusListeningValidated": false,
+    "phoneHardwareValidated": false
   }
 }
