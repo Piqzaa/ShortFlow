@@ -9,6 +9,7 @@ import './styles/studio.css';
 import './styles/cursor.css';
 import './styles/library.css';
 import './styles/legal.css';
+import './styles/guide.css';
 import { Application } from '@hotwired/stimulus';
 import AccessibilityController from './controllers/accessibility_controller.js';
 import StudioController from './controllers/studio_controller.js';

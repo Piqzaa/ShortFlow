@@ -70,9 +70,56 @@ final class AccountTest extends WebTestCase
         $this->client->loginUser($user);
         $this->client->request('GET', '/contact');
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('.studio-menu a[href="/contact"][aria-current="page"]');
+        self::assertSelectorNotExists('.studio-sidebar a[href="/contact"]');
+        self::assertSelectorNotExists('.studio-menu a[href="/contact"]');
         self::assertSelectorNotExists('.studio-bottom-nav a[aria-current="page"]');
         self::assertSelectorCount(6, '.studio-bottom-nav > a');
+        $this->client->click($this->client->getCrawler()->filter('.studio-top-account')->link());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('nav[aria-label="Aide et contact"] a[href="/contact"]');
+        self::assertSelectorExists('nav[aria-label="Aide et contact"] a[href="/fonctionnement"]');
+        $this->client->click($this->client->getCrawler()->filter('nav[aria-label="Aide et contact"] a[href="/contact"]')->link());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Contact et suggestions');
+    }
+
+    public function testGuideIsPublicAndKeepsNativeSectionsAndSeparateConfirmations(): void
+    {
+        $this->client->request('GET', '/fonctionnement');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Comment ça marche');
+        self::assertSelectorExists('main#contenu[tabindex="-1"]');
+        self::assertSelectorExists('meta[name="description"]');
+        foreach (['parcours', 'couts-beta', 'reseaux', 'premiers-pas'] as $anchor) {
+            self::assertSelectorExists('.guide-summary a[href="#'.$anchor.'"]');
+            self::assertSelectorExists('section#'.$anchor.'[aria-labelledby]');
+        }
+        self::assertSelectorTextContains('#parcours', 'Un brouillon enregistré n’est pas une publication confirmée');
+        self::assertSelectorTextContains('#reseaux', 'Sandbox');
+        self::assertSelectorTextContains('#premiers-pas', 'il ne te sera pas demandé de cliquer à nouveau');
+        self::assertSelectorExists('.guide-next a[href="/inscription"]');
+        self::assertSelectorExists('.guide-action[href="/connexion"]');
+        self::assertSelectorNotExists('form');
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        $this->client->request('POST', '/fonctionnement');
+        self::assertResponseStatusCodeSame(405);
+        $this->client->request('GET', '/');
+        self::assertSelectorExists('header a[href="/fonctionnement"]');
+        self::assertSelectorExists('footer a[href="/fonctionnement"]');
+    }
+
+    public function testGuideKeepsVerifiedMemberInTheirStudio(): void
+    {
+        $this->createUser('guide@example.test');
+        $user = static::getContainer()->get(UserRepository::class)->findByEmail('guide@example.test');
+        self::assertNotNull($user);
+        $this->client->loginUser($user);
+        $this->client->request('GET', '/fonctionnement');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.guide-intro a[href="/studio"]');
+        self::assertSelectorExists('.guide-next a[href="/studio/bibliotheque/importer"]');
+        self::assertSelectorExists('.guide-action[href="/studio/connexions"]');
+        self::assertSelectorNotExists('.guide-next a[href="/inscription"]');
     }
 
     public function testRegistrationHashesPasswordAndDuplicateIsNeutral(): void

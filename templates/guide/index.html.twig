@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+{% block title %}Comment ça marche — VydFlow{% endblock %}
+{% block meta_description %}Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.{% endblock %}
+{% set verified = is_granted('ROLE_VERIFIED') %}
+{% block body %}
+<header class="account-header guide-header"><a class="wordmark" href="{{ path(verified ? 'app_dashboard' : 'app_home') }}" aria-label="VydFlow, {{ verified ? 'mon studio' : 'accueil' }}">vydflow<span class="brand-dot">/</span></a><nav aria-label="Navigation du guide"><a href="{{ path('app_home') }}">Accueil</a><a href="{{ path('app_contact') }}">Contact</a><a href="{{ path(verified ? 'app_dashboard' : 'app_login') }}">{{ verified ? 'Mon studio' : 'Se connecter' }}</a></nav></header>
+<main id="contenu" tabindex="-1" class="guide-page wrap">
+  <header class="guide-intro"><span class="eyebrow">VYDFLOW · LE GUIDE DE LA BÊTA</span><h1>Comment ça marche.</h1><p>Pars d’une vidéo, d’une idée ou d’une série. Retrouve ici les étapes, les coûts et les décisions qui restent entre tes mains.</p><a class="button" href="{{ path(verified ? 'app_dashboard' : 'app_register') }}">{{ verified ? 'Ouvrir mon studio' : 'Créer mon compte' }} {% include 'icons/_arrow_up_right.html.twig' %}</a></header>
+  <div class="guide-layout">
+    <nav class="guide-summary" aria-label="Dans ce guide"><span>AU SOMMAIRE</span><a href="#parcours">01 · Fonctionnement</a><a href="#couts-beta">02 · Coûts et bêta</a><a href="#reseaux">03 · Réseaux compatibles</a><a href="#premiers-pas">04 · Premiers pas</a></nav>
+    <div class="guide-content">
+      <section id="parcours" aria-labelledby="paths-title"><span class="eyebrow">01 / FONCTIONNEMENT</span><h2 id="paths-title">Trois points de départ.<br><em>Un même studio.</em></h2>
+        <article><h3>Tu as déjà une vidéo</h3><p>Importe ton fichier dans ta bibliothèque privée. Tu peux le conserver tel quel ou passer par le montage guidé pour assembler et couper des plans, puis préparer ses textes et sa publication.</p><p>Importer un fichier ne lance aucune génération IA. Le montage est facultatif.</p></article>
+        <article><h3>Tu pars d’une idée ou d’une image</h3><p>Choisis ton format et ton modèle, écris tes scènes ou demande une proposition de scénario. Relis les prompts et les références réellement utilisés, puis ouvre le récapitulatif.</p><p>Vérifie le devis et confirme son coût pour lancer la génération sur ton compte fournisseur. Une fois le résultat obtenu, relis la vidéo avant de la préparer pour tes réseaux.</p></article>
+        <article><h3>Tu prépares une série</h3><p>Définis le thème et les réglages communs, puis prépare tes épisodes. La préparation des scénarios peut être automatique ; chaque vidéo exige sa relecture et son devis confirmé.</p><p>Une vidéo validée ouvre sa propre préparation de publication. Modifier un épisode ne remplace pas silencieusement une version déjà programmée.</p></article>
+        <aside class="guide-note"><strong>Générer et publier sont deux décisions.</strong><p>Après import ou génération, choisis les comptes destinataires, relis les textes et vérifie la date. Seule la confirmation finale autorise l’envoi immédiat ou programmé. Un brouillon enregistré n’est pas une publication confirmée.</p></aside>
+      </section>
+      <section id="couts-beta" aria-labelledby="beta-title"><span class="eyebrow">02 / COÛTS ET BÊTA</span><h2 id="beta-title">Le logiciel et la génération<br><em>ont des coûts distincts.</em></h2>
+        <h3>VydFlow pendant la bêta</h3><p>Aucun abonnement VydFlow n’est facturé actuellement. Créer ton compte ne demande pas de carte bancaire. Aucun tarif provisoire ni offre définitive n’est vendu sur cette page.</p>
+        <h3>Ton fournisseur vidéo</h3><p>Pour générer une vidéo, tu utilises ton propre compte fournisseur, connecté par navigateur ou clé API selon l’intégration. Le fournisseur te facture la génération. Des crédits disponibles dans une autre application ne garantissent pas un accès gratuit à son API.</p><p>VydFlow affiche une estimation selon le modèle, les plans et leurs réglages. Relis-la et confirme le devis de chaque vidéo avant son lancement. Un tarif à revérifier peut bloquer le départ ; un ancien devis ne vaut pas une nouvelle autorisation de coût.</p>
+        <h3>Les textes et les résultats</h3><p>La rédaction des scénarios et des textes est distincte de la génération vidéo payante. Tu peux aussi écrire ou corriger tes textes toi-même.</p><p>Les illustrations de la landing présentent des concepts et des parcours. Elles ne garantissent ni le rendu d’un modèle, ni la fidélité d’un personnage, d’une voix ou de répliques. La relecture reste nécessaire.</p>
+        <p>Ta bibliothèque est privée. Les médias et informations nécessaires sont transmis aux fournisseurs et réseaux que tu choisis pour générer ou publier. <a href="{{ path('app_privacy') }}">Lire l’utilisation des données</a>.</p>
+      </section>
+      <section id="reseaux" aria-labelledby="networks-title"><span class="eyebrow">03 / RÉSEAUX COMPATIBLES</span><h2 id="networks-title">Choisis tes destinations.<br><em>Vérifie leurs accès.</em></h2><p>Tu peux préparer une vidéo pour un, deux ou trois réseaux. Les comptes disponibles et les autorisations nécessaires apparaissent dans Connexions ; une intégration présente dans VydFlow ne garantit pas l’ouverture à tous les comptes pendant la bêta.</p>
+        <dl class="guide-networks">
+          <div><dt>YouTube</dt><dd>Prépare titre, description, visibilité et audience. L’envoi utilise le compte YouTube que tu as connecté et sélectionné dans ta préparation.</dd></div>
+          <div><dt>Instagram Reels</dt><dd>La connexion proposée utilise un compte Instagram professionnel Créateur ou Entreprise. Pour Reels, importe un MP4 H.264 ; une vidéo acceptée dans ta bibliothèque n’est pas forcément acceptée par chaque réseau.</dd></div>
+          <div><dt>TikTok</dt><dd>L’intégration reste en essai Sandbox, sur des comptes autorisés. Les choix de visibilité et les options disponibles dépendent du compte connecté. Aucun accès public général n’est annoncé.</dd></div>
+        </dl>
+        <p>Une connexion expirée ou une autorisation manquante peut empêcher un envoi. Vérifie l’état du compte avant de confirmer ; reconnecter un compte ne republie pas automatiquement tes vidéos.</p>
+        {% if verified %}<a class="guide-action" href="{{ path('app_connections') }}">Vérifier mes connexions {% include 'icons/_arrow_up_right.html.twig' %}</a>{% else %}<a class="guide-action" href="{{ path('app_login') }}">Me connecter pour vérifier mes accès {% include 'icons/_arrow_up_right.html.twig' %}</a>{% endif %}
+      </section>
+      <section id="premiers-pas" aria-labelledby="start-title"><span class="eyebrow">04 / PREMIERS PAS</span><h2 id="start-title">Ta première préparation,<br><em>pas à pas.</em></h2>
+        <ol class="guide-steps">
+          <li><strong>Crée ton compte et confirme ton email.</strong><p>Connecte-toi ensuite pour ouvrir ton studio privé.</p></li>
+          <li><strong>Commence avec une vidéo existante.</strong><p>Depuis Vidéos, choisis l’import. Utilise un MP4 H.264 ou un WebM compatible, jusqu’à 100 Mo et trois minutes. Tu n’as pas besoin d’un compte fournisseur IA pour ce parcours.</p></li>
+          <li><strong>Prépare les textes, les comptes et la date.</strong><p>Ouvre la préparation de ta vidéo, choisis tes destinations et relis chaque texte. Vérifie la visibilité, l’audience et les autres réglages demandés par le réseau. Tu peux enregistrer un brouillon et revenir plus tard.</p></li>
+          <li><strong>Vérifie, puis confirme.</strong><p>Contrôle la vidéo source, les comptes et le créneau dans le récapitulatif. Une programmation confirmée autorise l’envoi à la date choisie ; il ne te sera pas demandé de cliquer à nouveau à cette heure-là.</p></li>
+          <li><strong>Retrouve le suivi.</strong><p>Publications affiche le résultat par destination. En cas d’échec ou d’état incertain, consulte le suivi avant de lancer une nouvelle tentative. Un créneau manqué demande une reprise manuelle.</p></li>
+        </ol>
+        <div class="guide-next"><a class="button" href="{{ path(verified ? 'app_video_upload' : 'app_register') }}">{{ verified ? 'Importer ma première vidéo' : 'Créer mon compte' }} {% include 'icons/_arrow_up_right.html.twig' %}</a><a href="{{ path('app_contact') }}">Poser une question ou signaler un problème</a></div>
+      </section>
+      <footer class="guide-footer"><p>Guide de la bêta · mis à jour le 3 novembre 2026.</p><a href="{{ path('app_contact') }}">Contact et suggestions</a><a href="{{ path('app_home') }}">Retour à l’accueil</a></footer>
+    </div>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,1084 @@
+{
+  "date": "2026-11-03",
+  "lot": "R6.3",
+  "guide": "/fonctionnement",
+  "contact_location": "Mon compte > Besoin d’aide",
+  "public_browser": [
+    {
+      "width": 320,
+      "path": "/fonctionnement",
+      "status": 200,
+      "errors": [],
+      "scroll": 320,
+      "title": "Comment ça marche — VydFlow",
+      "links": [
+        {
+          "text": "vydflow/",
+          "rect": {
+            "x": 20,
+            "right": 131.953125
+          }
+        },
+        {
+          "text": "Accueil",
+          "rect": {
+            "x": 20,
+            "right": 60.625
+          }
+        },
+        {
+          "text": "Contact",
+          "rect": {
+            "x": 76.625,
+            "right": 121.875
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 137.875,
+            "right": 211.90625
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 20,
+            "right": 240.984375
+          }
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "scroll": 320,
+      "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+      "links": [
+        {
+          "text": "∨vydflow/",
+          "rect": {
+            "x": 20,
+            "right": 151.46875
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 31,
+            "right": 289
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 31,
+            "right": 289
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 31,
+            "right": 289
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 31,
+            "right": 289
+          }
+        },
+        {
+          "text": "Contact et suggestions",
+          "rect": {
+            "x": 31,
+            "right": 289
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 31,
+            "right": 289
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 31,
+            "right": 289
+          }
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "path": "/fonctionnement",
+      "status": 200,
+      "errors": [],
+      "scroll": 390,
+      "title": "Comment ça marche — VydFlow",
+      "links": [
+        {
+          "text": "vydflow/",
+          "rect": {
+            "x": 20,
+            "right": 131.953125
+          }
+        },
+        {
+          "text": "Accueil",
+          "rect": {
+            "x": 178.09375,
+            "right": 218.71875
+          }
+        },
+        {
+          "text": "Contact",
+          "rect": {
+            "x": 234.71875,
+            "right": 279.96875
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 295.96875,
+            "right": 370
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 20,
+            "right": 240.984375
+          }
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "scroll": 390,
+      "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+      "links": [
+        {
+          "text": "∨vydflow/",
+          "rect": {
+            "x": 20,
+            "right": 159.46875
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 101,
+            "right": 359
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 101,
+            "right": 359
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 101,
+            "right": 359
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 101,
+            "right": 359
+          }
+        },
+        {
+          "text": "Contact et suggestions",
+          "rect": {
+            "x": 101,
+            "right": 359
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 101,
+            "right": 359
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 101,
+            "right": 359
+          }
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/fonctionnement",
+      "status": 200,
+      "errors": [],
+      "scroll": 768,
+      "title": "Comment ça marche — VydFlow",
+      "links": [
+        {
+          "text": "vydflow/",
+          "rect": {
+            "x": 48,
+            "right": 179.296875
+          }
+        },
+        {
+          "text": "Accueil",
+          "rect": {
+            "x": 498.765625,
+            "right": 542.78125
+          }
+        },
+        {
+          "text": "Contact",
+          "rect": {
+            "x": 566.78125,
+            "right": 615.796875
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 639.796875,
+            "right": 720
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 28,
+            "right": 248.984375
+          }
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "scroll": 768,
+      "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+      "links": [
+        {
+          "text": "∨vydflow/",
+          "rect": {
+            "x": 20,
+            "right": 165.578125
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 479,
+            "right": 737
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 479,
+            "right": 737
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 479,
+            "right": 737
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 479,
+            "right": 737
+          }
+        },
+        {
+          "text": "Contact et suggestions",
+          "rect": {
+            "x": 479,
+            "right": 737
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 479,
+            "right": 737
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 479,
+            "right": 737
+          }
+        }
+      ]
+    },
+    {
+      "width": 1001,
+      "path": "/fonctionnement",
+      "status": 200,
+      "errors": [],
+      "scroll": 1001,
+      "title": "Comment ça marche — VydFlow",
+      "links": [
+        {
+          "text": "vydflow/",
+          "rect": {
+            "x": 48,
+            "right": 179.296875
+          }
+        },
+        {
+          "text": "Accueil",
+          "rect": {
+            "x": 731.765625,
+            "right": 775.78125
+          }
+        },
+        {
+          "text": "Contact",
+          "rect": {
+            "x": 799.78125,
+            "right": 848.796875
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 872.796875,
+            "right": 953
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 28,
+            "right": 248.984375
+          }
+        }
+      ]
+    },
+    {
+      "width": 1001,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "scroll": 1001,
+      "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+      "links": [
+        {
+          "text": "∨vydflow/",
+          "rect": {
+            "x": 32,
+            "right": 196.921875
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 271.640625,
+            "right": 342.015625
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 362.015625,
+            "right": 412.96875
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 432.96875,
+            "right": 481.125
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 501.125,
+            "right": 618.4375
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 638.4375,
+            "right": 712.46875
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 787.171875,
+            "right": 969
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Contact et suggestions",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "width": 1100,
+      "path": "/fonctionnement",
+      "status": 200,
+      "errors": [],
+      "scroll": 1100,
+      "title": "Comment ça marche — VydFlow",
+      "links": [
+        {
+          "text": "vydflow/",
+          "rect": {
+            "x": 48,
+            "right": 179.296875
+          }
+        },
+        {
+          "text": "Accueil",
+          "rect": {
+            "x": 830.765625,
+            "right": 874.78125
+          }
+        },
+        {
+          "text": "Contact",
+          "rect": {
+            "x": 898.78125,
+            "right": 947.796875
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 971.796875,
+            "right": 1052
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 28,
+            "right": 248.984375
+          }
+        }
+      ]
+    },
+    {
+      "width": 1100,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "scroll": 1100,
+      "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+      "links": [
+        {
+          "text": "∨vydflow/",
+          "rect": {
+            "x": 32,
+            "right": 196.921875
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 321.140625,
+            "right": 391.515625
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 411.515625,
+            "right": 462.46875
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 482.46875,
+            "right": 530.625
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 550.625,
+            "right": 667.9375
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 687.9375,
+            "right": 761.96875
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 886.171875,
+            "right": 1068
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Contact et suggestions",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/fonctionnement",
+      "status": 200,
+      "errors": [],
+      "scroll": 1280,
+      "title": "Comment ça marche — VydFlow",
+      "links": [
+        {
+          "text": "vydflow/",
+          "rect": {
+            "x": 48,
+            "right": 179.296875
+          }
+        },
+        {
+          "text": "Accueil",
+          "rect": {
+            "x": 1010.765625,
+            "right": 1054.78125
+          }
+        },
+        {
+          "text": "Contact",
+          "rect": {
+            "x": 1078.78125,
+            "right": 1127.796875
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 1151.796875,
+            "right": 1232
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 48,
+            "right": 268.984375
+          }
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "scroll": 1280,
+      "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+      "links": [
+        {
+          "text": "∨vydflow/",
+          "rect": {
+            "x": 32,
+            "right": 196.921875
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 391.140625,
+            "right": 461.515625
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 491.515625,
+            "right": 542.46875
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 572.46875,
+            "right": 620.625
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 650.625,
+            "right": 767.9375
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 797.9375,
+            "right": 871.96875
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 1066.171875,
+            "right": 1248
+          }
+        },
+        {
+          "text": "L’expérience",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Le studio",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "La vision",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Comment ça marche",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Contact et suggestions",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Se connecter",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        },
+        {
+          "text": "Créer mon compte",
+          "rect": {
+            "x": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "noJS": true,
+      "url": "http://127.0.0.1:8000/fonctionnement#reseaux",
+      "sections": 4,
+      "width": 390
+    }
+  ],
+  "keyboard": {
+    "skip": {
+      "id": "contenu",
+      "tag": "MAIN"
+    },
+    "anchors": [
+      {
+        "id": "parcours",
+        "url": "http://127.0.0.1:8000/fonctionnement#parcours",
+        "heading": "Trois points de départ.Un même studio."
+      },
+      {
+        "id": "couts-beta",
+        "url": "http://127.0.0.1:8000/fonctionnement#couts-beta",
+        "heading": "Le logiciel et la générationont des coûts distincts."
+      },
+      {
+        "id": "reseaux",
+        "url": "http://127.0.0.1:8000/fonctionnement#reseaux",
+        "heading": "Choisis tes destinations.Vérifie leurs accès."
+      },
+      {
+        "id": "premiers-pas",
+        "url": "http://127.0.0.1:8000/fonctionnement#premiers-pas",
+        "heading": "Ta première préparation,pas à pas."
+      }
+    ],
+    "register": "http://127.0.0.1:8000/inscription",
+    "login": "http://127.0.0.1:8000/connexion"
+  },
+  "source_sha256": {
+    "assets/styles/guide.css": "fb1eb3405c5106e414ce950744d11b4833d52b00a2bbdf342ba13c6674aa65f3",
+    "templates/studio/shell.html.twig": "34ad5433378a34ef727e1ad3fb80010a1c54832b336232896ffb673eb33122c9",
+    "templates/studio/account.html.twig": "949dc4cf5b4a2ccf329b670497d6c34ad93d18da9296efdda1cd036932dfe6b7",
+    "templates/landing/index.html.twig": "47327162ae9ad880ac5362be2b35b8ccb040a30c1d28dc205e6c7f78b7a0ad56",
+    "templates/guide/index.html.twig": "020509cfd991077c35f0628b91a8776623907c4e81b556a2861256d193c95bcd",
+    "src/Controller/GuideController.php": "a7c83518f7845708618a9360d59e9a1bc4b0aba56228e04532d00373440dfca0"
+  },
+  "frontend": {
+    "tests": 195,
+    "failures": 0,
+    "build": "pass",
+    "check": "pass"
+  },
+  "php": {
+    "last_suite": {
+      "cause": "Incorrect expected upload URL in new test; application URL correct",
+      "assertions": 185,
+      "passed": 15,
+      "tests": 16,
+      "failed": 1
+    },
+    "replay": {
+      "assertions": 7,
+      "tests": 1,
+      "failures": 0
+    },
+    "full_php_suite_rerun": false,
+    "twig": 120,
+    "phpstan": "pass",
+    "container": "pass",
+    "style": "pass"
+  },
+  "review": "Independent static review, no blocker",
+  "limits": [
+    "Chromium synthetic widths, no new hardware validation",
+    "Full PHP suite 825/9596 remains historical",
+    "R6 open; support response delay, R6.5 and R6.6 pending"
+  ],
+  "account_browser": [
+    {
+      "width": 320,
+      "scroll": 320,
+      "sidebarContact": 0,
+      "mobileContact": 0,
+      "guide": 1,
+      "bottomDestinations": 6
+    },
+    {
+      "width": 320,
+      "contactUrl": "http://127.0.0.1:8000/contact",
+      "contactHeading": "Contact et suggestions"
+    },
+    {
+      "width": 390,
+      "scroll": 390,
+      "sidebarContact": 0,
+      "mobileContact": 0,
+      "guide": 1,
+      "bottomDestinations": 6
+    },
+    {
+      "width": 390,
+      "contactUrl": "http://127.0.0.1:8000/contact",
+      "contactHeading": "Contact et suggestions"
+    },
+    {
+      "width": 768,
+      "scroll": 768,
+      "sidebarContact": 0,
+      "mobileContact": 0,
+      "guide": 1,
+      "bottomDestinations": 6
+    },
+    {
+      "width": 768,
+      "contactUrl": "http://127.0.0.1:8000/contact",
+      "contactHeading": "Contact et suggestions"
+    },
+    {
+      "width": 1280,
+      "scroll": 1280,
+      "sidebarContact": 0,
+      "mobileContact": 0,
+      "guide": 1,
+      "bottomDestinations": 6
+    },
+    {
+      "width": 1280,
+      "contactUrl": "http://127.0.0.1:8000/contact",
+      "contactHeading": "Contact et suggestions"
+    }
+  ],
+  "rollback_export": {
+    "before": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "external_http": 0
+  }
+}
