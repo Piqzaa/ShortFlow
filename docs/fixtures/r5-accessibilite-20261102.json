@@ -890,5 +890,20 @@
     "settingRestoredConfirmed": false,
     "dynamicStatusListeningValidated": false,
     "phoneHardwareValidated": false
+  },
+  "dynamicListeningAttempt": {
+    "date": "2026-11-02",
+    "ownerInitiallyReportsNoAnnouncement": true,
+    "timingProtocolUnclearToOwner": true,
+    "currentBrowserTextIsFinalUnavailableMessage": true,
+    "role": "status",
+    "ariaLive": "polite",
+    "hiddenOrBusyAncestorObserved": false,
+    "initialPollSeconds": 4,
+    "retrySeconds": 20,
+    "expectedFinalMessageSeconds": 44,
+    "result": "inconclusive; reader activation relative to mutation unknown",
+    "codeChanged": false,
+    "next": "Narrator active before reload, tab visible for one minute without Tab"
   }
 }
