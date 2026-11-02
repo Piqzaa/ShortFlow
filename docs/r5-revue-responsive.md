@@ -72,3 +72,21 @@ Suivi dynamique synthétique observé en onglet visible : mutations à 4 029, 24
 3. Avant ouverture R6.4 : vérifier la réception d’un email adressé à `dev@alexbuild.fr` et fixer un délai de support réaliste. Aucun email réel envoyé par l’agent.
 
 **Décision de sortie : R5.2, R5.3, R5.5 et grand R5 restent ouverts**, uniquement dans les périmètres restant à valider décrits ici ; le bilan de revue PC est livré. Après retours, consigner les résultats et corriger/rejouer si nécessaire avant clôture. Les essais d’erreurs d’inscription et d’effets Windows désactivés déjà acceptés ne sont pas à refaire par défaut. Aucun coût, appel réel, activation, migration applicative, redémarrage worker, déploiement ou push. Le serveur synthétique GET 8024 est conservé pour l’écoute manuelle ; il refuse les POST. Les anciens ports indiqués dans les sections historiques ne sont pas le point de reprise courant.
+## Retour propriétaire : annonce spontanée acceptée
+
+Le 2 novembre, le propriétaire confirme : « suivi indisponible est annoncé spontanément », après le reste de la lecture (titre, etc.). L’annonce dynamique est donc validée par écoute humaine sur ce PC. Sa lecture après le contenu en cours est acceptée pour cette région `aria-live=polite`. Aucun nouvel essai automatique ni changement applicatif. Avec les erreurs d’inscription et la préférence Windows déjà acceptées, **R5.3 est validé sur le périmètre contrôlé** ; aucune conformité exhaustive revendiquée.
+
+## Téléphone sur le réseau local : préparation, pas validation
+
+PC Ethernet et téléphone Wi-Fi sur même réseau confirmés. Serveur PHP de recette démarré caché, lié explicitement à `192.168.1.95:8025`, avec `scripts/responsive-router.php` : exports synthétiques, GET uniquement, aucun transfert vers Symfony. Landing et création répondent 200 depuis le PC via IP LAN ; POST refusé 405. Aucun tunnel, profil réseau ou service applicatif modifié. Ethernet est classé Public par Windows, sans reclassement. Tentative de règle entrante limitée à IP Ethernet, TCP 8025, programme PHP et 192.168.1.0/24 : refus Windows « Accès refusé », faute de privilèges administrateur. Aucune règle ajoutée. Accès téléphone à essayer ; si inaccessible, traiter pare-feu/isolation Wi-Fi sans désactiver les protections globales.
+
+Liens temporaires, tant que le PC garde cette IP et le serveur tourne :
+
+- `http://192.168.1.95:8025/qa/landing` : menu public, connexion/inscription, texte et CTA sans chevauchement, portrait/paysage.
+- `http://192.168.1.95:8025/qa/creation` : menu Studio, six destinations basses, défilement, champ texte avec clavier ouvert/fermé, actions accessibles et barre basse hors de la zone d’accueil/encoche. Aucun formulaire à soumettre.
+
+Recueillir modèle de téléphone/navigateur et résultat de ces cas, tout chevauchement/action inaccessible. **R5.2, R5.5 et grand R5 restent ouverts.** Arrêter le serveur temporaire après recette ; aucune règle pare-feu à retirer puisque l’ajout est refusé.
+
+## Email : boîte et transport applicatif distincts
+
+Le propriétaire confirme que `dev@alexbuild.fr` fonctionne. Cela valide sa boîte, pas un envoi depuis VydFlow. L’application utilise encore Mailpit local : transport de production, expéditeur, liens du domaine et réception des emails transactionnels restent à tester en R8.4. Délai support encore à fixer, aide complète à préparer en R6.4. Aucun email réel envoyé dans cette étape.

@@ -20,3 +20,5 @@ Réception réelle de `dev@alexbuild.fr` et délai de réponse restent à confir
 ## Contrôle visuel final
 
 Huit cas Contact public/connecté à 320/390/768/1280 px sans débordement. Sans JavaScript réel à 320×400, huit liens de menu et six entrées basses conservés ; huit Tab depuis le menu atteignent Contact (y=252,5–296,5, hauteur 44 px). Dernier ajustement CSS : Contact sur sa propre ligne au-dessus du profil desktop pour conserver sa largeur, sous-titre à 24–28 px. Captures desktop et sans JS inspectées. Build rejoué après CSS ; [manifeste de reprise](fixtures/contact-r5-reprise-20261102.json).
+
+Le propriétaire confirme ensuite le fonctionnement de dev@alexbuild.fr. Le transport VydFlow reste Mailpit local : envoi applicatif de production non validé, à traiter en R8.4. Délai de support et aide complète restent à finaliser.

@@ -215,5 +215,17 @@
     "schemaTest": "pass",
     "priceClockCommit": "d79da9d",
     "realPricesReverified": false
+  },
+  "ownerFollowup": {
+    "date": "2026-11-02",
+    "spontaneousAnnouncementAccepted": true,
+    "announcementOrder": "Après le titre et le reste du contenu",
+    "r53": "validated within documented scope",
+    "phoneSameLan": true,
+    "phoneValidated": false,
+    "mailboxWorkingConfirmed": true,
+    "applicationTransport": "Mailpit local",
+    "productionMailValidated": false,
+    "newAutomatedSuite": false
   }
 }
