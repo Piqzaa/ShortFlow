@@ -1,0 +1,219 @@
+{
+  "date": "2026-11-02",
+  "contactCommit": "25f0a30",
+  "scope": "Contact et reprise R5, PC uniquement",
+  "contact": {
+    "publicAndStudioWidths": [
+      320,
+      390,
+      768,
+      1280
+    ],
+    "checks": 8,
+    "documentOverflow": 0,
+    "nativeWithoutJavaScript": {
+      "width": 320,
+      "height": 400,
+      "menuLinks": 8,
+      "bottomLinks": 6,
+      "keyboardFocused": "Contact et suggestions",
+      "focusedTop": 252.5,
+      "focusedBottom": 296.5,
+      "actionHeight": 44
+    },
+    "skipFocus": "contenu"
+  },
+  "responsive": {
+    "views": 23,
+    "widths": [
+      320,
+      390,
+      768,
+      1280
+    ],
+    "checks": 92,
+    "documentOverflow": 0,
+    "reducedMotion": "browser emulation",
+    "phoneValidated": false
+  },
+  "dynamicStatus": {
+    "route": "/qa/generation?case=poll-error",
+    "visibleTab": true,
+    "observedMilliseconds": [
+      4029,
+      24034,
+      44040
+    ],
+    "role": "status",
+    "ariaLive": "polite",
+    "finalMessage": "Le suivi automatique est indisponible. Utilise « Actualiser le suivi » ; la génération peut continuer en arrière-plan.",
+    "audioValidated": false
+  },
+  "exports": {
+    "routes": {
+      "landing": {
+        "url": "/",
+        "sha256": "1bd596e35794e483042cfb738c2409e174a26469c400a3f25356cf8889f7fbb6"
+      },
+      "login": {
+        "url": "/connexion",
+        "sha256": "2d1353e5398f8fb80317dec0d181d7bbd5ed890c52dcb10e89e276156ccaf8f1"
+      },
+      "register": {
+        "url": "/inscription",
+        "sha256": "b31932b7626497424c3899e60312756fefc561adeaec6c997232a9c9efa87717"
+      },
+      "legal": {
+        "url": "/informations-legales",
+        "sha256": "4f4dac7111ba2c86c560991c2fbcf99e713acb64b0423aa1419d5a695d464aa9"
+      },
+      "contact-public": {
+        "url": "/contact",
+        "sha256": "85e026707576299a920951bd17231cfadf77a0cffde2f9ee36f1541f444603a1"
+      },
+      "register-error": {
+        "url": "/inscription?error",
+        "sha256": "d738725ff5b3cf1ced3ef1413e4dc00de772fb079510ed9cc11d10da172b0f2c"
+      },
+      "contact-studio": {
+        "url": "/contact",
+        "sha256": "371b42cabb883a4ca74606abc549dfa4584464f42382aac19f96943f0ebb727f"
+      },
+      "videos": {
+        "url": "/studio",
+        "sha256": "cfc5c6dabd97c7c0e17bf4b4f598bccd431dcbe053b552741b3c12be6bdd036a"
+      },
+      "creation": {
+        "url": "/studio/creation",
+        "sha256": "85c3a4432581a23fab82103e72c87ce27f0a1d6c97f03401622f988f61a2ccb9"
+      },
+      "series-new": {
+        "url": "/studio/series/nouvelle",
+        "sha256": "13c01557825a77e8056a0a084f9e2820e4a7fe78f3bcb75cab2ab1dd5d4b27b3"
+      },
+      "calendar": {
+        "url": "/studio/calendrier",
+        "sha256": "37d4ab838d434015f32d6561665867745d188c910520092a0e90d6ff9b7061d1"
+      },
+      "connections": {
+        "url": "/studio/connexions",
+        "sha256": "554bffa8190453df933edf5931395afc33a5b60642457b118abbc9c298d1a5a2"
+      },
+      "publications": {
+        "url": "/studio/publications",
+        "sha256": "873f1ffa47c0b12283a0d7ef81bb6626ce9ecd6e03b559255da6321894f2e852"
+      },
+      "profile": {
+        "url": "/studio/mon-compte",
+        "sha256": "e7a2d5e175516ef59d79eee70876cfcd2a48beb1c183f48fe6993338b0d9371f"
+      },
+      "upload": {
+        "url": "/studio/bibliotheque/importer",
+        "sha256": "d8d387974f4852c02847e45ceaec6b5b72d8db10d225eb1ca48e0cc283d96796"
+      },
+      "series": {
+        "url": "/studio/series/4807",
+        "sha256": "589f13466cc67739f5ce6f09e943880a13cbc8971e85d8fa4bceeb6432890ec7"
+      },
+      "episode": {
+        "url": "/studio/series/episodes/13619",
+        "sha256": "1441305b520ba323b4576e3443fd7509f4d54029ac9a40ff3972354833d75efa"
+      },
+      "edit": {
+        "url": "/studio/montage/3281",
+        "sha256": "e05d9579fcb1eedf8835992465dcbc58e70af2934d946afef6db8062e028e66c"
+      },
+      "videos-filled": {
+        "url": "/studio",
+        "sha256": "5dcbacde0a7bfd6ee374a96f7e19a39d5a8aca64bf11632b780c6e6995a65431"
+      },
+      "generation": {
+        "url": "/studio/ia/generations/8816",
+        "sha256": "739399bc2c159360c6ad78f318f2793e49b5994cfbdb46249fd7bf00f716dc89"
+      },
+      "generation-review": {
+        "url": "/studio/ia/generations/8816",
+        "sha256": "8bb693631c8c7b1e782494c534c597cf5c0478efded6100739502a78ea4adf35"
+      },
+      "edit-export": {
+        "url": "/studio/montage/3282",
+        "sha256": "8c038be935e8f16c57931918145624f768c94ec4a682010b9a06f5687caf12ba"
+      },
+      "composer": {
+        "url": "/studio/composer/7b001e62a2d16ab2558a6e0095adff10712e556d093f91df",
+        "sha256": "d901ecf38cf6a164135dbf83367c31b7cf692740f17d3c7c953f2c9b3dbbc9a3"
+      }
+    },
+    "before": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0
+  },
+  "captures": [
+    {
+      "path": "output/playwright/contact-mobile.png",
+      "sha256": "e4b2a5a663ee47b4911ac6602df318c97d25c824d5db95c8d6ea34196f0ae972"
+    },
+    {
+      "path": "output/playwright/contact-desktop.png",
+      "sha256": "c1b3a3ff89e5552e9298b46d3c8e42fc9d257c8d04a685f937a9b300110e4fa4"
+    },
+    {
+      "path": "output/playwright/contact-no-js.png",
+      "sha256": "289c3e03fcb80e91dad697957d267270d8029e6c8f30915b6e8fc5226eedaad1"
+    },
+    {
+      "path": "output/playwright/r5-export-768.png",
+      "sha256": "8e0240bc81b5437e065e6259a420c1b26fcfdee0a84fd8e34fa2c3c19306dcfa"
+    },
+    {
+      "path": "output/playwright/r5-landing-390.png",
+      "sha256": "c76720846e830ce3587bbc63d428477959f16106fa5a5cde170d8450a825e8b0"
+    }
+  ],
+  "assets": {
+    "cssSha256": "94bf6a5bf8b71dbc572954271c6ffa57181d9afa22babccb1d1c1aaa43b1afc1",
+    "jsSha256": "f96d5c792a113cadf3d8b063e5e40dd325cbd250af0dcacb6d4a5a5423330afa"
+  },
+  "limits": [
+    "Téléphone réel non vérifié",
+    "Annonce sonore dynamique non écoutée",
+    "Réception réelle et délai support non vérifiés",
+    "Matrice DOM bornée, pas conformité exhaustive"
+  ],
+  "validation": {
+    "phpTests": 825,
+    "phpAssertions": 9596,
+    "frontendTests": 186,
+    "twigFiles": 118,
+    "yamlFiles": 19,
+    "styleFiles": 323,
+    "phpstan": "pass",
+    "schemaTest": "pass",
+    "priceClockCommit": "d79da9d",
+    "realPricesReverified": false
+  }
+}

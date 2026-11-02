@@ -17,3 +17,6 @@ Accès : pied de landing et menu public mobile, bas de sidebar et menu Studio. L
 - Revue indépendante en lecture seule Contact et R5.3–R5.5 : aucun blocage de code identifié. Sa réserve sur la suppression des destinations du menu est levée en conservant les six liens.
 
 Réception réelle de `dev@alexbuild.fr` et délai de réponse restent à confirmer par le propriétaire avant ouverture : R6.4 garde sa case ouverte, aide complète non livrée. Aucun email réel envoyé, coût, publication, migration applicative, redémarrage worker, déploiement ou push.
+## Contrôle visuel final
+
+Huit cas Contact public/connecté à 320/390/768/1280 px sans débordement. Sans JavaScript réel à 320×400, huit liens de menu et six entrées basses conservés ; huit Tab depuis le menu atteignent Contact (y=252,5–296,5, hauteur 44 px). Dernier ajustement CSS : Contact sur sa propre ligne au-dessus du profil desktop pour conserver sa largeur, sous-titre à 24–28 px. Captures desktop et sans JS inspectées. Build rejoué après CSS ; [manifeste de reprise](fixtures/contact-r5-reprise-20261102.json).

@@ -54,3 +54,21 @@ L’essai sur téléphone reste séparé : menu public et Studio, portrait/paysa
 ## Validation propriétaire des effets Windows désactivés
 
 Le 2 novembre, après la procédure Accessibilité → Effets visuels, le propriétaire confirme que le rendu sans effets est plus sobre, fonctionne sans anomalie et que les liens fonctionnent. Le test de la préférence Windows réelle et du fallback de la landing est accepté sur la base de ce retour ; aucun état système n’a été mesuré automatiquement. Le rétablissement du réglage initial n’est pas confirmé. Les validations Narrateur des erreurs d’inscription restent acceptées ; l’annonce dynamique du suivi et le téléphone réel restent à vérifier avant clôture R5.3/R5.5. Aucun code applicatif changé, suite rejouée, coût ou appel réel pour cet enregistrement. Commits existants : `5fe6f0d` et `121ff8e`, sans push.
+
+## Reprise sur ce PC et revue indépendante — 2 novembre 2026
+
+Contact livré dans `25f0a30`, horloge tarifaire dans `d79da9d`. Revue indépendante de Contact et des changements R5.3–R5.5 en lecture seule : aucun blocage de code identifié ; les six destinations sont conservées dans le menu natif, en complément de la barre basse. Dernier ajustement visuel Contact : lien sur sa propre ligne desktop, profil non comprimé, sous-titre borné. À 320×400 sans moteur JavaScript, Tab atteint Contact visible (y=252,5–296,5), menu à huit liens et six destinations basses.
+
+Nouvelle matrice : **23 vues × 4 largeurs = 92 contrôles sans débordement document**, dont Contact public/connecté. Landing à 390×780 et export à 768×900 inspectés sur captures ; aucun chevauchement gênant ni titre tronqué constaté sur ces cas. Mouvement réduit émulé ; aucune nouvelle mesure de préférence Windows ou téléphone revendiquée. **23 exports**, rollback/11 compteurs égaux et zéro HTTP fournisseur/inférence. [Manifeste](fixtures/contact-r5-reprise-20261102.json).
+
+Suivi dynamique synthétique observé en onglet visible : mutations à 4 029, 24 034 et 44 040 ms, région `role=status`, `aria-live=polite`, texte final et lien Actualiser présents. Ces observations DOM ne prouvent pas l’annonce sonore.
+
+**Suite complète finale : 825 PHP / 9 596 assertions**, 186 frontend, check/build verts ; 118 Twig, 19 YAML, conteneur, PHPStan, 323 fichiers de style et schéma test verts. Le problème temporel des tarifs de fixtures est corrigé par horloge injectée ; la garde réelle et les dates de catalogue sont conservées. [Détails des tests, incidents préparatoires et limites](tests-horloge-tarifs.md).
+
+### Ce que le propriétaire doit encore faire
+
+1. Sur ce PC, ouvrir `http://127.0.0.1:8024/qa/generation?case=poll-error`. Activer le Narrateur **avant Ctrl+R**, garder l’onglet visible une minute, sans Tab. Dire si le message est annoncé spontanément ; le texte final arrive vers 44 secondes. Ensuite seulement, utiliser Tab pour vérifier que « Actualiser le suivi » est trouvable. Arrêter le Narrateur avec Ctrl+Windows+Entrée.
+2. Téléphone : portrait/paysage, menus public/Studio, barre basse et safe areas, saisie avec clavier virtuel, défilement et fermeture du menu. Le serveur reste en loopback ; **aucune URL téléphone n’est encore préparée**. Confirmer la disponibilité du téléphone et d’un accès privé (par exemple même Wi-Fi) avant de préparer cet accès. Ne pas utiliser 127.0.0.1 depuis le téléphone.
+3. Avant ouverture R6.4 : vérifier la réception d’un email adressé à `dev@alexbuild.fr` et fixer un délai de support réaliste. Aucun email réel envoyé par l’agent.
+
+**Décision de sortie : R5.2, R5.3, R5.5 et grand R5 restent ouverts**, uniquement dans les périmètres restant à valider décrits ici ; le bilan de revue PC est livré. Après retours, consigner les résultats et corriger/rejouer si nécessaire avant clôture. Les essais d’erreurs d’inscription et d’effets Windows désactivés déjà acceptés ne sont pas à refaire par défaut. Aucun coût, appel réel, activation, migration applicative, redémarrage worker, déploiement ou push. Le serveur synthétique GET 8024 est conservé pour l’écoute manuelle ; il refuse les POST. Les anciens ports indiqués dans les sections historiques ne sont pas le point de reprise courant.
