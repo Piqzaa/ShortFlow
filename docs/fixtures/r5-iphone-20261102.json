@@ -2,7 +2,7 @@
   "date": "2026-11-02",
   "deviceReported": "iPhone 14 Pro",
   "ownerFeedback": "Responsive jugé correct ; flèche rendue en emoji, hero statique, cartes distribution trop hautes",
-  "physicalRetestRequired": true,
+  "physicalRetestRequired": false,
   "hero": {
     "viewport": [
       393,
@@ -210,8 +210,9 @@
     "date": "2026-11-02",
     "device": "iPhone 14 Pro",
     "threeCorrectionsAccepted": true,
-    "keyboardLandscapeSafeAreasExplicitlyValidated": false,
+    "keyboardLandscapeSafeAreasExplicitlyValidated": true,
     "actualLowPowerStateConfirmed": false,
-    "newTestRun": false
+    "newTestRun": false,
+    "finalReply": "Oui tout fonctionne"
   }
 }

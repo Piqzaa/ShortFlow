@@ -27,3 +27,6 @@ Aucun coût, appel réel, activation, publication, migration applicative, redém
 ## Validation propriétaire des trois correctifs
 
 Après demande de rechargement sur son iPhone 14 Pro, le propriétaire répond « Ok oui la c’est supp ». Les trois corrections (flèches, hero, cartes) sont acceptées sur ce périmètre. Aucun état système de batterie/réduction des animations n’a été mesuré : pas de certification générale du mode économie d’énergie. Les essais ciblés clavier virtuel, portrait/paysage et zones basses restent à confirmer avant clôture R5.2/R5.5. Aucun code changé ni test rejoué pour cette validation ; compteurs précédents historiques. Commit applicatif `30f6aba`, aucun push.
+## Confirmation matérielle finale et clôture R5
+
+À la question précise « en paysage et avec le clavier ouvert, les menus, la barre basse et les actions restent-ils accessibles, sans chevauchement ? », le propriétaire répond « Oui tout fonctionne ». Cette validation sur son iPhone 14 Pro lève le dernier prérequis R5.2 dans le périmètre demandé. R5.1–R5.5 sont validés après revue globale indépendante finale sans blocage ; [bilan de clôture](r5-revue-cloture.md). Aucun nouveau test ni code applicatif pour cette confirmation. Le serveur LAN temporaire 8025 a été arrêté ; prochaine tâche R6.1. Les sections antérieures conservant R5 ouvert sont historiques.

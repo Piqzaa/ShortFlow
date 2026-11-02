@@ -56,3 +56,7 @@ Le template Twig choisit les routes existantes ; CSS détermine l'affichage au b
 Essai manuel sans coût : ouvrir Menu en haut de la landing, rejoindre connexion puis inscription, revenir ; dans le Studio à 320 px, vérifier les six entrées et Mon compte dans Menu, puis Échap. Ne soumettre aucune génération ou publication pour cet essai.
 
 Commit fonctionnel local `e6628f8 fix: restore mobile account access and readable studio navigation`. Serveur et navigateur de recette fermés en fin de travail. Aucun service PHP changé, cache dev/worker redémarré, migration applicative, inférence réelle, coût, activation, publication, déploiement ou push. Grand R5 non clôturé.
+
+## Confirmation matérielle finale et clôture R5
+
+À la question précise « en paysage et avec le clavier ouvert, les menus, la barre basse et les actions restent-ils accessibles, sans chevauchement ? », le propriétaire répond « Oui tout fonctionne ». Cette validation sur son iPhone 14 Pro lève le dernier prérequis R5.2 dans le périmètre demandé. R5.1–R5.5 sont validés après revue globale indépendante finale sans blocage ; [bilan de clôture](r5-revue-cloture.md). Aucun nouveau test ni code applicatif pour cette confirmation. Le serveur LAN temporaire 8025 a été arrêté ; prochaine tâche R6.1. Les sections antérieures conservant R5 ouvert sont historiques.
