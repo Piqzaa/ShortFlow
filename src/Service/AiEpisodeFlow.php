@@ -663,7 +663,7 @@ final class AiEpisodeFlow
         if (!$this->keys->hasAccess($episode->getOwner(), $model['provider'], $recipe['accessMode'])) {
             throw new \RuntimeException('Connecte le compte fournisseur choisi avant de continuer.');
         }
-        if (new \DateTimeImmutable($model['checked'] ?? AiCatalog::CHECKED) < new \DateTimeImmutable('-14 days')) {
+        if ($this->catalog->priceExpired($model['checked'] ?? AiCatalog::CHECKED)) {
             throw new \RuntimeException('Les tarifs de ce modèle doivent être revérifiés avant de lancer.');
         }
         foreach ([$recipe['reference'], $recipe['endReference']] as $reference) {

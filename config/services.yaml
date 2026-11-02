@@ -23,6 +23,13 @@ services:
     App\:
         resource: '../src/'
 
+    app.ai_price_clock:
+        class: Symfony\Component\Clock\NativeClock
+        arguments: ['UTC']
+    App\Service\AiCatalog:
+        arguments:
+            $priceClock: '@app.ai_price_clock'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 

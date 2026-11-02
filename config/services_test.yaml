@@ -1,4 +1,9 @@
 services:
+    # Historical synthetic prices stay deterministic; production uses real UTC.
+    # Separate from the publication/retirement clock used by time-sensitive tests.
+    app.ai_price_clock:
+        class: Symfony\Component\Clock\MockClock
+        arguments: ['2026-10-30T12:00:00Z']
     story.http:
         class: Symfony\Component\HttpClient\MockHttpClient
         public: true

@@ -58,7 +58,7 @@ final class AiGenerations
             $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
             $this->assertLanguage($job);
             $this->assertReference($job);
-            if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
+            if ($this->catalog->priceExpired($job->getPriceChecked()) || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
                 throw new \RuntimeException('Le tarif doit être revérifié. Prépare une nouvelle estimation avant de lancer.');
             }
             $active = $this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]);
@@ -93,7 +93,7 @@ final class AiGenerations
                 $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
                 $this->assertLanguage($job);
                 $this->assertReference($job);
-                if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
+                if ($this->catalog->priceExpired($job->getPriceChecked()) || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
                     throw new \RuntimeException('Le tarif doit être revérifié avant de reprendre.');
                 }
                 if ($this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]) >= 3) {
@@ -155,7 +155,7 @@ final class AiGenerations
                     $this->catalog->validate($job->getModel(), $job->getSeconds(), $job->getRatio());
                     $this->catalog->validatePrompt($job->getModel(), $job->getPrompt());
                     $this->assertReference($job);
-                    if ((new \DateTimeImmutable($job->getPriceChecked())) < new \DateTimeImmutable('-14 days') || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
+                    if ($this->catalog->priceExpired($job->getPriceChecked()) || $this->estimatedCost($job) !== $job->getEstimatedCents()) {
                         throw new \RuntimeException('Le tarif doit être revérifié avant de lancer. Prépare une nouvelle estimation.');
                     }
                 } catch (VideoPromptReviewRequired $error) {

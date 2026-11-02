@@ -7,8 +7,13 @@ use Symfony\Component\Clock\NativeClock;
 
 final class AiCatalog
 {
-    public function __construct(private ClockInterface $clock = new NativeClock('UTC'))
+    public function __construct(private ClockInterface $clock = new NativeClock('UTC'), private ?ClockInterface $priceClock = null)
     {
+    }
+
+    public function priceExpired(string $checked): bool
+    {
+        return new \DateTimeImmutable($checked, new \DateTimeZone('UTC')) < ($this->priceClock ?? $this->clock)->now()->modify('-14 days');
     }
 
     public const CHECKED = '2026-10-19';
