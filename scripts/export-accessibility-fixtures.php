@@ -62,6 +62,9 @@ try {
     foreach (['landing' => '/', 'login' => '/connexion', 'register' => '/inscription', 'legal' => '/informations-legales'] as $name => $url) {
         $save($name, $url);
     }
+    if ('r55' === $fixtureSet) {
+        $save('contact-public', '/contact');
+    }
     $crawler = $client->request('GET', '/inscription');
     $client->submit($crawler->selectButton('Créer mon compte')->form([
         'registration[email]' => 'invalid',
@@ -80,6 +83,9 @@ try {
     $em->persist($owner);
     $em->flush();
     $client->loginUser($owner);
+    if ('r55' === $fixtureSet) {
+        $save('contact-studio', '/contact');
+    }
     foreach (['videos' => '/studio', 'creation' => '/studio/creation', 'series-new' => '/studio/series/nouvelle', 'calendar' => '/studio/calendrier', 'connections' => '/studio/connexions', 'publications' => '/studio/publications', 'profile' => '/studio/mon-compte', 'upload' => '/studio/bibliotheque/importer'] as $name => $url) {
         $save($name, $url);
     }

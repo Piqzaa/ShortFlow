@@ -7,7 +7,7 @@ if ('GET' !== $_SERVER['REQUEST_METHOD']) {
 }
 $root = dirname(__DIR__);
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-if (preg_match('~^/(build|media|fonts)/~', $path)) {
+if (preg_match('~^/(build|media|fonts)/~', $path) || in_array($path, ['/favicon.svg', '/cursor.svg', '/cursor-active.svg'], true)) {
     $public = realpath($root.'/public');
     $file = realpath($public.$path);
     if (false !== $file && str_starts_with($file, $public.DIRECTORY_SEPARATOR) && is_file($file)) {

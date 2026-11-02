@@ -10,6 +10,7 @@
     <summary><span aria-hidden="true">☰</span> Menu</summary>
     <nav aria-label="Menu principal mobile">
       <a href="#studio">L’expérience</a><a href="#organisation">Le studio</a><a href="#vision">La vision</a>
+      <a href="{{ path('app_contact') }}">Contact et suggestions</a>
       {% if is_granted('ROLE_VERIFIED') %}<a class="public-menu-entry" href="{{ path(entry_route) }}">{{ entry_label }}</a>{% else %}<a href="{{ path('app_login') }}">Se connecter</a><a class="public-menu-entry" href="{{ path('app_register') }}">Créer mon compte</a>{% endif %}
     </nav>
   </details>
@@ -83,5 +84,5 @@
 </div>
 <section class="join section" id="rejoindre" aria-labelledby="join-title"><div class="wrap join-inner"><span class="eyebrow"><i></i> ACCÈS BÊTA</span><h2 id="join-title">Ton prochain flow<br><em>commence ici.</em></h2><p>Crée ton compte, confirme ton email<br>et prépare ta première vidéo dans ton studio privé.</p><a class="button" href="{{ path(entry_route) }}">{{ entry_label }} <span aria-hidden="true">↗</span></a><p class="honest-note">Import, studio IA et calendrier intégrés à la bêta. Aucun abonnement VydFlow facturé actuellement ; les générations IA sont payantes chez ton fournisseur.</p><small>Compte VydFlow sans carte bancaire. <a href="{{ path('app_privacy') }}">Utilisation de tes données</a></small></div></section>
 </main>
-<footer class="wrap footer"><a href="/" class="wordmark">vydflow /</a><span>IMPORTE. PRÉPARE. PUBLIE.</span><a href="{{ path('app_login') }}">Se connecter</a>{% include 'legal/_links.html.twig' with {compact:true} %}<small>© {{ 'now'|date('Y') }} VydFlow</small></footer>
+<footer class="wrap footer"><a href="/" class="wordmark">vydflow /</a><span>IMPORTE. PRÉPARE. PUBLIE.</span><a href="{{ path('app_contact') }}">Contact et suggestions</a><a href="{{ path('app_login') }}">Se connecter</a>{% include 'legal/_links.html.twig' with {compact:true} %}<small>© {{ 'now'|date('Y') }} VydFlow</small></footer>
 {% endblock %}

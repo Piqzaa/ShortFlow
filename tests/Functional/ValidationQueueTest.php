@@ -112,7 +112,7 @@ final class ValidationQueueTest extends WebTestCase
         self::assertSelectorExists('a[href="/studio/series/episodes/'.$watch->getId().'"]');
         self::assertSelectorCount(6, '.studio-bottom-nav a');
         self::assertSelectorCount(6, '.studio-sidebar nav > a');
-        self::assertSelectorCount(7, '.studio-menu nav > a');
+        self::assertSelectorCount(8, '.studio-menu nav > a');
         self::assertSelectorNotExists('.studio-sidebar a[href="/studio/a-valider"]');
         self::assertSame($before, $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM publication_draft'));
         self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
@@ -215,7 +215,11 @@ final class ValidationQueueTest extends WebTestCase
             self::assertResponseIsSuccessful();
             self::assertSelectorCount(6, '.studio-sidebar nav > a');
             self::assertSelectorCount(6, '.studio-bottom-nav > a');
-            self::assertSelectorCount(7, '.studio-menu nav > a');
+            self::assertSelectorCount(8, '.studio-menu nav > a');
+            self::assertSelectorExists('.studio-menu nav a[href="/studio/mon-compte"]');
+            self::assertSelectorExists('.studio-menu nav a[href="/contact"]');
+            self::assertSelectorCount(1, '.studio-menu form[action="/deconnexion"]');
+            self::assertSelectorExists('.studio-menu nav a[href="/studio/creation"]');
             self::assertSelectorTextContains('.studio-menu > summary', 'Menu');
             self::assertSelectorTextContains('.studio-bottom-nav a[href="/studio/calendrier"]', 'Agenda');
             self::assertSelectorExists('.studio-bottom-nav a[aria-label="Envois · Publications"][href="/studio/publications"]');

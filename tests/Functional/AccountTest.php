@@ -38,6 +38,8 @@ final class AccountTest extends WebTestCase
         self::assertSelectorTextContains('details.public-menu > summary', 'Menu');
         self::assertSelectorExists('.public-menu nav a[href="/connexion"]');
         self::assertSelectorExists('.public-menu nav a[href="/inscription"]');
+        self::assertSelectorExists('.public-menu nav a[href="/contact"]');
+        self::assertSelectorExists('footer a[href="/contact"]');
         $this->client->click($this->client->getCrawler()->filter('.public-menu a[href="/connexion"]')->link());
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('input[type="password"]');
@@ -45,6 +47,32 @@ final class AccountTest extends WebTestCase
         $this->client->click($this->client->getCrawler()->filter('.public-menu a[href="/inscription"]')->link());
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('input[type="email"]');
+    }
+
+    public function testContactAndSuggestionsAreAvailableWithoutSendingOrStoringMessages(): void
+    {
+        $this->client->request('GET', '/contact');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Contact et suggestions');
+        self::assertSelectorExists('.contact-actions a[href^="mailto:"][href*="subject="]');
+        self::assertSelectorTextContains('.contact-actions', 'Proposer une amélioration');
+        self::assertSelectorExists('main#contenu[tabindex="-1"]');
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        self::assertSelectorNotExists('form');
+        $this->client->request('POST', '/contact', ['message' => 'Synthetic message']);
+        self::assertResponseStatusCodeSame(405);
+        $user = new User('contact-synthetic@example.test');
+        $user->verify();
+        $user->setPassword('unused');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($user);
+        $em->flush();
+        $this->client->loginUser($user);
+        $this->client->request('GET', '/contact');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.studio-menu a[href="/contact"][aria-current="page"]');
+        self::assertSelectorNotExists('.studio-bottom-nav a[aria-current="page"]');
+        self::assertSelectorCount(6, '.studio-bottom-nav > a');
     }
 
     public function testRegistrationHashesPasswordAndDuplicateIsNeutral(): void
