@@ -85,12 +85,12 @@ export function drawScreen(c, images, mode, phase = 0, video = null, frames = []
     MEDIA.forEach((name, i) => {const x = 29 + i % 3 * 170, y = 255 + Math.floor(i / 3) * 260;cover(c, images[name], x, y, 145, 220);text(c, ['Le geste', 'À l’aube', 'Après la pluie', 'Le son', 'À table', 'Respire'][i], x, y + 244, 16);});
     c.fillStyle = '#201b2e';c.fillRect(29, 813, 482, 98);text(c, 'MARDI / 18:00', 47, 850, 17, '#cbb2f8');text(c, 'Le geste · Reel à préparer', 47, 884, 21);
   } else {
-    text(c, 'STUDIO IA', 30, 172, 34, '#fff', 700);text(c, 'BIENTÔT DISPONIBLE', 30, 213, 17, '#c5a9ff');
+    text(c, 'STUDIO IA', 30, 172, 34, '#fff', 700);text(c, 'DÉMONSTRATION · BÊTA', 30, 213, 17, '#c5a9ff');
     c.fillStyle = '#242030';c.fillRect(28, 250, 484, 112);text(c, '« Une raie de verre,', 45, 293, 24);text(c, 'dans un océan de nuit. »', 45, 331, 24);
     if (!drawSequence(c, frames, horizonProgress, 145, 375, 249, 443)) cover(c, images.manta, 137, 375, 266, 443);
     text(c, 'IMAGINER → EXPLORER → CRÉER', 30, 842, 17, '#c5a9ff');
     for(let i = 0; i < 6; i++) { if (frames[i]) c.drawImage(frames[i], 28 + i * 81, 863, 76, 45); }
     c.fillStyle = '#d8c8ff'; c.fillRect(28 + horizonProgress * 481, 858, 2, 56);
-    text(c, 'Illustration du futur studio', 30, 932, 14, '#9d93ac');
+    text(c, 'Illustration du Studio IA', 30, 932, 14, '#9d93ac');
   }
 }
