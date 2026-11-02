@@ -90,3 +90,6 @@ Recueillir modèle de téléphone/navigateur et résultat de ces cas, tout cheva
 ## Email : boîte et transport applicatif distincts
 
 Le propriétaire confirme que `dev@alexbuild.fr` fonctionne. Cela valide sa boîte, pas un envoi depuis VydFlow. L’application utilise encore Mailpit local : transport de production, expéditeur, liens du domaine et réception des emails transactionnels restent à tester en R8.4. Délai support encore à fixer, aide complète à préparer en R6.4. Aucun email réel envoyé dans cette étape.
+## Retours iPhone après ouverture LAN
+
+Le propriétaire indique un rendu responsive correct sur iPhone 14 Pro, mais signale la flèche en emoji, la hero statique et les cartes de distribution trop hautes. Correctifs et recette PC livrés, [bilan iPhone](r5-retours-iphone.md) et [manifeste](fixtures/r5-iphone-20261102.json). Ce premier retour matériel ne clôture pas les essais téléphone : revalider les corrections et les cas clavier/zones basses. R5.2/R5.5 restent ouverts ; R5.3 reste validé. Dernier passage : 24 PHP ciblés / 336 assertions, 189 frontend, 119 Twig/check/build ; suite complète 825 / 9 596 historique, non rejouée.

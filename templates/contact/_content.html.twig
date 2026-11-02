@@ -4,9 +4,9 @@
   <p><a class="contact-address" href="mailto:{{ legal_identity.email }}">{{ legal_identity.email }}</a></p>
   <p class="library-note">Copie cette adresse ou choisis le sujet de ton message. Le lien ouvre ta messagerie ; tu pourras relire ton email avant de l’envoyer.</p>
   <div class="contact-actions">
-    <a class="account-secondary" href="mailto:{{ legal_identity.email }}?subject={{ 'Question sur VydFlow'|url_encode }}">Poser une question ↗</a>
-    <a class="account-secondary" href="mailto:{{ legal_identity.email }}?subject={{ 'Problème rencontré sur VydFlow'|url_encode }}">Signaler un problème ↗</a>
-    <a class="account-secondary" href="mailto:{{ legal_identity.email }}?subject={{ 'Suggestion pour améliorer VydFlow'|url_encode }}">Proposer une amélioration ↗</a>
+    <a class="account-secondary" href="mailto:{{ legal_identity.email }}?subject={{ 'Question sur VydFlow'|url_encode }}">Poser une question {% include 'icons/_arrow_up_right.html.twig' %}</a>
+    <a class="account-secondary" href="mailto:{{ legal_identity.email }}?subject={{ 'Problème rencontré sur VydFlow'|url_encode }}">Signaler un problème {% include 'icons/_arrow_up_right.html.twig' %}</a>
+    <a class="account-secondary" href="mailto:{{ legal_identity.email }}?subject={{ 'Suggestion pour améliorer VydFlow'|url_encode }}">Proposer une amélioration {% include 'icons/_arrow_up_right.html.twig' %}</a>
   </div>
   <p class="library-note">Pour un problème, indique l’écran concerné et ce qui s’est passé. Pour une idée, explique ce que tu aimerais pouvoir faire.</p>
 </section>

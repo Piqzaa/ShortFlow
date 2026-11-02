@@ -1,0 +1,209 @@
+{
+  "date": "2026-11-02",
+  "deviceReported": "iPhone 14 Pro",
+  "ownerFeedback": "Responsive jugé correct ; flèche rendue en emoji, hero statique, cartes distribution trop hautes",
+  "physicalRetestRequired": true,
+  "hero": {
+    "viewport": [
+      393,
+      852
+    ],
+    "autoplayDenied": true,
+    "canvasChanged": true,
+    "phoneTransformChanged": true,
+    "imageRequests": [
+      "hero-fashion.webp",
+      "hero-cat.webp",
+      "hero-fiction.webp",
+      "hero-cars.webp",
+      "hero-football.webp"
+    ],
+    "pauseHidesCanvas": true,
+    "reducedMotionState": "static",
+    "canvasMaximumFps": 15,
+    "realLowPowerModeValidated": false
+  },
+  "cards": [
+    {
+      "documentOverflow": 0,
+      "width": 320,
+      "ratio": "9/16",
+      "height": 208
+    },
+    {
+      "documentOverflow": 0,
+      "width": 393,
+      "ratio": "9/16",
+      "height": 202
+    },
+    {
+      "documentOverflow": 0,
+      "width": 768,
+      "ratio": "9/16",
+      "height": 313
+    },
+    {
+      "documentOverflow": 0,
+      "width": 1000,
+      "ratio": "9/16",
+      "height": 313
+    }
+  ],
+  "studio": {
+    "sendIsSvg": true,
+    "bottomDestinations": 6,
+    "headingArrows": 2,
+    "width": 393,
+    "documentOverflow": 0
+  },
+  "desktop": "webgl",
+  "pageErrors": 0,
+  "tests": {
+    "check": "pass",
+    "phpTargeted": 24,
+    "historicalFullAssertions": 9596,
+    "fullPhpRerun": false,
+    "phpAssertions": 336,
+    "frontend": 189,
+    "historicalFullPhp": 825,
+    "build": "pass",
+    "twig": 119
+  },
+  "exports": {
+    "routes": {
+      "landing": {
+        "url": "/",
+        "sha256": "dc55116b89ce7b136307e9b2234a9ba22a906558bcf926c999fcd14a88cd7cde"
+      },
+      "login": {
+        "url": "/connexion",
+        "sha256": "de05240ae7c04a9cec5d6afd0273bf7a360be4fb4b7335d01be27f0f598d87ce"
+      },
+      "register": {
+        "url": "/inscription",
+        "sha256": "b3641cf2ed86e192708d278e433ad9110c2900304f5d8ad8b3cd63405d916161"
+      },
+      "legal": {
+        "url": "/informations-legales",
+        "sha256": "c6d86fabc68966e28b7a23619518565cec2a6553940d2024abca2860765e6750"
+      },
+      "contact-public": {
+        "url": "/contact",
+        "sha256": "58176b48f9e36ff4206866eb3c7621fa0e62ceda55f393a6c042c1a1128bbd0c"
+      },
+      "register-error": {
+        "url": "/inscription?error",
+        "sha256": "e12de0b2c2706f111d4bca956b5d9926248abf89a41144899e74e03d9a2e5239"
+      },
+      "contact-studio": {
+        "url": "/contact",
+        "sha256": "1078b9d8aadc48693fb2690d2ff46e3e80ea7c0f0ce8cda82ab2db35367d5c7f"
+      },
+      "videos": {
+        "url": "/studio",
+        "sha256": "1aaba4b008fecdf0f13e02169f09409556ad891023906d91781efd64efeb6783"
+      },
+      "creation": {
+        "url": "/studio/creation",
+        "sha256": "e8d68a743c59159a88a27c62a8c1c3787994c6cd3908bb508d0d4521b04a9c33"
+      },
+      "series-new": {
+        "url": "/studio/series/nouvelle",
+        "sha256": "2f8c102afa3911982e6960ee58b2dd8f0fd60278c29387a6cfbbc587b174a583"
+      },
+      "calendar": {
+        "url": "/studio/calendrier",
+        "sha256": "689362e20bcae1212231ec01a5071836868f6e9489a8076ba579ca5f40659b58"
+      },
+      "connections": {
+        "url": "/studio/connexions",
+        "sha256": "4f20643e89e09699b934f49e29abf562d089455d548d8e268cdc6064bf4514e1"
+      },
+      "publications": {
+        "url": "/studio/publications",
+        "sha256": "8491ba856d89670cdb6379d267b71976db26fc013d42d52f03af11568595bb15"
+      },
+      "profile": {
+        "url": "/studio/mon-compte",
+        "sha256": "2bfad8e9d8f651dd6f3e2a4b33ab17588fd4764a10be3c13195a492600eecef6"
+      },
+      "upload": {
+        "url": "/studio/bibliotheque/importer",
+        "sha256": "40fd6f3c7ab0bf5b04ff12edfb6ed99b330f8875b20b7263c7996014151fdf05"
+      },
+      "series": {
+        "url": "/studio/series/5068",
+        "sha256": "7096ad8c85888c2e9155aedc7ba1706a700f82edf0ecaee7f748fa18ed678399"
+      },
+      "episode": {
+        "url": "/studio/series/episodes/15285",
+        "sha256": "81d440a08e8e479b84816c8a35c4a9d807e30cc68c6d2b5c1c8025b04c88d7dd"
+      },
+      "edit": {
+        "url": "/studio/montage/3371",
+        "sha256": "b39f3659600156d005cd9bf520fd82a4d9fca9479411e298e377d43ed8c609bf"
+      },
+      "videos-filled": {
+        "url": "/studio",
+        "sha256": "9ed3294451baed73897d4ee2b966a46b126eddffed52f00226b7494cae8cf1ca"
+      },
+      "generation": {
+        "url": "/studio/ia/generations/9114",
+        "sha256": "a2d23b63d8903384c59194089c794fda1573b47001a3b5265ae95511d333378e"
+      },
+      "generation-review": {
+        "url": "/studio/ia/generations/9114",
+        "sha256": "8a74d5f93cfcdfbaa2d5554b277fddcd76804c2e1c945aa32d3c51b12599f4c8"
+      },
+      "edit-export": {
+        "url": "/studio/montage/3372",
+        "sha256": "72236c8d2155fa0ac43038bfd7f6fe03e53cc1b3b5d828bf8928694cd4a88f4c"
+      },
+      "composer": {
+        "url": "/studio/composer/c602880112ea4b21e7f805783ff5d375c56824478878511b",
+        "sha256": "f567f34bb6ec91d85a56c8c960ff043b226b281c0cf24acf7afaaccb4830ee30"
+      }
+    },
+    "before": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 2,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0
+  },
+  "captures": [
+    {
+      "sha256": "e0e40099b518e112ec64ebefd6cc4109c37e5c7ddd43e1a1e5052bd335724337",
+      "path": "output/playwright/iphone-hero.png"
+    },
+    {
+      "sha256": "59cf7a8562667ea5a107c8ea4ef7c5b4fb386ac422e5fdc22aa79974a61f4567",
+      "path": "output/playwright/iphone-cards-final.png"
+    },
+    {
+      "sha256": "27db815fd55c529dfb63c580d18415a3c356f080b11c07a62966181685f4d36f",
+      "path": "output/playwright/iphone-studio-final.png"
+    }
+  ]
+}

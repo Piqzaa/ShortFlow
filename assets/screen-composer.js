@@ -2,8 +2,9 @@ import { drawEditScreen } from './edit-sequence.js';
 import { drawSequence } from './horizon-sequence.js';
 // Presentation assets only. This module does not implement editing or publishing.
 export const MEDIA = ['craft', 'surf', 'street', 'sound', 'taste', 'botanic'];
-export async function loadMedia() {
-  const pairs = await Promise.all([...MEDIA, 'dance', 'object', 'architecture', 'backstage', 'portrait', 'landscape', 'manta', 'river', 'hero-fashion', 'hero-cat', 'hero-fiction', 'hero-cars', 'hero-football', 'edit-0'].map(name => new Promise(resolve => {
+export const HERO_MEDIA = ['hero-fashion', 'hero-cat', 'hero-fiction', 'hero-cars', 'hero-football'];
+export async function loadMedia(names = [...MEDIA, 'dance', 'object', 'architecture', 'backstage', 'portrait', 'landscape', 'manta', 'river', ...HERO_MEDIA, 'edit-0']) {
+  const pairs = await Promise.all(names.map(name => new Promise(resolve => {
     const image = new Image(); image.onload = () => resolve([name, image]); image.onerror = () => resolve([name, null]);
     image.src = (name.startsWith('edit-') ? '/media/edit/' : '/media/creators/') + name + '.webp';
   })));

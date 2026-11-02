@@ -3,7 +3,7 @@ import { loadFrames, drawSequence } from '../horizon-sequence.js';
 import { loadEditFrames, drawEditScreen, editState } from '../edit-sequence.js';
 
 export default class extends Controller {
-  static targets = ['canvas', 'stage', 'fallback', 'toggle', 'framing', 'horizon', 'timecode', 'edit', 'editLabel'];
+  static targets = ['canvas', 'stage', 'fallback', 'toggle', 'framing', 'horizon', 'timecode', 'edit', 'editLabel', 'hero'];
 
   connect() {
     this.element.dataset.studioState = 'connecting';
@@ -52,9 +52,9 @@ export default class extends Controller {
       const scenes = [...this.element.querySelectorAll('[data-scene]')];
       this.animationContext = gsap.context(() => {
         this.element.querySelectorAll('.destination').forEach((card, index) => {
-          gsap.from(card, { x: this.mobile.matches ? 0 : -280 - index * 90, y: this.mobile.matches ? 45 : 100 + index * 35,
-            rotationY: this.mobile.matches ? 0 : -55, rotationZ: this.mobile.matches ? 3 : -20,
-            scale: this.mobile.matches ? .96 : .72, opacity: this.mobile.matches ? .8 : .15,
+          gsap.from(card, { x: this.mobile.matches ? 0 : -280 - index * 90, y: this.mobile.matches ? 12 : 100 + index * 35,
+            rotationY: this.mobile.matches ? 0 : -55, rotationZ: this.mobile.matches ? 0 : -20,
+            scale: this.mobile.matches ? .99 : .72, opacity: this.mobile.matches ? .8 : .15,
             ease: 'power2.out', scrollTrigger: { trigger: this.mobile.matches ? card : '.destinations',
               start: 'top 92%', end: this.mobile.matches ? 'top 55%' : 'center 53%', scrub: .65 } });
         });
@@ -71,7 +71,11 @@ export default class extends Controller {
 
       }, this.element);
       this.setupPreviews(generation);
-      if (this.mobile.matches) { this.element.dataset.studioState = 'mobile'; ScrollTrigger.refresh(); return; }
+      if (this.mobile.matches) {
+        await this.setupMobileHero(gsap, generation);
+        if (generation !== this.generation) return;
+        this.element.dataset.studioState = 'mobile'; ScrollTrigger.refresh(); return;
+      }
       const [THREE, { RoomEnvironment }, composer] = await Promise.all([import('three'), import('three/addons/environments/RoomEnvironment.js'), import('../screen-composer.js')]);
       this.composer = composer;
       this.screenAssets = await composer.loadMedia();
@@ -366,6 +370,39 @@ export default class extends Controller {
     this.element.querySelectorAll('.timeline-track i').forEach((frame, i) => frame.classList.toggle('is-current', i === index));
   }
 
+  async setupMobileHero(gsap, generation) {
+    if (!this.hasHeroTarget) return;
+    const { HERO_MEDIA, loadMedia, drawFilm } = await import('../screen-composer.js');
+    const images = await loadMedia(HERO_MEDIA);
+    if (generation !== this.generation || !HERO_MEDIA.every(name => images[name])) return;
+    const context = this.heroTarget.getContext('2d');
+    if (!context) return;
+    let elapsed = 0, drawn = -1;
+    this.heroTick = (_time, delta) => {
+      elapsed += Math.min(delta, 100) / 1000;
+      if (elapsed - drawn < 1 / 15) return;
+      drawn = elapsed;
+      drawFilm(context, images, elapsed);
+    };
+    drawFilm(context, images, 0);
+    this.heroTarget.classList.add('is-ready');
+    this.fallbackTarget.classList.add('has-hero-motion');
+    this.syncHero = () => {
+      const active = this.heroVisible && !document.hidden && generation === this.generation;
+      this.fallbackTarget.classList.toggle('is-hero-visible', active);
+      if (active === this.heroTicking) return;
+      this.heroTicking = active;
+      if (active) gsap.ticker.add(this.heroTick);
+      else gsap.ticker.remove(this.heroTick);
+    };
+    document.addEventListener('visibilitychange', this.syncHero);
+    this.heroObserver = new IntersectionObserver(entries => {
+      this.heroVisible = entries[0].isIntersecting;
+      this.syncHero();
+    }, { threshold: .1 });
+    this.heroObserver.observe(this.heroTarget);
+  }
+
   setupPreviews(generation) {
     this.previewVideos = [...this.element.querySelectorAll('[data-preview-src]')].filter(video => !video.hasAttribute('data-mobile-only') || this.mobile.matches);
     const update = video => {
@@ -422,8 +459,18 @@ export default class extends Controller {
     this.restart();
   }
 
+  clearMobileHero() {
+    this.heroObserver?.disconnect();
+    document.removeEventListener('visibilitychange', this.syncHero);
+    if (this.heroTick) this.gsap?.ticker.remove(this.heroTick);
+    this.heroTick = null; this.syncHero = null; this.heroTicking = false; this.heroVisible = false;
+    if (this.hasHeroTarget) this.heroTarget.classList.remove('is-ready');
+    this.fallbackTarget.classList.remove('has-hero-motion', 'is-hero-visible');
+  }
+
   cleanup() {
     this.generation++;
+    this.clearMobileHero();
     this.controlsAvailable = this.paused;
     this.toggleTarget.hidden = !this.controlsVisible || !this.controlsAvailable;
     this.element.classList.remove('has-edit-motion');
