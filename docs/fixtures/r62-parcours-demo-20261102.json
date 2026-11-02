@@ -1,0 +1,447 @@
+{
+  "date": "2026-11-02",
+  "scope": "R6.2 parcours, coûts, validations et démonstration locale préparée",
+  "ownerMediaChoice": "Le film de présentation du projet",
+  "browser": {
+    "results": [
+      {
+        "mode": "normal",
+        "width": 320,
+        "height": 740,
+        "scroll": 320,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 25.0263671875,
+        "state": "mobile",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "normal",
+        "width": 390,
+        "height": 780,
+        "scroll": 390,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.46600341796875,
+        "state": "mobile",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "normal",
+        "width": 768,
+        "height": 900,
+        "scroll": 768,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.0284423828125,
+        "state": "mobile",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "normal",
+        "width": 1280,
+        "height": 900,
+        "scroll": 1280,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": null,
+        "state": "webgl"
+      },
+      {
+        "mode": "normal",
+        "width": 844,
+        "height": 390,
+        "scroll": 844,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.0284423828125,
+        "state": "mobile",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "normal",
+        "width": 740,
+        "height": 320,
+        "scroll": 740,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.46600341796875,
+        "state": "mobile",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "reduced",
+        "width": 320,
+        "height": 740,
+        "scroll": 320,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 25.0263671875,
+        "state": "static",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "reduced",
+        "width": 390,
+        "height": 780,
+        "scroll": 390,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.46600341796875,
+        "state": "static",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "reduced",
+        "width": 768,
+        "height": 900,
+        "scroll": 768,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.0284423828125,
+        "state": "static",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "reduced",
+        "width": 1280,
+        "height": 900,
+        "scroll": 1280,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": null,
+        "state": "static"
+      },
+      {
+        "mode": "reduced",
+        "width": 844,
+        "height": 390,
+        "scroll": 844,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.0284423828125,
+        "state": "static",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "reduced",
+        "width": 740,
+        "height": 320,
+        "scroll": 740,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.46600341796875,
+        "state": "static",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "no-js",
+        "width": 320,
+        "height": 740,
+        "scroll": 320,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 25.0263671875,
+        "state": "native",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "no-js",
+        "width": 390,
+        "height": 780,
+        "scroll": 390,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.46600341796875,
+        "state": "native",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "no-js",
+        "width": 768,
+        "height": 900,
+        "scroll": 768,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.0284423828125,
+        "state": "native",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "no-js",
+        "width": 1280,
+        "height": 900,
+        "scroll": 1280,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": null,
+        "state": "native"
+      },
+      {
+        "mode": "no-js",
+        "width": 844,
+        "height": 390,
+        "scroll": 844,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.0284423828125,
+        "state": "native",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "no-js",
+        "width": 740,
+        "height": 320,
+        "scroll": 740,
+        "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+        "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+        "descriptions": 1,
+        "h1": 1,
+        "phoneCtaGap": 23.46600341796875,
+        "state": "native",
+        "loginVisible": true,
+        "registrationVisible": true
+      },
+      {
+        "mode": "no-js",
+        "nativeLogin": true,
+        "nativeRegistration": true
+      }
+    ],
+    "errors": []
+  },
+  "content": {
+    "results": [
+      {
+        "width": 390,
+        "scroll": 390,
+        "paths": [
+          "Vidéo existante",
+          "Création IA",
+          "Série d’épisodes"
+        ],
+        "costsVisible": 904.71875,
+        "confirmation": "La publication reste une étape à part. Pour chaque vidéo, vérifie les comptes destinataires, les textes et la date, puis confirme l’envoi immédiat ou programmé.",
+        "costLink": "Comprendre les coûts et la bêta"
+      },
+      {
+        "width": 1280,
+        "scroll": 1280,
+        "paths": [
+          "Vidéo existante",
+          "Création IA",
+          "Série d’épisodes"
+        ],
+        "costsVisible": 565.5,
+        "confirmation": "La publication reste une étape à part. Pour chaque vidéo, vérifie les comptes destinataires, les textes et la date, puis confirme l’envoi immédiat ou programmé.",
+        "costLink": "Comprendre les coûts et la bêta"
+      }
+    ],
+    "anchored": {
+      "hash": "#couts",
+      "heading": "Ton studio.Ton compte fournisseur.",
+      "top": 129.640625
+    }
+  },
+  "demo": {
+    "source": "public/media/films/hero-v4.webm",
+    "sourceSha256": "dcb63d7a14c0f714e3777c3e0e3a9a9e963b683148ab664d06bc9ee11771b913",
+    "video": {
+      "id": 33401,
+      "mime": "video/webm",
+      "duration": 14.960081,
+      "width": 540,
+      "height": 960
+    },
+    "draft": {
+      "status": "draft",
+      "networks": [
+        "youtube"
+      ],
+      "content": {
+        "youtube": {
+          "videos": {
+            "33401": {
+              "title": "Mon premier brouillon VydFlow",
+              "description": "Film de présentation du projet. Démonstration locale, aucun envoi.",
+              "privacy": "public",
+              "audience": "yes",
+              "synthetic": false
+            }
+          }
+        }
+      }
+    },
+    "routes": {
+      "upload": {
+        "url": "/studio/bibliotheque/importer?next=compose",
+        "sha256": "b6a4f92a5cec5a7039852890506886fdd2d823467099946b986907ef860c0e1d"
+      },
+      "imported": {
+        "url": "/studio/bibliotheque/33401",
+        "sha256": "26c733e43e86668e7160799a06fdfbf40a65495dc68bec07660875bd878f0dbe"
+      },
+      "prepare": {
+        "url": "/studio/composer/9846a1aff95d21d93433b9e5a8f5b9ffefcc23dddb9ae379",
+        "sha256": "507ddd9c0d4b7bfedb62137d4c0ac8d8c21b070c2b21c6a5d659e50200a256c8"
+      },
+      "saved": {
+        "url": "/studio/composer/9846a1aff95d21d93433b9e5a8f5b9ffefcc23dddb9ae379",
+        "sha256": "046a1316727bcd75b78726e0830cd4c67c30d58b4adba2e7890b9bcbd6e4b2ea"
+      }
+    },
+    "before": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0,
+    "privateFileRemoved": true
+  },
+  "demoBrowser": {
+    "proof": [
+      {
+        "name": "upload",
+        "heading": "Ajoute ton prochain flow.",
+        "title": null
+      },
+      {
+        "name": "imported",
+        "heading": "Film de présentation — démonstration",
+        "title": null
+      },
+      {
+        "name": "prepare",
+        "heading": "Prépare la suite.",
+        "title": null
+      },
+      {
+        "name": "saved",
+        "heading": "Prépare la suite.",
+        "title": "Mon premier brouillon VydFlow"
+      }
+    ],
+    "videoDuration": 14.960081
+  },
+  "tests": {
+    "build": "pass",
+    "styleFiles": 2,
+    "phpSyntaxFiles": 2,
+    "php": 14,
+    "check": "pass",
+    "frontend": 189,
+    "assertions": 146,
+    "twig": 119,
+    "fullPhpRerun": false
+  },
+  "captures": [
+    {
+      "sha256": "cb85f84041945baaa3adba213bed7ad7149762e3475aba787c9fb35db424df0a",
+      "path": "output/playwright/r62-paths-390.png"
+    },
+    {
+      "sha256": "11308a628e0d02771471ec871303fa78844de703771e08bde39596da6c516330",
+      "path": "output/playwright/r62-paths-1280.png"
+    },
+    {
+      "sha256": "9d81ebf5dbbd82a7e2116a44242f7b80220fefe058d22f727c4a2ffb0184d1ac",
+      "path": "output/playwright/r62-costs-390.png"
+    },
+    {
+      "sha256": "8e08814bd58679ea8c3f0b201df9652569e76d56f0b6f971d0466c14b82791b9",
+      "path": "output/playwright/r62-costs-1280.png"
+    },
+    {
+      "sha256": "bbd6d6441f4618efe9085510d98764d4249f727d125b7c9f039751e077bff759",
+      "path": "output/playwright/r62-demo-upload.png"
+    },
+    {
+      "sha256": "c366cbba3e140b4b36e7a158dff88a0d1cdec0278de133d22358c9922f74fe1e",
+      "path": "output/playwright/r62-demo-imported.png"
+    },
+    {
+      "sha256": "d77dbc3a23fd510a11487d1f9e1e47ba87e4935817435c7b97cf548504e018ab",
+      "path": "output/playwright/r62-demo-prepare.png"
+    },
+    {
+      "sha256": "1d8706d144de7fe0aea0653fc1afa3270ab04bcd82ccd53636562b01d53ca5c7",
+      "path": "output/playwright/r62-demo-saved.png"
+    }
+  ],
+  "limits": [
+    "Relecture de captures issues du parcours réellement exécuté, pas démo interactive active",
+    "Brouillon incomplet sans compte connecté, aucune programmation/publication confirmée",
+    "Aucune génération IA ni qualité audiovisuelle fournisseur testée",
+    "Pas de nouvel essai matériel iPhone"
+  ],
+  "documentedCompletion": "2026-11-03"
+}
