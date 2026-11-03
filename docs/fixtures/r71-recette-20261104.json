@@ -1,0 +1,1072 @@
+{
+  "tests": {
+    "final_journeys": {
+      "note": "Final version rerun, overlap with targeted suite; do not sum as unique tests",
+      "assertions": 158,
+      "tests": 3,
+      "failures": 0
+    },
+    "series_recovery": {
+      "assertions": 76,
+      "tests": 4,
+      "failures": 0
+    },
+    "targeted": {
+      "note": "Includes initial version of the 3 new scenarios; not a global PHP suite",
+      "assertions": 1242,
+      "tests": 87,
+      "failures": 0
+    }
+  },
+  "quality": {
+    "phpstan": "passed",
+    "frontend": "not rerun, no JS/CSS changes",
+    "php_style": "passed",
+    "global_php": "not rerun",
+    "test_schema": "valid",
+    "php_syntax": "passed"
+  },
+  "logs": [
+    {
+      "sha256": "f9270e1e1a01968d94cc0f0a64a15273f5d93938e77c771fa75e0de005ce00a9",
+      "file": "functional.log"
+    },
+    {
+      "sha256": "b31f2eabbf863d656be8c767001f0130c4bf91e764d9031eb4e5310234e85474",
+      "file": "journey-final.log"
+    },
+    {
+      "sha256": "e30b8389c6e2199b3fa4993c76c7f4abad3f84056883b410c31ec6f3712e480e",
+      "file": "series-recovery.log"
+    }
+  ],
+  "journeys": [
+    {
+      "case": "testConfirmingOneVideoKeepsTheOtherAccountTextAndDateUnarmed",
+      "report": {
+        "completed": true,
+        "stages": {
+          "publication-confirmation": {
+            "url": "/studio/brouillons/6806/confirmer",
+            "sha256": "56411bc7a9c1daf7930956976f33cd8134ba7918599a2ff97a30ee22a66d20fe"
+          },
+          "calendar-scheduled": {
+            "url": "/studio/calendrier?month=2026-11",
+            "sha256": "dacab30dd312c155dabf30ae354c1c7eb3524fb09b9bf6817f35ef3b10df1fad"
+          },
+          "independent-unarmed-video": {
+            "url": "/studio/brouillons/6807",
+            "sha256": "93cb957c5036e0c83a121a9db95ce8a0c31678c99c511bb705505770ca21b270"
+          }
+        },
+        "media": {
+          "33543": {
+            "file": "video-33543.mp4",
+            "sha256": "bb1b1fadb8f7e5b83b359b1eac9ae15b597d44af1d552887a473dc2488737629",
+            "duration": 3,
+            "width": 96,
+            "height": 160
+          },
+          "33544": {
+            "file": "video-33544.mp4",
+            "sha256": "bb1b1fadb8f7e5b83b359b1eac9ae15b597d44af1d552887a473dc2488737629",
+            "duration": 3,
+            "width": 96,
+            "height": 160
+          }
+        },
+        "before": {
+          "account_token": 0,
+          "ai_credential": 0,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 39,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 4,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 1,
+          "tiktok_publication": 1,
+          "video_asset": 1,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_credential": 0,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 39,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 4,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 1,
+          "tiktok_publication": 1,
+          "video_asset": 1,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "simulatedHttp": [],
+        "unexpectedHttp": 0,
+        "privateFilesRestored": true
+      }
+    },
+    {
+      "case": "testImportedMontageReturnsToItsPreparationAndPublishesOnlyAfterConfirmation",
+      "report": {
+        "completed": true,
+        "stages": {
+          "import": {
+            "url": "/studio/bibliotheque/importer?next=compose",
+            "sha256": "a968f3109c7df2450c77b9ef532b266271697d9a93ccaa4307bca48d628e1350"
+          },
+          "prepare-before-edit": {
+            "url": "/studio/composer/a74b2907087988108ffb8d72c50d47596b986e50b0743ed1",
+            "sha256": "1648d3dc381e3df8d2dd34ea28c1e31da1416c6185870cdea778432418aacf90"
+          },
+          "montage-draft": {
+            "url": "/studio/montage/3381",
+            "sha256": "ce461738567c7e5af72732b6c1d9c41d4e931a9fc9626d6b7e2551b3c4013ed6"
+          },
+          "montage-ready": {
+            "url": "/studio/montage/3381",
+            "sha256": "65dafd8ea60264ccb8bb05b5f6db4d9a4a3d250eb88f03bd2516c7fdfc2f2305"
+          },
+          "prepare-after-edit": {
+            "url": "/studio/composer/79786b4066966bae0728ebcda8cb8d9b1ba0b0b06b9bef2c",
+            "sha256": "17034b82cb51d0cbbec374b726db08e86e80cbd762656ee074ac2f945123cdaf"
+          },
+          "publication-confirmation": {
+            "url": "/studio/brouillons/6805/confirmer",
+            "sha256": "05b6d13b0d6d6f4fd2f42ef3e045e83d682b759cad37263178ee3bff471e9344"
+          },
+          "calendar-scheduled": {
+            "url": "/studio/calendrier?month=2026-11",
+            "sha256": "6f5ca0f302af781bc9aca4bd5f6df581b61fdb62ff912fd97f45bcff82defd6a"
+          },
+          "publication-tracked": {
+            "url": "/studio/publications",
+            "sha256": "ed405ec52b6e8a87b5d2044ba4e13594cd7ab9167eca46e756febc0a5599d00d"
+          }
+        },
+        "media": {
+          "33541": {
+            "file": "video-33541.mp4",
+            "sha256": "bb1b1fadb8f7e5b83b359b1eac9ae15b597d44af1d552887a473dc2488737629",
+            "duration": 3,
+            "width": 96,
+            "height": 160
+          },
+          "33542": {
+            "file": "video-33542.mp4",
+            "sha256": "585771c6a4a5a68d7c12c96e691215a649dd924908a45acbb0757dd8f354a923",
+            "duration": 0.622,
+            "width": 1080,
+            "height": 1920
+          }
+        },
+        "before": {
+          "account_token": 0,
+          "ai_credential": 0,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 39,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 4,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 1,
+          "tiktok_publication": 1,
+          "video_asset": 1,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_credential": 0,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 39,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 4,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 1,
+          "tiktok_publication": 1,
+          "video_asset": 1,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "simulatedHttp": {
+          "youtube": [
+            "POST",
+            "PUT",
+            "PUT",
+            "GET"
+          ]
+        },
+        "unexpectedHttp": 0,
+        "privateFilesRestored": true
+      }
+    },
+    {
+      "case": "testSeriesAssemblyRequiresApprovalBeforeOpeningItsScheduledPublication",
+      "report": {
+        "completed": true,
+        "stages": {
+          "series-scenes-review": {
+            "url": "/studio/series/episodes/15298?review=1",
+            "sha256": "010b442670374dca832d4a2584f71e6a0d28c6b407152d0ef54b73b1a5c8ce55"
+          },
+          "series-result-unapproved": {
+            "url": "/studio/series/episodes/15298",
+            "sha256": "8b13b7bc8e2bd9f4de32fd656b69c74c1703d6b25ceab464bcb1b01e51b60980"
+          },
+          "series-result-approved": {
+            "url": "/studio/series/episodes/15298",
+            "sha256": "f6abcb0a2fd346f7cacf0d5018d75bd2879ccff1d3d351b83224038a159b9201"
+          },
+          "series-publication-prepare": {
+            "url": "/studio/composer/eb889da4534e86f752a3b637c30125a146d7bcc042ba74d2",
+            "sha256": "6654a25e06fd94021b3cff136fdeaa91d813a65aed07b4f16021bcca78280e9b"
+          },
+          "publication-confirmation": {
+            "url": "/studio/brouillons/6808/confirmer",
+            "sha256": "ce5845f383bfde42d225f2692eb8533a09eab2a8521be25424fc5ebeabae63dc"
+          },
+          "calendar-scheduled": {
+            "url": "/studio/calendrier?month=2026-11",
+            "sha256": "1f3ef168c963c33f3339a14d72a83bd90068d79391207b1fc5adeb50417b8248"
+          },
+          "series-scheduled": {
+            "url": "/studio/series/5080",
+            "sha256": "17d057a4570ee490cf16546221517b22451c19f77eb48acb91c0fe95bb7060f7"
+          }
+        },
+        "media": {
+          "33545": {
+            "file": "video-33545.mp4",
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "duration": 5,
+            "width": 360,
+            "height": 640
+          },
+          "33546": {
+            "file": "video-33546.mp4",
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "duration": 5,
+            "width": 360,
+            "height": 640
+          },
+          "33547": {
+            "file": "video-33547.mp4",
+            "sha256": "97deafcfba3e22e29cdab346bca9be1e829e9d9e91793c6ce525c465c5b304f4",
+            "duration": 10.022,
+            "width": 1080,
+            "height": 1920
+          }
+        },
+        "before": {
+          "account_token": 0,
+          "ai_credential": 0,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 39,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 4,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 1,
+          "tiktok_publication": 1,
+          "video_asset": 1,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_credential": 0,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 39,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 4,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 1,
+          "tiktok_publication": 1,
+          "video_asset": 1,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "simulatedHttp": {
+          "ai": [
+            "POST",
+            "GET",
+            "GET",
+            "GET",
+            "POST",
+            "GET",
+            "GET",
+            "GET"
+          ]
+        },
+        "unexpectedHttp": 0,
+        "privateFilesRestored": true
+      }
+    }
+  ],
+  "screenshots": [
+    {
+      "sha256": "4114fbfdba2113fd532916e48ab8805d3a713a92a8075fe6b57dcd4830fe95dc",
+      "file": "r71-import-prepare-after-edit-1280.png"
+    },
+    {
+      "sha256": "25e674e681b534b766e46da80806f3910982a2df2bc0e1b15d7586bd000488a1",
+      "file": "r71-import-prepare-after-edit-390.png"
+    },
+    {
+      "sha256": "8b4ed354949546dfa7ffd77463d26bab750c7df1f1d77171b041029dbc8c716d",
+      "file": "r71-import-publication-tracked-1280.png"
+    },
+    {
+      "sha256": "3f5c97e27eff09e4f47214c67d2f3c1b55731406bbab6dc0da21e8a77c490220",
+      "file": "r71-import-publication-tracked-390.png"
+    },
+    {
+      "sha256": "1c221de3f89c1840cabe7fadc591869c570b961cade5102fe86ecca2d5571a5a",
+      "file": "r71-independent-independent-unarmed-video-1280.png"
+    },
+    {
+      "sha256": "f8ac07e9bcb1fdcf1c171e3cab6164540289a826a7fe609e72f024806e5e5949",
+      "file": "r71-independent-independent-unarmed-video-390.png"
+    },
+    {
+      "sha256": "58be70d6f6114d9206af2a3dcf1718ac3ba68c7e306e985ce194236f92a5b46b",
+      "file": "r71-series-series-result-approved-1280.png"
+    },
+    {
+      "sha256": "806e54649579494997326e53de06a64106f608c092d775bc24b36d36864ac901",
+      "file": "r71-series-series-result-approved-390.png"
+    },
+    {
+      "sha256": "2ff6edccc238f051f79825de709c471010701c08439b447573f59ee556aef881",
+      "file": "r71-series-series-scheduled-1280.png"
+    },
+    {
+      "sha256": "669035f5ca4f985b8f43e695e97652cd8165593fe9ac22ee877e2b83c8dacaaa",
+      "file": "r71-series-series-scheduled-390.png"
+    }
+  ],
+  "limits": [
+    "All provider and social HTTP simulated; no real sends, costs or local inference",
+    "Purple synthetic clips do not validate narrative, character identity, audio or provider rendering",
+    "Browser views replay captured BrowserKit responses without JavaScript, not live submissions",
+    "24 table counts and private file restoration concern the 3 new transactional scenarios, not all historical suites",
+    "No workers or dev cache restarted, no deployment or indexing activation",
+    "Human Resonance PC confirmation remains pending; R7.2 human testers still required"
+  ],
+  "lot": "R7.1",
+  "date": "2026-11-04",
+  "browser": {
+    "rows": [
+      {
+        "case": "import",
+        "stage": "publication-confirmation",
+        "width": 390,
+        "scroll": 390,
+        "title": "Confirmer la préparation — VydFlow",
+        "h1": "Vérifie avant de confirmer.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture",
+            "duration": 0.621333,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "calendar-scheduled",
+        "width": 390,
+        "scroll": 390,
+        "title": "Calendrier — VydFlow",
+        "h1": "Calendrier.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33547/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33546/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33545/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "independent",
+        "stage": "publication-confirmation",
+        "width": 390,
+        "scroll": 390,
+        "title": "Confirmer la préparation — VydFlow",
+        "h1": "Vérifie avant de confirmer.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33543/lecture",
+            "duration": 3,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "series-scheduled",
+        "width": 390,
+        "scroll": 390,
+        "title": "Série R7.1 — Mes séries",
+        "h1": "Série R7.1",
+        "videos": [
+          {
+            "src": null,
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "prepare-after-edit",
+        "width": 390,
+        "scroll": 390,
+        "title": "Préparer ma publication — VydFlow",
+        "h1": "Prépare la suite.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture",
+            "duration": 0.621333,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "series-result-unapproved",
+        "width": 390,
+        "scroll": 390,
+        "title": "Milo R7.1 · Les plans — VydFlow",
+        "h1": "Milo R7.1",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33545/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33546/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33547/lecture",
+            "duration": 10.021029,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "publication-tracked",
+        "width": 390,
+        "scroll": 390,
+        "title": "Mes publications — VydFlow",
+        "h1": "Publications.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture",
+            "duration": 0.621333,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "series-scenes-review",
+        "width": 390,
+        "scroll": 390,
+        "title": "Milo R7.1 · Les plans — VydFlow",
+        "h1": "Milo R7.1",
+        "videos": []
+      },
+      {
+        "case": "series",
+        "stage": "series-result-approved",
+        "width": 390,
+        "scroll": 390,
+        "title": "Milo R7.1 · Les plans — VydFlow",
+        "h1": "Milo R7.1",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33545/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33546/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33547/lecture",
+            "duration": 10.021029,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "montage-ready",
+        "width": 390,
+        "scroll": 390,
+        "title": "Export monté R7.1 — Montage — VydFlow",
+        "h1": "Export monté R7.1",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture",
+            "duration": 0.621333,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "publication-confirmation",
+        "width": 390,
+        "scroll": 390,
+        "title": "Confirmer la préparation — VydFlow",
+        "h1": "Vérifie avant de confirmer.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33547/lecture",
+            "duration": 10.021029,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "montage-draft",
+        "width": 390,
+        "scroll": 390,
+        "title": "Mon montage — Montage — VydFlow",
+        "h1": "Mon montage",
+        "videos": [
+          {
+            "src": null,
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33541/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": null,
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "independent",
+        "stage": "calendar-scheduled",
+        "width": 390,
+        "scroll": 390,
+        "title": "Calendrier — VydFlow",
+        "h1": "Calendrier.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33544/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33543/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "prepare-before-edit",
+        "width": 390,
+        "scroll": 390,
+        "title": "Préparer ma publication — VydFlow",
+        "h1": "Prépare la suite.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33541/lecture",
+            "duration": 3,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "import",
+        "width": 390,
+        "scroll": 390,
+        "title": "Importer une vidéo — VydFlow",
+        "h1": "Ajoute ton prochain flow.",
+        "videos": [
+          {
+            "src": null,
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "independent",
+        "stage": "independent-unarmed-video",
+        "width": 390,
+        "scroll": 390,
+        "title": "Vidéo B — VydFlow",
+        "h1": "Vidéo B",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33544/lecture",
+            "duration": 3,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "series-publication-prepare",
+        "width": 390,
+        "scroll": 390,
+        "title": "Préparer ma publication — VydFlow",
+        "h1": "Prépare la suite.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33547/lecture",
+            "duration": 10.021029,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "calendar-scheduled",
+        "width": 390,
+        "scroll": 390,
+        "title": "Calendrier — VydFlow",
+        "h1": "Calendrier.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33541/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "publication-confirmation",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Confirmer la préparation — VydFlow",
+        "h1": "Vérifie avant de confirmer.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture",
+            "duration": 0.621333,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "calendar-scheduled",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Calendrier — VydFlow",
+        "h1": "Calendrier.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33547/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33546/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33545/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "independent",
+        "stage": "publication-confirmation",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Confirmer la préparation — VydFlow",
+        "h1": "Vérifie avant de confirmer.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33543/lecture",
+            "duration": 3,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "series-scheduled",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Série R7.1 — Mes séries",
+        "h1": "Série R7.1",
+        "videos": [
+          {
+            "src": null,
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "prepare-after-edit",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Préparer ma publication — VydFlow",
+        "h1": "Prépare la suite.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture",
+            "duration": 0.621333,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "series-result-unapproved",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Milo R7.1 · Les plans — VydFlow",
+        "h1": "Milo R7.1",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33545/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33546/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33547/lecture",
+            "duration": 10.021029,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "publication-tracked",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Mes publications — VydFlow",
+        "h1": "Publications.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture",
+            "duration": 0.621333,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "series-scenes-review",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Milo R7.1 · Les plans — VydFlow",
+        "h1": "Milo R7.1",
+        "videos": []
+      },
+      {
+        "case": "series",
+        "stage": "series-result-approved",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Milo R7.1 · Les plans — VydFlow",
+        "h1": "Milo R7.1",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33545/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33546/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33547/lecture",
+            "duration": 10.021029,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "montage-ready",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Export monté R7.1 — Montage — VydFlow",
+        "h1": "Export monté R7.1",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture",
+            "duration": 0.621333,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "publication-confirmation",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Confirmer la préparation — VydFlow",
+        "h1": "Vérifie avant de confirmer.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33547/lecture",
+            "duration": 10.021029,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "montage-draft",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Mon montage — Montage — VydFlow",
+        "h1": "Mon montage",
+        "videos": [
+          {
+            "src": null,
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33541/lecture",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": null,
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "independent",
+        "stage": "calendar-scheduled",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Calendrier — VydFlow",
+        "h1": "Calendrier.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33544/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33543/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "prepare-before-edit",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Préparer ma publication — VydFlow",
+        "h1": "Prépare la suite.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33541/lecture",
+            "duration": 3,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "import",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Importer une vidéo — VydFlow",
+        "h1": "Ajoute ton prochain flow.",
+        "videos": [
+          {
+            "src": null,
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      },
+      {
+        "case": "independent",
+        "stage": "independent-unarmed-video",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Vidéo B — VydFlow",
+        "h1": "Vidéo B",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33544/lecture",
+            "duration": 3,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "series",
+        "stage": "series-publication-prepare",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Préparer ma publication — VydFlow",
+        "h1": "Prépare la suite.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33547/lecture",
+            "duration": 10.021029,
+            "readyState": 4
+          }
+        ]
+      },
+      {
+        "case": "import",
+        "stage": "calendar-scheduled",
+        "width": 1280,
+        "scroll": 1280,
+        "title": "Calendrier — VydFlow",
+        "h1": "Calendrier.",
+        "videos": [
+          {
+            "src": "/studio/bibliotheque/33542/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          },
+          {
+            "src": "/studio/bibliotheque/33541/lecture#t=0.1",
+            "duration": null,
+            "readyState": 0
+          }
+        ]
+      }
+    ],
+    "failures": [],
+    "blocked": [],
+    "javascriptEnabled": false,
+    "kind": "read-only replay of BrowserKit responses and synthetic test media"
+  },
+  "independent_review": {
+    "decision": "No blocker for bounded R7.1 completion",
+    "verified": "18 HTML hashes, 7 media hashes, 3 completed reports and equal counts, 36 browser views, test logs",
+    "execution": "Read only; reviewer did not execute tests or database operations"
+  }
+}
