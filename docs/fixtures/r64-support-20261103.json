@@ -1,0 +1,174 @@
+{
+  "date": "2026-11-03",
+  "lot": "R6.4",
+  "owner_decision": "No support response time announced during beta",
+  "php": {
+    "failures": 0,
+    "assertions": 68,
+    "tests": 4
+  },
+  "twig": 120,
+  "public_browser": [
+    {
+      "width": 320,
+      "status": 200,
+      "scroll": 320,
+      "email": "dev@alexbuild.fr",
+      "mailto": [
+        "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+        "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+        "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow"
+      ],
+      "guide": "/fonctionnement",
+      "forms": 0
+    },
+    {
+      "width": 320,
+      "guideUrl": "http://127.0.0.1:8000/fonctionnement",
+      "title": "Comment ça marche."
+    },
+    {
+      "width": 390,
+      "status": 200,
+      "scroll": 390,
+      "email": "dev@alexbuild.fr",
+      "mailto": [
+        "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+        "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+        "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow"
+      ],
+      "guide": "/fonctionnement",
+      "forms": 0
+    },
+    {
+      "width": 390,
+      "guideUrl": "http://127.0.0.1:8000/fonctionnement",
+      "title": "Comment ça marche."
+    },
+    {
+      "width": 768,
+      "status": 200,
+      "scroll": 768,
+      "email": "dev@alexbuild.fr",
+      "mailto": [
+        "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+        "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+        "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow"
+      ],
+      "guide": "/fonctionnement",
+      "forms": 0
+    },
+    {
+      "width": 768,
+      "guideUrl": "http://127.0.0.1:8000/fonctionnement",
+      "title": "Comment ça marche."
+    },
+    {
+      "width": 1280,
+      "status": 200,
+      "scroll": 1280,
+      "email": "dev@alexbuild.fr",
+      "mailto": [
+        "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+        "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+        "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow"
+      ],
+      "guide": "/fonctionnement",
+      "forms": 0
+    },
+    {
+      "width": 1280,
+      "guideUrl": "http://127.0.0.1:8000/fonctionnement",
+      "title": "Comment ça marche."
+    }
+  ],
+  "member_browser": [
+    {
+      "width": 320,
+      "scroll": 320,
+      "sidebarContact": 0,
+      "mobileContact": 0,
+      "guide": 1,
+      "bottomDestinations": 6
+    },
+    {
+      "width": 320,
+      "contactUrl": "http://127.0.0.1:8000/contact",
+      "contactHeading": "Contact et suggestions"
+    },
+    {
+      "width": 390,
+      "scroll": 390,
+      "sidebarContact": 0,
+      "mobileContact": 0,
+      "guide": 1,
+      "bottomDestinations": 6
+    },
+    {
+      "width": 390,
+      "contactUrl": "http://127.0.0.1:8000/contact",
+      "contactHeading": "Contact et suggestions"
+    },
+    {
+      "width": 768,
+      "scroll": 768,
+      "sidebarContact": 0,
+      "mobileContact": 0,
+      "guide": 1,
+      "bottomDestinations": 6
+    },
+    {
+      "width": 768,
+      "contactUrl": "http://127.0.0.1:8000/contact",
+      "contactHeading": "Contact et suggestions"
+    },
+    {
+      "width": 1280,
+      "scroll": 1280,
+      "sidebarContact": 0,
+      "mobileContact": 0,
+      "guide": 1,
+      "bottomDestinations": 6
+    },
+    {
+      "width": 1280,
+      "contactUrl": "http://127.0.0.1:8000/contact",
+      "contactHeading": "Contact et suggestions"
+    }
+  ],
+  "rollback_export": {
+    "before": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "external_http": 0
+  },
+  "template_sha256": "4c3477189260a6bd60e135714a8fda8264eea012d75ad6793799e1327f16ba9f",
+  "limits": [
+    "No real email sent; app production delivery R8.4 remains open",
+    "Full PHP/frontend/build not rerun for Twig text/link only",
+    "R6 still open; next R6.5 then global review R6.6"
+  ]
+}

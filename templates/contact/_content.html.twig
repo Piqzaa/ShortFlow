@@ -1,6 +1,7 @@
 <div class="studio-heading"><div><span class="eyebrow">ON GARDE LE CONTACT</span><h1>Contact et suggestions</h1><p>Une question, un souci ou une idée pour améliorer VydFlow ? Écris-nous.</p></div></div>
 <section class="account-panel" aria-labelledby="contact-email-title">
   <h2 id="contact-email-title">Nous écrire</h2>
+  <p class="library-note">Pendant la bêta, le support se fait par email.</p>
   <p><a class="contact-address" href="mailto:{{ legal_identity.email }}">{{ legal_identity.email }}</a></p>
   <p class="library-note">Copie cette adresse ou choisis le sujet de ton message. Le lien ouvre ta messagerie ; tu pourras relire ton email avant de l’envoyer.</p>
   <div class="contact-actions">
@@ -9,4 +10,9 @@
     <a class="account-secondary" href="mailto:{{ legal_identity.email }}?subject={{ 'Suggestion pour améliorer VydFlow'|url_encode }}">Proposer une amélioration {% include 'icons/_arrow_up_right.html.twig' %}</a>
   </div>
   <p class="library-note">Pour un problème, indique l’écran concerné et ce qui s’est passé. Pour une idée, explique ce que tu aimerais pouvoir faire.</p>
+</section>
+<section class="account-panel" aria-labelledby="contact-guide-title">
+  <h2 id="contact-guide-title">Besoin d’un repère ?</h2>
+  <p class="library-note">Le guide explique les parcours, les coûts, les réseaux compatibles et les premières étapes.</p>
+  <a class="account-secondary" href="{{ path('app_guide') }}">Comment ça marche {% include 'icons/_arrow_up_right.html.twig' %}</a>
 </section>

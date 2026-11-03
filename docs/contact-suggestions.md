@@ -23,3 +23,5 @@ Huit cas Contact public/connecté à 320/390/768/1280 px sans débordement. Sans
 
 Le propriétaire confirme ensuite le fonctionnement de dev@alexbuild.fr. Le transport VydFlow reste Mailpit local : envoi applicatif de production non validé, à traiter en R8.4. Délai de support et aide complète restent à finaliser.
 3 novembre 2026 : à la demande du propriétaire, Contact quitte la sidebar et le menu Studio. Accès désormais depuis Mon compte, bloc « Besoin d’aide ? », à côté du guide. Six destinations métier conservées. Recette compte/contact à quatre largeurs sans JavaScript et tests de navigation effectués en R6.3 ; voir [bilan](r6-guide-fonctionnement.md).
+
+3 novembre 2026, R6.4 : le propriétaire choisit de ne pas annoncer de délai de réponse pendant la bêta. Accès au guide ajouté sur Contact, support email précisé. Quatre tests / 68 assertions, 120 Twig et recette publique/connectée sur quatre largeurs sans JS réussis. [Bilan R6.4](r6-aide-support.md). Transport de production toujours à traiter en R8.4.
