@@ -2,6 +2,7 @@ twig:
     file_name_pattern: '*.twig'
     form_themes: ['form/accessibility.html.twig']
     globals:
+        public_seo: '@App\Service\PublicSeo'
         legal_identity:
             operator: 'Alexandre Berrel — Entrepreneur individuel'
             siren: '108640418'
