@@ -1,0 +1,2117 @@
+{
+  "member": {
+    "rows": [
+      {
+        "width": 320,
+        "path": "/studio/mon-compte",
+        "scroll": 320,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 6,
+        "help": [
+          "/fonctionnement",
+          "/contact"
+        ],
+        "title": "Mon compte — VydFlow"
+      },
+      {
+        "width": 320,
+        "path": "/contact",
+        "scroll": 320,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 6,
+        "help": [],
+        "title": "Contact et suggestions — VydFlow"
+      },
+      {
+        "width": 320,
+        "path": "/fonctionnement",
+        "scroll": 320,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 0,
+        "help": [],
+        "title": "Comment ça marche — VydFlow"
+      },
+      {
+        "width": 320,
+        "clickContact": "http://127.0.0.1:8000/contact",
+        "heading": "Contact et suggestions"
+      },
+      {
+        "width": 320,
+        "clickGuide": "http://127.0.0.1:8000/fonctionnement",
+        "heading": "Comment ça marche."
+      },
+      {
+        "width": 390,
+        "path": "/studio/mon-compte",
+        "scroll": 390,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 6,
+        "help": [
+          "/fonctionnement",
+          "/contact"
+        ],
+        "title": "Mon compte — VydFlow"
+      },
+      {
+        "width": 390,
+        "path": "/contact",
+        "scroll": 390,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 6,
+        "help": [],
+        "title": "Contact et suggestions — VydFlow"
+      },
+      {
+        "width": 390,
+        "path": "/fonctionnement",
+        "scroll": 390,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 0,
+        "help": [],
+        "title": "Comment ça marche — VydFlow"
+      },
+      {
+        "width": 390,
+        "clickContact": "http://127.0.0.1:8000/contact",
+        "heading": "Contact et suggestions"
+      },
+      {
+        "width": 390,
+        "clickGuide": "http://127.0.0.1:8000/fonctionnement",
+        "heading": "Comment ça marche."
+      },
+      {
+        "width": 768,
+        "path": "/studio/mon-compte",
+        "scroll": 768,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 6,
+        "help": [
+          "/fonctionnement",
+          "/contact"
+        ],
+        "title": "Mon compte — VydFlow"
+      },
+      {
+        "width": 768,
+        "path": "/contact",
+        "scroll": 768,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 6,
+        "help": [],
+        "title": "Contact et suggestions — VydFlow"
+      },
+      {
+        "width": 768,
+        "path": "/fonctionnement",
+        "scroll": 768,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 0,
+        "help": [],
+        "title": "Comment ça marche — VydFlow"
+      },
+      {
+        "width": 768,
+        "clickContact": "http://127.0.0.1:8000/contact",
+        "heading": "Contact et suggestions"
+      },
+      {
+        "width": 768,
+        "clickGuide": "http://127.0.0.1:8000/fonctionnement",
+        "heading": "Comment ça marche."
+      },
+      {
+        "width": 1280,
+        "path": "/studio/mon-compte",
+        "scroll": 1280,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 6,
+        "help": [
+          "/fonctionnement",
+          "/contact"
+        ],
+        "title": "Mon compte — VydFlow"
+      },
+      {
+        "width": 1280,
+        "path": "/contact",
+        "scroll": 1280,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 6,
+        "help": [],
+        "title": "Contact et suggestions — VydFlow"
+      },
+      {
+        "width": 1280,
+        "path": "/fonctionnement",
+        "scroll": 1280,
+        "sidebarContact": 0,
+        "mobileContact": 0,
+        "bottom": 0,
+        "help": [],
+        "title": "Comment ça marche — VydFlow"
+      },
+      {
+        "width": 1280,
+        "clickContact": "http://127.0.0.1:8000/contact",
+        "heading": "Contact et suggestions"
+      },
+      {
+        "width": 1280,
+        "clickGuide": "http://127.0.0.1:8000/fonctionnement",
+        "heading": "Comment ça marche."
+      }
+    ],
+    "errors": [],
+    "blocks": []
+  },
+  "keyboard": {
+    "rows": [
+      {
+        "js": true,
+        "path": "/",
+        "first": {
+          "text": "Aller au contenu",
+          "href": "#contenu"
+        },
+        "skipTarget": "contenu"
+      },
+      {
+        "js": true,
+        "path": "/fonctionnement",
+        "first": {
+          "text": "Aller au contenu",
+          "href": "#contenu"
+        },
+        "skipTarget": "contenu"
+      },
+      {
+        "js": true,
+        "path": "/contact",
+        "first": {
+          "text": "Aller au contenu",
+          "href": "#contenu"
+        },
+        "skipTarget": "contenu"
+      },
+      {
+        "js": true,
+        "anchor": "http://127.0.0.1:8000/fonctionnement#reseaux",
+        "top": 63.625
+      },
+      {
+        "js": true,
+        "menuOpen": true
+      },
+      {
+        "js": true,
+        "escapeClosed": true
+      },
+      {
+        "js": true,
+        "login": "http://127.0.0.1:8000/connexion",
+        "password": 1
+      },
+      {
+        "js": true,
+        "register": "http://127.0.0.1:8000/inscription",
+        "email": 1
+      },
+      {
+        "js": false,
+        "path": "/",
+        "first": {
+          "text": "Aller au contenu",
+          "href": "#contenu"
+        },
+        "skipTarget": "contenu"
+      },
+      {
+        "js": false,
+        "path": "/fonctionnement",
+        "first": {
+          "text": "Aller au contenu",
+          "href": "#contenu"
+        },
+        "skipTarget": "contenu"
+      },
+      {
+        "js": false,
+        "path": "/contact",
+        "first": {
+          "text": "Aller au contenu",
+          "href": "#contenu"
+        },
+        "skipTarget": "contenu"
+      },
+      {
+        "js": false,
+        "anchor": "http://127.0.0.1:8000/fonctionnement#reseaux",
+        "top": 63.625
+      },
+      {
+        "js": false,
+        "menuOpen": true
+      },
+      {
+        "js": false,
+        "login": "http://127.0.0.1:8000/connexion",
+        "password": 1
+      },
+      {
+        "js": false,
+        "register": "http://127.0.0.1:8000/inscription",
+        "email": 1
+      }
+    ],
+    "links": [
+      {
+        "path": "/robots.txt",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/sitemap.xml",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/fonctionnement",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/connexion",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/inscription",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/contact",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/confidentialite",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/informations-legales",
+        "status": 200,
+        "robots": "noindex, nofollow"
+      }
+    ],
+    "blocked": []
+  },
+  "public": [
+    {
+      "mode": "normal",
+      "rows": [
+        {
+          "mode": "normal",
+          "path": "/",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 71.89375305175781,
+            "y": 262.5461120605469,
+            "w": 176.21249389648438,
+            "h": 291.9311828613281,
+            "bottom": 554.477294921875
+          },
+          "cta": {
+            "x": 20,
+            "y": 579.53125,
+            "w": 280,
+            "h": 133.1875,
+            "bottom": 712.71875
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/contact",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 87.35049438476562,
+            "y": 280.4257507324219,
+            "w": 215.29901123046875,
+            "h": 355.0497741699219,
+            "bottom": 635.4755249023438
+          },
+          "cta": {
+            "x": 20,
+            "y": 658.96875,
+            "w": 350,
+            "h": 136.375,
+            "bottom": 795.34375
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/contact",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 271.25592041015625,
+            "y": 313.43890380859375,
+            "w": 225.4881591796875,
+            "h": 367.9171142578125,
+            "bottom": 681.3560180664062
+          },
+          "cta": {
+            "x": 20,
+            "y": 704.421875,
+            "w": 728,
+            "h": 136.375,
+            "bottom": 840.796875
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/contact",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 517.6203002929688,
+            "y": 397.3855895996094,
+            "w": 244.7593994140625,
+            "h": 390.2287902832031,
+            "bottom": 787.6143798828125
+          },
+          "cta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "bottom": 0
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "normal",
+          "path": "/contact",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        }
+      ],
+      "errors": [],
+      "failures": [],
+      "blocked": []
+    },
+    {
+      "mode": "reduced",
+      "rows": [
+        {
+          "mode": "reduced",
+          "path": "/",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 71.87592315673828,
+            "y": 262.5575866699219,
+            "w": 176.24813842773438,
+            "h": 291.9472961425781,
+            "bottom": 554.5048828125
+          },
+          "cta": {
+            "x": 20,
+            "y": 579.53125,
+            "w": 280,
+            "h": 133.1875,
+            "bottom": 712.71875
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/contact",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 87.33045959472656,
+            "y": 280.4347229003906,
+            "w": 215.33909606933594,
+            "h": 355.0680236816406,
+            "bottom": 635.5027465820312
+          },
+          "cta": {
+            "x": 20,
+            "y": 658.96875,
+            "w": 350,
+            "h": 136.375,
+            "bottom": 795.34375
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/contact",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 271.2279357910156,
+            "y": 313.4503479003906,
+            "w": 225.54412841796875,
+            "h": 367.9430847167969,
+            "bottom": 681.3934326171875
+          },
+          "cta": {
+            "x": 20,
+            "y": 704.421875,
+            "w": 728,
+            "h": 136.375,
+            "bottom": 840.796875
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/contact",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 517.6203002929688,
+            "y": 397.3855895996094,
+            "w": 244.7593994140625,
+            "h": 390.2287902832031,
+            "bottom": 787.6143798828125
+          },
+          "cta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "bottom": 0
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "reduced",
+          "path": "/contact",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        }
+      ],
+      "errors": [],
+      "failures": [],
+      "blocked": []
+    },
+    {
+      "mode": "no-js",
+      "rows": [
+        {
+          "mode": "no-js",
+          "path": "/",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 71.87592315673828,
+            "y": 262.5575866699219,
+            "w": 176.24813842773438,
+            "h": 291.9472961425781,
+            "bottom": 554.5048828125
+          },
+          "cta": {
+            "x": 20,
+            "y": 579.53125,
+            "w": 280,
+            "h": 133.1875,
+            "bottom": 712.71875
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/contact",
+          "status": 200,
+          "width": 320,
+          "scroll": 320,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 87.33045959472656,
+            "y": 280.4347229003906,
+            "w": 215.33909606933594,
+            "h": 355.0680236816406,
+            "bottom": 635.5027465820312
+          },
+          "cta": {
+            "x": 20,
+            "y": 658.96875,
+            "w": 350,
+            "h": 136.375,
+            "bottom": 795.34375
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/contact",
+          "status": 200,
+          "width": 390,
+          "scroll": 390,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 271.2279357910156,
+            "y": 313.4503479003906,
+            "w": 225.54412841796875,
+            "h": 367.9430847167969,
+            "bottom": 681.3934326171875
+          },
+          "cta": {
+            "x": 20,
+            "y": 704.421875,
+            "w": 728,
+            "h": 136.375,
+            "bottom": 840.796875
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/contact",
+          "status": 200,
+          "width": 768,
+          "scroll": 768,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "VydFlow — Crée, prépare et publie tes vidéos courtes",
+          "description": "Importe ou crée tes vidéos courtes, monte tes plans et prépare tes publications. Studio IA et séries en bêta, avec confirmation du coût avant chaque génération.",
+          "canonical": "https://vydflow.com/",
+          "robots": "noindex, nofollow",
+          "h1": "Tes vidéos.Trois réseaux.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": {
+            "x": 517.6203002929688,
+            "y": 397.3855895996094,
+            "w": 244.7593994140625,
+            "h": 390.2287902832031,
+            "bottom": 787.6143798828125
+          },
+          "cta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "bottom": 0
+          },
+          "links": [
+            "#contenu",
+            "/",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/connexion",
+            "/inscription",
+            "#studio",
+            "#organisation",
+            "#vision",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "/inscription",
+            "#studio",
+            "#studio",
+            "/fonctionnement#parcours",
+            "#couts",
+            "/inscription",
+            "/contact",
+            "/inscription",
+            "/confidentialite",
+            "/",
+            "/fonctionnement",
+            "/contact",
+            "/connexion",
+            "/informations-legales"
+          ],
+          "cards": [
+            {
+              "opacity": "1",
+              "text": "♪TikTok / 9:16\n        \n\n        01 / LE RYTHMETik"
+            },
+            {
+              "opacity": "1",
+              "text": "◎Instagram Reels / 9:16\n        \n\n        02 / LA "
+            },
+            {
+              "opacity": "1",
+              "text": "▷YouTube Shorts / 9:16\n        \n\n        03 / LA P"
+            }
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/fonctionnement",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "Comment ça marche — VydFlow",
+          "description": "Comprends les parcours VydFlow : import, création IA et séries, coûts fournisseur, réseaux disponibles dans la bêta et premières étapes avant publication.",
+          "canonical": "https://vydflow.com/fonctionnement",
+          "robots": "noindex, nofollow",
+          "h1": "Comment ça marche.",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "/contact",
+            "/connexion",
+            "/inscription",
+            "#parcours",
+            "#couts-beta",
+            "#reseaux",
+            "#premiers-pas",
+            "/confidentialite",
+            "/connexion",
+            "/inscription",
+            "/contact",
+            "/contact",
+            "/"
+          ]
+        },
+        {
+          "mode": "no-js",
+          "path": "/contact",
+          "status": 200,
+          "width": 1280,
+          "scroll": 1280,
+          "title": "Contact et suggestions — VydFlow",
+          "description": "Une question sur la bêta VydFlow ou une suggestion ? Retrouve le guide de fonctionnement et les coordonnées pour contacter son créateur.",
+          "canonical": "https://vydflow.com/contact",
+          "robots": "noindex, nofollow",
+          "h1": "Contact et suggestions",
+          "duplicateIds": [],
+          "missingAnchors": [],
+          "phone": null,
+          "cta": null,
+          "links": [
+            "#contenu",
+            "/",
+            "/",
+            "mailto:dev@alexbuild.fr",
+            "mailto:dev@alexbuild.fr?subject=Question%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Probl%C3%A8me%20rencontr%C3%A9%20sur%20VydFlow",
+            "mailto:dev@alexbuild.fr?subject=Suggestion%20pour%20am%C3%A9liorer%20VydFlow",
+            "/fonctionnement"
+          ]
+        }
+      ],
+      "errors": [],
+      "failures": [],
+      "blocked": []
+    }
+  ],
+  "rollback": {
+    "routes": {
+      "account": {
+        "url": "/studio/mon-compte",
+        "sha256": "f6a8ba46fe67fb7621e8bc103cb538ae6756ba85983575af19325efc719de0e2"
+      },
+      "contact": {
+        "url": "/contact",
+        "sha256": "8508a356f3f6149ca7b0cf10764339dad7b069db6fc9151f813591418e903374"
+      },
+      "guide": {
+        "url": "/fonctionnement",
+        "sha256": "1294aff760bde2e11016ea39af1639774cc7c0897e3ebcd40e73d4362fc37f98"
+      }
+    },
+    "before": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "after": {
+      "app_user": 1,
+      "account_token": 0,
+      "video_asset": 0,
+      "ai_series": 0,
+      "ai_episode": 0,
+      "ai_shot": 0,
+      "ai_generation": 0,
+      "video_edit": 0,
+      "publication_draft": 0,
+      "publication_draft_item": 0,
+      "messenger_messages": 0
+    },
+    "httpCalls": 0
+  },
+  "screenshots": [
+    {
+      "file": "r66-member-contact-1280.png",
+      "sha256": "65a75d2465dedc55471e8638f85e50c1aaedcd5be45a350a2035047f2803e9b6"
+    },
+    {
+      "file": "r66-member-contact-390.png",
+      "sha256": "e6b43d748380bbf17a0f966c894ff1e19e49546a851c4527122c5667ed12b2de"
+    },
+    {
+      "file": "r66-member-fonctionnement-1280.png",
+      "sha256": "db952e6b3f2c3cec6838b82738f20b47112d05bc7a719e769bff800b6bba0a48"
+    },
+    {
+      "file": "r66-member-fonctionnement-390.png",
+      "sha256": "8dcfc4fd65fa166cc80e371493a6a2629d70538836c7c76018f060f6bb82ede9"
+    },
+    {
+      "file": "r66-member-mon-compte-1280.png",
+      "sha256": "1c3541c171c0116e1334ad4c893e65a12569208d6cde022ca6a3ace52399bbd4"
+    },
+    {
+      "file": "r66-member-mon-compte-390.png",
+      "sha256": "612ecfdc8eaec1ad242530821b51aaae265317add787488df73c41020f35b8e6"
+    },
+    {
+      "file": "r66-no-js-contact-1280.png",
+      "sha256": "d81f553882e102be9e07bee40c3d166efc100ab81f6c986bc6338fea6166687a"
+    },
+    {
+      "file": "r66-no-js-contact-390.png",
+      "sha256": "230e43c337f9d25cd390f501e0c4a9fb74f46c73d6a472e20bb733335df4d58b"
+    },
+    {
+      "file": "r66-no-js-fonctionnement-1280.png",
+      "sha256": "ae34ab0de915d9a3477949e7606eb3525a440729a9af94a9df91b82896f4701e"
+    },
+    {
+      "file": "r66-no-js-fonctionnement-390.png",
+      "sha256": "bd76f3512700e73e9d3108d685786d9a6bf6d94f1dfe7b5eb2e58befde92b320"
+    },
+    {
+      "file": "r66-no-js-landing-1280.png",
+      "sha256": "f3897759cfce73f383ae02b8c53faeb3301a826ff6177675237353a1fcfd6c92"
+    },
+    {
+      "file": "r66-no-js-landing-390.png",
+      "sha256": "93b4eb6b35c8bffb4c6655fbe01d9220e3fa4fe02b9facbe59f44146916875d2"
+    },
+    {
+      "file": "r66-normal-contact-1280.png",
+      "sha256": "d81f553882e102be9e07bee40c3d166efc100ab81f6c986bc6338fea6166687a"
+    },
+    {
+      "file": "r66-normal-contact-390.png",
+      "sha256": "230e43c337f9d25cd390f501e0c4a9fb74f46c73d6a472e20bb733335df4d58b"
+    },
+    {
+      "file": "r66-normal-fonctionnement-1280.png",
+      "sha256": "ae34ab0de915d9a3477949e7606eb3525a440729a9af94a9df91b82896f4701e"
+    },
+    {
+      "file": "r66-normal-fonctionnement-390.png",
+      "sha256": "bd76f3512700e73e9d3108d685786d9a6bf6d94f1dfe7b5eb2e58befde92b320"
+    },
+    {
+      "file": "r66-normal-landing-1280.png",
+      "sha256": "9faba7513583d754097202bad771f46c2c357afeffd65440143b7fcf2f8c0411"
+    },
+    {
+      "file": "r66-normal-landing-390.png",
+      "sha256": "b9bcdc1691ede3c1092b397a20365377ef0e05bc01589774dacac0673d84cad8"
+    },
+    {
+      "file": "r66-reduced-contact-1280.png",
+      "sha256": "d81f553882e102be9e07bee40c3d166efc100ab81f6c986bc6338fea6166687a"
+    },
+    {
+      "file": "r66-reduced-contact-390.png",
+      "sha256": "230e43c337f9d25cd390f501e0c4a9fb74f46c73d6a472e20bb733335df4d58b"
+    },
+    {
+      "file": "r66-reduced-fonctionnement-1280.png",
+      "sha256": "ae34ab0de915d9a3477949e7606eb3525a440729a9af94a9df91b82896f4701e"
+    },
+    {
+      "file": "r66-reduced-fonctionnement-390.png",
+      "sha256": "bd76f3512700e73e9d3108d685786d9a6bf6d94f1dfe7b5eb2e58befde92b320"
+    },
+    {
+      "file": "r66-reduced-landing-1280.png",
+      "sha256": "ec878fd2c228a616cbda846a951640f71ecd5075ea01209757c532f726144312"
+    },
+    {
+      "file": "r66-reduced-landing-390.png",
+      "sha256": "f61d98dc970f1dc3a665c771353378162d893f9fa147d7b76819fd744c39d3e9"
+    }
+  ],
+  "lot": "R6.6",
+  "limits": [
+    "No real provider HTTP, email, social publication or indexing activation",
+    "No new physical phone or screen reader validation",
+    "PC Resonance owner confirmation after Ctrl+F5 remains pending",
+    "Dev cache refreshed before final browser matrix; no worker restarted",
+    "No global PHP suite rerun"
+  ],
+  "date": "2026-11-03",
+  "php": {
+    "failures": 0,
+    "tests": 19,
+    "assertions": 228
+  },
+  "quality": {
+    "build": "passed",
+    "container": "passed",
+    "export_style": "passed",
+    "test_schema": "valid",
+    "twig": 120,
+    "phpstan": "passed",
+    "frontend": 195,
+    "yaml": 19,
+    "check": "passed"
+  },
+  "independent_review": "Global R6 source review and final manifest/export read-only review: no blocker; PC owner Resonance confirmation still pending"
+}
