@@ -25,6 +25,10 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class AiSeriesController extends AbstractController
 {
+    public function __construct(private \App\Service\AiCharacterSelection $characterSelection)
+    {
+    }
+
     #[Route('/studio/series/{id}/supprimer', name: 'app_series_delete', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function delete(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio): Response
     {
@@ -79,7 +83,8 @@ final class AiSeriesController extends AbstractController
         $connected['fal-api'] = $connected['fal'];
         $connected['fal-mcp'] = $keys->hasAccess($user, 'fal', 'mcp');
         $connected['fal'] = $connected['fal-api'] || $connected['fal-mcp'];
-        $form = $this->createForm(AiSeriesType::class, $data, ['creating' => null === $series, 'subjects' => $series?->getRecipe()['subjects'] ?? [], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites()]);
+        $data = $this->characterSelection->formData($data);
+        $form = $this->createForm(AiSeriesType::class, $data, ['character_choices' => $this->characterSelection->choices($user, $data['characterPool'] ?? []), 'creating' => null === $series, 'subjects' => $series?->getRecipe()['subjects'] ?? [], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites()]);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             try {

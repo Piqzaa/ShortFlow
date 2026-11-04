@@ -253,3 +253,16 @@ test('a contain framing choice alone prevents deleting a plan', () => {
   assert.equal(controller.redistribute(),false);
   assert.match(controller.noticeTarget.textContent,/plan déjà renseigné/);
 });
+
+test('a character selection alone prevents silently removing its scene', () => {
+  const {controller,rows}=setup();
+  controller.hasPlanCountTarget=true;
+  controller.planCountTarget={value:'2',options:[]};
+  controller.countStatusTarget={};
+  for (const row of rows) row.querySelector('textarea').value='';
+  const original=rows[2].querySelector;
+  rows[2].querySelector=selector=>selector.includes('[characterIds]')?{selectedOptions:[{value:'42'}]}:original(selector);
+  assert.equal(controller.redistribute(),false);
+  assert.match(controller.noticeTarget.textContent,/plan déjà renseigné/);
+  assert.equal(rows.length,3);
+});

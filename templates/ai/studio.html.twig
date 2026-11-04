@@ -1,7 +1,6 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}Studio — VydFlow{% endblock %}
 {% block studio_content %}
-<a class="account-secondary" href="{{ path('app_characters') }}">Mes personnages ↗</a>
 {% if episode|default(null) %}<a class="account-secondary composer-back" href="{{ path(episode.standalone ? 'app_studio' : 'app_series_show',episode.standalone ? {} : {id:episode.series.id,episode:episode.id,'_fragment':'episode-' ~ episode.id}) }}">← {{ episode.standalone ? 'Studio' : episode.series.name }}</a>{% endif %}
 <div class="studio-heading creation-heading"><div><span class="eyebrow">CRÉE. PRÉPARE. PUBLIE.</span><h1>{{ episode|default(null) ? episode.title : 'Créer une vidéo.' }}</h1><p>Ton idée, tes références et tes plans au même endroit.</p></div><div class="workspace-heading-actions"><a class="account-secondary" href="{{ path('app_ai_history') }}">Historique {% include 'icons/_arrow_up_right.html.twig' %}</a><a class="account-secondary" href="{{ path('app_dashboard') }}">Mes vidéos {% include 'icons/_arrow_up_right.html.twig' %}</a></div></div>
 
@@ -16,7 +15,8 @@
 <p class="library-note" role="status" data-creation-target="framingNotice">L’aperçu montre le cadrage qui sera envoyé au modèle.</p>
 </div>
 {{ form_start(ideaForm,{attr:{id:'ai-idea-form',class:'account-form creation-form','data-controller':episode|default(null) ? 'unsaved shot-editor' : 'idea-save shot-editor', 'data-unsaved-initial':(singlePrepared|default(false) or layoutPrepared|default(false) or ideaForm.vars.submitted) ? 'true' : 'false','data-shot-editor-model-value':models[ideaForm.model.vars.value]|default({})|json_encode,'data-idea-save-url-value':path('app_ai_save_idea'),'data-idea-save-revision-value':app.session.get('ai_idea_revision'),'data-action':episode|default(null) ? 'input->unsaved#change change->unsaved#change submit->unsaved#submit' : 'input->idea-save#change change->idea-save#change submit->idea-save#submit pagehide@window->idea-save#flush'}}) }}
-{{ form_errors(ideaForm) }}{{ form_widget(ideaForm.reference,{attr:{'data-creation-target':'reference'}}) }}{{ form_errors(ideaForm.reference) }}{{ form_widget(ideaForm.endReference,{attr:{'data-creation-target':'endReference'}}) }}{{ form_errors(ideaForm.endReference) }}{{ form_row(ideaForm.prompt) }}
+{{ form_errors(ideaForm) }}
+{% include 'ai/_character_pool.html.twig' with {poolForm:ideaForm} %}{{ form_widget(ideaForm.reference,{attr:{'data-creation-target':'reference'}}) }}{{ form_errors(ideaForm.reference) }}{{ form_widget(ideaForm.endReference,{attr:{'data-creation-target':'endReference'}}) }}{{ form_errors(ideaForm.endReference) }}{{ form_row(ideaForm.prompt) }}
 {% include 'ai/_timing.html.twig' %}
 <p class="library-note" role="status" data-idea-save-target="status" hidden></p>
 <noscript><p class="library-note">Pour conserver ton idée sans JavaScript, ouvre le récapitulatif avant de quitter cette page.</p></noscript>

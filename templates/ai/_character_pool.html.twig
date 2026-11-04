@@ -1,0 +1,5 @@
+<section class="story-context character-pool"><h2>Mes personnages</h2>
+{% if poolForm.characterSelection.vars.choices|length %}{{ form_row(poolForm.characterSelection) }}{% else %}<p class="library-note">Aucune fiche disponible. Ajoute un personnage avec son portrait pour le retrouver ici.</p><div hidden>{{ form_row(poolForm.characterSelection) }}</div>{% endif %}
+{{ form_widget(poolForm.characterSelectionManaged) }}
+<a class="account-secondary" href="{{ path('app_characters') }}" target="_blank" rel="noopener">Gérer mes fiches · nouvel onglet ↗</a>
+<p class="library-note">Les fiches choisies constituent une réserve ; seuls les personnages cochés dans chaque scène seront envoyés. Après un ajout dans la bibliothèque, enregistre ta préparation avant de recharger les choix.</p></section>

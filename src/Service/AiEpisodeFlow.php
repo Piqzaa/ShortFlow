@@ -17,7 +17,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiEpisodeFlow
 {
-    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent, private AiPlanInputs $inputs, private AiShotPrompts $prompts)
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent, private AiPlanInputs $inputs, private AiShotPrompts $prompts, private AiCharacterSelection $characterSelection)
     {
     }
 
@@ -61,7 +61,7 @@ final class AiEpisodeFlow
             $reference = array_shift($subjects);
         }
         $subjectDetails = $this->inputs->subjectDetails($owner, $data['model'], $subjects, $data['subjectDetails'] ?? [], ($model['subjectReference'] ?? false) ? $reference : null, false);
-        if ($image && !$reference && empty($rows[0]['startReference'])) {
+        if ($image && !$reference && empty($rows[0]['startReference']) && !(($model['subjectReference'] ?? false) && !empty($data['characterPool']))) {
             throw new \RuntimeException('Ajoute une référence ou le premier cadre du premier plan avant de continuer.');
         }
         if (!($model['subjectReference'] ?? false)) {
@@ -111,6 +111,10 @@ final class AiEpisodeFlow
             if (!$episode->isStandalone()) {
                 $this->em->refresh($episode->getSeries());
             }
+            $pool = $this->characterSelection->resolve($owner, $data, $episode->getPreparationRecipe() + array_intersect_key($data, ['characterPool' => true]));
+            if (null !== $pool) {
+                $recipe['characterPool'] = $pool;
+            }
             $recipe['visualContext'] = $episode->isStandalone() ? trim($data['prompt']) : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle();
             $recipe['montage'] = SeriesMontage::normalize($data['montage'] ?? $episode->getFlowRecipe()['montage'] ?? ($episode->isStandalone() ? [] : ($episode->getSeries()->getRecipe()['montage'] ?? [])));
             $episode->configurePreparation($recipe, $data['prompt'], $continuity, (bool) $data['mute'] || 0 === $recipe['montage']['sourceVolume']);
@@ -136,6 +140,9 @@ final class AiEpisodeFlow
         }
         if (count($rows) <= 1) {
             return [array_replace($rows[0] ?? ['prompt' => ''], ['seconds' => $target])];
+        }
+        if (array_filter($rows, static fn (array $row): bool => !empty($row['characterIds']))) {
+            throw new \RuntimeException('Tes scènes ont des personnages sélectionnés. Réaffecte leur présence avant de les réunir en un plan unique.');
         }
         if (array_filter($rows, static fn (array $row): bool => !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? ''))) {
             throw new \RuntimeException('Tes plans ont des images ou des consignes d’images distinctes. Conserve plusieurs scènes ou réaffecte ces éléments manuellement avant de les réunir ; rien n’a été retiré.');
@@ -258,14 +265,19 @@ final class AiEpisodeFlow
             if ($episode->getGeneration()) {
                 $this->em->refresh($episode->getGeneration(), LockMode::PESSIMISTIC_WRITE);
             }
-            $episode->beginStory($continuity, $mute);
+            if (array_key_exists('characterPool', $recipe) && ($recipe['inputVersion'] ?? 1) < 2) {
+                $recipe['inputVersion'] = 4;
+                $episode->configurePreparation($recipe, $episode->getPrompt(), $continuity, $mute);
+            } else {
+                $episode->beginStory($continuity, $mute);
+            }
             foreach ($durations as $index => $seconds) {
                 $this->em->persist(new AiShot($episode, $index + 1, $seconds));
             }
         });
     }
 
-    /** @param list<array{prompt:string,seconds:int}> $rows */
+    /** @param list<array<string,mixed>> $rows */
     public function save(AiEpisode $episode, int $revision, string $title, array $rows): void
     {
         $this->locked($episode, function () use ($episode, $revision, $title, $rows): void {
@@ -288,6 +300,9 @@ final class AiEpisodeFlow
             foreach ($rows as $index => $row) {
                 $shot = $shots[$index] ?? new AiShot($episode, $index + 1, $row['seconds']);
                 $shot->revise($row['prompt'], $row['seconds']);
+                if ('1' !== (string) ($row['characterIdsManaged'] ?? '0') && !array_key_exists('characterIds', $row) && array_key_exists('characterIds', $shot->getInputs())) {
+                    $row['characterIds'] = $shot->getInputs()['characterIds'];
+                }
                 $shot->configureInputs($this->inputs->row($episode->getOwner(), $row, $episode->getFlowRecipe()['imageFit']));
                 $this->em->persist($shot);
             }
@@ -688,7 +703,15 @@ final class AiEpisodeFlow
                 $context = '';
             }
 
-            return $this->prompts->build($recipe['model'], $shot->getSeconds(), $scene, $context, $episode->getContinuity(), count($recipe['subjects'] ?? []), $recipe['subjectDetails'] ?? []);
+            $details = $recipe['subjectDetails'] ?? [];
+            $subjects = $recipe['subjects'] ?? [];
+            if (array_key_exists('characterPool', $recipe)) {
+                $resolved = $this->inputs->resolve($episode, $shot, $shot->getPosition() - 1, count($this->shots($episode)));
+                $details = $resolved['subjectDetails'];
+                $subjects = $resolved['subjects'];
+            }
+
+            return $this->prompts->build($recipe['model'], $shot->getSeconds(), $scene, $context, $episode->getContinuity(), count($subjects), $details);
         }
         if ('single' === $episode->getContinuity()) {
             return 'ONE CONTINUOUS TAKE — '.$shot->getSeconds()." seconds. No cuts, no montage, no scene change. Complete one simple action smoothly within this shot:\n".$scene."\nVisual identity and style only:\n".$episode->getPrompt();

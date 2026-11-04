@@ -72,6 +72,8 @@ final class AiSeriesType extends AbstractType
             $choices['Retirer la référence supplémentaire '.($index + 1)] = $name;
         }
         $builder->add('removeSubjects', ChoiceType::class, ['label' => 'Références supplémentaires enregistrées', 'choices' => $choices, 'multiple' => true, 'expanded' => true, 'required' => false]);
+        $builder->add('characterSelection', AiCharacterPoolType::class, ['choices' => $options['character_choices']]);
+        $builder->add('characterSelectionManaged', HiddenType::class, ['data' => '1', 'required' => false, 'empty_data' => '0']);
         $builder->addEventListener(FormEvents::POST_SUBMIT, static function (FormEvent $event) use ($catalog): void {
             $data = $event->getData();
             if (!isset(AiCatalog::MODELS[$data['model'] ?? ''])) {
@@ -90,6 +92,8 @@ final class AiSeriesType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
+        $resolver->setDefault('character_choices', []);
+        $resolver->setAllowedTypes('character_choices', 'array');
         $resolver->setDefaults(['connected_providers' => [], 'favorite_models' => []]);
         $resolver->setAllowedTypes('connected_providers', 'array');
         $resolver->setAllowedTypes('favorite_models', 'array');

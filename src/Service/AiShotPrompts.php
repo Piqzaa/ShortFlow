@@ -10,7 +10,7 @@ final class AiShotPrompts
     {
     }
 
-    /** @param list<array{name:string,role:string,presence:string,reference?:string,views?:list<string>}> $subjectDetails */
+    /** @param list<array{name:string,role:string,presence:string,reference?:string,views?:list<string>,description?:string}> $subjectDetails */
     public function build(string $model, int $seconds, string $scene, string $context, string $continuity, int $subjects = 0, array $subjectDetails = []): string
     {
         $rule = match ($continuity) {
@@ -28,6 +28,9 @@ final class AiShotPrompts
             $guide .= ' Use '.implode(' and ', array_map(static fn (int $n): string => '@Element'.$n, range(1, $subjects))).' for the corresponding subject identities.';
         }
         foreach ($subjectDetails as $index => $detail) {
+            if ('' !== ($detail['description'] ?? '')) {
+                $guide .= ' Appearance of '.json_encode($detail['name'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE).': '.json_encode($detail['description'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE).'.';
+            }
             if ('subject' === $role) {
                 $guide .= ' Reference'.($index + 1).'='.json_encode($detail['name'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE).'('.$detail['role'].','.$detail['presence'].').';
                 continue;

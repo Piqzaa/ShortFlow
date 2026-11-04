@@ -41,7 +41,7 @@ final class AiIdeaType extends AbstractType
             ->add('planCount', ChoiceType::class, ['label' => 'Combien de plans ?', 'required' => false, 'placeholder' => 'Choisir le nombre de plans', 'choices' => array_combine(array_map(static fn (int $n): string => $n.' plans', range(2, 8)), range(2, 8))])
             ->add('mute', CheckboxType::class, ['label' => 'Couper le son des plans au montage', 'required' => false])
             ->add('revision', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex('/^\d+$/D')]])
-            ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations(), 'visual_context' => $options['visual_context']], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
+            ->add('shots', CollectionType::class, ['entry_type' => AiShotType::class, 'entry_options' => ['durations' => (new AiCatalog())->durations(), 'visual_context' => $options['visual_context'], 'character_choices' => $options['character_choices']], 'allow_add' => true, 'allow_delete' => true, 'label' => false, 'required' => false, 'constraints' => [new Assert\Count(max: 8)]]);
         $builder
             ->add('subjectDetails', CollectionType::class, ['entry_type' => AiSubjectType::class, 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'label' => false, 'constraints' => [new Assert\Count(max: 7)]])
             ->add('subjects', CollectionType::class, ['entry_type' => HiddenType::class, 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'constraints' => [new Assert\Count(max: 7)], 'entry_options' => ['required' => false, 'constraints' => [new Assert\Regex('/^[a-f0-9]{48}\.jpg$/D')]]])
@@ -56,6 +56,8 @@ final class AiIdeaType extends AbstractType
             ->add('accessMode', ChoiceType::class, ['label' => 'Connexion à utiliser', 'choices' => ['Ma clé API' => 'api', 'Mon compte Fal connecté par navigateur' => 'mcp'], 'help' => 'Un seul accès suffit. Pour Fal, la connexion navigateur évite de copier une clé ; vérifie le compte et ses crédits chez Fal.', 'constraints' => [new Assert\NotBlank()]])
             ->add('seconds', ChoiceType::class, ['label' => 'Durée du plan', 'placeholder' => 'Choisir une durée', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', (new AiCatalog())->durations()), (new AiCatalog())->durations()), 'constraints' => [new Assert\NotBlank()]])
             ->add('ratio', ChoiceType::class, ['label' => 'Format', 'placeholder' => 'Choisir un format', 'choices' => ['Vertical · 9:16' => '9:16', 'Paysage · 16:9' => '16:9', 'Carré · 1:1' => '1:1', 'Celui de l’image' => 'auto'], 'constraints' => [new Assert\NotBlank()]]);
+        $builder->add('characterSelection', AiCharacterPoolType::class, ['choices' => $options['character_choices']]);
+        $builder->add('characterSelectionManaged', HiddenType::class, ['data' => '1', 'required' => false, 'empty_data' => '0']);
         $builder->addEventListener(FormEvents::POST_SUBMIT, static function (FormEvent $event): void {
             $data = $event->getData();
             $form = $event->getForm();
@@ -69,7 +71,7 @@ final class AiIdeaType extends AbstractType
             if ((new AiCatalog())->referenceMode($data['model']) !== ($data['source'] ?? 'text')) {
                 $form->get('model')->addError(new FormError('Choisis un modèle compatible avec ton point de départ.'));
             }
-            if (!$form->getConfig()->getOption('composed') && ($model['image'] ?? false) && empty($data['reference'])) {
+            if (!$form->getConfig()->getOption('composed') && ($model['image'] ?? false) && empty($data['reference']) && empty($data['characterSelection'])) {
                 $form->get('reference')->addError(new FormError('Importe une image de départ avant de continuer.'));
             }
             if (($model['image'] ?? false) && ($data['useEnd'] ?? false)) {
@@ -109,6 +111,8 @@ final class AiIdeaType extends AbstractType
         $resolver->setAllowedTypes('composed', 'bool');
         $resolver->setDefault('visual_context', '');
         $resolver->setAllowedTypes('visual_context', 'string');
+        $resolver->setDefault('character_choices', []);
+        $resolver->setAllowedTypes('character_choices', 'array');
         $resolver->setDefault('connected_providers', []);
         $resolver->setAllowedTypes('connected_providers', 'array');
         $resolver->setDefault('favorite_models', []);

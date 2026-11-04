@@ -1,0 +1,983 @@
+{
+  "lot": "R7.3a selection, scenes and quotes",
+  "frontend": {
+    "tests": 196,
+    "check": "passed",
+    "warning": "Existing Three.js chunk size",
+    "build": "passed"
+  },
+  "logs_sha256": {
+    "selection-phpstan.log": "09cea3bdb4e3e9ba8e018ba484ca8066447d838221e34d16e1b8939efaa364fc",
+    "selection-style-final.log": "dde04c77e48ca26d769ba19be80c824d04f9a2b1ce8c67ac2ee4165512f84521",
+    "selection-dev-cache.log": "90b1b9e9779d8b42a31cf90378164191b7eb5d94a53cb668eebf87e3088baa8f",
+    "selection-twig.log": "aeb2118c5b521d9e3cca0e71ee0312f05811f2b9d023424aa144163b57a2dbd7",
+    "selection-frontend.log": "6ab4440ba3b0fcb76eef71ef6b2d7b6173f2e4bc8385e895350b94e81841cd70",
+    "selection-build.log": "53b12cace06f87b36284ee2990a243335e5312d8239a80d961808c2864e467e8",
+    "selection-yaml.log": "59799ee554bdb207b6e2a04fdf1adf04af08cf68bfea3450649c1caeedcb0a54",
+    "selection-style.log": "0afc4039bab1e89aa2f9bb2c3838c0e45760dfa6cf251d318738c681b6834380",
+    "selection-schema-test.log": "192758555bb8993def242836fbdbc3696967f6f79e3fa04cfcdc51dc55a446f7",
+    "selection-container.log": "999e902548341ec5a7f0b6ff4aef29788e8b8c24a18f75003bc4072dfe00f919",
+    "selection-php.log": "d4f5d2fa984c8413a8d9a3f5318edc882d1bca30cbe19c1781f52d457a69c122",
+    "selection-regression.log": "d1599f79d5072d0309955f6f17df5559469af2a598cae8cbe0f489b47da52754",
+    "selection-schema-dev.log": "192758555bb8993def242836fbdbc3696967f6f79e3fa04cfcdc51dc55a446f7",
+    "selection-check.log": "e50903972b142f2ae477d54e23c54bb4abd05719368dff5d75624c9eeb2c7aab"
+  },
+  "quality": {
+    "phpstan": "passed",
+    "dev_schema": "valid",
+    "style": "global applied; final three files unchanged",
+    "yaml": 19,
+    "twig": 123,
+    "test_schema": "valid",
+    "container": "passed"
+  },
+  "keyboard": {
+    "first": "#contenu",
+    "main": "contenu",
+    "reached": true,
+    "pool": {
+      "label": "Personnages disponibles pour les scènes",
+      "selected": [
+        "196:1",
+        "197:1"
+      ]
+    },
+    "scene": {
+      "label": "Personnages présents dans cette scène",
+      "selected": [
+        "196",
+        "197"
+      ]
+    }
+  },
+  "screenshots": [
+    {
+      "file": "character-selection-card-390.png",
+      "sha256": "d009fb6f3104dde69f33d144bddb3c4e87f4d824857ecbb9e0c7c0ad47252a4e"
+    },
+    {
+      "file": "character-selection-pool-390.png",
+      "sha256": "ffc52ddf9b0af9c574a802d5e99b0a7df7640b6619039d9f9514c38924007392"
+    },
+    {
+      "file": "character-selection-selection-edit-1280.png",
+      "sha256": "0e159609f93186cced0c7327062932ad0da661d46ce9543f51d741cf251db2b8"
+    },
+    {
+      "file": "character-selection-selection-edit-390.png",
+      "sha256": "6ba35232e29007ff6a3e758f17a7b94fd7c3984e7daad3c8ec7d4af9e70b99f6"
+    },
+    {
+      "file": "character-selection-selection-review-1280.png",
+      "sha256": "892be3a61912f39e3405dc1cbf07b7727bb34bae0d7ab2d6d58406a9cde6f401"
+    },
+    {
+      "file": "character-selection-selection-review-390.png",
+      "sha256": "e3d28a86b3f7201593a4c72075d0458477d517200c064431b63280217bd3b3e0"
+    },
+    {
+      "file": "character-selection-selection-series-configured-1280.png",
+      "sha256": "e7235ce6bfcb0e3211766a9824239f6ac19439bb3c3300e6b828f4150b31c4b3"
+    },
+    {
+      "file": "character-selection-selection-series-configured-390.png",
+      "sha256": "2ad8a740af439ed7ee64778ea8b51e19ae7e3f222adf2e193a1bb93ce15d9913"
+    }
+  ],
+  "actions": {
+    "before": [
+      [
+        "196"
+      ],
+      [
+        "197"
+      ],
+      [
+        "196",
+        "197"
+      ]
+    ],
+    "after": [
+      [
+        "196"
+      ],
+      [
+        "197"
+      ],
+      [
+        "196",
+        "197"
+      ]
+    ],
+    "retained": 3,
+    "errors": [],
+    "blocked": []
+  },
+  "reports": [
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "selection-autosave": "65e8e36a4eec109ebb99ca46e3af01be052b3c7fa0009ffca1d3576fc9bb20f6"
+        }
+      },
+      "case": "testAutosaveKeepsFrozenSelectionAndOlderPayloadCannotEraseSceneCharacters"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "empty": "0b01f7887a4de0c624b6c213c4d98754ac115491d69732eaccb58d9ec6b04098",
+          "new": "8a6b45721218793deb1f7a48e5ccaa5f8abef7eb0ea6c9a3873d6bda5e022b01",
+          "list": "b4e607a251da690690ae9559fdc619041f5f98810bb9e24ca7e06e8192f7b2c9",
+          "edit": "3ce8a23f926cdf12295816529bfe284a214a13ddf5b851f089025f90c1a51cd5",
+          "archives": "623198553c9e6acf882d0cdb3748863b0109c955877f3830384e79d0759186c9"
+        }
+      },
+      "case": "testCrudStaleFormsArchiveAndPrivateImages"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "invalid": "164c9cdb63a180e705ea2379489a91b504fcab33072f3e9f464dc0e9a9d5afbb"
+        }
+      },
+      "case": "testInvalidFilesKeepTextAndRollbackEveryNewImage"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": []
+      },
+      "case": "testMaintenancePinsArchivedAndReplacedImages"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": []
+      },
+      "case": "testPaginationStaleArchiveAndFailedReplacementPreserveImages"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": []
+      },
+      "case": "testSceneResolutionRejectsIncompatibilityMissingFilesAndUnknownCharactersWithoutFallback"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": []
+      },
+      "case": "testSelectionRejectsForeignStaleAndDuplicateVersionsButKeepsFrozenArchive"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "selection-series": "34235c870b0b43ffdcca9f961c8e2f068a245ba135fc9401339d6cb093d35b85",
+          "selection-series-configured": "8fc1f63c0e333818711c2b73297d9d1447911d26719fc69fe0f50d015ae05232"
+        }
+      },
+      "case": "testSeriesSelectionFreezesExistingEpisodeAndExplicitClearDoesNotRefreshIt"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "selection-studio": "6a58e32a3700a33d7f8171ed688b0386d16b6865e2842d64e8c777d3317c5680",
+          "selection-review": "b9a0d3bc88ff8467b3a1b55c88c7cda5246abe7c2d6f674890b603a1de54db2d",
+          "selection-edit": "e174a12952b3dd5149b9014a81ee24ccbcce0c24876dbfc51c8b08cd668d1c29"
+        }
+      },
+      "case": "testStudioThreeScenesUseOnlyTheirFrozenCharactersAndQuoteChangesWithPresence"
+    }
+  ],
+  "review": "Independent read-only review; both findings corrected, final autosave case passed; reviewer ran no DB tests",
+  "limits": [
+    "No real provider HTTP, expense, email, social publication, indexing activation, push or deployment",
+    "Browser replays BrowserKit captures; interactive autosave fulfilled synthetically; real autosave verified in PHP",
+    "No new iPhone, screen reader or audiovisual quality certification",
+    "New per-scene references compared at quote level; multi-episode simulated dispatch and recovery still pending for final R7.3a review",
+    "Legacy common identity references are not silently merged with the library; explicit correction or a separate preparation is required"
+  ],
+  "html_sha256": {
+    "selection-review": "b9a0d3bc88ff8467b3a1b55c88c7cda5246abe7c2d6f674890b603a1de54db2d",
+    "selection-studio": "6a58e32a3700a33d7f8171ed688b0386d16b6865e2842d64e8c777d3317c5680",
+    "selection-series-configured": "8fc1f63c0e333818711c2b73297d9d1447911d26719fc69fe0f50d015ae05232",
+    "list": "b4e607a251da690690ae9559fdc619041f5f98810bb9e24ca7e06e8192f7b2c9",
+    "selection-edit": "e174a12952b3dd5149b9014a81ee24ccbcce0c24876dbfc51c8b08cd668d1c29",
+    "empty": "0b01f7887a4de0c624b6c213c4d98754ac115491d69732eaccb58d9ec6b04098",
+    "edit": "3ce8a23f926cdf12295816529bfe284a214a13ddf5b851f089025f90c1a51cd5",
+    "invalid": "164c9cdb63a180e705ea2379489a91b504fcab33072f3e9f464dc0e9a9d5afbb",
+    "selection-series": "34235c870b0b43ffdcca9f961c8e2f068a245ba135fc9401339d6cb093d35b85",
+    "new": "8a6b45721218793deb1f7a48e5ccaa5f8abef7eb0ea6c9a3873d6bda5e022b01",
+    "archives": "623198553c9e6acf882d0cdb3748863b0109c955877f3830384e79d0759186c9",
+    "selection-autosave": "65e8e36a4eec109ebb99ca46e3af01be052b3c7fa0009ffca1d3576fc9bb20f6"
+  },
+  "workers": "not restarted",
+  "browser": {
+    "rows": [
+      {
+        "name": "selection-series",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "selection-autosave",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "selection-edit",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "selection-studio",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "selection-review",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "selection-series-configured",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "selection-series",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-autosave",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-edit",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-studio",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-review",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-series-configured",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-series",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "selection-autosave",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "selection-edit",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "selection-studio",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "selection-review",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "selection-series-configured",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "selection-series",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-autosave",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-edit",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-studio",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-review",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-series-configured",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-series",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-autosave",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-edit",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-studio",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-review",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-series-configured",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "selection-series",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-autosave",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-edit",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-studio",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-review",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "selection-series-configured",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      }
+    ],
+    "failures": [],
+    "errors": [],
+    "blocked": []
+  },
+  "migration": "none",
+  "date": "2026-11-04",
+  "php": {
+    "final_targeted": {
+      "assertions": 167,
+      "tests": 18
+    },
+    "regression": {
+      "tests": 76,
+      "assertions": 1136,
+      "timing": "Run before final autosave compatibility and choice-label refinements; followed by final targeted run"
+    },
+    "global": "not rerun"
+  },
+  "dev_cache": "web cache refreshed",
+  "status": "Local implementation delivered; final cross-episode and simulated transport review pending; R7.2 human tests postponed",
+  "portrait_sha256": "ebd7285106e22b7e933259f13be0ca798f87ffe82501a1f3a3718f39a9ba46e5"
+}

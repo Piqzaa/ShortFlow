@@ -14,7 +14,7 @@ final class AiSeriesStudio
 {
     public const EPISODES_PER_PAGE = 12;
 
-    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiReferenceStorage $references)
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiReferenceStorage $references, private AiCharacterSelection $characterSelection)
     {
     }
 
@@ -71,6 +71,7 @@ final class AiSeriesStudio
             $model = $this->catalog->model($data['model']);
             $this->catalog->validate($data['model'], $data['seconds'], $data['ratio']);
             $previous = $series?->getRecipe();
+            $characterPool = $this->characterSelection->resolve($owner, $data, $previous ?? []);
             $image = $previous['reference'] ?? null;
             $endImage = $previous['endReference'] ?? null;
             $managedSubjects = '1' === (string) ($data['subjectsManaged'] ?? '0');
@@ -100,7 +101,7 @@ final class AiSeriesStudio
                 $endImage = null;
             }
             if ($model['image'] ?? false) {
-                if (!$image && !$data['image'] instanceof UploadedFile && !($series && ($data['removeImage'] ?? false))) {
+                if (!$image && !$data['image'] instanceof UploadedFile && !($series && ($data['removeImage'] ?? false)) && !(($model['subjectReference'] ?? false) && $characterPool)) {
                     throw new \RuntimeException('Ajoute une image de départ pour ce modèle.');
                 }
                 if (($model['requiresEnd'] ?? false) && !$endImage && !$data['endImage'] instanceof UploadedFile && !($series && ($data['removeEndImage'] ?? false))) {
@@ -155,6 +156,9 @@ final class AiSeriesStudio
             $details = array_values(array_filter($details, static fn (array $detail): bool => !in_array($detail['reference'] ?? '', $removedReferences, true)));
             $details = $inputs->subjectDetails($owner, $data['model'], $subjects, $details, ($model['subjectReference'] ?? false) ? $image : null, false);
             $recipe = ['totalSeconds' => $data['totalSeconds'] ?? 30, 'model' => $data['model'], 'seconds' => $data['seconds'], 'ratio' => $data['ratio'], 'accessMode' => $data['accessMode'], 'reference' => $image, 'endReference' => $endImage, 'imageFit' => $data['imageFit'], 'subjects' => $subjects, 'subjectDetails' => $details];
+            if (null !== $characterPool) {
+                $recipe['characterPool'] = $characterPool;
+            }
             if (isset($previous['montage'])) {
                 $recipe['montage'] = SeriesMontage::normalize($previous['montage']);
             }
@@ -220,6 +224,9 @@ final class AiSeriesStudio
             $this->assertRevision($episode->getRevision(), (int) $data['revision']);
             $this->assertRevision($series->getRevision(), (int) $data['seriesRevision']);
             $recipe = $series->getRecipe();
+            if (($prepare || $existing) && !empty($recipe['characterPool'])) {
+                throw new \RuntimeException('Ouvre la préparation par scènes pour choisir les personnages présents et relire son devis.');
+            }
             if ($prepare || $existing) {
                 if (!$existing) {
                     $this->catalog->validateReferences($recipe['model'], $recipe['reference'], $recipe['endReference']);

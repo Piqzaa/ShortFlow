@@ -29,6 +29,10 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class AiStudioController extends AbstractController
 {
+    public function __construct(private \App\Service\AiCharacterSelection $characterSelection)
+    {
+    }
+
     #[Route('/studio/creation', name: 'app_studio', methods: ['GET', 'POST'])]
     #[Route('/studio/ia', name: 'app_ai_studio', methods: ['GET', 'POST'])]
     public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, LocalStoryWriter $writer, AiReferenceStorage $references, EntityManagerInterface $em, FormFactoryInterface $forms, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, AiEpisodeFlow $flow, \App\Service\EpisodeCovers $covers, ?int $preparingEpisode = null): Response
@@ -72,7 +76,9 @@ final class AiStudioController extends AbstractController
         $layoutPrepared = false;
         $connecting = $request->isMethod('POST') && 'connect' === $request->request->getString('intent');
         $visualContext = $episode ? ($episode->getFlowRecipe()['visualContext'] ?? ($episode->isStandalone() ? $episode->getPrompt() : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle())) : ($idea['prompt'] ?? '');
-        $form = $this->createForm(AiIdeaType::class, $idea, ['validation_groups' => $connecting ? ['connection'] : ['Default'], 'visual_context' => $visualContext, 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => in_array($request->request->getString('intent'), ['compose', 'replan', 'single'], true) || $request->request->has('plan_action'), 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea'])->handleRequest($request);
+        $idea = $this->characterSelection->formData($idea);
+        $characterChoices = $this->characterSelection->choices($user, $idea['characterPool'] ?? []);
+        $form = $this->createForm(AiIdeaType::class, $idea, ['character_choices' => $characterChoices, 'validation_groups' => $connecting ? ['connection'] : ['Default'], 'visual_context' => $visualContext, 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => in_array($request->request->getString('intent'), ['compose', 'replan', 'single'], true) || $request->request->has('plan_action'), 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea'])->handleRequest($request);
         $referenceUrl = $endReferenceUrl = null;
         foreach (['reference', 'endReference'] as $field) {
             $reference = $form->get($field)->getData();
@@ -93,8 +99,19 @@ final class AiStudioController extends AbstractController
                 }
             }
         }
+        $selectedPool = null;
+        if ($form->isSubmitted() && $form->isValid()) {
+            try {
+                $selectedPool = $this->characterSelection->resolve($user, $form->getData(), $idea);
+            } catch (\RuntimeException $error) {
+                $form->get('characterSelection')->addError(new FormError($error->getMessage()));
+            }
+        }
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
+            if (null !== $selectedPool) {
+                $data['characterPool'] = $selectedPool;
+            }
             $request->getSession()->set('ai_idea', $data);
             $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
             if (!$limiter->create('ai-idea-'.$user->getId())->consume()->isAccepted()) {
@@ -154,10 +171,10 @@ final class AiStudioController extends AbstractController
                             if (array_filter(array_slice($old, count($durations)), static fn (array $row): bool => '' !== trim($row['sceneDescription'] ?? ''))) {
                                 throw new \RuntimeException('Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.');
                             }
-                            if (array_filter(array_slice($old, count($durations)), static fn (array $row): bool => '' !== trim($row['prompt'] ?? '') || !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? '') || !empty($row['translatedIdentity']) || !empty($row['translationSource']) || 'contain' === ($row['referenceFit'] ?? 'crop'))) {
+                            if (array_filter(array_slice($old, count($durations)), static fn (array $row): bool => !empty($row['characterIds']) || '' !== trim($row['prompt'] ?? '') || !empty($row['startReference']) || !empty($row['endReference']) || '' !== trim($row['imagePrompt'] ?? '') || !empty($row['translatedIdentity']) || !empty($row['translationSource']) || 'contain' === ($row['referenceFit'] ?? 'crop'))) {
                                 throw new \RuntimeException('Ce découpage retirerait un plan déjà renseigné. Conserve le nombre actuel ou réaffecte ses textes et images avant de le réduire. Rien n’a été effacé.');
                             }
-                            $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds] + array_intersect_key($old[$i] ?? [], array_flip(['startReference', 'endReference', 'referenceFit', 'imagePrompt', 'sceneDescription', 'translatedIdentity', 'translationSource', 'promptOnly'])), $durations, array_keys($durations));
+                            $data['shots'] = array_map(static fn (int $seconds, int $i): array => ['prompt' => $old[$i]['prompt'] ?? '', 'seconds' => $seconds] + array_intersect_key($old[$i] ?? [], array_flip(['startReference', 'endReference', 'referenceFit', 'imagePrompt', 'sceneDescription', 'translatedIdentity', 'translationSource', 'promptOnly', 'characterIds', 'characterIdsManaged'])), $durations, array_keys($durations));
                             if (count($old) > count($durations)) {
                                 $last = count($durations) - 1;
                                 $data['shots'][$last]['prompt'] .= "\n".implode("\n", array_column(array_slice($old, count($durations)), 'prompt'));
@@ -168,7 +185,7 @@ final class AiStudioController extends AbstractController
                         if (!$episode) {
                             $request->getSession()->set('ai_idea', $data);
                         }
-                        $form = $this->createForm(AiIdeaType::class, $data, ['visual_context' => $visualContext, 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => true, 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea']);
+                        $form = $this->createForm(AiIdeaType::class, $data, ['character_choices' => $characterChoices, 'visual_context' => $visualContext, 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => true, 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea']);
                     } else {
                         if (!$episode) {
                             $last = $request->getSession()->get('ai_composed_preparation', []);
@@ -190,6 +207,8 @@ final class AiStudioController extends AbstractController
                 } catch (\RuntimeException|\InvalidArgumentException $failure) {
                     $form->addError(new FormError($failure->getMessage()));
                 }
+            } elseif (!empty($data['characterPool'])) {
+                $form->addError(new FormError('Utilise les scènes et leur récapitulatif pour préparer les personnages choisis.'));
             } elseif ($episode) {
                 $form->addError(new FormError('Utilise le récapitulatif de cette préparation pour continuer.'));
             } else {
@@ -255,7 +274,7 @@ final class AiStudioController extends AbstractController
     public function saveIdea(Request $request, #[CurrentUser] User $user, AiReferenceStorage $references): Response
     {
         $session = $request->getSession();
-        $form = $this->createForm(AiIdeaType::class, null, ['validation_groups' => ['autosave']])->handleRequest($request);
+        $form = $this->createForm(AiIdeaType::class, null, ['character_choices' => $this->characterSelection->choices($user, $session->get('ai_idea', [])['characterPool'] ?? []), 'validation_groups' => ['autosave']])->handleRequest($request);
         if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
         }
@@ -318,7 +337,24 @@ final class AiStudioController extends AbstractController
         unset($sequences[$key]);
         $sequences[$key] = $sequence;
         $session->set('ai_idea_sequences', array_slice($sequences, -10, null, true));
-        $session->set('ai_idea', $form->getData());
+        try {
+            $savedIdea = $form->getData();
+            $pool = $this->characterSelection->resolve($user, $savedIdea, $session->get('ai_idea', []));
+            if (null !== $pool) {
+                $savedIdea['characterPool'] = $pool;
+            }
+            foreach ($savedIdea['shots'] ?? [] as $index => $shot) {
+                if ('1' !== (string) ($shot['characterIdsManaged'] ?? '0') && !array_key_exists('characterIds', $shot)) {
+                    $previousShot = $session->get('ai_idea', [])['shots'][$index] ?? [];
+                    if (array_key_exists('characterIds', $previousShot)) {
+                        $savedIdea['shots'][$index]['characterIds'] = $previousShot['characterIds'];
+                    }
+                }
+            }
+        } catch (\RuntimeException) {
+            return $this->json(['saved' => false], 422, ['Cache-Control' => 'private, no-store']);
+        }
+        $session->set('ai_idea', $savedIdea);
 
         return $this->json(['saved' => true], headers: ['Cache-Control' => 'private, no-store']);
     }

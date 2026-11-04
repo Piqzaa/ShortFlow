@@ -15,6 +15,9 @@ export default class extends Controller {
       .filter(profile => !profile.querySelector('[data-subject-profile-reference]')?.disabled)
       .map(profile => ({ name: profile.querySelector('[data-subject-name]')?.value.trim() || '', role: profile.querySelector('[name$="[role]"]')?.value || 'character', presence: profile.querySelector('[name$="[presence]"]')?.value || 'unspecified' }))
       .filter(subject => subject.name);
+    for (const option of this.form.querySelector('[name="ai_idea[characterSelection][]"]')?.selectedOptions || []) {
+      subjectHints.push({ name: option.textContent.split(' · ')[0], role: 'character', presence: 'unspecified' });
+    }
     return { idea: field('prompt'), model: field('model'), target: field('target'), layout, planCount: field('continuity') === 'single' ? '1' : this.form.querySelector('[name="ai_idea[planCount]"]')?.value || '', continuity: field('continuity'), tone: this.toneTarget.value, episode: String(this.episodeValue), subjectHints: JSON.stringify(subjectHints) };
   }
   fingerprint() {
@@ -24,6 +27,8 @@ export default class extends Controller {
         const input = this.element.querySelector(`[name="ai_idea[${name}]"]`);
         return input?.type === 'checkbox' ? input.checked : input?.value;
       }),
+      characterSelection: [...(this.form.querySelector('[name="ai_idea[characterSelection][]"]')?.selectedOptions || [])].map(option => option.value),
+      sceneCharacters: this.editor.rows().map(row => [...(row.querySelector('[name$="[characterIds][]"]')?.selectedOptions || [])].map(option => option.value)),
       subjects: [...this.form.querySelectorAll('[name^="ai_idea[subjects]"]')].map(input => input.value),
       subjectDetails: [...this.form.querySelectorAll('[name^="ai_idea[subjectDetails]"]')].filter(input => !input.disabled).map(input => [input.name, input.value]),
       shots: this.editor.rows().map(row => [
@@ -219,8 +224,9 @@ export default class extends Controller {
       this.statusTarget.textContent = 'Attends la fin de l’import des images avant d’utiliser ces scènes. Ta proposition reste disponible.';
       return;
     }
+    const characters = this.editor.rows().map(row => [...(row.querySelector('[name$="[characterIds][]"]')?.selectedOptions || [])].map(option => option.value));
     const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
-    if (inputs.length !== this.proposal.shots.length && inputs.some(row=>row.startReference || row.endReference || row.imagePrompt?.trim())) {
+    if (inputs.length !== this.proposal.shots.length && (inputs.some(row=>row.startReference || row.endReference || row.imagePrompt?.trim()) || characters.some(ids => ids.length))) {
       this.statusTarget.textContent = 'La proposition change le nombre de plans. Déplace ou retire leurs cadres et consignes d’images avant de l’appliquer ; tes textes restent conservés.';
       return;
     }
@@ -228,6 +234,7 @@ export default class extends Controller {
     this.proposal.shots.forEach((shot, index) => {
       this.editor.listTarget.insertAdjacentHTML('beforeend', this.editor.prototypeTarget.innerHTML.replaceAll('__name__', String(index)));
       const row = this.editor.rows()[index];
+      for (const option of row.querySelector('[name$="[characterIds][]"]')?.options || []) option.selected = (characters[index] || []).includes(option.value);
       row.querySelector('textarea').value = shot.prompt;
       const promptOnly = row.querySelector('[name$="[promptOnly]"]');
       if (promptOnly) promptOnly.value = '1';

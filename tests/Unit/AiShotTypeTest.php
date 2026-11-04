@@ -49,6 +49,7 @@ final class AiShotTypeTest extends TestCase
         $form->submit(['prompt' => 'A white cat walks.', 'seconds' => '5']);
         self::assertTrue($form->isValid());
         self::assertNull($form->getData()['promptOnly']);
+        self::assertArrayNotHasKey('characterIds', $form->getData());
     }
 
     public function testOversizedMergedTextIsNeverTruncatedAndCannotBeSaved(): void

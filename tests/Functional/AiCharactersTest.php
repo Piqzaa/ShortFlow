@@ -130,6 +130,253 @@ final class AiCharactersTest extends WebTestCase
         return $this->em->getRepository(AiCharacter::class)->findOneBy(['owner' => $this->owner]);
     }
 
+    private function cast(): array
+    {
+        $first = $this->create();
+        $owner = $this->em->find(User::class, $this->owner);
+        $second = static::getContainer()->get(AiCharacters::class)->save($owner, null, 0, 'Lea', 'White cat with green coat.', $this->image(), []);
+
+        return [$first, $second];
+    }
+
+    public function testAutosaveKeepsFrozenSelectionAndOlderPayloadCannotEraseSceneCharacters(): void
+    {
+        [$a, $b] = $this->cast();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $revision = $crawler->filter('#ai-idea-form')->attr('data-idea-save-revision-value');
+        $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+        $values += ['revision' => $revision, 'editor' => str_repeat('a', 32), 'sequence' => '1'];
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'A cat explores a garden.', 'model' => 'vidu-q1-subject', 'source' => 'subject', 'ratio' => '9:16', 'seconds' => '5', 'accessMode' => 'api', 'characterSelectionManaged' => '1', 'characterSelection' => [$a->getId().':1'], 'shots' => [['prompt' => 'A cat walks slowly.', 'seconds' => '5', 'promptOnly' => 'manual', 'characterIdsManaged' => '1', 'characterIds' => [(string) $a->getId()]]]]);
+        $this->client->request('POST', '/studio/creation/idee', $values);
+        self::assertResponseIsSuccessful();
+        $owner = $this->em->find(User::class, $this->owner);
+        static::getContainer()->get(AiCharacters::class)->save($owner, $a->getId(), 1, 'Updated Milo', 'A different coat.', $this->image(), []);
+        unset($values['ai_idea']['characterSelection'], $values['ai_idea']['characterSelectionManaged'], $values['ai_idea']['shots'][0]['characterIds'], $values['ai_idea']['shots'][0]['characterIdsManaged']);
+        $values['sequence'] = '2';
+        $this->client->request('POST', '/studio/creation/idee', $values);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorExists('select[name="ai_idea[characterSelection][]"] option[value="'.$a->getId().':1"][selected]');
+        self::assertSelectorExists('select[name="ai_idea[shots][0][characterIds][]"] option[value="'.$a->getId().'"][selected]');
+        $this->snap('selection-autosave');
+    }
+
+    public function testSelectionRejectsForeignStaleAndDuplicateVersionsButKeepsFrozenArchive(): void
+    {
+        [$a, $b] = $this->cast();
+        $owner = $this->em->find(User::class, $this->owner);
+        $library = static::getContainer()->get(\App\Service\AiCharacterSelection::class);
+        $service = static::getContainer()->get(AiCharacters::class);
+        $other = $this->em->find(User::class, $this->other);
+        $foreign = $service->save($other, null, 0, 'Foreign', '', $this->image(), []);
+        self::assertNotContains($foreign->getId().':1', $library->choices($owner));
+        $data = ['characterSelectionManaged' => '1', 'characterSelection' => [$a->getId().':1', $b->getId().':1']];
+        $pool = $library->resolve($owner, $data);
+        self::assertCount(2, $pool);
+        $aId = $a->getId();
+        $old = $a->getPortrait();
+        $service->save($owner, $aId, 1, 'New Milo', 'New appearance', $this->image(), []);
+        $service->archive($owner, $aId, 2, true);
+        self::assertSame($pool, $library->resolve($owner, $data, ['characterPool' => $pool]));
+        self::assertSame($old, $pool[0]['portrait']);
+        self::assertSame([], $library->resolve($owner, ['characterSelectionManaged' => '1', 'characterSelection' => []], ['characterPool' => $pool]));
+        self::assertNull($library->resolve($owner, []));
+        self::assertSame($pool, $library->resolve($owner, [], ['characterPool' => $pool]));
+        foreach ([[$foreign->getId().':1'], [$aId.':1'], [$b->getId().':1', $b->getId().':1']] as $tokens) {
+            try {
+                $library->resolve($owner, ['characterSelectionManaged' => '1', 'characterSelection' => $tokens]);
+                self::fail('Invalid selection accepted.');
+            } catch (\RuntimeException) {
+                self::assertTrue(true);
+            }
+        }
+    }
+
+    public function testStudioThreeScenesUseOnlyTheirFrozenCharactersAndQuoteChangesWithPresence(): void
+    {
+        [$a, $b] = $this->cast();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        $this->snap('selection-studio');
+        $form = $crawler->selectButton('Voir le récapitulatif')->form();
+        $values = $form->getPhpValues();
+        $values['intent'] = 'compose';
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'Two cats explore a garden.', 'model' => 'vidu-q1-subject', 'source' => 'subject', 'seconds' => '5', 'target' => '15', 'planCount' => '3', 'ratio' => '9:16', 'accessMode' => 'api', 'characterSelection' => [$a->getId().':1', $b->getId().':1'], 'characterSelectionManaged' => '1', 'shots' => []]);
+        foreach ([[(string) $a->getId()], [(string) $b->getId()], [(string) $a->getId(), (string) $b->getId()]] as $ids) {
+            $values['ai_idea']['shots'][] = ['prompt' => 'A cat walks slowly across the garden.', 'seconds' => '5', 'promptOnly' => 'manual', 'characterIdsManaged' => '1', 'characterIds' => $ids];
+        }
+        $invalid = $values;
+        $invalid['ai_idea']['_token'] = 'invalid';
+        $this->client->request('POST', '/studio/creation', $invalid);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiEpisode::class)->count(['owner' => $this->owner]));
+        $invalid = $values;
+        $invalid['ai_idea']['characterSelection'] = ['999999999:1'];
+        $this->client->request('POST', '/studio/creation', $invalid);
+        self::assertResponseStatusCodeSame(422);
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        $this->snap('selection-review');
+        $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner]);
+        $flow = static::getContainer()->get(\App\Service\AiEpisodeFlow::class);
+        $quote = $flow->quote($episode);
+        $refs = $quote['references'];
+        self::assertSame($a->getPortrait(), $refs[0]['start']);
+        self::assertSame([], $refs[0]['subjects']);
+        self::assertSame($b->getPortrait(), $refs[1]['start']);
+        self::assertSame([$b->getPortrait()], $refs[2]['subjects']);
+        self::assertSame(['Milo'], array_column($refs[0]['subjectDetails'], 'name'));
+        self::assertStringNotContainsString('Lea', $refs[0]['prompt']);
+        self::assertStringContainsString('White cat with green coat.', $refs[1]['prompt']);
+        self::assertSame(['Milo', 'Lea'], array_column($refs[2]['subjectDetails'], 'name'));
+        $owner = $this->em->find(User::class, $this->owner);
+        static::getContainer()->get(AiCharacters::class)->save($owner, $a->getId(), 1, 'Milo changed', '', $this->image(), []);
+        self::assertSame($quote['hash'], $flow->quote($episode)['hash']);
+        // Old HTML does not know the selection fields: omission must preserve the scene.
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $this->snap('selection-edit');
+        $old = $crawler->filter('form#ai-idea-form')->form()->getPhpValues();
+        $old['intent'] = 'compose';
+        unset($old['ai_idea']['characterSelection'], $old['ai_idea']['characterSelectionManaged']);
+        foreach ($old['ai_idea']['shots'] as &$row) {
+            unset($row['characterIds'], $row['characterIdsManaged']);
+        }
+        unset($row);
+        $this->client->request('POST', '/studio/series/episodes/'.$episode->getId(), $old);
+        self::assertResponseStatusCodeSame(303);
+        $episode = $this->em->find(\App\Entity\AiEpisode::class, $episode->getId());
+        self::assertSame([(string) $a->getId()], $flow->shots($episode)[0]->getInputs()['characterIds']);
+        // No-JS redistribution must not discard a scene carrying only a selected character.
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        $replan = $crawler->filter('form#ai-idea-form')->form()->getPhpValues();
+        $replan['intent'] = 'replan';
+        $replan['ai_idea']['target'] = '10';
+        $replan['ai_idea']['planCount'] = '2';
+        $replan['ai_idea']['shots'][2]['prompt'] = '';
+        $this->client->request('POST', '/studio/series/episodes/'.$episode->getId(), $replan);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.form-errors, .form-error-message', 'plan déjà renseigné');
+        self::assertSelectorCount(3, '[data-shot-editor-target="list"] > .shot-card');
+        $episode = $this->em->find(\App\Entity\AiEpisode::class, $episode->getId());
+        $shots = $flow->shots($episode);
+        $rows = array_map(static fn ($s): array => ['prompt' => $s->getPrompt(), 'seconds' => $s->getSeconds()] + $s->getInputs(), $shots);
+        $rows[0]['characterIds'] = [(string) $b->getId()];
+        $flow->save($episode, $episode->getRevision(), $episode->getTitle(), $rows);
+        self::assertNotSame($quote['hash'], $flow->quote($episode)['hash']);
+        try {
+            $flow->confirm($episode, $quote['hash']);
+            self::fail('The old quote must not authorize changed character presence.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('changé', $error->getMessage());
+        }
+        $rows[0]['characterIds'] = [];
+        $flow->save($episode, $episode->getRevision(), $episode->getTitle(), $rows);
+        try {
+            $flow->quote($episode);
+            self::fail('Empty Vidu scene must not receive the whole cast.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('référence', $error->getMessage());
+        }
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+    }
+
+    public function testSeriesSelectionFreezesExistingEpisodeAndExplicitClearDoesNotRefreshIt(): void
+    {
+        [$a, $b] = $this->cast();
+        $crawler = $this->client->request('GET', '/studio/series/nouvelle');
+        self::assertResponseIsSuccessful();
+        $this->snap('selection-series');
+        $form = $crawler->selectButton('Créer ma série')->form();
+        $values = $form->getPhpValues();
+        $values['ai_series'] = array_replace($values['ai_series'], ['name' => 'Two cats', 'theme' => 'Garden discoveries', 'model' => 'vidu-q1-subject', 'seconds' => '5', 'totalSeconds' => '15', 'episodeCount' => '1', 'ratio' => '9:16', 'accessMode' => 'api', 'imageFit' => 'crop', 'characterSelectionManaged' => '1', 'characterSelection' => [$a->getId().':1', $b->getId().':1']]);
+        $this->client->request('POST', '/studio/series/nouvelle', $values);
+        self::assertResponseStatusCodeSame(303);
+        $series = $this->em->getRepository(\App\Entity\AiSeries::class)->findOneBy(['owner' => $this->owner]);
+        self::assertCount(2, $series->getRecipe()['characterPool']);
+        $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['series' => $series]);
+        $episode->configurePreparation($series->getRecipe() + ['inputVersion' => 4], 'A quiet garden.', 'independent', false);
+        $this->em->flush();
+        $frozen = $episode->getFlowRecipe();
+        $crawler = $this->client->request('GET', '/studio/series/'.$series->getId().'/configuration');
+        self::assertResponseIsSuccessful();
+        $this->snap('selection-series-configured');
+        $form = $crawler->selectButton('Enregistrer la configuration')->form();
+        $values = $form->getPhpValues();
+        $values['ai_series']['characterSelection'] = [];
+        $values['ai_series']['model'] = 'kling-25';
+        $values['ai_series']['seconds'] = '5';
+        $this->client->request('POST', $form->getUri(), $values);
+        self::assertResponseStatusCodeSame(303);
+        $series = $this->em->find(\App\Entity\AiSeries::class, $series->getId());
+        self::assertSame([], $series->getRecipe()['characterPool']);
+        self::assertSame($frozen, $episode->getFlowRecipe());
+    }
+
+    public function testSceneResolutionRejectsIncompatibilityMissingFilesAndUnknownCharactersWithoutFallback(): void
+    {
+        [$a, $b] = $this->cast();
+        $owner = $this->em->find(User::class, $this->owner);
+        $pool = static::getContainer()->get(\App\Service\AiCharacterSelection::class)->resolve($owner, ['characterSelectionManaged' => '1', 'characterSelection' => [$a->getId().':1', $b->getId().':1']]);
+        $inputs = static::getContainer()->get(\App\Service\AiPlanInputs::class);
+        $recipe = ['model' => 'kling-3-image', 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => null, 'endReference' => null, 'imageFit' => 'crop', 'inputVersion' => 4, 'characterPool' => $pool];
+        $episode = new \App\Entity\AiEpisode($owner, 1, 'Garden', 'A garden.', $recipe);
+        $episode->configurePreparation($recipe, 'A garden.', 'independent', false);
+        $shot = new \App\Entity\AiShot($episode, 1, 5);
+        $shot->configureInputs(['startReference' => $a->getPortrait(), 'characterIds' => []]);
+        self::assertSame([], $inputs->resolve($episode, $shot, 0, 1)['subjects']);
+        self::assertSame([], $inputs->resolve($episode, $shot, 0, 1)['subjectDetails']);
+        $shot->configureInputs(['startReference' => $a->getPortrait(), 'characterIds' => [(string) $a->getId()]]);
+        try {
+            $inputs->resolve($episode, $shot, 0, 1);
+            self::fail('Kling requires grouped views.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('vues', $error->getMessage());
+        }
+        $shot->configureInputs(['startReference' => $a->getPortrait(), 'characterIds' => ['999999999']]);
+        try {
+            $inputs->resolve($episode, $shot, 0, 1);
+            self::fail('Unknown scene character must be refused.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('ne fait pas partie', $error->getMessage());
+        }
+        $recipe['model'] = 'kling-25';
+        $episode->configurePreparation($recipe, 'A garden.', 'independent', false);
+        $shot->configureInputs(['characterIds' => [(string) $a->getId()]]);
+        try {
+            $inputs->resolve($episode, $shot, 0, 1);
+            self::fail('A text model must not ignore selected characters.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('ne reçoit pas', $error->getMessage());
+        }
+        $recipe['model'] = 'vidu-q1-subject';
+        $recipe['characterPool'][0]['views'] = [$b->getPortrait()];
+        $episode->configurePreparation($recipe, 'A garden.', 'independent', false);
+        try {
+            $inputs->resolve($episode, $shot, 0, 1);
+            self::fail('Vidu does not support grouped views.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('vues groupées', $error->getMessage());
+        }
+        unset($recipe['characterPool']);
+        $recipe['reference'] = $a->getPortrait();
+        $episode->configurePreparation($recipe, 'A garden.', 'independent', false);
+        $shot->configureInputs([]);
+        self::assertSame($a->getPortrait(), $inputs->resolve($episode, $shot, 0, 1)['start']);
+        $recipe['characterPool'] = $pool;
+        $recipe['reference'] = null;
+        $episode->configurePreparation($recipe, 'A garden.', 'independent', false);
+        $shot->configureInputs(['characterIds' => [(string) $a->getId()]]);
+        unlink(static::getContainer()->get(AiReferenceStorage::class)->path($owner, $a->getPortrait()));
+        try {
+            $inputs->resolve($episode, $shot, 0, 1);
+            self::fail('Missing frozen image must not be replaced.');
+        } catch (\RuntimeException) {
+            self::assertTrue(true);
+        }
+    }
+
     public function testCrudStaleFormsArchiveAndPrivateImages(): void
     {
         $this->client->request('GET', '/studio/personnages');

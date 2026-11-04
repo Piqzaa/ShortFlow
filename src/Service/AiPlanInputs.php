@@ -110,11 +110,23 @@ final class AiPlanInputs
     }
 
     /** @param array<string,mixed> $row
-     * @return array{startReference:?string,endReference:?string,referenceFit:string,imagePrompt?:string,sceneDescription?:string,translatedIdentity?:string,translationSource?:string,promptOnly?:string}
+     * @return array{characterIds?:list<string>,startReference:?string,endReference:?string,referenceFit:string,imagePrompt?:string,sceneDescription?:string,translatedIdentity?:string,translationSource?:string,promptOnly?:string}
      */
     public function row(User $owner, array $row, string $defaultFit): array
     {
         $result = ['startReference' => null, 'endReference' => null, 'referenceFit' => $row['referenceFit'] ?? $defaultFit];
+        if ('1' === (string) ($row['characterIdsManaged'] ?? '0') || array_key_exists('characterIds', $row)) {
+            $ids = $row['characterIds'] ?? [];
+            if (!is_array($ids) || count($ids) > 7 || count(array_unique($ids, SORT_REGULAR)) !== count($ids)) {
+                throw new \RuntimeException('Sélection de personnages invalide dans le plan.');
+            }
+            foreach ($ids as $id) {
+                if (!is_string($id) || !preg_match('/^[1-9][0-9]*$/D', $id)) {
+                    throw new \RuntimeException('Personnage invalide dans le plan.');
+                }
+            }
+            $result['characterIds'] = array_values($ids);
+        }
         if (!in_array($row['promptOnly'] ?? '', ['', '1', 'manual'], true)) {
             throw new \RuntimeException('Le mode de consignes du plan est invalide. Recharge la préparation.');
         }
@@ -160,7 +172,7 @@ final class AiPlanInputs
         return $result;
     }
 
-    /** @return array{start:?string,end:?string,fit:string,subjects:list<string>,subjectDetails:list<array{reference:string,name:string,role:string,presence:string,views:list<string>}>,fromPrevious:bool,role:string} */
+    /** @return array{start:?string,end:?string,fit:string,subjects:list<string>,subjectDetails:list<array{reference:string,name:string,role:string,presence:string,views:list<string>,description?:string}>,fromPrevious:bool,role:string} */
     public function resolve(AiEpisode $episode, AiShot $shot, int $index, int $count): array
     {
         $recipe = $episode->getFlowRecipe() ?? throw new \RuntimeException('Prépare les plans avant leurs références.');
@@ -180,6 +192,39 @@ final class AiPlanInputs
         if ($fromPrevious && $start) {
             throw new \RuntimeException('Le plan '.($index + 1).' repart du précédent : retire son image de début explicite ou choisis plusieurs scènes.');
         }
+        if (!array_key_exists('characterPool', $recipe) && !empty($own['characterIds'])) {
+            throw new \RuntimeException('Choisis d’abord les fiches communes à cette préparation, puis leur présence par scène.');
+        }
+        $libraryDetails = null;
+        if (array_key_exists('characterPool', $recipe)) {
+            if (!array_key_exists('characterIds', $own)) {
+                throw new \RuntimeException('Choisis les personnages présents dans chaque scène, puis enregistre les plans.');
+            }
+            if (!empty($recipe['subjects']) || !empty($recipe['subjectDetails']) || ($subject && $recipe['reference'])) {
+                throw new \RuntimeException('Retire les anciennes références communes avant de choisir les fiches par scène. Les images de début restent distinctes.');
+            }
+            $pool = [];
+            foreach ($recipe['characterPool'] as $character) {
+                $pool[(string) $character['id']] = $character;
+            }
+            $libraryDetails = [];
+            foreach ($own['characterIds'] as $id) {
+                if (!isset($pool[$id])) {
+                    throw new \RuntimeException('Un personnage du plan ne fait pas partie de cette préparation. Corrige la scène ou sa sélection commune.');
+                }
+                $character = $pool[$id];
+                $libraryDetails[] = ['reference' => $character['portrait'], 'name' => $character['name'], 'role' => 'character', 'presence' => 'unspecified', 'views' => $character['views']];
+            }
+            if ($libraryDetails && 0 === $this->catalog->subjectLimit($recipe['model'])) {
+                throw new \RuntimeException('Ce modèle ne reçoit pas de références de personnages. Choisis un modèle compatible ou retire les personnages de la scène.');
+            }
+            if ($subject) {
+                $start = $libraryDetails[0]['reference'] ?? null;
+                if (!$start) {
+                    throw new \RuntimeException('Aucun personnage choisi pour ce plan : ce modèle exige une référence de personnage. Choisis sa présence ou un autre modèle.');
+                }
+            }
+        }
         if (!$fromPrevious) {
             $this->catalog->validateReferences($recipe['model'], $start, $end);
         } elseif ($end && !isset($model['endImageField'])) {
@@ -190,12 +235,26 @@ final class AiPlanInputs
                 $this->storage->path($episode->getOwner(), $name);
             }
         }
-        $subjects = $this->subjects($episode->getOwner(), $recipe['model'], $recipe['subjects'] ?? []);
+        $names = null === $libraryDetails ? ($recipe['subjects'] ?? []) : array_column($libraryDetails, 'reference');
+        if ($subject && null !== $libraryDetails) {
+            array_shift($names);
+        }
+        $subjects = $this->subjects($episode->getOwner(), $recipe['model'], $names);
         if ($subject && count($subjects) + ($start ? 1 : 0) > $this->catalog->subjectLimit($recipe['model'])) {
             throw new \RuntimeException('Trop d’images de personnage pour ce modèle.');
         }
 
-        $details = $this->subjectDetails($episode->getOwner(), $recipe['model'], $subjects, $recipe['subjectDetails'] ?? [], $subject ? $start : null);
+        $details = $this->subjectDetails($episode->getOwner(), $recipe['model'], $subjects, $libraryDetails ?? ($recipe['subjectDetails'] ?? []), $subject ? $start : null);
+        if (null !== $libraryDetails) {
+            foreach ($details as &$detail) {
+                foreach ($recipe['characterPool'] as $character) {
+                    if ($character['portrait'] === $detail['reference']) {
+                        $detail['description'] = $character['description'];
+                    }
+                }
+            }
+            unset($detail);
+        }
 
         return ['start' => $start, 'end' => $shot->getEndAnchor() ?? $end, 'fit' => $own['referenceFit'] ?? $recipe['imageFit'], 'subjects' => $subjects, 'subjectDetails' => $details, 'fromPrevious' => $fromPrevious, 'role' => $subject ? 'personnage' : (($model['image'] ?? false) ? 'cadres' : 'texte')];
     }

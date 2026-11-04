@@ -1,6 +1,7 @@
 <section class="story-shot shot-card" data-shot-editor-row data-action="input->shot-editor#update change->shot-editor#update">
   <header class="shot-card-heading"><h3 data-shot-heading>Plan {{ shotNumber|default('') }}</h3><div class="shot-card-duration">{{ form_row(shotForm.seconds) }}</div></header>
   {{ form_errors(shotForm) }}
+  {% if shotForm.characterIds.vars.choices|length %}{{ form_row(shotForm.characterIds) }}{% else %}<div hidden>{{ form_row(shotForm.characterIds) }}</div>{% endif %}{{ form_widget(shotForm.characterIdsManaged) }}
   {{ form_widget(shotForm.translatedIdentity) }}{{ form_errors(shotForm.translatedIdentity) }}
   {{ form_widget(shotForm.translationSource) }}{{ form_errors(shotForm.translationSource) }}
   {{ form_widget(shotForm.promptOnly) }}{{ form_errors(shotForm.promptOnly) }}
