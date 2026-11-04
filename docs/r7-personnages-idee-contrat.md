@@ -56,3 +56,5 @@ Ce découpage Symfony sépare la saisie du devis, puis la demande payante de la 
 Sources publiques officielles consultées uniquement ; aucun Playground lancé, SDK installé, clé réelle lue ou API authentifiée appelée. Aucune promesse de ressemblance, tenue, vues cohérentes ou qualité de portrait n’est validée. Aucun code applicatif, schéma, service ou test modifié ; aucune suite/build/navigateur rejoué et aucune revue indépendante nouvelle revendiquée. Les résultats antérieurs ne sont pas présentés comme de nouveaux passages.
 
 Contrôle documentaire et cohérence des paramètres avec le schéma ; `git diff --check`. Pas de coût, activation, génération, email réel, publication, migration, cache dev actualisé, worker redémarré, push ou déploiement. R7.2/R7.3 et R7.3c restent ouverts ; les essais humains demeurent reportés.
+
+Suite du 5 novembre : [brouillon privé et devis image implémentés localement](r7-portraits-brouillons-devis.md). La migration additive a été testée puis son application locale annoncée explicitement pour rendre les écrans utilisables. Aucune génération ni confirmation payante ajoutée ; R7.3b reste ouvert.

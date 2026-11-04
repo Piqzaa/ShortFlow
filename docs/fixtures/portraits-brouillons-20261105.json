@@ -1,0 +1,970 @@
+{
+  "limits": [
+    "R7.3b async submission, retrieval, private pending results and acceptance into a character are not implemented",
+    "R7.2 human tests postponed; no new device, screen reader or image quality certification",
+    "Browser native POST intercepted in isolated replay; actual saves tested separately via BrowserKit",
+    "54 captured HTML views plus two separate DOM-only long-prompt stress cases; stale 422 navigations are expected",
+    "No real provider HTTP, cost, email, activation, publication, push or deployment"
+  ],
+  "price_policy": {
+    "dimensions": {
+      "height": 1024,
+      "width": 1024
+    },
+    "currency": "USD",
+    "costMicros": 30000,
+    "valid_days": 14,
+    "zone": "Europe/Paris",
+    "provider_permissions_credit": "not verified",
+    "quantity": 1,
+    "price_recheck": "No fresh provider lookup; documented contract unchanged",
+    "checked": "2026-11-05"
+  },
+  "browser": {
+    "rows": [
+      {
+        "name": "expired",
+        "js": false,
+        "width": 320,
+        "status": 200,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "list",
+        "js": false,
+        "width": 320,
+        "status": 200,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "key-changed",
+        "js": false,
+        "width": 320,
+        "status": 200,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "new",
+        "js": false,
+        "width": 320,
+        "status": 200,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "empty",
+        "js": false,
+        "width": 320,
+        "status": 200,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "stale",
+        "js": false,
+        "width": 320,
+        "status": 422,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "saved-key",
+        "js": false,
+        "width": 320,
+        "status": 200,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "expired-saved",
+        "js": false,
+        "width": 320,
+        "status": 200,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "saved-missing-key",
+        "js": false,
+        "width": 320,
+        "status": 200,
+        "scroll": 320,
+        "broken": 0
+      },
+      {
+        "name": "expired",
+        "js": false,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "list",
+        "js": false,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "key-changed",
+        "js": false,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "new",
+        "js": false,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "empty",
+        "js": false,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "stale",
+        "js": false,
+        "width": 390,
+        "status": 422,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "saved-key",
+        "js": false,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "long-prompt-dom-stress",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "expired-saved",
+        "js": false,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "saved-missing-key",
+        "js": false,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "expired",
+        "js": false,
+        "width": 768,
+        "status": 200,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "list",
+        "js": false,
+        "width": 768,
+        "status": 200,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "key-changed",
+        "js": false,
+        "width": 768,
+        "status": 200,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "new",
+        "js": false,
+        "width": 768,
+        "status": 200,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "empty",
+        "js": false,
+        "width": 768,
+        "status": 200,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "stale",
+        "js": false,
+        "width": 768,
+        "status": 422,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "saved-key",
+        "js": false,
+        "width": 768,
+        "status": 200,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "expired-saved",
+        "js": false,
+        "width": 768,
+        "status": 200,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "saved-missing-key",
+        "js": false,
+        "width": 768,
+        "status": 200,
+        "scroll": 768,
+        "broken": 0
+      },
+      {
+        "name": "expired",
+        "js": false,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "list",
+        "js": false,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "key-changed",
+        "js": false,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "new",
+        "js": false,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "empty",
+        "js": false,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "stale",
+        "js": false,
+        "width": 1280,
+        "status": 422,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "saved-key",
+        "js": false,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "long-prompt-dom-stress",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "expired-saved",
+        "js": false,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "saved-missing-key",
+        "js": false,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "expired",
+        "js": true,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "list",
+        "js": true,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "key-changed",
+        "js": true,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "new",
+        "js": true,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "empty",
+        "js": true,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "stale",
+        "js": true,
+        "width": 390,
+        "status": 422,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "saved-key",
+        "js": true,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "expired-saved",
+        "js": true,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "saved-missing-key",
+        "js": true,
+        "width": 390,
+        "status": 200,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "expired",
+        "js": true,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "list",
+        "js": true,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "key-changed",
+        "js": true,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "new",
+        "js": true,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "empty",
+        "js": true,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "stale",
+        "js": true,
+        "width": 1280,
+        "status": 422,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "saved-key",
+        "js": true,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "expired-saved",
+        "js": true,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "saved-missing-key",
+        "js": true,
+        "width": 1280,
+        "status": 200,
+        "scroll": 1280,
+        "broken": 0
+      }
+    ],
+    "failed": [],
+    "errors": [],
+    "blocked": []
+  },
+  "keyboard": {
+    "skip": "#contenu",
+    "main": "contenu",
+    "customLabel": "Mon prompt complet (facultatif)",
+    "button": {
+      "label": "Enregistrer le brouillon",
+      "bottom": 756.640625,
+      "navTop": 829
+    },
+    "sent": {
+      "name": "Milo clavier",
+      "idea": "Chat explorateur.",
+      "customPrompt": "One cat on a plain background.",
+      "revision": "0"
+    },
+    "submission": "intercepted replay; actual application saves verified in PHP"
+  },
+  "date": "2026-11-05",
+  "migration": {
+    "available": 41,
+    "test": "up and schema validation; empty table down/up checked; non-empty down refusal tested",
+    "previous_executed": 40,
+    "version": "20261105010000",
+    "workers": "not restarted",
+    "dev": "only pending additive migration, announced and applied",
+    "cache": "web dev refreshed"
+  },
+  "frontend": {
+    "warning": "existing Three.js chunk size",
+    "check": "passed",
+    "build": "passed",
+    "tests": 196
+  },
+  "status": "First sub-lot delivered locally; R7.3b remains open; no image generation",
+  "screenshots": [
+    {
+      "file": "portrait-draft-expired-saved-1280.png",
+      "sha256": "004c39d7bf1eab037ce082819ff9d39c7f50345fd2febb7e9ff48f2b1cdc439c"
+    },
+    {
+      "file": "portrait-draft-expired-saved-390.png",
+      "sha256": "7d42da851f9f38210c3e26cdcf4c6bfe320ff529c4091b120964df91e1ba8f52"
+    },
+    {
+      "file": "portrait-draft-new-1280.png",
+      "sha256": "8dabde41e52401565f29a7b6646dd58232bde82e4ee01373fc9296fec5411df5"
+    },
+    {
+      "file": "portrait-draft-new-390.png",
+      "sha256": "a3c4ef29b68cb3d2646d07adb105acc8b5ea8ce0676e092e83a5f00d0b00cc25"
+    },
+    {
+      "file": "portrait-draft-saved-key-1280.png",
+      "sha256": "d909a0fcdd8dab968cda48bc88851995783116c818ab69927c069e92adb26c8a"
+    },
+    {
+      "file": "portrait-draft-saved-key-390.png",
+      "sha256": "4cc134308642ec5b5f20ea0ee0533558d05db3f27638c13eb62bca29520accb6"
+    },
+    {
+      "file": "portrait-draft-stale-1280.png",
+      "sha256": "836be513e05cf13a2de64d84df91d937e521d6ca3ce45dbf05ab0a9c58a29e7b"
+    },
+    {
+      "file": "portrait-draft-stale-390.png",
+      "sha256": "c4749a3126c48fe798da8692a942ef1ef5f8043b76c1a9d0a68b3cfea5cb58b7"
+    }
+  ],
+  "quality": {
+    "style": "seven files formatted, one entity changed by formatter",
+    "container": "passed",
+    "twig": 125,
+    "test_schema": "valid",
+    "dev_schema": "valid",
+    "phpstan": "passed (src)",
+    "yaml": "not rerun, config unchanged"
+  },
+  "reports": [
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "stale": "8e76941244c2f8a1a41bb4fe9031251aee3e843f9ddf2d50023d2df1acf34b89"
+        }
+      },
+      "case": "testForeignCsrfStaleAndExtraFieldsAreRejectedWithoutLosingText"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": []
+      },
+      "case": "testMigrationRollbackRefusesNonEmptyDraftTable"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "empty": "79e3666bf96fc7e32a1f2bd5a651e326ed03951164ffa41f7e6e3424dbf70d6a",
+          "new": "5025c272f3b621c99aa87c01b58187763fa62258e2236e95b73f23c3d16395fa",
+          "saved-missing-key": "6043bc3d1170430ee52e509bcf8cc8102c42f8e41b93817d8b241eb5bc3cac4b",
+          "list": "c14e8072926ed906fbfd8bf3a6521df9af7aed4aa815b408a4a8202e5be1f8e0"
+        }
+      },
+      "case": "testNativeDraftFormCreatesSeparateEstimateWithoutCharacterOrProviderJob"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": []
+      },
+      "case": "testPaginationEscapingDraftIdentityAndAnonymousAccess"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "expired": "9ea29adc65a73a7c5a61e103e739d95e56df45f241c06c6de5f134ba1c87dd7b",
+          "expired-saved": "480c5d540c35763c2c4f1e63a06747db0f6e3a00bd6bac0df271372e9043638b"
+        }
+      },
+      "case": "testPriceBoundaryPreservesDraftAndNeverReissuesAnExpiredEstimate"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_portrait_draft": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 41,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "saved-key": "45fb04c8ea9c40c6e6659bd8e046246976e17d460f493cfacb7c1b371f46c1be",
+          "key-changed": "d2ece3cdae44fdabda9d3b5f26e7504f1651f7f8b57c540305e8713d0c967790"
+        }
+      },
+      "case": "testQuoteTracksKeyReplacementRemovalAndTextButGetDoesNotRewriteIt"
+    }
+  ],
+  "logs_sha256": {
+    "schema-test.log": "192758555bb8993def242836fbdbc3696967f6f79e3fa04cfcdc51dc55a446f7",
+    "php.log": "7e15f84e766db59e77be1416a83435cb73c17eea8a750b82043677c2cc9e0011",
+    "php-final.log": "5136f3a82242e044924284b8de3a74b54c6e83fc09bdbc1b0ee19b6b1ca9255b",
+    "check.log": "e50903972b142f2ae477d54e23c54bb4abd05719368dff5d75624c9eeb2c7aab",
+    "twig.log": "6fe0ffa7f610245c512678c5d2398562d69adb690dcd56ac03348476b017e675",
+    "frontend.log": "39c280b3d233182804011a38e6e8ce2ba1127f5eb2ac25edb3886c534d70a393",
+    "style.log": "65ccfbbafb45fe6f4e2f300171c5f53b2533164f11e0250c518160c7e7a8779e",
+    "schema-dev.log": "192758555bb8993def242836fbdbc3696967f6f79e3fa04cfcdc51dc55a446f7",
+    "migration-dev.log": "57e7e060b391e46652dff2fdf5613877c1ff5268d1055477c92e5fb9b5911921",
+    "cache-dev.log": "90b1b9e9779d8b42a31cf90378164191b7eb5d94a53cb668eebf87e3088baa8f",
+    "container.log": "999e902548341ec5a7f0b6ff4aef29788e8b8c24a18f75003bc4072dfe00f919",
+    "build.log": "7c6e779334f9dff8b2caf3dd28f0e6c18e606bef878c8d042a166fbd183d83cd",
+    "phpstan.log": "09cea3bdb4e3e9ba8e018ba484ca8066447d838221e34d16e1b8939efaa364fc"
+  },
+  "review": "Local review and targeted tests; no new independent review for this first sub-lot",
+  "lot": "R7.3b private portrait drafts and image estimates",
+  "php": {
+    "new_cases": 6,
+    "assertions": 230,
+    "profile_regression_cases": 9,
+    "global": "not rerun",
+    "tests": 15
+  }
+}

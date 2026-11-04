@@ -3,6 +3,7 @@
 {% block studio_content %}
 <a class="account-secondary composer-back" href="{{ path('app_studio') }}">← Studio</a>
 <div class="workspace-heading"><div><span class="eyebrow">TA BIBLIOTHÈQUE PRIVÉE</span><h1>Mes personnages.</h1><p>Garde leurs portraits et leur apparence au même endroit.</p></div><a class="button" href="{{ path('app_character_new') }}">Ajouter un personnage</a></div>
+<div class="series-actions"><a class="account-secondary" href="{{ path('app_character_idea_new') }}">Depuis une idée</a><a class="account-secondary" href="{{ path('app_character_ideas') }}">Mes idées de portraits</a></div>
 <nav class="series-actions" aria-label="État des personnages"><a class="account-secondary" href="{{ path('app_characters') }}"{% if not archived %} aria-current="page"{% endif %}>Actifs</a><a class="account-secondary" href="{{ path('app_characters',{archives:1}) }}"{% if archived %} aria-current="page"{% endif %}>Archivés</a></nav>
 <p class="library-note">Ces fiches sont privées. Choisis-les dans le Studio ou une série, puis indique leur présence dans chaque scène. Aucun import ne lance de génération.</p>
 <div class="character-grid">

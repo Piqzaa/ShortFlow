@@ -1,0 +1,9 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Idées de portraits — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ path('app_characters') }}">← Mes personnages</a>
+<div class="workspace-heading"><div><span class="eyebrow">AVANT LE PORTRAIT</span><h1>Idées de portraits.</h1><p>Conserve tes descriptions et prépare leur estimation.</p></div><a class="button" href="{{ path('app_character_idea_new') }}">Depuis une idée</a></div>
+<p class="library-note">Ce sont des brouillons privés, pas encore des personnages utilisables dans les scènes. Aucune image n’est générée à cette étape.</p>
+<div class="character-grid">{% for draft in drafts %}<article class="account-panel character-card"><h2>{{ draft.name }}</h2><p>{{ draft.idea|slice(0,160) }}</p><a class="account-secondary" href="{{ path('app_character_idea_edit',{id:draft.id}) }}">Relire et modifier</a></article>{% else %}<section class="account-panel"><h2>Ta première idée.</h2><p>Décris ton personnage pour préparer son portrait.</p></section>{% endfor %}</div>
+{% if pages > 1 %}<nav class="series-actions" aria-label="Pages des idées">{% if page > 1 %}<a href="{{ path('app_character_ideas',{page:page-1}) }}">← Précédente</a>{% endif %}<span>Page {{ page }} sur {{ pages }}</span>{% if page < pages %}<a href="{{ path('app_character_ideas',{page:page+1}) }}">Suivante →</a>{% endif %}</nav>{% endif %}
+{% endblock %}
