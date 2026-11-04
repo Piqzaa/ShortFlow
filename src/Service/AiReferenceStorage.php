@@ -26,6 +26,15 @@ final class AiReferenceStorage
         return $path;
     }
 
+    // Only for rollback of images created by the current operation, never existing references.
+    public function discardNew(User $owner, string $name): void
+    {
+        $path = $this->path($owner, $name);
+        if (!@unlink($path)) {
+            throw new \RuntimeException('Impossible de nettoyer une image du nouvel import.');
+        }
+    }
+
     public function path(User $owner, string $name): string
     {
         if (!preg_match('/^[a-f0-9]{48}\.jpg$/D', $name)) {

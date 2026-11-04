@@ -1,6 +1,7 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}Studio — VydFlow{% endblock %}
 {% block studio_content %}
+<a class="account-secondary" href="{{ path('app_characters') }}">Mes personnages ↗</a>
 {% if episode|default(null) %}<a class="account-secondary composer-back" href="{{ path(episode.standalone ? 'app_studio' : 'app_series_show',episode.standalone ? {} : {id:episode.series.id,episode:episode.id,'_fragment':'episode-' ~ episode.id}) }}">← {{ episode.standalone ? 'Studio' : episode.series.name }}</a>{% endif %}
 <div class="studio-heading creation-heading"><div><span class="eyebrow">CRÉE. PRÉPARE. PUBLIE.</span><h1>{{ episode|default(null) ? episode.title : 'Créer une vidéo.' }}</h1><p>Ton idée, tes références et tes plans au même endroit.</p></div><div class="workspace-heading-actions"><a class="account-secondary" href="{{ path('app_ai_history') }}">Historique {% include 'icons/_arrow_up_right.html.twig' %}</a><a class="account-secondary" href="{{ path('app_dashboard') }}">Mes vidéos {% include 'icons/_arrow_up_right.html.twig' %}</a></div></div>
 

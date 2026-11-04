@@ -1,0 +1,641 @@
+{
+  "status": "Private character profiles delivered locally; series/scene selections pending",
+  "browser": {
+    "rows": [
+      {
+        "name": "new",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "list",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "empty",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "edit",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "h1": "Milo",
+        "brokenImages": 0
+      },
+      {
+        "name": "invalid",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "archives",
+        "js": false,
+        "width": 320,
+        "scroll": 320,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "new",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "list",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "empty",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "edit",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Milo",
+        "brokenImages": 0
+      },
+      {
+        "name": "invalid",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "archives",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "new",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "list",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "empty",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "edit",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "h1": "Milo",
+        "brokenImages": 0
+      },
+      {
+        "name": "invalid",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "archives",
+        "js": false,
+        "width": 768,
+        "scroll": 768,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "new",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "list",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "empty",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "edit",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Milo",
+        "brokenImages": 0
+      },
+      {
+        "name": "invalid",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "archives",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "new",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "list",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "empty",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "edit",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Milo",
+        "brokenImages": 0
+      },
+      {
+        "name": "invalid",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "archives",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "new",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "list",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "empty",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      },
+      {
+        "name": "edit",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Milo",
+        "brokenImages": 0
+      },
+      {
+        "name": "invalid",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Nouveau personnage.",
+        "brokenImages": 0
+      },
+      {
+        "name": "archives",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "h1": "Mes personnages.",
+        "brokenImages": 0
+      }
+    ],
+    "failures": [],
+    "blocked": []
+  },
+  "limits": [
+    "No character selection in series/scenes yet; R7.3a remains open",
+    "R7.2 testers and R7.3 feedback corrections remain open",
+    "No real provider HTTP, costs, email, inference, social publication, indexing activation, production deployment or push",
+    "Browser views replay test responses; no new real-device or screen-reader certification",
+    "Historical images consume shared storage and remain pinned; archive is not physical deletion"
+  ],
+  "frontend": {
+    "tests": 195,
+    "warning": "existing Three.js chunk size",
+    "build": "passed after final CSS",
+    "check": "passed"
+  },
+  "php": {
+    "regression": {
+      "tests": 4,
+      "assertions": 36
+    },
+    "profiles": {
+      "tests": 4,
+      "assertions": 66
+    },
+    "global": "not rerun"
+  },
+  "reports": [
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 1,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 1,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "empty": "541add0d84507927229305a24de2b9297d1370e51e5efafabe8a7939c117d546",
+          "new": "8338f61df135b36a756f191710db86206d9a2aded92573607afb5f0941a9e5ad",
+          "list": "58c40283c7276c9ebb690c39041c599ce4c0357481b6e44cd088301310e25fa7",
+          "edit": "9c27722efd27b78522228d4a724dfe59649495146b225ab1b88eb1cf915481d8",
+          "archives": "500d3b58b472b4855f88385dfed6b3338018db72591b760875951dc0fef89e4a"
+        }
+      },
+      "case": "testCrudStaleFormsArchiveAndPrivateImages"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 1,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 1,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": {
+          "invalid": "a15079ed1aba34c57e4ba931f312393fd446d8703c7c77cb7a8c0f86b0ef023d"
+        }
+      },
+      "case": "testInvalidFilesKeepTextAndRollbackEveryNewImage"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 1,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 1,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": []
+      },
+      "case": "testMaintenancePinsArchivedAndReplacedImages"
+    },
+    {
+      "report": {
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 1,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 1,
+          "ai_episode": 0,
+          "ai_generation": 0,
+          "ai_series": 0,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "http": 0,
+        "screens": []
+      },
+      "case": "testPaginationStaleArchiveAndFailedReplacementPreserveImages"
+    }
+  ],
+  "screenshots": [
+    {
+      "sha256": "9ea5d9b58a8f85afe36363532458a1dbe1475e972b634f3c68f208ddf96a9f07",
+      "file": "characters-invalid-1280.png"
+    },
+    {
+      "sha256": "d222bb8332b96bcda8feb0e294ddeb081a8fe29fd8c2279f969dac81dfece751",
+      "file": "characters-invalid-390.png"
+    },
+    {
+      "sha256": "6daae19b0ee6d6f1b5e197ee06ec81388f8df99729cd0762729658db3a53394a",
+      "file": "characters-list-1280.png"
+    },
+    {
+      "sha256": "dad3ea83b9f76c8db4bbba6ea79c9423991b110707f720f4b10a3c0a91bff722",
+      "file": "characters-list-390.png"
+    },
+    {
+      "sha256": "23a4a1b089537f39afd2c3d00c9a15210d019293f8e5939b33f7cc8f322972ca",
+      "file": "characters-list-bottom-390.png"
+    },
+    {
+      "sha256": "e9a72c81ebd4d8d0d8f9d4fface28e26ed5f09e96354c29c1515c967b8cf0743",
+      "file": "characters-new-1280.png"
+    },
+    {
+      "sha256": "05e614c67b44999cd01c04e73bc1ef73137ee742c6bdfeea98b9930204e812cf",
+      "file": "characters-new-390.png"
+    },
+    {
+      "sha256": "58dcedfcbdeb8c680a2353b7b5e440283ccf585e9d80b30df9166d519c9b5342",
+      "file": "characters-new-bottom-390.png"
+    }
+  ],
+  "migration": {
+    "workers": "not restarted",
+    "web_cache": "dev refreshed",
+    "test": "up, empty-table down/up and schema verified",
+    "version": "20261104010000",
+    "dev": "only pending migration applied, additive table/indexes/FK"
+  },
+  "keyboard": {
+    "first": "#contenu",
+    "skip": "contenu",
+    "input": {
+      "value": "Essai clavier",
+      "label": "Nom"
+    },
+    "heading": "Mes personnages.",
+    "bottom": {
+      "buttonBottom": 733.25,
+      "navTop": 829
+    }
+  },
+  "lot": "R7.3a.1",
+  "date": "2026-11-04",
+  "quality": {
+    "targeted_style": "passed",
+    "test_schema": "valid",
+    "container": "passed",
+    "twig": 122,
+    "dev_schema": "valid",
+    "yaml": 19,
+    "phpstan": "passed"
+  },
+  "html_hashes_verified": 6
+}

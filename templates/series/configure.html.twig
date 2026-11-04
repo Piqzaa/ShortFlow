@@ -1,6 +1,7 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}{{ series ? 'Configurer la série' : 'Nouvelle série' }} — VydFlow{% endblock %}
 {% block studio_content %}
+<a class="account-secondary" href="{{ path('app_characters') }}">Mes personnages ↗</a>
 <a class="account-secondary composer-back" href="{{ series ? path('app_series_show',{id:series.id}) : path('app_series') }}">← {{ series ? 'Les épisodes' : 'Mes séries' }}</a>
 {% if series %}<div class="series-actions"><a class="account-secondary" href="{{ path('app_series_editorial',{id:series.id}) }}">Voix et hashtags ↗</a><a class="account-secondary" href="{{ path('app_series_montage',{id:series.id}) }}">Montage des épisodes ↗</a></div>{% endif %}
 <div class="workspace-heading"><div><span class="eyebrow">LE CADRE COMMUN</span><h1>{{ series ? 'Configurer la série' : 'Ta nouvelle série' }}</h1><p>{{ series ? 'Les réglages vidéo s’appliqueront aux épisodes sans estimation. Les prompts existants seront conservés.' : 'Définis ton univers et choisis combien d’épisodes préparer.' }}</p></div></div>
