@@ -1,0 +1,1174 @@
+{
+  "log_sha256": "060fba7c1b840445986afb3f7f94a60d4fa8fcd5f00cb610e7011fb501a50959",
+  "php": {
+    "tests": 22,
+    "overlap": "Four new scenarios included, do not add to 22",
+    "new_scenarios": 4,
+    "assertions": 322,
+    "global": "not rerun"
+  },
+  "profile_regressions": [
+    {
+      "screens": {
+        "selection-autosave": "1432d40c8d9011ed8a2314354d6d4838cb606adbe31c24f066c4d128579cbcff"
+      },
+      "tables": 25,
+      "case": "testAutosaveKeepsFrozenSelectionAndOlderPayloadCannotEraseSceneCharacters",
+      "unexpectedHttp": 0,
+      "report_sha256": "6ce1f4140a324038c1a2aa8bbedaf8782950ac52cee52d830fd63472a74fa2ad",
+      "before_after_equal": true
+    },
+    {
+      "screens": {
+        "edit": "5dc372a8e74da6e79c9cc7f09a086dbe5d7990672d8401036a47ba3f6cd2bc39",
+        "list": "2962d36d26b7cd32083d8faf91db041259ac4b364818d715ef434113fc998047",
+        "empty": "070d220e974f3f5bf1c7776187a01d5537f7335c9ccb8f2bacf1c6fa3422abbc",
+        "archives": "04539c236b6795b343a3fad434791021f4de79f68f08b57605d0f4d214e918c9",
+        "new": "892e2ca0eb1dae3cd1a6cd5fc320fd338f871b2663317661eb65596c625a1e49"
+      },
+      "tables": 25,
+      "case": "testCrudStaleFormsArchiveAndPrivateImages",
+      "unexpectedHttp": 0,
+      "report_sha256": "181558f90c22da33d4ca9740bba00d85d2e1ed69956b71cb19651d1725c7a1f6",
+      "before_after_equal": true
+    },
+    {
+      "screens": {
+        "invalid": "3e27db817e009739139a40abf40e2023aadec222d0584230651a101712a3aacf"
+      },
+      "tables": 25,
+      "case": "testInvalidFilesKeepTextAndRollbackEveryNewImage",
+      "unexpectedHttp": 0,
+      "report_sha256": "51b1b945c6b24fc79b4145a0f0de0aa19f678def7807a2c7595e4be04ea0e18b",
+      "before_after_equal": true
+    },
+    {
+      "screens": {},
+      "tables": 25,
+      "case": "testMaintenancePinsArchivedAndReplacedImages",
+      "unexpectedHttp": 0,
+      "report_sha256": "fd116da0db605052ee4bdafa68345569b010f75dbfb276eeadd2ec755eccc175",
+      "before_after_equal": true
+    },
+    {
+      "screens": {},
+      "tables": 25,
+      "case": "testPaginationStaleArchiveAndFailedReplacementPreserveImages",
+      "unexpectedHttp": 0,
+      "report_sha256": "fd116da0db605052ee4bdafa68345569b010f75dbfb276eeadd2ec755eccc175",
+      "before_after_equal": true
+    },
+    {
+      "screens": {},
+      "tables": 25,
+      "case": "testSceneResolutionRejectsIncompatibilityMissingFilesAndUnknownCharactersWithoutFallback",
+      "unexpectedHttp": 0,
+      "report_sha256": "fd116da0db605052ee4bdafa68345569b010f75dbfb276eeadd2ec755eccc175",
+      "before_after_equal": true
+    },
+    {
+      "screens": {},
+      "tables": 25,
+      "case": "testSelectionRejectsForeignStaleAndDuplicateVersionsButKeepsFrozenArchive",
+      "unexpectedHttp": 0,
+      "report_sha256": "fd116da0db605052ee4bdafa68345569b010f75dbfb276eeadd2ec755eccc175",
+      "before_after_equal": true
+    },
+    {
+      "screens": {
+        "selection-series-configured": "ccd0a282743b5460b10ac638f195a6c608de5830b2ffe95dd70689877db3bcf4",
+        "selection-series": "4e47f3206a00537530f028e6002f1bfce7f1102f1eb76316136294621e8d25cc"
+      },
+      "tables": 25,
+      "case": "testSeriesSelectionFreezesExistingEpisodeAndExplicitClearDoesNotRefreshIt",
+      "unexpectedHttp": 0,
+      "report_sha256": "6bdcc0f648470f5d8c7ab106fc9bb42bc685e04e6e11228d19a1d5f7abf53c1c",
+      "before_after_equal": true
+    },
+    {
+      "screens": {
+        "selection-review": "60977ea5bc904a2194cc3d51618719417135d139bd2b48a811866b7aba749c5e",
+        "selection-studio": "826bea7b63c1994e9a382c0d6e89a758e5e05c3bacd936f0ee31ad13fa1c9de4",
+        "selection-edit": "da90b0926739727d2bc3a91bc9ad1f6f0f89d1583d656b438d3c482d9cda1036"
+      },
+      "tables": 25,
+      "case": "testStudioThreeScenesUseOnlyTheirFrozenCharactersAndQuoteChangesWithPresence",
+      "unexpectedHttp": 0,
+      "report_sha256": "b096086e89adf2d22096c0782a6c3200b0263cd1cd13e6a11b54e94701561a33",
+      "before_after_equal": true
+    }
+  ],
+  "browser": {
+    "rows": [
+      {
+        "name": "kling-empty-scene",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "first-ready",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "polling-paused",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "second-review",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "ambiguous-paused",
+        "js": false,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "kling-empty-scene",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "first-ready",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "polling-paused",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "second-review",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "ambiguous-paused",
+        "js": false,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "kling-empty-scene",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "first-ready",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "polling-paused",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "second-review",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "ambiguous-paused",
+        "js": true,
+        "width": 390,
+        "scroll": 390,
+        "broken": 0
+      },
+      {
+        "name": "kling-empty-scene",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "first-ready",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "polling-paused",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "second-review",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      },
+      {
+        "name": "ambiguous-paused",
+        "js": true,
+        "width": 1280,
+        "scroll": 1280,
+        "broken": 0
+      }
+    ],
+    "failed": [],
+    "errors": [],
+    "blocked": []
+  },
+  "date": "2026-11-04",
+  "lot": "R7.3a final technical review",
+  "totals": {
+    "image_references_verified": 13,
+    "journey_reports": 4,
+    "journey_html_verified": 5,
+    "simulated_posts": 12,
+    "media_verified": 16,
+    "tables_per_report": 25,
+    "simulated_http": 46,
+    "profile_reports": 9
+  },
+  "boundaries": {
+    "real_social_publication": 0,
+    "real_email": 0,
+    "workers": "not restarted",
+    "test_price_clock": "2026-10-30, existing synthetic fixture; no real tariffs refreshed",
+    "deployment": "none",
+    "test_generation_flag": "temporary test-process variables, restored",
+    "dev_cache": "unchanged",
+    "real_cost": 0,
+    "migration": "none",
+    "dev_generation_activation": "unchanged",
+    "push": "none",
+    "real_provider_http": 0
+  },
+  "source_test_sha256": "3bf72053b0a0b8bd65d5f516f4bc0b1ad3d9faf270b3fe7d9910e2828ca0a566",
+  "quality": {
+    "new_test_phpstan": "passed",
+    "app_static_schema": "Previous sub-lot, no application/schema change here",
+    "frontend": "196/check/build previous sub-lot; no frontend code changed, not rerun",
+    "new_test_style": "passed"
+  },
+  "screenshots": [
+    {
+      "file": "character-final-ambiguous-paused-1280.png",
+      "sha256": "0c917fba5619ffb0d4d5d7643129ff3e07a9c41c3c27838a572b5aebd046455e"
+    },
+    {
+      "file": "character-final-ambiguous-paused-390.png",
+      "sha256": "25f2acd6ddc3b21c085fbf35f14e2f349b0f4d9472e4b75a48f8d69052c82caf"
+    },
+    {
+      "file": "character-final-first-ready-1280.png",
+      "sha256": "8c111e6551a8fd6a32b53b2fb8a452a61fc0cb66b857ad1a98a2449d701402a5"
+    },
+    {
+      "file": "character-final-first-ready-390.png",
+      "sha256": "b04ac08f3543d19dc169c608189d4e33e46efd73b526be1828e26fc6e0cc0def"
+    },
+    {
+      "file": "character-final-kling-empty-scene-1280.png",
+      "sha256": "e4ae183859e1fc643ff169252aff667b02b6b51dea3f5807d905dbfa03786d86"
+    },
+    {
+      "file": "character-final-kling-empty-scene-390.png",
+      "sha256": "af52b9d66149666e3ce5610b69205f524cd6a2d5fb30beae7f1ee3f50689e460"
+    },
+    {
+      "file": "character-final-polling-paused-1280.png",
+      "sha256": "5404bcd7132010f93f05efa25dd29e0fe7cae83c606cf8647f01dd92e80da00b"
+    },
+    {
+      "file": "character-final-polling-paused-390.png",
+      "sha256": "697f0c8ab494f9237859fb9a63189fca6bc715f52ef9dcea58d282aa0e712a79"
+    },
+    {
+      "file": "character-final-second-review-1280.png",
+      "sha256": "560ea60f871c3747c5f94da5d479a01e8844b4a0640456c162c913af143e4d88"
+    },
+    {
+      "file": "character-final-second-review-390.png",
+      "sha256": "cf12a87254d112d0e1ba371049db73d328ace169716d287e153aae0298a0e232"
+    }
+  ],
+  "review": "Independent read-only review, cleanup and HTTP snapshot findings corrected, no remaining blocker identified; reviewer did not execute DB tests",
+  "limits": [
+    "R7.2 human observations postponed; R7.3, R7.3b/c and R7.4-R7.6 remain open",
+    "Solid-color references and purple synthetic clips do not demonstrate audiovisual AI consistency or quality",
+    "Service methods normally called by handlers executed directly; no real worker restart or external API run",
+    "Browser replays successful BrowserKit captures and preserved synthetic media; no new device or screen-reader certification",
+    "Existing approved/scheduled publication paths were not modified; prior product journey evidence remains separate"
+  ],
+  "journeys": [
+    {
+      "report_sha256": "49b6385773210b5c52767e9655c98cc21e2c2585d47e416db1efe464d78a0289",
+      "case": "testAmbiguousSubmissionDoesNotResendOrStartTheFollowingCharacter",
+      "report": {
+        "completed": true,
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "filesRestored": true,
+        "unexpectedHttp": 0,
+        "http": [
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          }
+        ],
+        "posts": [
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Lea\": \"White cat, green coat.\". Reference1=\"Lea\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+                "bytes": 1603,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          }
+        ],
+        "images": {
+          "10659333f5eefca679dbc9dc69149bcce170be0a43a14113.jpg": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+          "67d1d3e9781cfa7ecca09bdad5e25ebe5e81de22ffcb0437.jpg": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e"
+        },
+        "media": {
+          "synthetic-clip.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640
+          }
+        },
+        "snapshots": {
+          "ambiguous-paused": "d6040f81154277971fdc4ec7a25353056573d7f4c296604e83af00455e843249"
+        }
+      }
+    },
+    {
+      "report_sha256": "4eee44e5709d501a51b30c57abd04b4ce50d18b67270988afde7edb77094aa2a",
+      "case": "testKlingDispatchKeepsStartFrameAndGroupedViewsSeparateFromScenePresence",
+      "report": {
+        "completed": true,
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "filesRestored": true,
+        "unexpectedHttp": 0,
+        "http": [
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video/requests/characters-1/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video/requests/characters-1"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          },
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video/requests/characters-2/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video/requests/characters-2"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          },
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video/requests/characters-3/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video/requests/characters-3"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          }
+        ],
+        "posts": [
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Begin at the supplied first frame. Keep the visible subject consistent. Respect the end frame when supplied. Appearance of \"Milo\": \"Ginger cat, blue coat.\". @Element1 identifies the character named \"Milo\". Its appearance is guided by the reference; its participation follows the scene.\nScene: A cat walks slowly across the garden.",
+            "duration": "5",
+            "enable_safety_checker": true,
+            "generate_audio": true,
+            "shot_type": "customize",
+            "elements": [
+              {
+                "frontal_image_url": {
+                  "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+                  "bytes": 1604,
+                  "width": 360,
+                  "height": 640
+                },
+                "reference_image_urls": [
+                  {
+                    "sha256": "25fcc22b778b1332198c3c91470db4ef3a5e612e330b3d9637e47b03c879f81e",
+                    "bytes": 1604,
+                    "width": 360,
+                    "height": 640
+                  }
+                ]
+              }
+            ],
+            "start_image_url": {
+              "sha256": "6dd62d1a3d7c6b2a410c31661f51dac22b4c4fecc010117ad104c06c50d500a0",
+              "bytes": 12464,
+              "width": 1080,
+              "height": 1920
+            }
+          },
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Begin at the supplied first frame. Keep the visible subject consistent. Respect the end frame when supplied. Appearance of \"Lea\": \"White cat, green coat.\". @Element1 identifies the character named \"Lea\". Its appearance is guided by the reference; its participation follows the scene. Appearance of \"Milo\": \"Ginger cat, blue coat.\". @Element2 identifies the character named \"Milo\". Its appearance is guided by the reference; its participation follows the scene.\nScene: A cat walks slowly across the garden.",
+            "duration": "5",
+            "enable_safety_checker": true,
+            "generate_audio": true,
+            "shot_type": "customize",
+            "elements": [
+              {
+                "frontal_image_url": {
+                  "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+                  "bytes": 1603,
+                  "width": 360,
+                  "height": 640
+                },
+                "reference_image_urls": [
+                  {
+                    "sha256": "3f4ffdf93a0474ca1d229f56ed3bcc80b48a9410e0ac2688274cfae332b2873a",
+                    "bytes": 1604,
+                    "width": 360,
+                    "height": 640
+                  }
+                ]
+              },
+              {
+                "frontal_image_url": {
+                  "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+                  "bytes": 1604,
+                  "width": 360,
+                  "height": 640
+                },
+                "reference_image_urls": [
+                  {
+                    "sha256": "25fcc22b778b1332198c3c91470db4ef3a5e612e330b3d9637e47b03c879f81e",
+                    "bytes": 1604,
+                    "width": 360,
+                    "height": 640
+                  }
+                ]
+              }
+            ],
+            "start_image_url": {
+              "sha256": "6dd62d1a3d7c6b2a410c31661f51dac22b4c4fecc010117ad104c06c50d500a0",
+              "bytes": 12464,
+              "width": 1080,
+              "height": 1920
+            }
+          },
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Begin at the supplied first frame. Keep the visible subject consistent. Respect the end frame when supplied.\nScene: A cat walks slowly across the garden.",
+            "duration": "5",
+            "enable_safety_checker": true,
+            "generate_audio": true,
+            "shot_type": "customize",
+            "start_image_url": {
+              "sha256": "6dd62d1a3d7c6b2a410c31661f51dac22b4c4fecc010117ad104c06c50d500a0",
+              "bytes": 12464,
+              "width": 1080,
+              "height": 1920
+            }
+          }
+        ],
+        "images": {
+          "a69a231b6f6c8cc09a362d412d15bb56a7afe9d0f9884034.jpg": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+          "bf4a2a333cd6fd3b068c480a2241c2b5a891d348127abc5f.jpg": "25fcc22b778b1332198c3c91470db4ef3a5e612e330b3d9637e47b03c879f81e",
+          "91c7cf427822d23c9e599ef29a9cd05fc4d23b68a7bdb0f6.jpg": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+          "0831864705c1353dc43c0c724b8f528706402b0f13c91cab.jpg": "3f4ffdf93a0474ca1d229f56ed3bcc80b48a9410e0ac2688274cfae332b2873a",
+          "9fa97122aed81586fab22d55a305264030287f62e26d29c5.jpg": "6a4168b0c378967170c90afff206827045907c2a836d1d45bf3edea239e06a92"
+        },
+        "media": {
+          "synthetic-clip.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640
+          },
+          "clip-33642.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33642
+          },
+          "clip-33643.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33643
+          },
+          "clip-33644.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33644
+          }
+        },
+        "snapshots": {
+          "kling-empty-scene": "32fa314bd00842d9f663453510242c3b001b5aa7661a26fb1d19a652d104c487"
+        }
+      }
+    },
+    {
+      "report_sha256": "229cc4444cc108411dee6193ce8947e2311f6529b5cdd1c22cf9196cf881bf2e",
+      "case": "testPollingFailureRecoversSameRequestWithoutResendingOrLosingRemainingCharacters",
+      "report": {
+        "completed": true,
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "filesRestored": true,
+        "unexpectedHttp": 0,
+        "http": [
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-1/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-1/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-1"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          },
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-2/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-2"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          }
+        ],
+        "posts": [
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Ginger cat, blue coat.\". Reference1=\"Milo\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+                "bytes": 1604,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          },
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Lea\": \"White cat, green coat.\". Reference1=\"Lea\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+                "bytes": 1603,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          }
+        ],
+        "images": {
+          "eac8ae5fd44d3829f41738f31b5522fcc85b686e28de3ff8.jpg": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+          "aaac21daef0cab9f05593dff1958045310c490b238c4aa10.jpg": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e"
+        },
+        "media": {
+          "synthetic-clip.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640
+          },
+          "clip-33640.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33640
+          },
+          "clip-33641.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33641
+          }
+        },
+        "snapshots": {
+          "polling-paused": "ccd0f7fe7b58480bf8434b92315e0aab3b78205e8906136530ec685f4158c072"
+        }
+      }
+    },
+    {
+      "report_sha256": "24a3d6c4d4ae4e400c53ee89a9039550bd5e0b56d46bab798c5e8971ff83ecec",
+      "case": "testTwoEpisodesKeepFrozenCastThroughLibraryChangesAndSendOnlyTheirSceneReferences",
+      "report": {
+        "completed": true,
+        "before": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "after": {
+          "account_token": 0,
+          "ai_character": 0,
+          "ai_credential": 0,
+          "ai_episode": 3,
+          "ai_generation": 0,
+          "ai_series": 1,
+          "ai_shot": 0,
+          "app_user": 2,
+          "doctrine_migration_versions": 40,
+          "instagram_connection": 0,
+          "instagram_publication": 0,
+          "messenger_messages": 0,
+          "publication_draft": 0,
+          "publication_draft_item": 0,
+          "publication_statistic": 0,
+          "series_occurrence": 0,
+          "series_recurrence": 0,
+          "story_proposal": 0,
+          "tiktok_connection": 0,
+          "tiktok_publication": 0,
+          "video_asset": 0,
+          "video_edit": 0,
+          "waitlist_entry": 1,
+          "youtube_connection": 0,
+          "youtube_publication": 0
+        },
+        "filesRestored": true,
+        "unexpectedHttp": 0,
+        "http": [
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-1/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-1"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          },
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-2/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-2"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          },
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-3/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-3"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          },
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-4/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-4"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          },
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-5/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-5"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          },
+          {
+            "method": "POST",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-6/status"
+          },
+          {
+            "method": "GET",
+            "url": "https://queue.fal.run/fal-ai/vidu/q1/reference-to-video/requests/characters-6"
+          },
+          {
+            "method": "GET",
+            "url": "https://v3.fal.media/files/characters-synthetic.mp4"
+          }
+        ],
+        "posts": [
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Ginger cat, blue coat.\". Reference1=\"Milo\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+                "bytes": 1604,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          },
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Lea\": \"White cat, green coat.\". Reference1=\"Lea\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+                "bytes": 1603,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          },
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Ginger cat, blue coat.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Lea\": \"White cat, green coat.\". Reference2=\"Lea\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+                "bytes": 1604,
+                "width": 360,
+                "height": 640
+              },
+              {
+                "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+                "bytes": 1603,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          },
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo updated\": \"Ginger cat, red coat.\". Reference1=\"Milo updated\"(character,unspecified).\nScene: A cat walks across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "6a4168b0c378967170c90afff206827045907c2a836d1d45bf3edea239e06a92",
+                "bytes": 1604,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          },
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Lea\": \"White cat, green coat.\". Reference1=\"Lea\"(character,unspecified).\nScene: A cat walks across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+                "bytes": 1603,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          },
+          {
+            "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo updated\": \"Ginger cat, red coat.\". Reference1=\"Milo updated\"(character,unspecified). Appearance of \"Lea\": \"White cat, green coat.\". Reference2=\"Lea\"(character,unspecified).\nScene: A cat walks across the garden.",
+            "aspect_ratio": "9:16",
+            "enable_safety_checker": true,
+            "bgm": false,
+            "movement_amplitude": "auto",
+            "reference_image_urls": [
+              {
+                "sha256": "6a4168b0c378967170c90afff206827045907c2a836d1d45bf3edea239e06a92",
+                "bytes": 1604,
+                "width": 360,
+                "height": 640
+              },
+              {
+                "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+                "bytes": 1603,
+                "width": 360,
+                "height": 640
+              }
+            ]
+          }
+        ],
+        "images": {
+          "0d937ccf57fd4a5feb0ec547a36f7e72a3e7083f018dee6f.jpg": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+          "473c599ce54670c99528b545ef90f4aa6eb7b58c73540904.jpg": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+          "7dc8802369fd5a56aa5b5569a119e0d5082f643e767c9bca.jpg": "6a4168b0c378967170c90afff206827045907c2a836d1d45bf3edea239e06a92",
+          "180f4887207c1df15cd1c4abd776d1d0b21175e9b74ba567.jpg": "66eedd921380d91b9cc04e4bd40f80fae8859daacf41524b7cdc43b31624353c"
+        },
+        "media": {
+          "synthetic-clip.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640
+          },
+          "clip-33633.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33633
+          },
+          "clip-33634.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33634
+          },
+          "clip-33635.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33635
+          },
+          "assembled.mp4": {
+            "sha256": "496c76358ee1f1a871b79c94bece10a313780a5057fb23b5fc77ce514add9eb1",
+            "seconds": 15.022,
+            "width": 1080,
+            "height": 1920,
+            "videoId": 33636
+          },
+          "clip-33637.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33637
+          },
+          "clip-33638.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33638
+          },
+          "clip-33639.mp4": {
+            "sha256": "e0bacc4946abaa51a82bf0b02a85e0f69d82dcabffe5d90fe0e37987a047df3e",
+            "seconds": 5,
+            "width": 360,
+            "height": 640,
+            "videoId": 33639
+          }
+        },
+        "snapshots": {
+          "first-ready": "f24c2a6b11fce396b4010e89eca98158c4e6c23f6761a991efe57e36e228e2dd",
+          "second-review": "c7b83b71e2b032acde2ecef14c2e43043f65ae3bf46ef9f730479747046b719b"
+        }
+      }
+    }
+  ],
+  "status": "Technically complete on bounded local simulated scope"
+}
