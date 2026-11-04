@@ -44,3 +44,5 @@ Pour comprendre le découpage Symfony : le formulaire collecte l’idée ; le se
 Cadrage livré uniquement. Aucun code applicatif, schéma, service ou test modifié ; aucune suite ou recette navigateur rejouée pour ce document. Les résultats antérieurs restent ceux de leurs lots. Contrôle documentaire par `git diff --check`, sans nouvelle revue indépendante revendiquée.
 
 **Prochain point exact : vérifier et documenter le contrat d’un modèle image, puis préparer le premier sous-lot simulé.** Aucun appel fournisseur, coût, email réel, activation, publication, migration, cache dev actualisé, worker redémarré, push ou déploiement.
+
+Suite du 5 novembre : [contrat du candidat image documenté](r7-personnages-idee-contrat.md), avec tarif public daté et première connexion limitée à la clé API. Les décisions ci-dessus étaient celles du cadrage initial ; aucune génération implémentée, R7.3b reste ouvert.
