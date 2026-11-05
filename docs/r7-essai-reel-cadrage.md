@@ -1,6 +1,6 @@
 # R7.4 — proposition d’essai réel limité
 
-5 novembre 2026. **Cadrage préparé, essai non autorisé et non lancé. R7.4 reste ouvert.** Le propriétaire doit encore choisir le budget, confirmer le compte facturé et les deux portraits, puis valider le devis final avant tout envoi. Aucun achat de crédits, téléchargement de référence vers un fournisseur, génération ou activation effectué ici.
+5 novembre 2026. **Cadrage préparé, essai non autorisé et non lancé. R7.4 reste ouvert.** Le propriétaire a retenu un plafond de préparation de 4 USD et désigné le compte Fal d’Alex Berrel. Deux portraits ont été créés avec l’outil intégré `image_gen` et importés localement ; voir [leur provenance](pilotes/r74-personnages/README.md). Il reste à vérifier le lien avec la clé VydFlow, préparer les quatre devis finaux et obtenir l’accord distinct de lancement. Aucun achat de crédits, upload Fal, appel d’inférence Fal ou activation effectué ici.
 
 ## Proposition à relire
 
@@ -8,13 +8,13 @@ Tester d’abord la continuité visuelle avec **quatre mini-épisodes de dix sec
 
 Modèle candidat déjà intégré : **Vidu Q1 Référence de personnage**, `fal-ai/vidu/q1/reference-to-video`, via la **clé API enregistrée dans VydFlow**. Le compte du connecteur Fal de l’assistant n’est pas présumé identique à ce compte applicatif. Aucun appel de génération par le connecteur ne remplacerait la vérification du parcours VydFlow.
 
-Le tarif public consulté le 5 novembre indique **0,40 USD pour une vidéo de cinq secondes**, soit **8 × 0,40 = 3,20 USD estimés**, hors taxes et conversion. **Plafond proposé : 4 USD de générations, à accepter ou modifier par le propriétaire. Aucun plafond n’est encore autorisé.** Ce plafond de consentement n’est pas un réglage de facturation automatiquement configuré chez Fal. Une éventuelle recharge du compte est une décision distincte, jamais automatique. [Page officielle du modèle et du tarif](https://fal.ai/models/fal-ai/vidu/q1/reference-to-video).
+Le tarif public consulté le 5 novembre indique **0,40 USD pour une vidéo de cinq secondes**, soit **8 × 0,40 = 3,20 USD estimés**, hors taxes et conversion. **Plafond retenu par le propriétaire : 4 USD pour préparer l’essai. Aucun lancement payant n’est encore autorisé.** Ce plafond de consentement n’est pas un réglage de facturation automatiquement configuré chez Fal. Une éventuelle recharge du compte est une décision distincte, jamais automatique. [Page officielle du modèle et du tarif](https://fal.ai/models/fal-ai/vidu/q1/reference-to-video).
 
 Le prix public n’établit ni le solde, ni les permissions de clé, ni un tarif propre au compte. Au moment de l’essai, relire le tarif et le devis exact, refuser toute différence non approuvée et compter chaque soumission, même si son résultat est incertain. Huit demandes constituent une limite de quantité : un reliquat de budget n’autorise pas une variante supplémentaire.
 
 ## Références et paramètres
 
-**Deux portraits réels à choisir et faire approuver, sans nouvelle génération d’image prévue.** Les noms Milo/Nox et leurs traits reprennent le [pilote original](pilote-histoire-chats.md), mais les fiches utilisables ne sont pas supposées déjà présentes. Les images de scène du pilote comportent les deux personnages et ne sont pas automatiquement assimilées à deux portraits individuels validés. Si d’autres fiches sont retenues, réviser les noms/prompts avant tout accord de lancement.
+**Deux portraits proposés créés avec `image_gen`, puis importés dans les fiches privées Milo n° 1 et Nox n° 2, révision 1, du profil local Vyd.** Aucun portrait Fal payant supplémentaire n’est prévu ; la relecture humaine pourra accompagner l’accord final. Les noms et traits reprennent le [pilote original](pilote-histoire-chats.md). Les images de scène du pilote comportent les deux personnages et ne sont pas automatiquement assimilées à deux portraits individuels validés. Si d’autres fiches sont retenues, réviser les noms/prompts avant tout accord de lancement.
 
 Conserver pour chaque référence : propriétaire applicatif, identifiant et révision de fiche, nom de fichier privé et SHA-256. Fixer les copies dans les quatre préparations, avec Milo seul dans les quatre premiers clips et Milo/Nox dans les quatre suivants. Ni mise à jour implicite des fiches ni ajout de tous les personnages à chaque scène.
 
@@ -22,7 +22,7 @@ Paramètres prévus : vertical 9:16, caméra fixe, actions simples, `bgm=false`,
 
 Le schéma actuel demande `prompt` et `reference_image_urls`, avec prompt limité à 1 500 caractères et jusqu’à sept références décrites. L’API documente aussi les Data URI utilisées par l’adaptateur existant. Le contrat ne fournit pas de champ de durée pour cet endpoint ; ne pas ajouter un `duration` inventé : cinq secondes est ici la durée annoncée de la sortie. Vérifier aussi la longueur du prompt final enrichi par VydFlow après sélection des fiches, pas seulement celle du texte de scène. [Contrat API officiel](https://fal.ai/models/fal-ai/vidu/q1/reference-to-video/api).
 
-Les huit prompts précis et les paramètres proposés figurent dans [le protocole JSON](fixtures/r74-essai-propose-20261105.json). Ce fichier est un **document de préparation**, avec références/compte/accord encore absents, pas un corps de requête prêt à envoyer.
+Les huit prompts précis et les paramètres proposés figurent dans [le protocole JSON](fixtures/r74-essai-propose-20261105.json). Ce fichier est un **document de préparation**, avec références désormais fixées, compte Fal désigné mais lien applicatif non vérifié, devis et accord final encore absents, pas un corps de requête prêt à envoyer.
 
 | Épisode | Personnages | Deux actions simples | Estimation publique |
 | --- | --- | --- | --- |
@@ -62,8 +62,8 @@ Le propriétaire peut rester à **0 USD de nouvel appel**. Le [premier essai rob
 
 ## Vérification de ce cadrage
 
-Page et API publiques Vidu consultées, schéma du catalogue Fal lu via le connecteur ; aucune génération/upload/solde/historique demandé. La connexion du connecteur ne prouve pas le compte VydFlow et aucune identité de compte ou clé n’est copiée dans le protocole. Le catalogue applicatif et ses dates restent inchangés : cette vérification documentaire n’actualise pas silencieusement un devis enregistré.
+Page et API publiques Vidu consultées, schéma du catalogue Fal lu via le connecteur ; aucune inférence ou upload Fal, aucun solde ou historique demandé. Les deux créations `image_gen` ultérieures sont décrites dans le bilan des portraits. La connexion du connecteur ne prouve pas le compte VydFlow et aucun identifiant secret ni clé n’est copié dans le protocole ; seul le nom de compte ensuite indiqué par le propriétaire y est consigné. Le catalogue applicatif et ses dates restent inchangés : cette vérification documentaire n’actualise pas silencieusement un devis enregistré.
 
-Contrôles locaux du JSON : quatre épisodes, deux plans chacun, huit plans de cinq secondes, présence attendue par épisode, longueur des prompts bruts, somme des coûts et champs d’accord/références volontairement absents. Aucun code applicatif, schéma, service, test ou dépendance modifié ; aucune suite PHP/frontend/build/navigateur ou revue indépendante rejouée pour ce document. Les résultats R7.3c restent historiques.
+Contrôles locaux du JSON : quatre épisodes, deux plans chacun, huit plans de cinq secondes, présence attendue par épisode, longueur des prompts bruts, somme des coûts, empreintes des portraits importés et accord de lancement toujours absent. Aucun code applicatif, schéma, service, test ou dépendance modifié ; aucune suite PHP/frontend/build/navigateur ou revue indépendante rejouée pour ce document. Les résultats R7.3c restent historiques.
 
-**Il manque maintenant le choix de budget, le compte facturé et les deux références.** Une fois ces éléments connus, établir le devis final et demander l’accord de lancement concret. Aucun coût, génération, achat de crédits, email, activation, publication, migration, cache dev actualisé, worker démarré/redémarré, push ou déploiement.
+**Il reste à vérifier le rattachement de la clé VydFlow au compte Fal désigné, préparer les quatre brouillons applicatifs et leurs devis finaux, puis obtenir l’accord de lancement concret.** Le choix de budget et la création/import des portraits sont effectués ; leur existence ne vaut pas consentement de génération vidéo. Aucun coût Fal, appel vidéo, achat de crédits, email, activation, publication, migration, cache dev actualisé, worker démarré/redémarré, push ou déploiement. Les deux images de préparation proviennent de l’outil intégré, sans appel image Fal.

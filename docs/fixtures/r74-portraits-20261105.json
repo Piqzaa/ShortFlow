@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-05",
+  "mode": "built-in image_gen",
+  "generationRequestedByOwner": true,
+  "assets": {
+    "milo": {
+      "path": "docs/pilotes/r74-personnages/milo-reference-v1.png",
+      "sha256": "4a43d0027ec24302aee8fefb238cdee5fdebfff35881ac160863c6e861e3b218",
+      "bytes": 2001481,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "mime": "image/png"
+    },
+    "nox": {
+      "path": "docs/pilotes/r74-personnages/nox-reference-v1.png",
+      "sha256": "137ee6882b80e428342dfef269ef146a44e59eb1ec7a32ac738417f70ce7e2f4",
+      "bytes": 2000172,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "mime": "image/png"
+    }
+  },
+  "privateImport": {
+    "environment": "dev",
+    "ownerId": 2,
+    "localProfile": "Vyd",
+    "sources": "built-in image_gen, imported through AiCharacters/AiReferenceStorage",
+    "characters": {
+      "milo": {
+        "characterId": 1,
+        "revision": 1,
+        "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+        "normalizedSha256": "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849",
+        "normalizedBytes": 159952,
+        "width": 1254,
+        "height": 1254,
+        "sourceSha256": "4a43d0027ec24302aee8fefb238cdee5fdebfff35881ac160863c6e861e3b218"
+      },
+      "nox": {
+        "characterId": 2,
+        "revision": 1,
+        "portrait": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+        "normalizedSha256": "43575b438ae465a935388a36a2324ad685612c388f919cd598256dcdf5b2c0d2",
+        "normalizedBytes": 125470,
+        "width": 1254,
+        "height": 1254,
+        "sourceSha256": "137ee6882b80e428342dfef269ef146a44e59eb1ec7a32ac738417f70ce7e2f4"
+      }
+    },
+    "before": {
+      "ai_character": 0,
+      "ai_portrait_request": 0,
+      "ai_generation": 4,
+      "ai_episode": 10,
+      "messenger_messages": 0
+    },
+    "after": {
+      "ai_character": 2,
+      "ai_portrait_request": 0,
+      "ai_generation": 4,
+      "ai_episode": 10,
+      "messenger_messages": 0
+    },
+    "providerCalls": 0,
+    "keyRead": false,
+    "videoLaunchAuthorized": false
+  },
+  "budget": {
+    "retainedUsd": 4,
+    "scope": "preparation for video pilot",
+    "videoLaunchConsent": false
+  },
+  "providerAccount": {
+    "selectedByOwner": "Alex Berrel",
+    "localProfile": "Vyd",
+    "sameFalAccountVerified": false
+  },
+  "humanPortraitApprovalObtained": false,
+  "falImageGenerationInvoked": false,
+  "appPortraitPipelineUsed": false,
+  "newVideoDrafts": 0,
+  "qualityAcrossVideoEpisodesVerified": false,
+  "sha256": {
+    "docs/pilotes/r74-personnages/milo-reference-v1.png": "4a43d0027ec24302aee8fefb238cdee5fdebfff35881ac160863c6e861e3b218",
+    "docs/pilotes/r74-personnages/nox-reference-v1.png": "137ee6882b80e428342dfef269ef146a44e59eb1ec7a32ac738417f70ce7e2f4",
+    "docs/pilotes/r74-personnages/prompts-v1.json": "90ba99ecd1bd14b6d7cd1002527701f986ac4d8d5e8171b649d36884c2ab83ce"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "date": "2026-11-05",
   "stage": "R7.4",
-  "status": "draft_pending_owner_budget_account_references_and_launch_consent",
+  "status": "portraits_created_and_imported_pending_owner_review_final_quotes_and_launch_consent",
   "authorized_to_execute": false,
   "proposal": {
     "provider": "fal",
@@ -20,7 +20,8 @@
     "montage_mute": true,
     "software_publication": false,
     "new_image_requests": 0,
-    "automatic_rerolls": 0
+    "automatic_rerolls": 0,
+    "image_fit": "contain"
   },
   "pricing": {
     "source": "https://fal.ai/models/fal-ai/vidu/q1/reference-to-video",
@@ -29,28 +30,43 @@
     "public_cost_per_5_second_request": 0.4,
     "estimated_total": 3.2,
     "proposed_usage_cap": 4,
-    "owner_approved_cap": null,
+    "owner_approved_cap": 4,
     "taxes_and_fx_excluded": true,
     "provider_hard_cap_configured": false,
-    "actual_credits_or_account_rate_checked": false
+    "actual_credits_or_account_rate_checked": false,
+    "approval_scope": "budget retained for preparation, no paid launch consent"
   },
   "references": {
     "milo": {
-      "character_id": null,
-      "revision": null,
-      "sha256": null
+      "character_id": 1,
+      "revision": 1,
+      "sha256": "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849",
+      "source_sha256": "4a43d0027ec24302aee8fefb238cdee5fdebfff35881ac160863c6e861e3b218",
+      "source_file": "docs/pilotes/r74-personnages/milo-reference-v1.png",
+      "private_portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+      "width": 1254,
+      "height": 1254,
+      "owner_reviewed": false
     },
     "nox": {
-      "character_id": null,
-      "revision": null,
-      "sha256": null
+      "character_id": 2,
+      "revision": 1,
+      "sha256": "43575b438ae465a935388a36a2324ad685612c388f919cd598256dcdf5b2c0d2",
+      "source_sha256": "137ee6882b80e428342dfef269ef146a44e59eb1ec7a32ac738417f70ce7e2f4",
+      "source_file": "docs/pilotes/r74-personnages/nox-reference-v1.png",
+      "private_portrait": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+      "width": 1254,
+      "height": 1254,
+      "owner_reviewed": false
     }
   },
   "account": {
-    "selected_vydflow_user_id": null,
-    "owner_confirmed_fal_account": null,
+    "selected_vydflow_user_id": 2,
+    "owner_confirmed_fal_account": "Alex Berrel",
     "connector_account_equivalence_established": false,
-    "real_key_read": false
+    "real_key_read": false,
+    "local_profile_display_name": "Vyd",
+    "vydflow_key_remote_account_verified": false
   },
   "episodes": [
     {
@@ -229,11 +245,10 @@
     ]
   },
   "pending": [
-    "Owner budget choice: zero/new paid test.",
-    "Owner confirmation of the Fal account used by VydFlow, not inferred from the assistant connector.",
-    "Two real approved portrait references with owner, revision and hashes.",
-    "Exact prompt and final quote review; fresh price check at execution time.",
-    "Separate explicit launch authorization; no generation from this draft."
+    "Owner review of the two proposed portraits can accompany the final launch review; creative delegation does not fabricate human acceptance.",
+    "Verify the existing VydFlow key belongs to the selected Fal account before billing; no key read or decryption in this preparation.",
+    "Prepare four application drafts and final quotes with these frozen portrait versions, not just the planning JSON.",
+    "Separate explicit video launch consent under the retained 4 USD cap, excluding taxes and conversion."
   ],
   "execution_rules": [
     "Use VydFlow pipeline, not a connector-side generation that bypasses its private workflow.",
@@ -253,6 +268,21 @@
     "catalog_changed": false,
     "flags_changed": false,
     "worker_started_or_restarted": false,
-    "publication": false
+    "publication": false,
+    "scope": "Fal execution only; the two built-in images and local imports are tracked under preparation"
+  },
+  "preparation": {
+    "image_generator": "built-in image_gen",
+    "generated_images": 2,
+    "fal_image_inference_calls": 0,
+    "source_prompts": "docs/pilotes/r74-personnages/prompts-v1.json",
+    "import_service": "AiCharacters + AiReferenceStorage",
+    "private_import_completed": true,
+    "app_portrait_requests_created": 0,
+    "video_drafts_created_this_turn": 0,
+    "video_generations_created": 0,
+    "messages_dispatched": 0,
+    "source_hashes_checked": true,
+    "normalized_hashes_checked": true
   }
 }
