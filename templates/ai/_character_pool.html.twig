@@ -1,5 +1,9 @@
-<section class="story-context character-pool"><h2>Mes personnages</h2>
-{% if poolForm.characterSelection.vars.choices|length %}{{ form_row(poolForm.characterSelection) }}{% else %}<p class="library-note">Aucune fiche disponible. Ajoute un personnage avec son portrait pour le retrouver ici.</p><div hidden>{{ form_row(poolForm.characterSelection) }}</div>{% endif %}
+<section class="story-context character-pool" data-character-pool{% if poolForm.source.vars.value != 'subject' %} hidden{% endif %}><h2>Mes personnages</h2>
+{% if not poolForm.characterSelection.vars.choices|length %}<p class="library-note" data-character-empty>Aucun personnage enregistré.</p>{% endif %}
 {{ form_widget(poolForm.characterSelectionManaged) }}
-<a class="account-secondary" href="{{ path('app_characters') }}" target="_blank" rel="noopener">Gérer mes fiches · nouvel onglet ↗</a>
-<p class="library-note">Les fiches choisies constituent une réserve ; seuls les personnages cochés dans chaque scène seront envoyés. Après un ajout dans la bibliothèque, enregistre ta préparation avant de recharger les choix.</p></section>
+<div class="character-picker-actions"><a class="account-secondary" href="{{ path('app_character_new',{rapide:1}) }}" target="_blank" rel="noopener" data-action="character-picker#creating">{{ poolForm.characterSelection.vars.choices|length ? 'Ajouter un personnage' : 'Créer mon premier personnage' }} ↗</a><button type="button" class="account-secondary" data-character-refresh data-action="character-picker#refresh" hidden>Actualiser la liste</button></div>
+{% include 'ai/_character_choices.html.twig' with {field:poolForm.characterSelection} %}
+<p class="library-note">Coche les personnages à utiliser, puis choisis leur présence dans chaque plan.</p>
+<p class="library-note" data-character-refresh-status role="status" aria-live="polite"></p>
+</section>
+<p class="account-notice" data-character-notice hidden><span></span> <button type="button" class="account-secondary" data-action="character-picker#clear">Retirer les personnages sélectionnés</button></p>

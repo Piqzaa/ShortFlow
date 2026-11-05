@@ -32,7 +32,7 @@ final class AiShotPrompts
                 $guide .= ' Appearance of '.json_encode($detail['name'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE).': '.json_encode($detail['description'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE).'.';
             }
             if ('subject' === $role) {
-                $guide .= ' Reference'.($index + 1).'='.json_encode($detail['name'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE).'('.$detail['role'].','.$detail['presence'].').';
+                $guide .= ' '.($this->catalog->model($model)['subjectToken'] ?? 'Reference').($index + ($this->catalog->model($model)['subjectIndexBase'] ?? 1)).($this->catalog->model($model)['subjectTokenSuffix'] ?? '').'='.json_encode($detail['name'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE).'('.$detail['role'].','.$detail['presence'].').';
                 continue;
             }
             $token = 'kling-3-image' === $model ? '@Element'.($index + 1) : 'Reference image '.($index + 1);

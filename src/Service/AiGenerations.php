@@ -359,7 +359,7 @@ final class AiGenerations
 
     private function estimatedCost(AiGeneration $job): int
     {
-        return 'ltx-23-extend' === $job->getModel() ? $this->extensions->estimate($job) : $this->catalog->estimate($job->getModel(), $job->getSeconds());
+        return 'ltx-23-extend' === $job->getModel() ? $this->extensions->estimate($job) : $this->catalog->estimate($job->getModel(), $job->getSeconds(), count(array_unique(array_filter([$job->getReferenceImage(), ...($job->getInputSettings()['subjects'] ?? [])]))));
     }
 
     private function assertCapacity(AiGeneration $job): void

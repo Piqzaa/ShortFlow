@@ -1,3 +1,4 @@
+import { selectedCharacters, setCharacters } from '../../assets/character-choices.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -6,10 +7,10 @@ import { proposePlan } from '../../assets/preparation-plan.js';
 
 test('preparation reads the current shared catalog and supports older page attributes', () => {
   const source = readFileSync(new URL('../../assets/controllers/preparation_controller.js', import.meta.url), 'utf8')
-    .replace("import { Controller } from '@hotwired/stimulus';", '')
+    .replace("import { selectedCharacters, setCharacters } from '../character-choices.js';", '').replace("import { Controller } from '@hotwired/stimulus';", '')
     .replace("import { proposePlan } from '../preparation-plan.js';", '')
     .replace('export default class', 'class Preparation');
-  const Preparation = runInNewContext(`${source}\nPreparation`, { Controller: class {}, proposePlan, Event });
+  const Preparation = runInNewContext(`${source}\nPreparation`, { selectedCharacters, setCharacters, Controller: class {}, proposePlan, Event });
   const controller = new Preparation();
   const model = { value: 'first' }, first = { seconds: [5] }, second = { seconds: [10] };
   const creation = { modelsValue: { first, second } };
@@ -37,10 +38,10 @@ test('preparation reads the current shared catalog and supports older page attri
 
 function setup(count = 3) {
   const source = readFileSync(new URL('../../assets/controllers/preparation_controller.js', import.meta.url), 'utf8')
-    .replace("import { Controller } from '@hotwired/stimulus';", '')
+    .replace("import { selectedCharacters, setCharacters } from '../character-choices.js';", '').replace("import { Controller } from '@hotwired/stimulus';", '')
     .replace("import { proposePlan } from '../preparation-plan.js';", '')
     .replace('export default class', 'class Preparation');
-  const Preparation = runInNewContext(`${source}\nPreparation`, { Controller: class {}, proposePlan, Event });
+  const Preparation = runInNewContext(`${source}\nPreparation`, { selectedCharacters, setCharacters, Controller: class {}, proposePlan, Event });
   const controller = new Preparation();
   const rows = Array.from({ length: count }, (_, i) => {
     const duration = { value: '5', options: [{ value: '5' }] }, prompt = { value: `Scene ${i + 1}.` };

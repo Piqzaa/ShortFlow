@@ -49,7 +49,7 @@ final class AiPlanInputs
             }
             $names = array_values(array_unique($names));
             if (count($names) > $this->catalog->subjectLimit($model)) {
-                throw new \RuntimeException('Ce modèle accepte au maximum sept images de référence au total.');
+                throw new \RuntimeException('Ce modèle accepte au maximum '.$this->catalog->subjectLimit($model).' images de référence au total.');
             }
         }
         if (!is_array($rows) || count($rows) > 7) {
@@ -213,7 +213,7 @@ final class AiPlanInputs
                     throw new \RuntimeException('Un personnage du plan ne fait pas partie de cette préparation. Corrige la scène ou sa sélection commune.');
                 }
                 $character = $pool[$id];
-                $libraryDetails[] = ['reference' => $character['portrait'], 'name' => $character['name'], 'role' => 'character', 'presence' => 'unspecified', 'views' => $character['views']];
+                $libraryDetails[] = ['reference' => $character['portrait'], 'name' => $character['name'], 'role' => 'character', 'presence' => 'unspecified', 'views' => ($model['subjectReference'] ?? false) ? [] : $character['views']];
             }
             if ($libraryDetails && 0 === $this->catalog->subjectLimit($recipe['model'])) {
                 throw new \RuntimeException('Ce modèle ne reçoit pas de références de personnages. Choisis un modèle compatible ou retire les personnages de la scène.');

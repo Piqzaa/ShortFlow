@@ -1,0 +1,8 @@
+<fieldset id="{{ field.vars.id }}" class="character-choices" data-character-field="{{ field.vars.name }}" data-character-name="{{ field.vars.full_name }}[]">
+  <legend>{{ field.vars.label }}</legend>
+  <div data-character-options>{% for choice in field %}<label class="character-choice">{{ form_widget(choice) }}<span>{{ choice.vars.label }}</span></label>{% endfor %}</div>
+  {{ form_errors(field) }}
+  <p class="library-note" data-character-summary>{{ field.vars.value|length }} sélectionné(s)</p>
+  <button type="button" class="account-secondary" data-character-clear data-action="character-picker#clear" hidden>Tout retirer</button>
+</fieldset>
+{% do field.setRendered %}

@@ -22,13 +22,25 @@ final class FalVideoApi
         $payload = array_replace($payload, $model['input'] ?? []);
         if ('integer' === ($model['durationType'] ?? '')) {
             $payload['duration'] = $job->getSeconds();
+        } elseif ('frames' === ($model['durationType'] ?? '')) {
+            unset($payload['duration']);
+            $payload['num_frames'] = $job->getSeconds() * 24 + 1;
+        } elseif ('suffix' === ($model['durationType'] ?? '')) {
+            $payload['duration'] = $job->getSeconds().'s';
         } elseif ('none' === ($model['durationType'] ?? '')) {
             unset($payload['duration']);
+        }
+        if ($model['canvasFromRatio'] ?? false) {
+            $payload['resolution'] = match ($job->getRatio()) {
+                '9:16' => ['width' => 720, 'height' => 1280],
+                '1:1' => ['width' => 960, 'height' => 960],
+                default => ['width' => 1280, 'height' => 720],
+            };
         }
         if ($model['omitRatio'] ?? false) {
             unset($payload['aspect_ratio']);
         }
-        if (str_starts_with($model['endpoint'], 'bytedance/seedance-2.5/')) {
+        if (str_starts_with($model['endpoint'], 'bytedance/seedance-')) {
             $payload['end_user_id'] = hash('sha256', 'vydflow-user:'.$job->getOwner()->getId());
             unset($payload['enable_safety_checker']);
         }
@@ -54,7 +66,11 @@ final class FalVideoApi
                 if (count($names) > $this->catalog->subjectLimit($job->getModel())) {
                     throw new \RuntimeException('Trop de références de personnages pour ce modèle.');
                 }
-                $payload['reference_image_urls'] = array_map(fn (string $name): string => $this->references->dataUri($job->getOwner(), $name), $names);
+                $images = array_map(fn (string $name): string => $this->references->dataUri($job->getOwner(), $name, $model['referenceRatio'] ?? 'auto', 'contain'), $names);
+                if ('objects' === ($model['referenceFormat'] ?? '')) {
+                    $images = array_map(static fn (string $url, int $index): array => ['image_url' => $url, 'type' => 'subject', 'ref_name' => 'character'.($index + 1)], $images, array_keys($images));
+                }
+                $payload[$model['referenceImagesField'] ?? 'reference_image_urls'] = 'scalar' === ($model['referenceFormat'] ?? '') ? $images[0] : $images;
 
                 return $payload;
             }

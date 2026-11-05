@@ -250,7 +250,7 @@ final class AiSeriesStudio
 
                 return $existing;
             }
-            $job = new AiGeneration($owner, $episode->getTitle(), $episode->getPrompt(), $recipe['model'], $recipe['seconds'], $recipe['ratio'], $this->catalog->estimate($recipe['model'], $recipe['seconds']));
+            $job = new AiGeneration($owner, $episode->getTitle(), $episode->getPrompt(), $recipe['model'], $recipe['seconds'], $recipe['ratio'], $this->catalog->estimate($recipe['model'], $recipe['seconds'], count(array_unique(array_filter([$recipe['reference'] ?? null, ...($recipe['subjects'] ?? [])])))));
             $job->attachSubjects($recipe['subjects'] ?? []);
             if ($recipe['reference']) {
                 $job->attachReference($recipe['reference']);

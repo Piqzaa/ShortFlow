@@ -30,6 +30,17 @@ final class AiCharacterController extends AbstractController
         return $this->render('character/index.html.twig', ['characters' => $repo->findBy($criteria, ['id' => 'DESC'], 12, ($page - 1) * 12), 'page' => $page, 'pages' => $pages, 'archived' => $archived], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
+    #[Route('/studio/personnages/choix', name: 'app_character_choices', methods: ['GET'])]
+    public function choices(#[CurrentUser] User $user, \App\Service\AiCharacterSelection $selection): Response
+    {
+        $choices = [];
+        foreach ($selection->choices($user) as $label => $value) {
+            $choices[] = ['label' => $label, 'value' => $value];
+        }
+
+        return $this->json(['choices' => $choices], headers: ['Cache-Control' => 'private, no-store']);
+    }
+
     #[Route('/studio/personnages/nouveau', name: 'app_character_new', methods: ['GET', 'POST'])]
     #[Route('/studio/personnages/{id}', name: 'app_character_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function edit(Request $request, #[CurrentUser] User $user, AiCharacters $characters, ?int $id = null): Response
@@ -41,7 +52,7 @@ final class AiCharacterController extends AbstractController
             $data = $form->getData();
             try {
                 $characters->save($user, $id, (int) $data['revision'], $data['name'], $data['description'] ?? '', $data['portrait'], $data['views'] ?? [], $data['clearViews'] ?? false);
-                $this->addFlash('success', 'Personnage enregistré. Les préparations existantes restent conservées.');
+                $this->addFlash('success', $request->query->getBoolean('rapide') ? 'Personnage enregistré. Reviens à l’onglet de préparation pour le sélectionner ; la liste sera actualisée.' : 'Personnage enregistré. Les préparations existantes restent conservées.');
 
                 return $this->redirectToRoute('app_characters', status: 303);
             } catch (\RuntimeException $error) {
@@ -49,7 +60,7 @@ final class AiCharacterController extends AbstractController
             }
         }
 
-        return $this->render('character/edit.html.twig', ['character' => $character, 'characterForm' => $form], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('character/edit.html.twig', ['character' => $character, 'characterForm' => $form, 'quick' => !$character && $request->query->getBoolean('rapide')], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/personnages/{id}/archiver', name: 'app_character_archive', requirements: ['id' => '\d+'], methods: ['POST'])]

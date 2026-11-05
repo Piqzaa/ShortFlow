@@ -1,3 +1,4 @@
+import { selectedCharacters, setCharacters } from '../character-choices.js';
 import { Controller } from '@hotwired/stimulus';
 import { writingProgress } from '../writing-progress.js';
 
@@ -15,8 +16,8 @@ export default class extends Controller {
       .filter(profile => !profile.querySelector('[data-subject-profile-reference]')?.disabled)
       .map(profile => ({ name: profile.querySelector('[data-subject-name]')?.value.trim() || '', role: profile.querySelector('[name$="[role]"]')?.value || 'character', presence: profile.querySelector('[name$="[presence]"]')?.value || 'unspecified' }))
       .filter(subject => subject.name);
-    for (const option of this.form.querySelector('[name="ai_idea[characterSelection][]"]')?.selectedOptions || []) {
-      subjectHints.push({ name: option.textContent.split(' · ')[0], role: 'character', presence: 'unspecified' });
+    for (const option of selectedCharacters(this.form, 'characterSelection')) {
+      subjectHints.push({ name: (option.labels?.[0]?.textContent || option.textContent).trim().split(' · ')[0], role: 'character', presence: 'unspecified' });
     }
     return { idea: field('prompt'), model: field('model'), target: field('target'), layout, planCount: field('continuity') === 'single' ? '1' : this.form.querySelector('[name="ai_idea[planCount]"]')?.value || '', continuity: field('continuity'), tone: this.toneTarget.value, episode: String(this.episodeValue), subjectHints: JSON.stringify(subjectHints) };
   }
@@ -27,8 +28,8 @@ export default class extends Controller {
         const input = this.element.querySelector(`[name="ai_idea[${name}]"]`);
         return input?.type === 'checkbox' ? input.checked : input?.value;
       }),
-      characterSelection: [...(this.form.querySelector('[name="ai_idea[characterSelection][]"]')?.selectedOptions || [])].map(option => option.value),
-      sceneCharacters: this.editor.rows().map(row => [...(row.querySelector('[name$="[characterIds][]"]')?.selectedOptions || [])].map(option => option.value)),
+      characterSelection: selectedCharacters(this.form, 'characterSelection').map(option => option.value),
+      sceneCharacters: this.editor.rows().map(row => selectedCharacters(row).map(option => option.value)),
       subjects: [...this.form.querySelectorAll('[name^="ai_idea[subjects]"]')].map(input => input.value),
       subjectDetails: [...this.form.querySelectorAll('[name^="ai_idea[subjectDetails]"]')].filter(input => !input.disabled).map(input => [input.name, input.value]),
       shots: this.editor.rows().map(row => [
@@ -49,7 +50,13 @@ export default class extends Controller {
     this.restore();
   }
 
+  errorState(error) {
+    this.statusTarget.classList?.toggle('story-error', Boolean(error));
+    this.statusTarget.setAttribute?.('role', error ? 'alert' : 'status');
+  }
+
   busy(value) {
+    this.errorState(false);
     this.pending = value;
     this.generateTarget.disabled = value || this.enabledValue === false;
     this.generateTarget.textContent = value ? 'Envoi de la demande…' : '✨ Proposer mon scénario';
@@ -107,17 +114,19 @@ export default class extends Controller {
   }
 
   async propose() {
-    if (this.enabledValue === false) { this.statusTarget.textContent = 'La proposition automatique n’est pas activée sur ce poste. Tu peux écrire tes scènes directement.'; return; }
+    if (this.enabledValue === false) { this.errorState(true); this.statusTarget.textContent = 'La proposition automatique n’est pas activée sur ce poste. Tu peux écrire tes scènes directement.'; return; }
     if (this.pending) return;
     this.active = true;
     try {
       const preparation = this.application?.getControllerForElementAndIdentifier(this.element, 'preparation');
       if (preparation?.prepareStory && !preparation.prepareStory()) {
+        this.errorState(true);
         this.statusTarget.textContent = 'Vérifie le nombre de plans et leur répartition près du mode de tournage avant de proposer le scénario.';
         return;
       }
       const payload = this.payload();
       if (!payload.idea.trim() || !payload.model || !payload.target) {
+        this.errorState(true);
         this.statusTarget.textContent = 'Ajoute une idée, une durée et un modèle vidéo pour proposer des scènes compatibles.';
         return;
       }
@@ -142,6 +151,7 @@ export default class extends Controller {
       this.busy(false);
       this.proposal = null;
       this.previewTarget.hidden = true;
+      this.errorState(true);
       this.statusTarget.textContent = job.error || 'La rédaction s’est arrêtée. Tes scènes sont conservées ; tu peux demander une nouvelle proposition.';
       return;
     }
@@ -169,6 +179,7 @@ export default class extends Controller {
 
   failed(error) {
     this.busy(false);
+    this.errorState(true);
     this.statusTarget.textContent = error.name === 'AbortError' ? 'La connexion a pris trop de temps. La rédaction peut continuer en arrière-plan ; retrouve son état ou reviens sur cette page.' : error.name === 'TypeError' ? 'La préparation n’a pas pu être lue ou transmise. Recharge la page puis réessaie ; vérifie aussi ta connexion.' : error.message;
     if (this.hasRetryTarget) this.retryTarget.hidden = Boolean(error.status && error.status < 500);
   }
@@ -176,6 +187,7 @@ export default class extends Controller {
   render(data) {
     const stale = this.requestFingerprint !== this.fingerprint();
     if (stale) {
+      this.errorState(true);
       this.proposal = null;
       this.statusTarget.textContent = 'Ta préparation a changé pendant ou après la rédaction. Demande une nouvelle proposition pour tes réglages actuels.';
       return;
@@ -210,6 +222,7 @@ export default class extends Controller {
       this.scenesTarget.append(scene);
     });
     this.previewTarget.hidden = false;
+    this.errorState(data.translationReady === false || warnings.length > 0);
     this.statusTarget.textContent = data.translationReady === false ? 'Traduction à corriger. Le scénario français est conservé. Tu peux appliquer ce brouillon pour corriger les prompts ; la génération vidéo reste bloquée jusqu’à correction des points signalés.' : warnings.length ? 'Proposition à relire. Tu peux copier ces scènes dans ton brouillon malgré les alertes ; le récapitulatif contrôlera les consignes avant génération.' : 'Proposition prête. Relis-la puis utilise ces scènes si elles te conviennent. L’absence d’alerte ne garantit pas sa fidélité.';
   }
   apply() {
@@ -217,16 +230,19 @@ export default class extends Controller {
     const appliedCount = this.proposal.shots.length;
     const correctionNotice = this.proposal.translationReady === false ? 'Brouillon appliqué. Corrige les points signalés avant de demander le devis. Alertes de la proposition initiale : '+(this.proposal.warnings || []).join(' ') : null;
     if (this.requestFingerprint !== this.fingerprint()) {
+      this.errorState(true);
       this.statusTarget.textContent = 'Ta préparation a changé. Demande une nouvelle proposition avant de remplacer tes scènes.';
       return;
     }
     if (this.form.querySelector('[data-plan-reference-busy="true"]')) {
+      this.errorState(true);
       this.statusTarget.textContent = 'Attends la fin de l’import des images avant d’utiliser ces scènes. Ta proposition reste disponible.';
       return;
     }
-    const characters = this.editor.rows().map(row => [...(row.querySelector('[name$="[characterIds][]"]')?.selectedOptions || [])].map(option => option.value));
+    const characters = this.editor.rows().map(row => selectedCharacters(row).map(option => option.value));
     const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
     if (inputs.length !== this.proposal.shots.length && (inputs.some(row=>row.startReference || row.endReference || row.imagePrompt?.trim()) || characters.some(ids => ids.length))) {
+      this.errorState(true);
       this.statusTarget.textContent = 'La proposition change le nombre de plans. Déplace ou retire leurs cadres et consignes d’images avant de l’appliquer ; tes textes restent conservés.';
       return;
     }
@@ -234,7 +250,7 @@ export default class extends Controller {
     this.proposal.shots.forEach((shot, index) => {
       this.editor.listTarget.insertAdjacentHTML('beforeend', this.editor.prototypeTarget.innerHTML.replaceAll('__name__', String(index)));
       const row = this.editor.rows()[index];
-      for (const option of row.querySelector('[name$="[characterIds][]"]')?.options || []) option.selected = (characters[index] || []).includes(option.value);
+      setCharacters(row, characters[index] || []);
       row.querySelector('textarea').value = shot.prompt;
       const promptOnly = row.querySelector('[name$="[promptOnly]"]');
       if (promptOnly) promptOnly.value = '1';
@@ -261,6 +277,7 @@ export default class extends Controller {
     this.editor.rows()[0]?.scrollIntoView?.({ block: 'start' });
     this.previewTarget.hidden = true;
     this.proposal = null;
+    this.errorState(Boolean(correctionNotice));
     this.statusTarget.textContent = correctionNotice || `${appliedCount} scène(s) copiée(s) dans ton brouillon ci-dessous. Tu peux les modifier puis ouvrir le récapitulatif. Aucune vidéo n’a été lancée.`;
   }
   disconnect() {

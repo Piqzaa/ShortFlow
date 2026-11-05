@@ -139,6 +139,98 @@ final class AiCharactersTest extends WebTestCase
         return [$first, $second];
     }
 
+    public function testQuickCreateSavesAPrivateFicheAndMakesItAvailableToRefresh(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/personnages/nouveau?rapide=1');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.character-form details summary', 'Description et vues supplémentaires');
+        $form = $crawler->selectButton('Enregistrer le personnage')->form();
+        $form['ai_character[name]'] = 'Quick Milo';
+        $form['ai_character[portrait]']->upload($this->image()->getPathname());
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->request('GET', '/studio/personnages/choix');
+        self::assertResponseIsSuccessful();
+        $data = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertCount(1, $data['choices']);
+        self::assertStringStartsWith('Quick Milo', $data['choices'][0]['label']);
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiGeneration::class)->count(['owner' => $this->owner]));
+        $this->snap('quick-created');
+    }
+
+    public function testEmptyLibraryOffersFirstCharacterOnlyInReferenceMode(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        self::assertSelectorExists('[data-character-pool][hidden]');
+        self::assertSelectorTextContains('[data-character-pool] a', 'Créer mon premier personnage');
+        $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+        $values += ['revision' => $crawler->filter('#ai-idea-form')->attr('data-idea-save-revision-value'), 'editor' => str_repeat('e', 32), 'sequence' => '1'];
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'A cat waves.', 'model' => 'kling-o3-subject', 'source' => 'subject', 'seconds' => '5', 'ratio' => '9:16', 'accessMode' => 'api']);
+        $this->client->request('POST', '/studio/creation/idee', $values);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorExists('[data-character-pool]:not([hidden])');
+        self::assertSelectorTextContains('[data-character-empty]', 'Aucun personnage enregistré');
+        self::assertSelectorCount(0, '[data-character-pool] input[type="checkbox"]');
+        $this->snap('empty-reference-library');
+    }
+
+    public function testNewReferenceChoicesFitDurableGenerationStorage(): void
+    {
+        $catalog = static::getContainer()->get(\App\Service\AiCatalog::class);
+        $owner = $this->em->find(User::class, $this->owner);
+        $ids = [];
+        foreach (\App\Service\CharacterVideoModels::MODELS as $id => $model) {
+            $job = new \App\Entity\AiGeneration($owner, 'Synthetic storage contract', 'A cat waves.', $id, $model['seconds'][0], $model['ratios'][0], $catalog->estimate($id, $model['seconds'][0], 1));
+            $this->em->persist($job);
+            $ids[] = $id;
+        }
+        $this->em->flush();
+        self::assertSame($ids, $this->em->getConnection()->fetchFirstColumn('SELECT model FROM ai_generation WHERE owner_id = ? ORDER BY id', [$this->owner]));
+    }
+
+    public function testRefreshListsOnlyOwnedActiveCharactersAndNeverExposesStorage(): void
+    {
+        [$a, $b] = $this->cast();
+        $service = static::getContainer()->get(AiCharacters::class);
+        $foreign = $service->save($this->em->find(User::class, $this->other), null, 0, 'Private foreign cat', '', $this->image(), []);
+        $this->client->request('GET', '/studio/personnages/choix');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        $data = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertCount(2, $data['choices']);
+        self::assertSame([$b->getId().':1', $a->getId().':1'], array_column($data['choices'], 'value'));
+        self::assertStringNotContainsString($foreign->getPortrait(), $this->client->getResponse()->getContent());
+        self::assertStringNotContainsString('Private foreign cat', $this->client->getResponse()->getContent());
+        $service->archive($this->em->find(User::class, $this->owner), $b->getId(), 1, true);
+        $this->client->request('GET', '/studio/personnages/choix');
+        self::assertCount(1, json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['choices']);
+        $this->snap('choices-refreshed');
+    }
+
+    public function testExplicitEmptyCheckboxSelectionClearsAutosaveAndScenePresence(): void
+    {
+        [$a, $b] = $this->cast();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+        $values += ['revision' => $crawler->filter('#ai-idea-form')->attr('data-idea-save-revision-value'), 'editor' => str_repeat('c', 32), 'sequence' => '1'];
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'Two cats wave.', 'model' => 'kling-o3-subject', 'source' => 'subject', 'seconds' => '5', 'ratio' => '9:16', 'accessMode' => 'api', 'characterSelectionManaged' => '1', 'characterSelection' => [$a->getId().':1', $b->getId().':1'], 'shots' => [['prompt' => 'The cats wave.', 'seconds' => '5', 'promptOnly' => 'manual', 'characterIdsManaged' => '1', 'characterIds' => [(string) $a->getId(), (string) $b->getId()]]]]);
+        $this->client->request('POST', '/studio/creation/idee', $values);
+        self::assertResponseIsSuccessful();
+        $page = $this->client->request('GET', '/studio/creation');
+        self::assertSame([$a->getId().':1', $b->getId().':1'], $page->filter('#ai-idea-form')->form()->getPhpValues()['ai_idea']['characterSelection']);
+        $values['sequence'] = '2';
+        $values['ai_idea']['characterSelection'] = [];
+        $values['ai_idea']['shots'][0]['characterIds'] = [];
+        $this->client->request('POST', '/studio/creation/idee', $values);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorCount(0, 'input[name="ai_idea[characterSelection][]"]:checked');
+        self::assertSelectorCount(0, 'input[name="ai_idea[shots][0][characterIds][]"]:checked');
+        self::assertSelectorExists('a[href="/studio/personnages/nouveau?rapide=1"]');
+        $this->snap('checkboxes-cleared');
+    }
+
     public function testAutosaveKeepsFrozenSelectionAndOlderPayloadCannotEraseSceneCharacters(): void
     {
         [$a, $b] = $this->cast();
@@ -156,8 +248,8 @@ final class AiCharactersTest extends WebTestCase
         $this->client->request('POST', '/studio/creation/idee', $values);
         self::assertResponseIsSuccessful();
         $this->client->request('GET', '/studio/creation');
-        self::assertSelectorExists('select[name="ai_idea[characterSelection][]"] option[value="'.$a->getId().':1"][selected]');
-        self::assertSelectorExists('select[name="ai_idea[shots][0][characterIds][]"] option[value="'.$a->getId().'"][selected]');
+        self::assertSelectorExists('input[name="ai_idea[characterSelection][]"][value="'.$a->getId().':1"][checked]');
+        self::assertSelectorExists('input[name="ai_idea[shots][0][characterIds][]"][value="'.$a->getId().'"][checked]');
         $this->snap('selection-autosave');
     }
 
@@ -353,12 +445,10 @@ final class AiCharactersTest extends WebTestCase
         $recipe['model'] = 'vidu-q1-subject';
         $recipe['characterPool'][0]['views'] = [$b->getPortrait()];
         $episode->configurePreparation($recipe, 'A garden.', 'independent', false);
-        try {
-            $inputs->resolve($episode, $shot, 0, 1);
-            self::fail('Vidu does not support grouped views.');
-        } catch (\RuntimeException $error) {
-            self::assertStringContainsString('vues groupées', $error->getMessage());
-        }
+        $resolved = $inputs->resolve($episode, $shot, 0, 1);
+        self::assertSame($a->getPortrait(), $resolved['start']);
+        self::assertSame([], $resolved['subjectDetails'][0]['views']);
+        self::assertSame([$b->getPortrait()], $episode->getFlowRecipe()['characterPool'][0]['views']);
         unset($recipe['characterPool']);
         $recipe['reference'] = $a->getPortrait();
         $episode->configurePreparation($recipe, 'A garden.', 'independent', false);

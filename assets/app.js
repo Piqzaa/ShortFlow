@@ -97,3 +97,6 @@ app.register('image-preparation', ImagePreparationController);
 app.register('subject-list', SubjectListController);
 app.register('subject-upload', SubjectUploadController);
 app.register('publication-writer', PublicationWriterController);
+
+import CharacterPickerController from './controllers/character_picker_controller.js';
+app.register('character-picker', CharacterPickerController);

@@ -20,7 +20,8 @@ final class AiCatalog
     public const PROVIDERS = ['fal' => 'Fal', 'replicate' => 'Replicate', 'ltx' => 'LTX'];
     // IDs are durable execution choices: never rebind one to another provider/schema.
     public const MODELS = [
-        'seedance-25-us-image' => ['name' => 'Seedance 2.5 US · Image', 'maker' => 'ByteDance', 'provider' => 'fal', 'description' => 'Hébergé aux États-Unis. Image de départ, fin facultative et audio natif. Estimation indicative aux tokens ; dialogues français à tester.', 'endpoint' => 'bytedance/seedance-2.5/us/image-to-video', 'rateMicros' => 473000, 'audio' => true, 'seconds' => [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30], 'ratios' => ['auto', '9:16', '16:9', '1:1'], 'quality' => '720p', 'image' => true, 'omitRatio' => false, 'checked' => '2026-10-26', 'endImageField' => 'end_image_url', 'input' => ['resolution' => '720p', 'aspect_ratio' => 'auto', 'generate_audio' => true, 'codec' => 'H264', 'bitrate_mode' => 'standard']],
+        ...CharacterVideoModels::MODELS,
+        'seedance-25-us-image' => ['name' => 'Seedance 2.5 US · Image', 'maker' => 'ByteDance', 'provider' => 'fal', 'description' => 'Hébergé aux États-Unis. Image de départ, fin facultative et audio natif. Estimation indicative aux tokens ; dialogues français à tester.', 'endpoint' => 'bytedance/seedance-2.5/us/image-to-video', 'rateMicros' => 473000, 'audio' => true, 'seconds' => [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30], 'ratios' => ['auto', '9:16', '16:9', '1:1'], 'quality' => '720p', 'image' => true, 'omitRatio' => false, 'checked' => '2026-11-05', 'endImageField' => 'end_image_url', 'input' => ['resolution' => '720p', 'aspect_ratio' => 'auto', 'generate_audio' => true, 'codec' => 'H264', 'bitrate_mode' => 'standard']],
         'ltx-23-extend' => ['name' => 'LTX 2.3 Pro · Extension vidéo', 'maker' => 'Lightricks', 'provider' => 'ltx', 'description' => 'Prolonge une vidéo existante avec son mouvement et son contexte audio.', 'endpoint' => 'ltx-2-3-pro', 'operation' => 'extend', 'rateMicros' => 100000, 'audio' => true, 'seconds' => [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], 'ratios' => ['9:16', '16:9'], 'quality' => '1080p', 'checked' => '2026-10-24'],
         'vidu-q1-subject' => ['name' => 'Vidu Q1 · Référence de personnage', 'maker' => 'Vidu', 'provider' => 'fal', 'description' => 'Guide l’apparence du personnage sans imposer une image de début ou de fin. Scènes indépendantes, identité non garantie.', 'endpoint' => 'fal-ai/vidu/q1/reference-to-video', 'rateMicros' => 80000, 'audio' => false, 'seconds' => [5], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p', 'image' => true, 'subjectReference' => true, 'subjectLimit' => 7, 'durationType' => 'none', 'checked' => '2026-10-24', 'input' => ['bgm' => false, 'movement_amplitude' => 'auto']],
         'kling-25' => ['name' => 'Kling 2.5 Turbo Pro', 'maker' => 'Kling', 'provider' => 'fal', 'description' => 'Mouvements et plans cinématiques.', 'endpoint' => 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video', 'rateMicros' => 70000, 'audio' => false, 'seconds' => [5, 10], 'ratios' => ['9:16', '16:9', '1:1'], 'quality' => '1080p'],
@@ -79,13 +80,13 @@ final class AiCatalog
         'veo-image-replicate-1080p' => ['name' => 'Veo 3.1 Fast · Image · 1080p', 'maker' => 'Google', 'provider' => 'replicate', 'description' => 'Anime une image privée. Le cadrage est vérifié avant confirmation.', 'endpoint' => 'google/veo-3.1-fast', 'rateMicros' => 150000, 'audio' => true, 'seconds' => [4, 6, 8], 'ratios' => ['9:16', '16:9'], 'quality' => '1080p', 'image' => true, 'omitRatio' => true, 'checked' => '2026-10-20', 'imageField' => 'image', 'endImageField' => 'last_frame', 'input' => ['resolution' => '1080p', 'generate_audio' => true]],
     ];
 
-    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,string|bool>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,subjectReference?:bool,subjectLimit?:int,subjectViewsMin?:int,subjectViewsMax?:int,retireOn?:string,checked?:string,imageField?:string,endImageField?:string,requiresEnd?:bool,omitSafety?:bool,fixedMicros?:int,operation?:string} */
+    /** @return array{name:string,maker:string,provider:string,description:string,endpoint:string,rateMicros:int,audio:bool,seconds:list<int>,ratios:list<string>,quality:string,input?:array<string,mixed>,durationType?:string,omitRatio?:bool,pricesCents?:array<int,int>,promptBytes?:int,image?:bool,subjectReference?:bool,subjectLimit?:int,referenceImagesField?:string,subjectToken?:string,subjectTokenSuffix?:string,subjectIndexBase?:int,referenceFormat?:string,referenceRatio?:string,referenceMicros?:int,promptLimit?:int,billing?:string,canvasFromRatio?:bool,subjectViewsMin?:int,subjectViewsMax?:int,retireOn?:string,checked?:string,imageField?:string,endImageField?:string,requiresEnd?:bool,omitSafety?:bool,fixedMicros?:int,operation?:string} */
     public function model(string $id): array
     {
         return self::MODELS[$id] ?? throw new \InvalidArgumentException('Choisis un modèle disponible.');
     }
 
-    public function estimate(string $id, int $seconds): int
+    public function estimate(string $id, int $seconds, ?int $references = null): int
     {
         $model = $this->model($id);
         if (!in_array($seconds, $model['seconds'], true)) {
@@ -97,7 +98,7 @@ final class AiCatalog
         }
 
         // Round up to the cent using integer microdollars, including fractional-cent rates.
-        return intdiv($model['rateMicros'] * $seconds + ($model['fixedMicros'] ?? 0) + 9999, 10000);
+        return intdiv($model['rateMicros'] * $seconds + ($model['fixedMicros'] ?? 0) + ($model['referenceMicros'] ?? 0) * ($references ?? ($model['subjectLimit'] ?? 0)) + 9999, 10000);
     }
 
     public function provider(string $id): string
@@ -173,9 +174,12 @@ final class AiCatalog
     public function promptCharacters(string $id): int
     {
         $endpoint = $this->model($id)['endpoint'];
+        if (isset($this->model($id)['promptLimit'])) {
+            return $this->model($id)['promptLimit'];
+        }
 
         return match (true) {
-            str_starts_with($endpoint, 'fal-ai/kling-video/v2.5-turbo/'), str_starts_with($endpoint, 'fal-ai/kling-video/v3/') => 2500,
+            str_starts_with($endpoint, 'fal-ai/kling-video/v2.5-turbo/'), str_starts_with($endpoint, 'fal-ai/kling-video/v3/'), str_starts_with($endpoint, 'fal-ai/kling-video/o3/') => 2500,
             str_starts_with($endpoint, 'fal-ai/vidu/q1/') => 1500,
             str_starts_with($endpoint, 'xai/grok-imagine-video/') => 4096,
             'fal-ai/minimax/hailuo-02/standard/image-to-video' === $endpoint => 2000,
@@ -203,7 +207,7 @@ final class AiCatalog
             }
             $key = $model['provider'].'/'.$model['endpoint'].'/'.(($model['image'] ?? false) ? 'image' : 'text');
             $first = $keys[$key] ??= $id;
-            $groups[$first] ??= ['name' => preg_replace('/ · (720p|1080p|4K)$/i', '', $model['name']), 'variants' => []];
+            $groups[$first] ??= ['name' => preg_replace('/ · (360p|480p|540p|720p|768p|1080p|2K|4K)$/i', '', $model['name']), 'variants' => []];
             $groups[$first]['variants'][] = $id;
         }
 

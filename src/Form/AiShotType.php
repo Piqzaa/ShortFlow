@@ -23,7 +23,7 @@ final class AiShotType extends AbstractType
                 $choices[$label] = $id;
             }
         }
-        $builder->add('characterIds', ChoiceType::class, ['label' => 'Personnages présents dans cette scène', 'choices' => $choices, 'multiple' => true, 'required' => false, 'help' => 'Uniquement parmi les fiches choisies pour cette préparation. Aucune sélection signifie aucun personnage de la bibliothèque dans ce plan.', 'attr' => ['size' => 3]])
+        $builder->add('characterIds', AiCharacterChoicesType::class, ['label' => 'Personnages présents dans cette scène', 'choices' => $choices, 'multiple' => true, 'expanded' => true, 'required' => false, 'help' => 'Uniquement parmi les fiches choisies pour cette préparation. Aucune sélection signifie aucun personnage de la bibliothèque dans ce plan.'])
             ->add('characterIdsManaged', HiddenType::class, ['data' => '1', 'required' => false, 'empty_data' => '0'])
             ->add('sceneDescription', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Length(max: 300, groups: ['Default', 'connection', 'autosave'])]])
             ->add('translatedIdentity', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Length(max: 300, groups: ['Default', 'connection', 'autosave'])]])

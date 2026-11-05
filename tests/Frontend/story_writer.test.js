@@ -1,3 +1,4 @@
+import { selectedCharacters, setCharacters } from '../../assets/character-choices.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -5,8 +6,8 @@ import { runInNewContext } from 'node:vm';
 import { writingProgress } from '../../assets/writing-progress.js';
 
 function setup(fetch, document = {}) {
-  const source = readFileSync(new URL('../../assets/controllers/story_writer_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { writingProgress } from '../writing-progress.js';", '').replace('export default class', 'class Writer');
-  const Writer = runInNewContext(`${source}\nWriter`, { Controller: class {}, Event: class {}, AbortController, URLSearchParams, fetch, setTimeout, clearTimeout, setInterval, clearInterval, document, writingProgress });
+  const source = readFileSync(new URL('../../assets/controllers/story_writer_controller.js', import.meta.url), 'utf8').replace("import { selectedCharacters, setCharacters } from '../character-choices.js';", '').replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { writingProgress } from '../writing-progress.js';", '').replace('export default class', 'class Writer');
+  const Writer = runInNewContext(`${source}\nWriter`, { selectedCharacters, setCharacters, Controller: class {}, Event: class {}, AbortController, URLSearchParams, fetch, setTimeout, clearTimeout, setInterval, clearInterval, document, writingProgress });
   const writer = new Writer();
   writer.urlValue = '/scenario'; writer.tokenValue = 'csrf';
   writer.payload = () => ({ idea: 'Milo chat blanc', model: 'kling', target: '40' });
@@ -364,4 +365,25 @@ test('unknown states do not show a false waiting phase', async () => {
   const writer = setup(() => {}); writer.active = true;
   await assert.rejects(writer.watch({ status: 'unknown' }), /état/);
   writer.disconnect();
+});
+
+
+test('scenario failures are visibly marked and a new attempt clears the old error state', async () => {
+  const writer = setup(() => assert.fail('No inference request expected'));
+  const classes = new Set();
+  const attributes = {};
+  writer.statusTarget.classList = { toggle(name, enabled) { if (enabled) classes.add(name); else classes.delete(name); } };
+  writer.statusTarget.setAttribute = (name, value) => { attributes[name] = value; };
+  writer.payload = () => ({idea: '', model: '', target: ''});
+  await writer.propose();
+  assert.equal(classes.has('story-error'), true);
+  assert.equal(attributes.role, 'alert');
+  assert.match(writer.statusTarget.textContent, /Ajoute une idée/);
+  writer.busy(true);
+  assert.equal(classes.has('story-error'), false);
+  assert.equal(attributes.role, 'status');
+  writer.active = true;
+  await writer.watch({status: 'failed', error: 'Le moteur local est indisponible.'});
+  assert.equal(classes.has('story-error'), true);
+  assert.match(writer.statusTarget.textContent, /indisponible/);
 });

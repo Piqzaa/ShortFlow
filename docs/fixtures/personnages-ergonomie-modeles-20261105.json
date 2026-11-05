@@ -1,0 +1,4423 @@
+{
+  "date": "2026-11-05",
+  "scope": "Local technical delivery, no paid generation",
+  "new_families": 29,
+  "new_variants": 68,
+  "total_fal_photo_reference_families": 30,
+  "total_fal_photo_reference_variants": 69,
+  "public_search": {
+    "query": "reference-to-video",
+    "returned": 75,
+    "has_more": false,
+    "scope": "Fal public catalogue; callable photographic inputs, not video-required, training or superseded routes"
+  },
+  "authorized_to_execute": false,
+  "real_provider_requests": 0,
+  "source_snapshots": [
+    {
+      "endpoint": "minimax/h3-max/reference-to-video",
+      "url": "https://fal.ai/models/minimax/h3-max/reference-to-video/llms.txt",
+      "sha256": "a1a5a19e4e65273a18153c13ae7a6bbad3cfd74cf5ce69ff5d8aeeef207360c8",
+      "bytes": 11095
+    },
+    {
+      "endpoint": "alibaba/wan-3.0/reference-to-video",
+      "url": "https://fal.ai/models/alibaba/wan-3.0/reference-to-video/llms.txt",
+      "sha256": "a117e5ddd19a8335da02f1bf99c3951f52b043a0bfedc381f544e57ebe5ca10e",
+      "bytes": 6785
+    },
+    {
+      "endpoint": "minimax/h3/reference-to-video",
+      "url": "https://fal.ai/models/minimax/h3/reference-to-video/llms.txt",
+      "sha256": "854f4f3e355c94cecee4500cbb85e515cd995b476336e684b3c92dbaebc7fe38",
+      "bytes": 8524
+    },
+    {
+      "endpoint": "alibaba/wan-3.0-prime/reference-to-video",
+      "url": "https://fal.ai/models/alibaba/wan-3.0-prime/reference-to-video/llms.txt",
+      "sha256": "c4c62b7f66771831bea9d5929fcf9cc9ee94f15f49762c08012bdfb4f9d71835",
+      "bytes": 6970
+    },
+    {
+      "endpoint": "bytedance/seedance-2.0/fast/reference-to-video",
+      "url": "https://fal.ai/models/bytedance/seedance-2.0/fast/reference-to-video/llms.txt",
+      "sha256": "469a2b813fd5ab0cbd7e8e5bf0e7189e47a8bc2217415929641be6a20b5b769b",
+      "bytes": 8934
+    },
+    {
+      "endpoint": "alibaba/happy-horse/v1.1/reference-to-video",
+      "url": "https://fal.ai/models/alibaba/happy-horse/v1.1/reference-to-video/llms.txt",
+      "sha256": "491b31153939d239b71665667a8e28da55b5292de0829f9e77184d474a995c8a",
+      "bytes": 7171
+    },
+    {
+      "endpoint": "luma/agent/ray/v3.2/image-to-video",
+      "url": "https://fal.ai/models/luma/agent/ray/v3.2/image-to-video/llms.txt",
+      "sha256": "fe38f121f3965579ed383a5a22c317e123052919dfae7b52e214cf4ebb3d4562",
+      "bytes": 8013
+    },
+    {
+      "endpoint": "luma/agent/ray/v3.2/text-to-video",
+      "url": "https://fal.ai/models/luma/agent/ray/v3.2/text-to-video/llms.txt",
+      "sha256": "b0d636b6f0d3cee4db39e30241d9509ca1de7ae69652bd2d24b7bbcc8b93094a",
+      "bytes": 6665
+    },
+    {
+      "endpoint": "bytedance/seedance-2.5/us/reference-to-video",
+      "url": "https://fal.ai/models/bytedance/seedance-2.5/us/reference-to-video/llms.txt",
+      "sha256": "c551722374e35326edff21fb8b93885fc65fbfdd333c400b1fb2b7f7d321702a",
+      "bytes": 9868
+    },
+    {
+      "endpoint": "kling/v4/flash/reference-to-video",
+      "url": "https://fal.ai/models/kling/v4/flash/reference-to-video/llms.txt",
+      "sha256": "099059dc9650de8f34581c9c3bfd85b55adfdbc56d88e873b28cb9df10c53c46",
+      "bytes": 18278
+    },
+    {
+      "endpoint": "minimax/h3-max-turbo/reference-to-video",
+      "url": "https://fal.ai/models/minimax/h3-max-turbo/reference-to-video/llms.txt",
+      "sha256": "0cb81aec202dc71b390e20e76eb9b99dd3af56f22081d7b95bb06c732d4c784a",
+      "bytes": 10332
+    },
+    {
+      "endpoint": "kling/v4/reference-to-video",
+      "url": "https://fal.ai/models/kling/v4/reference-to-video/llms.txt",
+      "sha256": "300227915881d8c7323accff858a58d69a7b2c7451ef2fa0a0a24298cbad4bad",
+      "bytes": 6968
+    },
+    {
+      "endpoint": "google/gemini-omni-flash/v1.1/reference-to-video",
+      "url": "https://fal.ai/models/google/gemini-omni-flash/v1.1/reference-to-video/llms.txt",
+      "sha256": "609f37daa680288754faa8497ea4d8db11cdecfacec4f29b41fbc417a1ac9e77",
+      "bytes": 6037
+    },
+    {
+      "endpoint": "fal-ai/kling-video/o3/pro/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/kling-video/o3/pro/reference-to-video/llms.txt",
+      "sha256": "51c1a85287a27c1f0251269645a84761f0d347ec2f7d011136d80b3984c1abac",
+      "bytes": 7741
+    },
+    {
+      "endpoint": "fal-ai/kling-video/o3/standard/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/kling-video/o3/standard/reference-to-video/llms.txt",
+      "sha256": "470c7d5cf775c9475baf4edfc23f3ad216a99e833be2e2132a59a6eac818922d",
+      "bytes": 6652
+    },
+    {
+      "endpoint": "bytedance/seedance-2.0/mini/reference-to-video",
+      "url": "https://fal.ai/models/bytedance/seedance-2.0/mini/reference-to-video/llms.txt",
+      "sha256": "60fca01271bce80ea0486fc4145326dc8a341659b34f28343fb3c048d14b59b0",
+      "bytes": 8682
+    },
+    {
+      "endpoint": "heygen/heygen-video/reference-to-video",
+      "url": "https://fal.ai/models/heygen/heygen-video/reference-to-video/llms.txt",
+      "sha256": "59c294dc35d066f87ed2a690de3ce1424e333f7caea09c0ac20aee5c07dc899c",
+      "bytes": 5508
+    },
+    {
+      "endpoint": "xai/grok-imagine-video/v1.5/reference-to-video",
+      "url": "https://fal.ai/models/xai/grok-imagine-video/v1.5/reference-to-video/llms.txt",
+      "sha256": "fee13d38233b3dd501ee2c95c2de81bf56aa6ed1a7c4019aed35a11e2da212d0",
+      "bytes": 6843
+    },
+    {
+      "endpoint": "fal-ai/vidu/q4/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/vidu/q4/reference-to-video/llms.txt",
+      "sha256": "59142bd3012c788a866467a830ceccc3af046dd94606ff7e25b6c3897a3630fa",
+      "bytes": 8127
+    },
+    {
+      "endpoint": "fal-ai/kling-video/o1/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/kling-video/o1/reference-to-video/llms.txt",
+      "sha256": "e3646c48b35f0252d3a6671cc6603658708bdaa31de3bc85570682169ae6ad99",
+      "bytes": 10617
+    },
+    {
+      "endpoint": "fal-ai/kling-video/o3/4k/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/kling-video/o3/4k/reference-to-video/llms.txt",
+      "sha256": "c93fe70b1c6c234e6aa7ee42da02e96915e90d4cef75abd8ba42a85788f9afb4",
+      "bytes": 7021
+    },
+    {
+      "endpoint": "fal-ai/wan/v2.7/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/wan/v2.7/reference-to-video/llms.txt",
+      "sha256": "ee425845888f548cd3ff7357f0cf1c3fcf4dfed1179436897e9690e1c2ce9785",
+      "bytes": 6725
+    },
+    {
+      "endpoint": "fal-ai/pixverse/c1/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/pixverse/c1/reference-to-video/llms.txt",
+      "sha256": "d08b8949956abfd46a961a2bc51bf0ece7447b2633bba0402ae3569e94487400",
+      "bytes": 7476
+    },
+    {
+      "endpoint": "fal-ai/kling-video/o1/standard/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/kling-video/o1/standard/reference-to-video/llms.txt",
+      "sha256": "0a58fda7212e356e7cb5391532fbac45534a7d67101cd89093f0ced9f9f64e6b",
+      "bytes": 10694
+    },
+    {
+      "endpoint": "fal-ai/vidu/q1/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/vidu/q1/reference-to-video/llms.txt",
+      "sha256": "49c9902dd0abc378c9df517347b52a273cd82de1add0acaa6954b11f3fc0b6ae",
+      "bytes": 7380
+    },
+    {
+      "endpoint": "fal-ai/vidu/q3/reference-to-video/mix",
+      "url": "https://fal.ai/models/fal-ai/vidu/q3/reference-to-video/mix/llms.txt",
+      "sha256": "83e46fb82b831dbd36107af00e61c7f6d3d44874723511681e0491357ba6aa62",
+      "bytes": 7635
+    },
+    {
+      "endpoint": "fal-ai/vidu/q2/reference-to-video/pro",
+      "url": "https://fal.ai/models/fal-ai/vidu/q2/reference-to-video/pro/llms.txt",
+      "sha256": "063d66b5c30171d121cc8a235f84759f452013b640200435e5a3f6d5f701bc49",
+      "bytes": 7018
+    },
+    {
+      "endpoint": "fal-ai/vidu/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/vidu/reference-to-video/llms.txt",
+      "sha256": "7bedf0a91405f9dfe9d0860d4044f4f1bf7226e98833361def38bec67aaed282",
+      "bytes": 7425
+    },
+    {
+      "endpoint": "wan/v2.6/reference-to-video/flash",
+      "url": "https://fal.ai/models/wan/v2.6/reference-to-video/flash/llms.txt",
+      "sha256": "a360af78b1e53280d5031a1297eb5bdab7555f398d7c0fb2075291b6edb299b4",
+      "bytes": 8324
+    },
+    {
+      "endpoint": "fal-ai/minimax/video-01-subject-reference",
+      "url": "https://fal.ai/models/fal-ai/minimax/video-01-subject-reference/llms.txt",
+      "sha256": "e271ce25645d2564ae3fcfbad19cec72debf02c699341967ec0d09dc74612e0c",
+      "bytes": 5761
+    },
+    {
+      "endpoint": "fal-ai/veo3.1/reference-to-video",
+      "url": "https://fal.ai/models/fal-ai/veo3.1/reference-to-video/llms.txt",
+      "sha256": "7f90b9fc59e113dda4ffe2dd45066f1673d1cce3c2cd685a02f2c2a4ff756b63",
+      "bytes": 8192
+    },
+    {
+      "endpoint": "fal-ai/ltx-2.3-quality/ingredient",
+      "url": "https://fal.ai/models/fal-ai/ltx-2.3-quality/ingredient/llms.txt",
+      "sha256": "16b0f8aec6f4e27b3321147ad606e5e77a45ea57ff5ea84171e352fdf1f92f58",
+      "bytes": 9548
+    },
+    {
+      "url": "https://fal.ai/models/bytedance/seedance-2.5/us/image-to-video/llms.txt",
+      "sha256": "52467478f5ee53b3b09dfa783483dfa7857d75ccabfcfb21d44deaed722bb994",
+      "bytes": 8773
+    }
+  ],
+  "families": [
+    {
+      "family": "kling-o3-subject",
+      "endpoint": "fal-ai/kling-video/o3/standard/reference-to-video",
+      "ids": [
+        "kling-o3-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/kling-video/o3/standard/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/kling-video/o3/standard/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "kling-o3-pro-subject",
+      "endpoint": "fal-ai/kling-video/o3/pro/reference-to-video",
+      "ids": [
+        "kling-o3-pro-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/kling-video/o3/pro/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/kling-video/o3/pro/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "kling-o3-4k-subject",
+      "endpoint": "fal-ai/kling-video/o3/4k/reference-to-video",
+      "ids": [
+        "kling-o3-4k-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/kling-video/o3/4k/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/kling-video/o3/4k/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "kling-o1-subject",
+      "endpoint": "fal-ai/kling-video/o1/reference-to-video",
+      "ids": [
+        "kling-o1-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/kling-video/o1/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/kling-video/o1/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "kling-o1-standard-subject",
+      "endpoint": "fal-ai/kling-video/o1/standard/reference-to-video",
+      "ids": [
+        "kling-o1-standard-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/kling-video/o1/standard/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/kling-video/o1/standard/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "kling-4-subject",
+      "endpoint": "kling/v4/reference-to-video",
+      "ids": [
+        "kling-4-subject-720p",
+        "kling-4-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/kling/v4/reference-to-video/api",
+        "https://fal.ai/models/kling/v4/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "kling-4-flash-subject",
+      "endpoint": "kling/v4/flash/reference-to-video",
+      "ids": [
+        "kling-4-flash-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/kling/v4/flash/reference-to-video/api",
+        "https://fal.ai/models/kling/v4/flash/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "seedance-25-us-subject",
+      "endpoint": "bytedance/seedance-2.5/us/reference-to-video",
+      "ids": [
+        "seedance-25-us-subject-480p",
+        "seedance-25-us-subject-720p",
+        "seedance-25-us-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/bytedance/seedance-2.5/us/reference-to-video/api",
+        "https://fal.ai/models/bytedance/seedance-2.5/us/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "seedance-20-fast-subject",
+      "endpoint": "bytedance/seedance-2.0/fast/reference-to-video",
+      "ids": [
+        "seedance-20-fast-subject-480p",
+        "seedance-20-fast-subject-720p"
+      ],
+      "sources": [
+        "https://fal.ai/models/bytedance/seedance-2.0/fast/reference-to-video/api",
+        "https://fal.ai/models/bytedance/seedance-2.0/fast/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "seedance-20-mini-subject",
+      "endpoint": "bytedance/seedance-2.0/mini/reference-to-video",
+      "ids": [
+        "seedance-20-mini-subject-480p",
+        "seedance-20-mini-subject-720p"
+      ],
+      "sources": [
+        "https://fal.ai/models/bytedance/seedance-2.0/mini/reference-to-video/api",
+        "https://fal.ai/models/bytedance/seedance-2.0/mini/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "wan-30-subject",
+      "endpoint": "alibaba/wan-3.0/reference-to-video",
+      "ids": [
+        "wan-30-subject-480p",
+        "wan-30-subject-720p",
+        "wan-30-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/alibaba/wan-3.0/reference-to-video/api",
+        "https://fal.ai/models/alibaba/wan-3.0/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "wan-30-prime-subject",
+      "endpoint": "alibaba/wan-3.0-prime/reference-to-video",
+      "ids": [
+        "wan-30-prime-subject-480p",
+        "wan-30-prime-subject-720p",
+        "wan-30-prime-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/alibaba/wan-3.0-prime/reference-to-video/api",
+        "https://fal.ai/models/alibaba/wan-3.0-prime/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "wan-27-subject",
+      "endpoint": "fal-ai/wan/v2.7/reference-to-video",
+      "ids": [
+        "wan-27-subject-720p",
+        "wan-27-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/wan/v2.7/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/wan/v2.7/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "wan-26-flash-subject",
+      "endpoint": "wan/v2.6/reference-to-video/flash",
+      "ids": [
+        "wan-26-flash-subject-720p",
+        "wan-26-flash-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/wan/v2.6/reference-to-video/flash/api",
+        "https://fal.ai/models/wan/v2.6/reference-to-video/flash/llms.txt"
+      ]
+    },
+    {
+      "family": "happy-horse-11-subject",
+      "endpoint": "alibaba/happy-horse/v1.1/reference-to-video",
+      "ids": [
+        "happy-horse-11-subject-720p",
+        "happy-horse-11-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/alibaba/happy-horse/v1.1/reference-to-video/api",
+        "https://fal.ai/models/alibaba/happy-horse/v1.1/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "gemini-omni-11-subject",
+      "endpoint": "google/gemini-omni-flash/v1.1/reference-to-video",
+      "ids": [
+        "gemini-omni-11-subject-360p",
+        "gemini-omni-11-subject-720p",
+        "gemini-omni-11-subject-1080p",
+        "gemini-omni-11-subject-4k"
+      ],
+      "sources": [
+        "https://fal.ai/models/google/gemini-omni-flash/v1.1/reference-to-video/api",
+        "https://fal.ai/models/google/gemini-omni-flash/v1.1/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "heygen-subject",
+      "endpoint": "heygen/heygen-video/reference-to-video",
+      "ids": [
+        "heygen-subject-480p",
+        "heygen-subject-768p",
+        "heygen-subject-1080p",
+        "heygen-subject-2k"
+      ],
+      "sources": [
+        "https://fal.ai/models/heygen/heygen-video/reference-to-video/api",
+        "https://fal.ai/models/heygen/heygen-video/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "grok-15-subject",
+      "endpoint": "xai/grok-imagine-video/v1.5/reference-to-video",
+      "ids": [
+        "grok-15-subject-480p",
+        "grok-15-subject-720p"
+      ],
+      "sources": [
+        "https://fal.ai/models/xai/grok-imagine-video/v1.5/reference-to-video/api",
+        "https://fal.ai/models/xai/grok-imagine-video/v1.5/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "vidu-q4-subject",
+      "endpoint": "fal-ai/vidu/q4/reference-to-video",
+      "ids": [
+        "vidu-q4-subject-540p",
+        "vidu-q4-subject-720p",
+        "vidu-q4-subject-1080p",
+        "vidu-q4-subject-2k",
+        "vidu-q4-subject-4k"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/vidu/q4/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/vidu/q4/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "vidu-q3-subject",
+      "endpoint": "fal-ai/vidu/q3/reference-to-video/mix",
+      "ids": [
+        "vidu-q3-subject-360p",
+        "vidu-q3-subject-540p",
+        "vidu-q3-subject-720p",
+        "vidu-q3-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/vidu/q3/reference-to-video/mix/api",
+        "https://fal.ai/models/fal-ai/vidu/q3/reference-to-video/mix/llms.txt"
+      ]
+    },
+    {
+      "family": "vidu-q2-pro-subject",
+      "endpoint": "fal-ai/vidu/q2/reference-to-video/pro",
+      "ids": [
+        "vidu-q2-pro-subject-720p",
+        "vidu-q2-pro-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/vidu/q2/reference-to-video/pro/api",
+        "https://fal.ai/models/fal-ai/vidu/q2/reference-to-video/pro/llms.txt"
+      ]
+    },
+    {
+      "family": "vidu-20-subject",
+      "endpoint": "fal-ai/vidu/reference-to-video",
+      "ids": [
+        "vidu-20-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/vidu/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/vidu/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "minimax-h3-subject",
+      "endpoint": "minimax/h3/reference-to-video",
+      "ids": [
+        "minimax-h3-subject-480p",
+        "minimax-h3-subject-768p",
+        "minimax-h3-subject-2k",
+        "minimax-h3-subject-4k"
+      ],
+      "sources": [
+        "https://fal.ai/models/minimax/h3/reference-to-video/api",
+        "https://fal.ai/models/minimax/h3/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "minimax-h3-max-subject",
+      "endpoint": "minimax/h3-max/reference-to-video",
+      "ids": [
+        "minimax-h3-max-subject-480p",
+        "minimax-h3-max-subject-768p",
+        "minimax-h3-max-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/minimax/h3-max/reference-to-video/api",
+        "https://fal.ai/models/minimax/h3-max/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "minimax-h3mt-subject",
+      "endpoint": "minimax/h3-max-turbo/reference-to-video",
+      "ids": [
+        "minimax-h3mt-subject-480p",
+        "minimax-h3mt-subject-768p",
+        "minimax-h3mt-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/minimax/h3-max-turbo/reference-to-video/api",
+        "https://fal.ai/models/minimax/h3-max-turbo/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "pixverse-c1-subject",
+      "endpoint": "fal-ai/pixverse/c1/reference-to-video",
+      "ids": [
+        "pixverse-c1-subject-360p",
+        "pixverse-c1-subject-540p",
+        "pixverse-c1-subject-720p",
+        "pixverse-c1-subject-1080p"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/pixverse/c1/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/pixverse/c1/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "veo-31-subject",
+      "endpoint": "fal-ai/veo3.1/reference-to-video",
+      "ids": [
+        "veo-31-subject-720p",
+        "veo-31-subject-1080p",
+        "veo-31-subject-4k"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/veo3.1/reference-to-video/api",
+        "https://fal.ai/models/fal-ai/veo3.1/reference-to-video/llms.txt"
+      ]
+    },
+    {
+      "family": "ltx-23-ingredient-subject",
+      "endpoint": "fal-ai/ltx-2.3-quality/ingredient",
+      "ids": [
+        "ltx-23-ingredient-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/ltx-2.3-quality/ingredient/api",
+        "https://fal.ai/models/fal-ai/ltx-2.3-quality/ingredient/llms.txt"
+      ]
+    },
+    {
+      "family": "minimax-video01-subject",
+      "endpoint": "fal-ai/minimax/video-01-subject-reference",
+      "ids": [
+        "minimax-video01-subject"
+      ],
+      "sources": [
+        "https://fal.ai/models/fal-ai/minimax/video-01-subject-reference/api",
+        "https://fal.ai/models/fal-ai/minimax/video-01-subject-reference/llms.txt"
+      ]
+    }
+  ],
+  "configurations": {
+    "kling-o3-subject": {
+      "name": "Kling O3 Standard · Référence de personnage",
+      "maker": "Kling",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/kling-video/o3/standard/reference-to-video",
+      "rateMicros": 112000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 2500,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "shot_type": "customize"
+      },
+      "durationType": "string"
+    },
+    "kling-o3-pro-subject": {
+      "name": "Kling O3 Pro · Référence de personnage",
+      "maker": "Kling",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/kling-video/o3/pro/reference-to-video",
+      "rateMicros": 140000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 2500,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "shot_type": "customize"
+      },
+      "durationType": "string"
+    },
+    "kling-o3-4k-subject": {
+      "name": "Kling O3 4K · Référence de personnage",
+      "maker": "Kling",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/kling-video/o3/4k/reference-to-video",
+      "rateMicros": 420000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "4k",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 2500,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "shot_type": "customize"
+      },
+      "durationType": "string"
+    },
+    "kling-o1-subject": {
+      "name": "Kling O1 Pro · Référence de personnage",
+      "maker": "Kling",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Sans audio natif.",
+      "endpoint": "fal-ai/kling-video/o1/reference-to-video",
+      "rateMicros": 112000,
+      "audio": false,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 2500,
+      "checked": "2026-11-05",
+      "input": {},
+      "durationType": "string"
+    },
+    "kling-o1-standard-subject": {
+      "name": "Kling O1 Standard · Référence de personnage",
+      "maker": "Kling",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Sans audio natif.",
+      "endpoint": "fal-ai/kling-video/o1/standard/reference-to-video",
+      "rateMicros": 84000,
+      "audio": false,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 2500,
+      "checked": "2026-11-05",
+      "input": {},
+      "durationType": "string"
+    },
+    "kling-4-subject-720p": {
+      "name": "Kling 4.0 · Référence de personnage · 720p",
+      "maker": "Kling",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "kling/v4/reference-to-video",
+      "rateMicros": 157000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "720p"
+      },
+      "durationType": "integer",
+      "omitSafety": true
+    },
+    "kling-4-subject-1080p": {
+      "name": "Kling 4.0 · Référence de personnage · 1080p",
+      "maker": "Kling",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "kling/v4/reference-to-video",
+      "rateMicros": 235000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "1080p"
+      },
+      "durationType": "integer",
+      "omitSafety": true
+    },
+    "kling-4-flash-subject": {
+      "name": "Kling 4.0 Flash · Référence de personnage",
+      "maker": "Kling",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "kling/v4/flash/reference-to-video",
+      "rateMicros": 94000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "720p"
+      },
+      "durationType": "integer",
+      "omitSafety": true
+    },
+    "seedance-25-us-subject-480p": {
+      "name": "Seedance 2.5 US · Référence de personnage · 480p",
+      "maker": "Seedance",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester. Estimation indicative aux tokens.",
+      "endpoint": "bytedance/seedance-2.5/us/reference-to-video",
+      "rateMicros": 220500,
+      "audio": true,
+      "seconds": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "codec": "H264",
+        "bitrate_mode": "standard",
+        "task": "reference",
+        "draft": false,
+        "resolution": "480p"
+      },
+      "durationType": "string",
+      "omitSafety": true,
+      "billing": "tokens"
+    },
+    "seedance-25-us-subject-720p": {
+      "name": "Seedance 2.5 US · Référence de personnage · 720p",
+      "maker": "Seedance",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester. Estimation indicative aux tokens.",
+      "endpoint": "bytedance/seedance-2.5/us/reference-to-video",
+      "rateMicros": 473000,
+      "audio": true,
+      "seconds": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "codec": "H264",
+        "bitrate_mode": "standard",
+        "task": "reference",
+        "draft": false,
+        "resolution": "720p"
+      },
+      "durationType": "string",
+      "omitSafety": true,
+      "billing": "tokens"
+    },
+    "seedance-25-us-subject-1080p": {
+      "name": "Seedance 2.5 US · Référence de personnage · 1080p",
+      "maker": "Seedance",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester. Estimation indicative aux tokens.",
+      "endpoint": "bytedance/seedance-2.5/us/reference-to-video",
+      "rateMicros": 1164000,
+      "audio": true,
+      "seconds": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "codec": "H264",
+        "bitrate_mode": "standard",
+        "task": "reference",
+        "draft": false,
+        "resolution": "1080p"
+      },
+      "durationType": "string",
+      "omitSafety": true,
+      "billing": "tokens"
+    },
+    "seedance-20-fast-subject-480p": {
+      "name": "Seedance 2.0 Fast · Référence de personnage · 480p",
+      "maker": "Seedance",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester. Estimation indicative aux tokens.",
+      "endpoint": "bytedance/seedance-2.0/fast/reference-to-video",
+      "rateMicros": 112000,
+      "audio": true,
+      "seconds": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "codec": "H264",
+        "bitrate_mode": "standard",
+        "resolution": "480p"
+      },
+      "durationType": "string",
+      "omitSafety": true,
+      "billing": "tokens"
+    },
+    "seedance-20-fast-subject-720p": {
+      "name": "Seedance 2.0 Fast · Référence de personnage · 720p",
+      "maker": "Seedance",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester. Estimation indicative aux tokens.",
+      "endpoint": "bytedance/seedance-2.0/fast/reference-to-video",
+      "rateMicros": 241900,
+      "audio": true,
+      "seconds": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "codec": "H264",
+        "bitrate_mode": "standard",
+        "resolution": "720p"
+      },
+      "durationType": "string",
+      "omitSafety": true,
+      "billing": "tokens"
+    },
+    "seedance-20-mini-subject-480p": {
+      "name": "Seedance 2.0 Mini · Référence de personnage · 480p",
+      "maker": "Seedance",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester. Estimation indicative aux tokens.",
+      "endpoint": "bytedance/seedance-2.0/mini/reference-to-video",
+      "rateMicros": 70000,
+      "audio": true,
+      "seconds": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "codec": "H264",
+        "resolution": "480p"
+      },
+      "durationType": "string",
+      "omitSafety": true,
+      "billing": "tokens"
+    },
+    "seedance-20-mini-subject-720p": {
+      "name": "Seedance 2.0 Mini · Référence de personnage · 720p",
+      "maker": "Seedance",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester. Estimation indicative aux tokens.",
+      "endpoint": "bytedance/seedance-2.0/mini/reference-to-video",
+      "rateMicros": 151200,
+      "audio": true,
+      "seconds": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "@Image",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "codec": "H264",
+        "resolution": "720p"
+      },
+      "durationType": "string",
+      "omitSafety": true,
+      "billing": "tokens"
+    },
+    "wan-30-subject-480p": {
+      "name": "Wan 3.0 · Référence de personnage · 480p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "alibaba/wan-3.0/reference-to-video",
+      "rateMicros": 50000,
+      "audio": true,
+      "seconds": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "enable_prompt_expansion": false,
+        "enable_thinking": false,
+        "resolution": "480p"
+      },
+      "durationType": "integer"
+    },
+    "wan-30-subject-720p": {
+      "name": "Wan 3.0 · Référence de personnage · 720p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "alibaba/wan-3.0/reference-to-video",
+      "rateMicros": 100000,
+      "audio": true,
+      "seconds": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "enable_prompt_expansion": false,
+        "enable_thinking": false,
+        "resolution": "720p"
+      },
+      "durationType": "integer"
+    },
+    "wan-30-subject-1080p": {
+      "name": "Wan 3.0 · Référence de personnage · 1080p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "alibaba/wan-3.0/reference-to-video",
+      "rateMicros": 200000,
+      "audio": true,
+      "seconds": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "enable_prompt_expansion": false,
+        "enable_thinking": false,
+        "resolution": "1080p"
+      },
+      "durationType": "integer"
+    },
+    "wan-30-prime-subject-480p": {
+      "name": "Wan 3.0 Prime · Référence de personnage · 480p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "alibaba/wan-3.0-prime/reference-to-video",
+      "rateMicros": 68000,
+      "audio": true,
+      "seconds": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "enable_prompt_expansion": false,
+        "enable_thinking": false,
+        "resolution": "480p"
+      },
+      "durationType": "integer"
+    },
+    "wan-30-prime-subject-720p": {
+      "name": "Wan 3.0 Prime · Référence de personnage · 720p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "alibaba/wan-3.0-prime/reference-to-video",
+      "rateMicros": 140000,
+      "audio": true,
+      "seconds": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "enable_prompt_expansion": false,
+        "enable_thinking": false,
+        "resolution": "720p"
+      },
+      "durationType": "integer"
+    },
+    "wan-30-prime-subject-1080p": {
+      "name": "Wan 3.0 Prime · Référence de personnage · 1080p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "alibaba/wan-3.0-prime/reference-to-video",
+      "rateMicros": 280000,
+      "audio": true,
+      "seconds": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "enable_prompt_expansion": false,
+        "enable_thinking": false,
+        "resolution": "1080p"
+      },
+      "durationType": "integer"
+    },
+    "wan-27-subject-720p": {
+      "name": "Wan 2.7 · Référence de personnage · 720p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/wan/v2.7/reference-to-video",
+      "rateMicros": 100000,
+      "audio": true,
+      "seconds": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "multi_shots": false,
+        "resolution": "720p"
+      },
+      "durationType": "integer"
+    },
+    "wan-27-subject-1080p": {
+      "name": "Wan 2.7 · Référence de personnage · 1080p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/wan/v2.7/reference-to-video",
+      "rateMicros": 100000,
+      "audio": true,
+      "seconds": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "multi_shots": false,
+        "resolution": "1080p"
+      },
+      "durationType": "integer"
+    },
+    "wan-26-flash-subject-720p": {
+      "name": "Wan 2.6 Flash · Référence de personnage · 720p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "wan/v2.6/reference-to-video/flash",
+      "rateMicros": 100000,
+      "audio": true,
+      "seconds": [
+        5,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 5,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "Character",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "enable_prompt_expansion": false,
+        "multi_shots": false,
+        "resolution": "720p"
+      },
+      "durationType": "string"
+    },
+    "wan-26-flash-subject-1080p": {
+      "name": "Wan 2.6 Flash · Référence de personnage · 1080p",
+      "maker": "Wan",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "wan/v2.6/reference-to-video/flash",
+      "rateMicros": 150000,
+      "audio": true,
+      "seconds": [
+        5,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 5,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "Character",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "enable_prompt_expansion": false,
+        "multi_shots": false,
+        "resolution": "1080p"
+      },
+      "durationType": "string"
+    },
+    "happy-horse-11-subject-720p": {
+      "name": "Happy Horse 1.1 · Référence de personnage · 720p",
+      "maker": "Happy",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "alibaba/happy-horse/v1.1/reference-to-video",
+      "rateMicros": 140000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "character",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "720p"
+      },
+      "durationType": "integer",
+      "referenceRatio": "1:1"
+    },
+    "happy-horse-11-subject-1080p": {
+      "name": "Happy Horse 1.1 · Référence de personnage · 1080p",
+      "maker": "Happy",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "alibaba/happy-horse/v1.1/reference-to-video",
+      "rateMicros": 180000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "character",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "1080p"
+      },
+      "durationType": "integer",
+      "referenceRatio": "1:1"
+    },
+    "gemini-omni-11-subject-360p": {
+      "name": "Gemini Omni Flash 1.1 · Référence de personnage · 360p",
+      "maker": "Gemini",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "google/gemini-omni-flash/v1.1/reference-to-video",
+      "rateMicros": 30000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9"
+      ],
+      "quality": "360p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "<IMAGE_REF_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "360p"
+      },
+      "durationType": "integer",
+      "omitSafety": true,
+      "subjectIndexBase": 0,
+      "subjectTokenSuffix": ">"
+    },
+    "gemini-omni-11-subject-720p": {
+      "name": "Gemini Omni Flash 1.1 · Référence de personnage · 720p",
+      "maker": "Gemini",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "google/gemini-omni-flash/v1.1/reference-to-video",
+      "rateMicros": 100000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "<IMAGE_REF_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "720p"
+      },
+      "durationType": "integer",
+      "omitSafety": true,
+      "subjectIndexBase": 0,
+      "subjectTokenSuffix": ">"
+    },
+    "gemini-omni-11-subject-1080p": {
+      "name": "Gemini Omni Flash 1.1 · Référence de personnage · 1080p",
+      "maker": "Gemini",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "google/gemini-omni-flash/v1.1/reference-to-video",
+      "rateMicros": 150000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "<IMAGE_REF_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "1080p"
+      },
+      "durationType": "integer",
+      "omitSafety": true,
+      "subjectIndexBase": 0,
+      "subjectTokenSuffix": ">"
+    },
+    "gemini-omni-11-subject-4k": {
+      "name": "Gemini Omni Flash 1.1 · Référence de personnage · 4k",
+      "maker": "Gemini",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "google/gemini-omni-flash/v1.1/reference-to-video",
+      "rateMicros": 300000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ratios": [
+        "9:16",
+        "16:9"
+      ],
+      "quality": "4k",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "<IMAGE_REF_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "4k"
+      },
+      "durationType": "integer",
+      "omitSafety": true,
+      "subjectIndexBase": 0,
+      "subjectTokenSuffix": ">"
+    },
+    "heygen-subject-480p": {
+      "name": "HeyGen Video · Référence de personnage · 480p",
+      "maker": "HeyGen",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "heygen/heygen-video/reference-to-video",
+      "rateMicros": 20000,
+      "audio": true,
+      "seconds": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_enhancement": "disabled",
+        "resolution": "480p"
+      },
+      "durationType": "integer"
+    },
+    "heygen-subject-768p": {
+      "name": "HeyGen Video · Référence de personnage · 768p",
+      "maker": "HeyGen",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "heygen/heygen-video/reference-to-video",
+      "rateMicros": 20000,
+      "audio": true,
+      "seconds": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "768p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_enhancement": "disabled",
+        "resolution": "768p"
+      },
+      "durationType": "integer"
+    },
+    "heygen-subject-1080p": {
+      "name": "HeyGen Video · Référence de personnage · 1080p",
+      "maker": "HeyGen",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "heygen/heygen-video/reference-to-video",
+      "rateMicros": 60000,
+      "audio": true,
+      "seconds": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_enhancement": "disabled",
+        "resolution": "1080p"
+      },
+      "durationType": "integer"
+    },
+    "heygen-subject-2k": {
+      "name": "HeyGen Video · Référence de personnage · 2k",
+      "maker": "HeyGen",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "heygen/heygen-video/reference-to-video",
+      "rateMicros": 60000,
+      "audio": true,
+      "seconds": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "2k",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_enhancement": "disabled",
+        "resolution": "2k"
+      },
+      "durationType": "integer"
+    },
+    "grok-15-subject-480p": {
+      "name": "Grok Imagine 1.5 · Référence de personnage · 480p",
+      "maker": "Grok",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "xai/grok-imagine-video/v1.5/reference-to-video",
+      "rateMicros": 80000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 4096,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "480p"
+      },
+      "durationType": "integer",
+      "referenceMicros": 10000
+    },
+    "grok-15-subject-720p": {
+      "name": "Grok Imagine 1.5 · Référence de personnage · 720p",
+      "maker": "Grok",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "xai/grok-imagine-video/v1.5/reference-to-video",
+      "rateMicros": 140000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 4096,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": "720p"
+      },
+      "durationType": "integer",
+      "referenceMicros": 10000
+    },
+    "vidu-q4-subject-540p": {
+      "name": "Vidu Q4 · Référence de personnage · 540p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q4/reference-to-video",
+      "rateMicros": 31500,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "540p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "[@reference_image_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "540p"
+      },
+      "durationType": "integer",
+      "subjectTokenSuffix": "]"
+    },
+    "vidu-q4-subject-720p": {
+      "name": "Vidu Q4 · Référence de personnage · 720p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q4/reference-to-video",
+      "rateMicros": 66500,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "[@reference_image_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "720p"
+      },
+      "durationType": "integer",
+      "subjectTokenSuffix": "]"
+    },
+    "vidu-q4-subject-1080p": {
+      "name": "Vidu Q4 · Référence de personnage · 1080p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q4/reference-to-video",
+      "rateMicros": 84000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "[@reference_image_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "1080p"
+      },
+      "durationType": "integer",
+      "subjectTokenSuffix": "]"
+    },
+    "vidu-q4-subject-2k": {
+      "name": "Vidu Q4 · Référence de personnage · 2k",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q4/reference-to-video",
+      "rateMicros": 133000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "2k",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "[@reference_image_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "2K"
+      },
+      "durationType": "integer",
+      "subjectTokenSuffix": "]"
+    },
+    "vidu-q4-subject-4k": {
+      "name": "Vidu Q4 · Référence de personnage · 4k",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q4/reference-to-video",
+      "rateMicros": 273000,
+      "audio": true,
+      "seconds": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "4k",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "[@reference_image_",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "4K"
+      },
+      "durationType": "integer",
+      "subjectTokenSuffix": "]"
+    },
+    "vidu-q3-subject-360p": {
+      "name": "Vidu Q3 Mix · Référence de personnage · 360p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q3/reference-to-video/mix",
+      "rateMicros": 70000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "360p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 2000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "360p"
+      },
+      "durationType": "integer"
+    },
+    "vidu-q3-subject-540p": {
+      "name": "Vidu Q3 Mix · Référence de personnage · 540p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q3/reference-to-video/mix",
+      "rateMicros": 70000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "540p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 2000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "540p"
+      },
+      "durationType": "integer"
+    },
+    "vidu-q3-subject-720p": {
+      "name": "Vidu Q3 Mix · Référence de personnage · 720p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q3/reference-to-video/mix",
+      "rateMicros": 154000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 2000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "720p"
+      },
+      "durationType": "integer"
+    },
+    "vidu-q3-subject-1080p": {
+      "name": "Vidu Q3 Mix · Référence de personnage · 1080p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/vidu/q3/reference-to-video/mix",
+      "rateMicros": 154000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 2000,
+      "checked": "2026-11-05",
+      "input": {
+        "audio": true,
+        "resolution": "1080p"
+      },
+      "durationType": "integer"
+    },
+    "vidu-q2-pro-subject-720p": {
+      "name": "Vidu Q2 Pro · Référence de personnage · 720p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Sans audio natif.",
+      "endpoint": "fal-ai/vidu/q2/reference-to-video/pro",
+      "rateMicros": 0,
+      "audio": false,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 2000,
+      "checked": "2026-11-05",
+      "input": {
+        "bgm": false,
+        "movement_amplitude": "auto",
+        "resolution": "720p"
+      },
+      "durationType": "integer",
+      "fixedMicros": 300000
+    },
+    "vidu-q2-pro-subject-1080p": {
+      "name": "Vidu Q2 Pro · Référence de personnage · 1080p",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Sans audio natif.",
+      "endpoint": "fal-ai/vidu/q2/reference-to-video/pro",
+      "rateMicros": 100000,
+      "audio": false,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 2000,
+      "checked": "2026-11-05",
+      "input": {
+        "bgm": false,
+        "movement_amplitude": "auto",
+        "resolution": "1080p"
+      },
+      "durationType": "integer",
+      "fixedMicros": 200000
+    },
+    "vidu-20-subject": {
+      "name": "Vidu 2.0 · Référence de personnage",
+      "maker": "Vidu",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Sans audio natif.",
+      "endpoint": "fal-ai/vidu/reference-to-video",
+      "rateMicros": 0,
+      "audio": false,
+      "seconds": [
+        4
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 1500,
+      "checked": "2026-11-05",
+      "input": {
+        "movement_amplitude": "auto"
+      },
+      "durationType": "none",
+      "fixedMicros": 400000
+    },
+    "minimax-h3-subject-480p": {
+      "name": "MiniMax H3 · Référence de personnage · 480p",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3/reference-to-video",
+      "rateMicros": 50000,
+      "audio": true,
+      "seconds": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 5,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "480P"
+      },
+      "durationType": "integer"
+    },
+    "minimax-h3-subject-768p": {
+      "name": "MiniMax H3 · Référence de personnage · 768p",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3/reference-to-video",
+      "rateMicros": 60000,
+      "audio": true,
+      "seconds": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "768p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 5,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "768P"
+      },
+      "durationType": "integer"
+    },
+    "minimax-h3-subject-2k": {
+      "name": "MiniMax H3 · Référence de personnage · 2k",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3/reference-to-video",
+      "rateMicros": 130000,
+      "audio": true,
+      "seconds": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "2k",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 5,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "2K"
+      },
+      "durationType": "integer"
+    },
+    "minimax-h3-subject-4k": {
+      "name": "MiniMax H3 · Référence de personnage · 4k",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3/reference-to-video",
+      "rateMicros": 160000,
+      "audio": true,
+      "seconds": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "4k",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 5,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "4K"
+      },
+      "durationType": "integer"
+    },
+    "minimax-h3-max-subject-480p": {
+      "name": "MiniMax H3 Max · Référence de personnage · 480p",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3-max/reference-to-video",
+      "rateMicros": 50000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "480P"
+      },
+      "durationType": "integer",
+      "referenceRatio": "1:1"
+    },
+    "minimax-h3-max-subject-768p": {
+      "name": "MiniMax H3 Max · Référence de personnage · 768p",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3-max/reference-to-video",
+      "rateMicros": 80000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "768p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "768P"
+      },
+      "durationType": "integer",
+      "referenceRatio": "1:1"
+    },
+    "minimax-h3-max-subject-1080p": {
+      "name": "MiniMax H3 Max · Référence de personnage · 1080p",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3-max/reference-to-video",
+      "rateMicros": 160000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "1080P"
+      },
+      "durationType": "integer",
+      "referenceRatio": "1:1"
+    },
+    "minimax-h3mt-subject-480p": {
+      "name": "MiniMax H3 Max Turbo · Référence de personnage · 480p",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3-max-turbo/reference-to-video",
+      "rateMicros": 50000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "480p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "480P"
+      },
+      "durationType": "integer",
+      "referenceRatio": "1:1"
+    },
+    "minimax-h3mt-subject-768p": {
+      "name": "MiniMax H3 Max Turbo · Référence de personnage · 768p",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3-max-turbo/reference-to-video",
+      "rateMicros": 80000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "768p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "768P"
+      },
+      "durationType": "integer",
+      "referenceRatio": "1:1"
+    },
+    "minimax-h3mt-subject-1080p": {
+      "name": "MiniMax H3 Max Turbo · Référence de personnage · 1080p",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "minimax/h3-max-turbo/reference-to-video",
+      "rateMicros": 160000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 4,
+      "referenceImagesField": "reference_image_urls",
+      "subjectToken": "Image ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_expansion_mode": "disabled",
+        "sync_mode": false,
+        "resolution": "1080P"
+      },
+      "durationType": "integer",
+      "referenceRatio": "1:1"
+    },
+    "pixverse-c1-subject-360p": {
+      "name": "PixVerse C1 · Référence de personnage · 360p",
+      "maker": "PixVerse",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/pixverse/c1/reference-to-video",
+      "rateMicros": 40000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "360p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_references",
+      "subjectToken": "@character",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio_switch": true,
+        "resolution": "360p"
+      },
+      "durationType": "integer",
+      "referenceFormat": "objects",
+      "promptBytes": 2048
+    },
+    "pixverse-c1-subject-540p": {
+      "name": "PixVerse C1 · Référence de personnage · 540p",
+      "maker": "PixVerse",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/pixverse/c1/reference-to-video",
+      "rateMicros": 50000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "540p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_references",
+      "subjectToken": "@character",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio_switch": true,
+        "resolution": "540p"
+      },
+      "durationType": "integer",
+      "referenceFormat": "objects",
+      "promptBytes": 2048
+    },
+    "pixverse-c1-subject-720p": {
+      "name": "PixVerse C1 · Référence de personnage · 720p",
+      "maker": "PixVerse",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/pixverse/c1/reference-to-video",
+      "rateMicros": 65000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_references",
+      "subjectToken": "@character",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio_switch": true,
+        "resolution": "720p"
+      },
+      "durationType": "integer",
+      "referenceFormat": "objects",
+      "promptBytes": 2048
+    },
+    "pixverse-c1-subject-1080p": {
+      "name": "PixVerse C1 · Référence de personnage · 1080p",
+      "maker": "PixVerse",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/pixverse/c1/reference-to-video",
+      "rateMicros": 120000,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 7,
+      "referenceImagesField": "image_references",
+      "subjectToken": "@character",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio_switch": true,
+        "resolution": "1080p"
+      },
+      "durationType": "integer",
+      "referenceFormat": "objects",
+      "promptBytes": 2048
+    },
+    "veo-31-subject-720p": {
+      "name": "Veo 3.1 · Référence de personnage · 720p",
+      "maker": "Veo",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/veo3.1/reference-to-video",
+      "rateMicros": 400000,
+      "audio": true,
+      "seconds": [
+        8
+      ],
+      "ratios": [
+        "9:16",
+        "16:9"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 3,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "auto_fix": false,
+        "safety_tolerance": "4",
+        "resolution": "720p"
+      },
+      "durationType": "suffix",
+      "omitSafety": true
+    },
+    "veo-31-subject-1080p": {
+      "name": "Veo 3.1 · Référence de personnage · 1080p",
+      "maker": "Veo",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/veo3.1/reference-to-video",
+      "rateMicros": 400000,
+      "audio": true,
+      "seconds": [
+        8
+      ],
+      "ratios": [
+        "9:16",
+        "16:9"
+      ],
+      "quality": "1080p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 3,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "auto_fix": false,
+        "safety_tolerance": "4",
+        "resolution": "1080p"
+      },
+      "durationType": "suffix",
+      "omitSafety": true
+    },
+    "veo-31-subject-4k": {
+      "name": "Veo 3.1 · Référence de personnage · 4k",
+      "maker": "Veo",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Audio natif ; français et voix à tester.",
+      "endpoint": "fal-ai/veo3.1/reference-to-video",
+      "rateMicros": 600000,
+      "audio": true,
+      "seconds": [
+        8
+      ],
+      "ratios": [
+        "9:16",
+        "16:9"
+      ],
+      "quality": "4k",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 3,
+      "referenceImagesField": "image_urls",
+      "subjectToken": "Reference",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "generate_audio": true,
+        "auto_fix": false,
+        "safety_tolerance": "4",
+        "resolution": "4k"
+      },
+      "durationType": "suffix",
+      "omitSafety": true
+    },
+    "ltx-23-ingredient-subject": {
+      "name": "LTX 2.3 Quality · Planche ou portrait · Référence de personnage",
+      "maker": "LTX",
+      "provider": "fal",
+      "description": "Une planche de références ou un portrait unique, sans cadre de début imposé. Audio et fidélité à tester. Estimation au mégapixel, canevas fixe selon le format.",
+      "endpoint": "fal-ai/ltx-2.3-quality/ingredient",
+      "rateMicros": 0,
+      "audio": true,
+      "seconds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 1,
+      "referenceImagesField": "image_url",
+      "subjectToken": "Reference sheet ",
+      "promptLimit": 5000,
+      "checked": "2026-11-05",
+      "input": {
+        "resolution": {
+          "width": 1280,
+          "height": 720
+        },
+        "frames_per_second": 24,
+        "generate_audio": true,
+        "enable_prompt_expansion": false,
+        "sync_mode": false
+      },
+      "omitRatio": true,
+      "durationType": "frames",
+      "referenceFormat": "scalar",
+      "canvasFromRatio": true,
+      "pricesCents": {
+        "1": 6,
+        "2": 12,
+        "3": 17,
+        "4": 22,
+        "5": 27,
+        "6": 33,
+        "7": 38,
+        "8": 43,
+        "9": 49,
+        "10": 54,
+        "11": 59,
+        "12": 65,
+        "13": 70,
+        "14": 75,
+        "15": 81,
+        "16": 86,
+        "17": 91,
+        "18": 97,
+        "19": 102,
+        "20": 107
+      }
+    },
+    "minimax-video01-subject": {
+      "name": "MiniMax Video 01 · Portrait humain · Référence de personnage",
+      "maker": "MiniMax",
+      "provider": "fal",
+      "description": "Portraits de personnages sans image de début imposée. Sans audio natif.",
+      "endpoint": "fal-ai/minimax/video-01-subject-reference",
+      "rateMicros": 0,
+      "audio": false,
+      "seconds": [
+        6
+      ],
+      "ratios": [
+        "16:9"
+      ],
+      "quality": "720p",
+      "image": true,
+      "subjectReference": true,
+      "subjectLimit": 1,
+      "referenceImagesField": "subject_reference_image_url",
+      "subjectToken": "Reference",
+      "promptLimit": 2000,
+      "checked": "2026-11-05",
+      "input": {
+        "prompt_optimizer": false
+      },
+      "omitRatio": true,
+      "durationType": "none",
+      "referenceFormat": "scalar",
+      "fixedMicros": 500000
+    }
+  },
+  "pricing_notes": {
+    "seedance": "Token estimates, not invoice caps. Reference photos only, no input-video discount. US 2.5 480/720p $0.0214/1000 tokens, 1080p $0.0234. Approximate rates/s 0.2205, 0.473, 1.164.",
+    "seedance_fast_mini_480p": "Derived approximate forecasts: Fast 0.112 USD/s, Mini 0.07; 720p published equivalents 0.2419 and 0.1512. Final dimensions/tokens can differ.",
+    "seedance_us_image": "Live official page confirms existing 0.473 USD/s 720p estimate. Checked date only changed; old search result 0.02568/1000 superseded by live 0.0214.",
+    "grok": "0.01 USD per actual reference, conservative max-reference comparison; exact per-plan quote.",
+    "ltx": "ceil(width*height*(24*seconds+1)/1e6)*0.0024075 USD, round up to cents. Canvas area 921600; one photograph/reference sheet.",
+    "minimax_h3_max": "App cap four square references, 1024 reference tokens each, within 4096 free allocation. H3 app cap five.",
+    "heygen": "Normal pricing; promotion ending October 31 not used.",
+    "minimax_video01": "Human portrait legacy route; fixed six seconds/canvas also based on general official Video-01 documentation, not independently verified on animated cats."
+  },
+  "native_get_capture": {
+    "pages": {
+      "blank": {
+        "url": "/studio/creation",
+        "status": 200,
+        "sha256": "12d08230b9812c565c8a00a0641f3e65a81b9fa9187df216253fbf5a74ad91fd"
+      },
+      "selected": {
+        "url": "/studio/series/episodes/21",
+        "status": 200,
+        "sha256": "ad3077087721074ae076a80c5f1eb3a5f5677d38864840555eb1d1a70a57b2b1"
+      },
+      "image": {
+        "url": "/studio/series/episodes/22",
+        "status": 200,
+        "sha256": "a1b0d661e25962b78a599b208788066d14587cb4d46e2460caa07c427014e4e5"
+      },
+      "choices": {
+        "url": "/studio/personnages/choix",
+        "status": 200,
+        "sha256": "3ae1b7a753fc325490a62e50fcd5486fc98e2b865eee7464c9504229580da6e7"
+      },
+      "new": {
+        "url": "/studio/personnages/nouveau?rapide=1",
+        "status": 200,
+        "sha256": "ed00fb42d9906a8aadb6b53f383662eec9cc038932e930302a37ee8c7697fac2"
+      },
+      "series": {
+        "url": "/studio/series/nouvelle",
+        "status": 200,
+        "sha256": "f0440f8aa84a80ff2f5ef82c8872882a006bcdf0309f136e342f9186e15ebaf3"
+      }
+    },
+    "before": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 17,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 36,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 2,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "after": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 17,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 36,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 2,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "networkAttempts": 0
+  },
+  "browser_replay": {
+    "unsaved_controller_removed_only_from_qa_copies": true,
+    "real_writes_blocked": true,
+    "external_requests_blocked": true,
+    "synthetic_new_choice_not_persisted": true,
+    "browser-check": {
+      "results": [
+        {
+          "interaction": "select_remove_clear_reorder_modes_tooltip_error",
+          "modelCount": 31,
+          "reordered": [
+            {
+              "ids": [
+                "2"
+              ],
+              "name": "ai_idea[shots][0][characterIds][]"
+            },
+            {
+              "ids": [
+                "1"
+              ],
+              "name": "ai_idea[shots][1][characterIds][]"
+            }
+          ],
+          "errorText": "Ajoute une idée, une durée et un modèle vidéo pour proposer des scènes compatibles.",
+          "errorColor": "rgb(255, 180, 187)"
+        },
+        {
+          "interaction": "quick_create_tab_and_refresh",
+          "addedSyntheticChoice": true,
+          "oldSelectionPreserved": true
+        },
+        {
+          "width": 320,
+          "path": "/studio/series/episodes/21",
+          "viewport": 320,
+          "broken": []
+        },
+        {
+          "width": 320,
+          "path": "/studio/creation",
+          "viewport": 320,
+          "broken": []
+        },
+        {
+          "width": 320,
+          "path": "/studio/series/nouvelle",
+          "viewport": 320,
+          "broken": []
+        },
+        {
+          "width": 390,
+          "path": "/studio/series/episodes/21",
+          "viewport": 390,
+          "broken": []
+        },
+        {
+          "width": 390,
+          "path": "/studio/creation",
+          "viewport": 390,
+          "broken": []
+        },
+        {
+          "width": 390,
+          "path": "/studio/series/nouvelle",
+          "viewport": 390,
+          "broken": []
+        },
+        {
+          "width": 768,
+          "path": "/studio/series/episodes/21",
+          "viewport": 768,
+          "broken": []
+        },
+        {
+          "width": 768,
+          "path": "/studio/creation",
+          "viewport": 768,
+          "broken": []
+        },
+        {
+          "width": 768,
+          "path": "/studio/series/nouvelle",
+          "viewport": 768,
+          "broken": []
+        },
+        {
+          "width": 1280,
+          "path": "/studio/series/episodes/21",
+          "viewport": 1280,
+          "broken": []
+        },
+        {
+          "width": 1280,
+          "path": "/studio/creation",
+          "viewport": 1280,
+          "broken": []
+        },
+        {
+          "width": 1280,
+          "path": "/studio/series/nouvelle",
+          "viewport": 1280,
+          "broken": []
+        }
+      ],
+      "errors": [],
+      "requests": []
+    },
+    "browser-nojs": [
+      {
+        "width": 390,
+        "nativeUncheck": true,
+        "keyboardHelp": true,
+        "viewport": 390,
+        "broken": 0
+      },
+      {
+        "width": 1280,
+        "nativeUncheck": true,
+        "keyboardHelp": true,
+        "viewport": 1280,
+        "broken": 0
+      }
+    ],
+    "browser-empty": {
+      "nativeEmptyLibrary": true,
+      "refreshFirstCharacter": true,
+      "scenePresenceVisibleWithoutReload": true,
+      "syntheticChoiceOnly": true
+    },
+    "browser-series": {
+      "seriesModes": true,
+      "selectionPreserved": true,
+      "errors": []
+    },
+    "browser-help": {
+      "touchHelp": true,
+      "open": true
+    }
+  },
+  "tests": {
+    "php_targeted": {
+      "tests": 205,
+      "assertions": 7284,
+      "sha256": "b1fbc1f6720d6397b4f4b91a9ac054f88cdc44eda8da29cb8ab7a1382fd4dd3d"
+    },
+    "php_characters_previous": {
+      "tests": 15,
+      "assertions": 228,
+      "sha256": "e9ccaf7927c217a83c3d0c3b29d7abb70a96dff5c4d2c2654431b11bfeb8e38c"
+    },
+    "php_renderer_retry": {
+      "tests": 2,
+      "assertions": 90,
+      "sha256": "632f9c8a00ddb92105eb2323b2d91433d797147b38f125f2d4853cb08ab5a3cf"
+    },
+    "php_regression_initial": {
+      "tests": 105,
+      "assertions": 1156,
+      "failures": 2,
+      "sha256": "28b7b191e38b99c0a3c9fc9307543c6a1bcda087b2cb41c204d2a564d27895df"
+    },
+    "php_targeted_concurrent_failure": {
+      "tests": 204,
+      "assertions": 7266,
+      "failures": 6,
+      "sha256": "8beda48239bd2ca160cee6528142219cae8ae984d599ade2a3e93a7c7ed225f2"
+    },
+    "frontend": {
+      "sha256": "cc4faa986a42573b97c724049f16334facc16beb3cde55a335711e38a7a91a55",
+      "tests": 197,
+      "failures": 0
+    },
+    "build": {
+      "sha256": "008b79fc2c2ce425ac1a2d181cc225e07c621dff01c7ecd5aea79791e594908f"
+    },
+    "javascript_syntax": {
+      "sha256": "e50903972b142f2ae477d54e23c54bb4abd05719368dff5d75624c9eeb2c7aab"
+    },
+    "phpstan": {
+      "sha256": "09cea3bdb4e3e9ba8e018ba484ca8066447d838221e34d16e1b8939efaa364fc"
+    },
+    "twig": {
+      "sha256": "106c967b1b9a44cc4a256fb7c10fc6556ab50a39dd8db26bd549fcd01f106851",
+      "templates": 128
+    },
+    "container": {
+      "sha256": "999e902548341ec5a7f0b6ff4aef29788e8b8c24a18f75003bc4072dfe00f919"
+    },
+    "style": {
+      "sha256": "c4fc89ed039ab101292b3523e1d425faa57076518cb8303d79b394301b99cef0"
+    },
+    "dev_cache": {
+      "sha256": "90b1b9e9779d8b42a31cf90378164191b7eb5d94a53cb668eebf87e3088baa8f"
+    },
+    "browsers": {
+      "normal_layouts": 12,
+      "no_javascript_layouts": 2,
+      "touch_help": true,
+      "first_character_without_reload": true,
+      "series_mode_changes": true
+    },
+    "overlap": "php_characters_previous is a prior subset, not additive. Regression initially had two renderer failures; both passed on isolated retry. The concurrent targeted failure is superseded by the final sequential pass. Do not present the initial 105-test regression as wholly green."
+  },
+  "files": {
+    "output/playwright/character-picker/selection-mobile.png": {
+      "sha256": "afecb0b26dde9f806a64768441e61c17839fa542a50bd71159b1084327e28b4b",
+      "bytes": 48817
+    },
+    "output/playwright/character-picker/selection-desktop.png": {
+      "sha256": "89762fadf8169eb09dce6b2358b7545eb3426447fa8a2fefc931e62cee174cba",
+      "bytes": 22981
+    },
+    "output/playwright/character-picker/source-help-mobile.png": {
+      "sha256": "8999b0993639df1c295fc144db22f7311c84b69073f48c5f5c8bab00bfe0f3bc",
+      "bytes": 64173
+    },
+    "tests/Fixtures/character-video-contracts.json": {
+      "sha256": "1322861c20ca69a0f9f537b02ffd38c1683ea9ef4177b863bb3a7c17f279cffc",
+      "bytes": 58911
+    }
+  },
+  "limits": [
+    "No full PHP suite rerun",
+    "No independent review",
+    "No new real audiovisual result or French dialogue validation",
+    "No migration, flag activation, email, publication, push or deployment"
+  ],
+  "worker_update": {
+    "service": "background-worker",
+    "restarted": true,
+    "before": {
+      "database": "shortflow",
+      "ai_generation": [
+        {
+          "state": "prepared",
+          "count": 1
+        },
+        {
+          "state": "available",
+          "count": 10
+        },
+        {
+          "state": "replaced",
+          "count": 1
+        }
+      ],
+      "ai_episode": [
+        {
+          "state": null,
+          "count": 3
+        },
+        {
+          "state": "draft",
+          "count": 10
+        },
+        {
+          "state": "ready",
+          "count": 4
+        }
+      ],
+      "ai_portrait_request": [],
+      "video_edit": [
+        {
+          "state": "draft",
+          "count": 17
+        },
+        {
+          "state": "failed",
+          "count": 1
+        },
+        {
+          "state": "ready",
+          "count": 4
+        }
+      ],
+      "queued_messages": 0
+    },
+    "after": {
+      "database": "shortflow",
+      "ai_generation": [
+        {
+          "state": "prepared",
+          "count": 1
+        },
+        {
+          "state": "available",
+          "count": 10
+        },
+        {
+          "state": "replaced",
+          "count": 1
+        }
+      ],
+      "ai_episode": [
+        {
+          "state": null,
+          "count": 3
+        },
+        {
+          "state": "draft",
+          "count": 10
+        },
+        {
+          "state": "ready",
+          "count": 4
+        }
+      ],
+      "ai_portrait_request": [],
+      "video_edit": [
+        {
+          "state": "draft",
+          "count": 17
+        },
+        {
+          "state": "failed",
+          "count": 1
+        },
+        {
+          "state": "ready",
+          "count": 4
+        }
+      ],
+      "queued_messages": 0
+    }
+  },
+  "character_rollback_reports": [
+    {
+      "file": "testAutosaveKeepsFrozenSelectionAndOlderPayloadCannotEraseSceneCharacters.json",
+      "sha256": "96e16b52a35ce0ab7d1915001a5011b861d359ef26ab2de2a5f63fe3b73972d7",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testCrudStaleFormsArchiveAndPrivateImages.json",
+      "sha256": "6208a9b36ff56453af6a3880ff50db30deed30afccedf17ec0a124adef476828",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testEmptyLibraryOffersFirstCharacterOnlyInReferenceMode.json",
+      "sha256": "36885592b2436663d3deda7456c071aca1c68e4b7e3ef0a44a19a75038e5ae56",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testExplicitEmptyCheckboxSelectionClearsAutosaveAndScenePresence.json",
+      "sha256": "a8e7d1569c5d89b4d61461607a60043458f35cfcfa733885d3c615991a76d4cd",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testInvalidFilesKeepTextAndRollbackEveryNewImage.json",
+      "sha256": "2a43e68f60b789eddf38a65af43ebf94b0bff676bf38be8cd1c07d5b90776581",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testMaintenancePinsArchivedAndReplacedImages.json",
+      "sha256": "c160170f022fcee2c6399a4b2b75b9da041684084a18a238bee24ac9ab79ef96",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testModelChangeRejectsMissingViewsThenRequiresANewQuoteForExplicitNewVersion.json",
+      "sha256": "b752a1215e283ad4ba0f28879810028be6fb4e2efd876fed70e5b091a121797b",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testNewReferenceChoicesFitDurableGenerationStorage.json",
+      "sha256": "c160170f022fcee2c6399a4b2b75b9da041684084a18a238bee24ac9ab79ef96",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testPaginationStaleArchiveAndFailedReplacementPreserveImages.json",
+      "sha256": "c160170f022fcee2c6399a4b2b75b9da041684084a18a238bee24ac9ab79ef96",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testPersistedLegacyFramesStayDistinctFromMissingOrExplicitEmptyCharacterPresence.json",
+      "sha256": "c160170f022fcee2c6399a4b2b75b9da041684084a18a238bee24ac9ab79ef96",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testQuickCreateSavesAPrivateFicheAndMakesItAvailableToRefresh.json",
+      "sha256": "108a563561a6f04a650ab36822994eff49fee1e774c620f274824ede69a1d21d",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testRefreshListsOnlyOwnedActiveCharactersAndNeverExposesStorage.json",
+      "sha256": "a8029f2372a2bbd2cacc484b5bdb4d36d832198286d20dd3d3aa58d32594b31c",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testSceneResolutionRejectsIncompatibilityMissingFilesAndUnknownCharactersWithoutFallback.json",
+      "sha256": "c160170f022fcee2c6399a4b2b75b9da041684084a18a238bee24ac9ab79ef96",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testSelectionRejectsForeignStaleAndDuplicateVersionsButKeepsFrozenArchive.json",
+      "sha256": "c160170f022fcee2c6399a4b2b75b9da041684084a18a238bee24ac9ab79ef96",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testSeriesSelectionFreezesExistingEpisodeAndExplicitClearDoesNotRefreshIt.json",
+      "sha256": "d8e9f9b09598b4abc7cf22cf9aad32603e6bf789412602e28be964714f6be829",
+      "table_count": 27,
+      "provider_http": 0
+    },
+    {
+      "file": "testStudioThreeScenesUseOnlyTheirFrozenCharactersAndQuoteChangesWithPresence.json",
+      "sha256": "7133e621df41e9350436190937100f11a030666b79c5f6299bfd75920787abbd",
+      "table_count": 27,
+      "provider_http": 0
+    }
+  ],
+  "journey_rollback_reports": [
+    {
+      "scenario": "testAmbiguousSubmissionDoesNotResendOrStartTheFollowingCharacter",
+      "sha256": "1490f24ed4573dbcac6fc4851a246d473a28d825ccbe6345b35d1e027bc11eb8",
+      "table_count": 27,
+      "simulated_http": 1,
+      "simulated_posts": [
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Lea\": \"White cat, green coat.\". Reference1=\"Lea\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+              "bytes": 1603,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        }
+      ],
+      "files_restored": true
+    },
+    {
+      "scenario": "testKlingDispatchKeepsStartFrameAndGroupedViewsSeparateFromScenePresence",
+      "sha256": "1153248f27cda1367b0e3ed4cfd1a5c9a7e42d99aecff77b8988ed6a02e05e47",
+      "table_count": 27,
+      "simulated_http": 12,
+      "simulated_posts": [
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Begin at the supplied first frame. Keep the visible subject consistent. Respect the end frame when supplied. Appearance of \"Milo\": \"Ginger cat, blue coat.\". @Element1 identifies the character named \"Milo\". Its appearance is guided by the reference; its participation follows the scene.\nScene: A cat walks slowly across the garden.",
+          "duration": "5",
+          "enable_safety_checker": true,
+          "generate_audio": true,
+          "shot_type": "customize",
+          "elements": [
+            {
+              "frontal_image_url": {
+                "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+                "bytes": 1604,
+                "width": 360,
+                "height": 640
+              },
+              "reference_image_urls": [
+                {
+                  "sha256": "25fcc22b778b1332198c3c91470db4ef3a5e612e330b3d9637e47b03c879f81e",
+                  "bytes": 1604,
+                  "width": 360,
+                  "height": 640
+                }
+              ]
+            }
+          ],
+          "start_image_url": {
+            "sha256": "6dd62d1a3d7c6b2a410c31661f51dac22b4c4fecc010117ad104c06c50d500a0",
+            "bytes": 12464,
+            "width": 1080,
+            "height": 1920
+          }
+        },
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Begin at the supplied first frame. Keep the visible subject consistent. Respect the end frame when supplied. Appearance of \"Lea\": \"White cat, green coat.\". @Element1 identifies the character named \"Lea\". Its appearance is guided by the reference; its participation follows the scene. Appearance of \"Milo\": \"Ginger cat, blue coat.\". @Element2 identifies the character named \"Milo\". Its appearance is guided by the reference; its participation follows the scene.\nScene: A cat walks slowly across the garden.",
+          "duration": "5",
+          "enable_safety_checker": true,
+          "generate_audio": true,
+          "shot_type": "customize",
+          "elements": [
+            {
+              "frontal_image_url": {
+                "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+                "bytes": 1603,
+                "width": 360,
+                "height": 640
+              },
+              "reference_image_urls": [
+                {
+                  "sha256": "3f4ffdf93a0474ca1d229f56ed3bcc80b48a9410e0ac2688274cfae332b2873a",
+                  "bytes": 1604,
+                  "width": 360,
+                  "height": 640
+                }
+              ]
+            },
+            {
+              "frontal_image_url": {
+                "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+                "bytes": 1604,
+                "width": 360,
+                "height": 640
+              },
+              "reference_image_urls": [
+                {
+                  "sha256": "25fcc22b778b1332198c3c91470db4ef3a5e612e330b3d9637e47b03c879f81e",
+                  "bytes": 1604,
+                  "width": 360,
+                  "height": 640
+                }
+              ]
+            }
+          ],
+          "start_image_url": {
+            "sha256": "6dd62d1a3d7c6b2a410c31661f51dac22b4c4fecc010117ad104c06c50d500a0",
+            "bytes": 12464,
+            "width": 1080,
+            "height": 1920
+          }
+        },
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Begin at the supplied first frame. Keep the visible subject consistent. Respect the end frame when supplied.\nScene: A cat walks slowly across the garden.",
+          "duration": "5",
+          "enable_safety_checker": true,
+          "generate_audio": true,
+          "shot_type": "customize",
+          "start_image_url": {
+            "sha256": "6dd62d1a3d7c6b2a410c31661f51dac22b4c4fecc010117ad104c06c50d500a0",
+            "bytes": 12464,
+            "width": 1080,
+            "height": 1920
+          }
+        }
+      ],
+      "files_restored": true
+    },
+    {
+      "scenario": "testPollingFailureRecoversSameRequestWithoutResendingOrLosingRemainingCharacters",
+      "sha256": "202d8c10889ea0dde97ceaf207de6c170baf6eb5e487425b423475f11ef5238c",
+      "table_count": 27,
+      "simulated_http": 9,
+      "simulated_posts": [
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Ginger cat, blue coat.\". Reference1=\"Milo\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+              "bytes": 1604,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        },
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Lea\": \"White cat, green coat.\". Reference1=\"Lea\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+              "bytes": 1603,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        }
+      ],
+      "files_restored": true
+    },
+    {
+      "scenario": "testTwoEpisodesKeepFrozenCastThroughLibraryChangesAndSendOnlyTheirSceneReferences",
+      "sha256": "18c683244df12ebe3b6d8cdb29938cfb01c38a64803285d44537d47dffe835bd",
+      "table_count": 27,
+      "simulated_http": 24,
+      "simulated_posts": [
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Ginger cat, blue coat.\". Reference1=\"Milo\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+              "bytes": 1604,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        },
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Lea\": \"White cat, green coat.\". Reference1=\"Lea\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+              "bytes": 1603,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        },
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Ginger cat, blue coat.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Lea\": \"White cat, green coat.\". Reference2=\"Lea\"(character,unspecified).\nScene: A cat walks slowly across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "a0c22e672099f9d14abb038e5731f756777605337bd38dd384c540bdd44badc5",
+              "bytes": 1604,
+              "width": 360,
+              "height": 640
+            },
+            {
+              "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+              "bytes": 1603,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        },
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo updated\": \"Ginger cat, red coat.\". Reference1=\"Milo updated\"(character,unspecified).\nScene: A cat walks across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "6a4168b0c378967170c90afff206827045907c2a836d1d45bf3edea239e06a92",
+              "bytes": 1604,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        },
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Lea\": \"White cat, green coat.\". Reference1=\"Lea\"(character,unspecified).\nScene: A cat walks across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+              "bytes": 1603,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        },
+        {
+          "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo updated\": \"Ginger cat, red coat.\". Reference1=\"Milo updated\"(character,unspecified). Appearance of \"Lea\": \"White cat, green coat.\". Reference2=\"Lea\"(character,unspecified).\nScene: A cat walks across the garden.",
+          "aspect_ratio": "9:16",
+          "enable_safety_checker": true,
+          "bgm": false,
+          "movement_amplitude": "auto",
+          "reference_image_urls": [
+            {
+              "sha256": "6a4168b0c378967170c90afff206827045907c2a836d1d45bf3edea239e06a92",
+              "bytes": 1604,
+              "width": 360,
+              "height": 640
+            },
+            {
+              "sha256": "0622436a8b4a531bad061089d74107edf96fa3bef2b95487f5037fdda902c33e",
+              "bytes": 1603,
+              "width": 360,
+              "height": 640
+            }
+          ]
+        }
+      ],
+      "files_restored": true
+    }
+  ]
+}

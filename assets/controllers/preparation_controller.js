@@ -1,3 +1,4 @@
+import { selectedCharacters, setCharacters } from '../character-choices.js';
 import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
@@ -160,7 +161,7 @@ export default class extends Controller {
   planCountChanged(event) { this.redistribute(event); }
 
   rowHasContent(row) {
-    return Boolean(row.querySelector('[name$="[characterIds][]"]')?.selectedOptions.length || row.querySelector('textarea').value.trim() || row.querySelector('[name$="[referenceFit]"]')?.value === 'contain' || ['startReference', 'endReference', 'imagePrompt', 'sceneDescription', 'translatedIdentity', 'translationSource'].some(name => row.querySelector(`[name$="[${name}]"]`)?.value.trim()));
+    return Boolean(selectedCharacters(row).length || row.querySelector('textarea').value.trim() || row.querySelector('[name$="[referenceFit]"]')?.value === 'contain' || ['startReference', 'endReference', 'imagePrompt', 'sceneDescription', 'translatedIdentity', 'translationSource'].some(name => row.querySelector(`[name$="[${name}]"]`)?.value.trim()));
   }
 
   countFromCards() {
@@ -205,7 +206,7 @@ export default class extends Controller {
     if (this.hasPlanCountTarget && this.continuityTarget.value !== 'single' && !this.desiredCount) { this.refresh(); this.planCountTarget.focus(); return false; }
     const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds, this.desiredCount);
     if (!proposal.parts) { this.refresh(); return false; }
-    const characters = this.editor.rows().map(row => [...(row.querySelector('[name$="[characterIds][]"]')?.selectedOptions || [])].map(option => option.value));
+    const characters = this.editor.rows().map(row => selectedCharacters(row).map(option => option.value));
     const inputs = this.editor.rows().map(row => Object.fromEntries(['startReference','endReference','referenceFit','imagePrompt','sceneDescription','translatedIdentity','translationSource','promptOnly'].map(name=>[name,row.querySelector(`[name$="[${name}]"]`)?.value || ''])));
     if (inputs.slice(proposal.parts.length).some(row => row.sceneDescription.trim())) { this.showNotice('Ce découpage retirerait un résumé de scène. Conserve tes plans ou reporte ce texte avant de changer leur nombre.'); return false; }
     const prompts = this.editor.rows().map(row => row.querySelector('textarea').value);
@@ -214,7 +215,7 @@ export default class extends Controller {
     proposal.parts.forEach((seconds, index) => {
       this.editor.listTarget.insertAdjacentHTML('beforeend', this.editor.prototypeTarget.innerHTML.replaceAll('__name__', String(index)));
       const row = this.editor.rows()[index];
-      for (const option of row.querySelector('[name$="[characterIds][]"]')?.options || []) option.selected = (characters[index] || []).includes(option.value);
+      setCharacters(row, characters[index] || []);
       row.querySelector('textarea').value = prompts[index] || '';
       row.querySelector('select').value = String(seconds);
       for (const [name,value] of Object.entries(inputs[index] || {})) { const input=row.querySelector(`[name$="[${name}]"]`); if (input) input.value=value; }

@@ -244,7 +244,7 @@ final class AiStudioController extends AbstractController
 
                     return $this->redirectToRoute('app_series_episode', ['id' => $project->getId()], 303);
                 }
-                $job = new AiGeneration($user, $title, trim($data['prompt']), $data['model'], $data['seconds'], $data['ratio'], $catalog->estimate($data['model'], $data['seconds']));
+                $job = new AiGeneration($user, $title, trim($data['prompt']), $data['model'], $data['seconds'], $data['ratio'], $catalog->estimate($data['model'], $data['seconds'], count(array_unique(array_filter([$data['reference'] ?? null, ...($data['subjects'] ?? [])])))));
                 if ($catalog->model($data['model'])['image'] ?? false) {
                     $job->attachReference($data['reference']);
                     $job->frameImages($data['imageFit'] ?? 'crop');

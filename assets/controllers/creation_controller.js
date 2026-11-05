@@ -139,7 +139,8 @@ export default class extends GuidedModelPicker(Controller) {
     set('[data-card-quality]', quality);
     set('[data-card-description]', model.description);
     set('[data-card-capabilities]', `${model.seconds.length > 4 ? `${model.seconds[0]}–${model.seconds.at(-1)}` : model.seconds.join(' / ')} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.ratios.map(ratio => ratio === 'auto' ? 'Image d’origine' : ratio).join(' · ')}`);
-    set('[data-card-price]', model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.money(c)} $ US`).join(' · ') : `${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3}).format(model.rateMicros / 1000000)} $ US / s${model.fixedMicros ? ` + ${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:3}).format(model.fixedMicros / 1000000)} $ US d’image` : ''}`);
+    const price = model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.money(c)} $ US`).join(' · ') : `${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3}).format(model.rateMicros / 1000000)} $ US / s${model.fixedMicros ? ` + ${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:3}).format(model.fixedMicros / 1000000)} $ US par demande` : ''}`;
+    set('[data-card-price]', price + (model.referenceMicros ? ` + ${this.money(model.referenceMicros / 10000)} $ US par référence` : ''));
     const select = card.querySelector?.('.catalog-variant'); if (select) select.value = id;
     const button = card.querySelector?.('[data-creation-target="choose"]'); if (button) button.dataset.modelId = id;
   }
@@ -266,7 +267,7 @@ export default class extends GuidedModelPicker(Controller) {
 
   price(model, seconds) {
     if (!model || !model.seconds.includes(seconds)) return null;
-    const cents = model.pricesCents ? model.pricesCents[seconds] : Math.ceil((model.rateMicros * seconds + (model.fixedMicros || 0)) / 10000);
+    const cents = model.pricesCents ? model.pricesCents[seconds] : Math.ceil((model.rateMicros * seconds + (model.fixedMicros || 0) + (model.referenceMicros || 0) * (model.subjectLimit || 0)) / 10000);
     return Number.isSafeInteger(cents) && cents > 0 ? cents : null;
   }
 

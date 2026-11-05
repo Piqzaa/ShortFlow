@@ -1,11 +1,12 @@
+import { selectedCharacters } from '../../assets/character-choices.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
 function setup() {
-  const source = readFileSync(new URL('../../assets/controllers/shot_editor_controller.js', import.meta.url), 'utf8').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Editor');
-  const Editor = runInNewContext(`${source}\nEditor`, { Controller: class {} });
+  const source = readFileSync(new URL('../../assets/controllers/shot_editor_controller.js', import.meta.url), 'utf8').replace("import { selectedCharacters } from '../character-choices.js';", '').replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Editor');
+  const Editor = runInNewContext(`${source}\nEditor`, { selectedCharacters, Controller: class {} });
   const editor = new Editor();
   const prompt = { value: 'Milo opens a box.', focus() { this.focused = true; } };
   const description = { value: 'Milo ouvre une boîte.', focus() { this.focused = true; } };

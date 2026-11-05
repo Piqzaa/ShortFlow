@@ -343,12 +343,12 @@ final class AiEpisodeFlow
             (new VideoPromptLanguage())->assertScene($episode, $shot, $scene);
             $effectivePrompt = $this->prompt($episode, $shot, $scene);
             $this->catalog->validatePrompt($recipe['model'], $effectivePrompt);
-            $price = $this->catalog->estimate($recipe['model'], $shot->getSeconds());
             try {
                 $resolved = $this->inputs->resolve($episode, $shot, $index, count($shots));
             } catch (\RuntimeException $failure) {
                 throw new \RuntimeException('Plan '.($index + 1).' : '.$failure->getMessage());
             }
+            $price = $this->catalog->estimate($recipe['model'], $shot->getSeconds(), count(array_unique(array_filter([$resolved['start'], ...$resolved['subjects']]))));
             if ($redo && 'linked' === $episode->getContinuity() && isset($this->catalog->model($recipe['model'])['endImageField'])) {
                 $resolved['endFromExisting'] = true;
             }
@@ -607,7 +607,7 @@ final class AiEpisodeFlow
                             }
                             $resolved = $this->inputs->resolve($episode, $shot, $index, count($shots));
                             $reference = $resolved['fromPrevious'] && $previous ? $this->frames->lastFrame($previous) : $resolved['start'];
-                            $job = new AiGeneration($owner, mb_substr($episode->getTitle(), 0, 100).' · plan '.$shot->getPosition(), $shot->getInputs()['confirmedPrompt'] ?? $this->prompt($episode, $shot), $recipe['model'], $shot->getSeconds(), $recipe['ratio'], $this->catalog->estimate($recipe['model'], $shot->getSeconds()));
+                            $job = new AiGeneration($owner, mb_substr($episode->getTitle(), 0, 100).' · plan '.$shot->getPosition(), $shot->getInputs()['confirmedPrompt'] ?? $this->prompt($episode, $shot), $recipe['model'], $shot->getSeconds(), $recipe['ratio'], $this->catalog->estimate($recipe['model'], $shot->getSeconds(), count(array_unique(array_filter([$reference, ...$resolved['subjects']])))));
                             if ($reference) {
                                 $job->attachReference($reference);
                                 $job->frameImages($resolved['fit']);

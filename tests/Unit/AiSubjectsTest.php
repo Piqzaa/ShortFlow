@@ -46,6 +46,40 @@ final class AiSubjectsTest extends TestCase
         rmdir($this->directory);
     }
 
+    public function testO3UsesOrderedPortraitImagesWithoutAStartingFrameOrExtraViews(): void
+    {
+        $catalog = new AiCatalog();
+        $details = (new AiPlanInputs($catalog, $this->storage))->subjectDetails($this->owner, 'kling-o3-subject', [self::OBJECT], [['reference' => 'primary', 'name' => 'Milo', 'role' => 'character']], self::FRONT);
+        $prompt = (new AiShotPrompts($catalog))->build('kling-o3-subject', 5, 'Milo waves.', '', 'independent', 2, $details);
+        self::assertStringContainsString('@Image1="Milo"', $prompt);
+        self::assertStringContainsString('@Image2=', $prompt);
+        $job = new AiGeneration($this->owner, 'O3', $prompt, 'kling-o3-subject', 5, '9:16', $catalog->estimate('kling-o3-subject', 5));
+        $job->attachReference(self::FRONT);
+        $job->attachSubjects([self::OBJECT]);
+        $api = new FalVideoApi(new MockHttpClient(static function (): never { throw new \LogicException('No real request.'); }), $catalog, $this->storage);
+        $input = $api->input($job);
+        self::assertSame(56, $job->getEstimatedCents());
+        self::assertSame('5', $input['duration']);
+        self::assertTrue($input['generate_audio']);
+        self::assertSame('9:16', $input['aspect_ratio']);
+        self::assertSame([$this->storage->dataUri($this->owner, self::FRONT), $this->storage->dataUri($this->owner, self::OBJECT)], $input['image_urls']);
+        self::assertArrayNotHasKey('image_url', $input);
+        self::assertArrayNotHasKey('start_image_url', $input);
+        self::assertArrayNotHasKey('reference_image_urls', $input);
+        self::assertArrayNotHasKey('elements', $input);
+        self::assertSame(2500, $catalog->promptCharacters('kling-o3-subject'));
+    }
+
+    public function testO3RejectsMoreThanFourPortraitsBeforeReadingOrSendingThem(): void
+    {
+        $job = new AiGeneration($this->owner, 'O3', 'The cats wave.', 'kling-o3-subject', 5, '9:16', 70);
+        $job->attachReference(self::FRONT);
+        $job->attachSubjects([self::VIEW, self::OBJECT, str_repeat('e', 48).'.jpg', str_repeat('f', 48).'.jpg']);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Trop de références');
+        (new FalVideoApi(new MockHttpClient(static function (): never { throw new \LogicException('No real request.'); }), new AiCatalog(), $this->storage))->input($job);
+    }
+
     public function testNamedElementsKeepTheImageOrderAndTheirOwnViews(): void
     {
         $inputs = new AiPlanInputs(new AiCatalog(), $this->storage);

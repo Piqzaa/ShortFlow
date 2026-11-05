@@ -1,3 +1,4 @@
+import { selectedCharacters } from '../character-choices.js';
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
@@ -73,7 +74,7 @@ export default class extends Controller {
       }
       row.querySelector('[data-shot-heading]').textContent = `Plan ${index + 1}`;
       row.querySelectorAll('[name], [id], label[for], [aria-describedby]').forEach(element => {
-        for (const attr of ['name', 'id', 'for', 'aria-describedby']) {
+        for (const attr of ['name', 'id', 'for', 'aria-describedby', 'data-character-name']) {
           const value = element.getAttribute(attr);
           if (value) element.setAttribute(attr, value.replace(/\[shots\]\[\d+\]/g, `[shots][${index}]`).replace(/_shots_\d+(?=_|$)/g, `_shots_${index}`));
         }
@@ -85,7 +86,7 @@ export default class extends Controller {
       });
       const duration = Number(row.querySelector('select').value);
       seconds += duration;
-      cents += !this.modelValue.seconds?.includes(duration) ? NaN : this.modelValue.pricesCents?.[duration] ?? Math.ceil(((this.modelValue.rateMicros || 0) * duration + (this.modelValue.fixedMicros || 0)) / 10000);
+      cents += !this.modelValue.seconds?.includes(duration) ? NaN : this.modelValue.pricesCents?.[duration] ?? Math.ceil(((this.modelValue.rateMicros || 0) * duration + (this.modelValue.fixedMicros || 0) + (this.modelValue.referenceMicros || 0) * selectedCharacters(row).length) / 10000);
     });
     this.addTarget.disabled = rows.length >= 8;
     this.summaryTarget.textContent = `${rows.length} plan(s) · ${seconds} s au total · ${Number.isFinite(cents) ? (cents / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $ US estimés' : 'estimation à vérifier après ajustement des durées'}. ${seconds > 60 ? 'Réduis la durée totale à 60 secondes maximum avant de continuer.' : 'Aucun lancement avant confirmation.'}`;
