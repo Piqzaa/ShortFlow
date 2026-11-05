@@ -55,3 +55,5 @@ Migration additive `Version20261105020000`, seule en attente en dev : appliquée
 ## Suite exacte
 
 Finir R7.3b par une recette idée → demande simulée → portrait accepté → sélection dans une scène → devis vidéo avec référence figée ; relire l’ensemble des protections et consigner les limites avant clôture technique. R7.3c et les validations audiovisuelles réelles restent distinctes. Les tests humains R7.2 restent à organiser quand le propriétaire sera disponible. Aucun push, activation, génération réelle, email, publication ou déploiement.
+
+Suite du 5 novembre : [recette finale et bilan R7.3b](r7-portraits-recette-finale.md), terminé sur le périmètre technique local simulé. Génération réelle désactivée, essais humains et qualité audiovisuelle distincts ; prochain point technique R7.3c.

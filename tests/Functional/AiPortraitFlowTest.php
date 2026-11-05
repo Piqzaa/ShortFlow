@@ -133,13 +133,17 @@ final class AiPortraitFlowTest extends WebTestCase
                 unlink($path);
             }
             @rmdir(dirname(__DIR__, 2).'/var/storage/ai-references/test/'.$this->owner);
+            $storageRemoved = !is_dir(dirname(__DIR__, 2).'/var/storage/ai-references/test/'.$this->owner);
+            if ('testIdeaToAcceptedPortraitSceneAndFrozenVideoQuoteAcrossReplacement' === $this->name()) {
+                self::assertTrue($storageRemoved, 'Synthetic portrait journey references must be removed after the test.');
+            }
             @unlink($this->image);
             @unlink(substr($this->image, 0, -4));
             $this->em->getConnection()->rollBack();
             $after = $this->counts();
             self::assertSame($this->before, $after);
             $posts = array_values(array_filter($this->calls, fn (array $call): bool => 'POST' === $call['method']));
-            file_put_contents(dirname(__DIR__, 2).'/artifacts/portrait-flow/'.$this->name().'.json', json_encode(['before' => $this->before, 'after' => $after, 'simulatedHttp' => count($this->calls), 'posts' => count($posts), 'screens' => $this->screens], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+            file_put_contents(dirname(__DIR__, 2).'/artifacts/portrait-flow/'.$this->name().'.json', json_encode(['before' => $this->before, 'after' => $after, 'simulatedHttp' => count($this->calls), 'posts' => count($posts), 'storageRemoved' => $storageRemoved, 'screens' => $this->screens], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
         } finally {
             putenv(false === $this->oldFlag ? 'PORTRAIT_GENERATION_ENABLED' : 'PORTRAIT_GENERATION_ENABLED='.$this->oldFlag);
             parent::tearDown();
@@ -462,5 +466,120 @@ final class AiPortraitFlowTest extends WebTestCase
             self::assertSame('blocked', $portrait->getStatus());
         }
         self::assertCount(0, $this->calls);
+    }
+
+    public function testIdeaToAcceptedPortraitSceneAndFrozenVideoQuoteAcrossReplacement(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/personnages/idees/nouveau');
+        $form = $crawler->selectButton('Enregistrer le brouillon')->form();
+        $values = $form->getPhpValues();
+        $values['ai_portrait_draft'] = array_replace($values['ai_portrait_draft'], ['name' => 'Milo', 'idea' => 'Un chat explorateur dans un jardin.', 'appearance' => 'Orange cat wearing a blue jacket.', 'style' => 'Soft illustration.']);
+        $this->client->request('POST', $form->getUri(), $values);
+        self::assertResponseStatusCodeSame(303);
+        $crawler = $this->client->followRedirect();
+        $this->snap('journey-image-estimate');
+        $form = $crawler->selectButton('Confirmer la demande de portrait')->form(['consent' => '1']);
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        $portrait = $this->em->getRepository(AiPortraitRequest::class)->findOneBy(['owner' => $this->user()]);
+        $portraitId = $portrait->getId();
+        $this->flow()->process($portraitId);
+        $this->flow()->process($portraitId);
+        self::assertSame('ready', $portrait->getStatus());
+        self::assertSame(0, $this->em->getRepository(AiCharacter::class)->count(['owner' => $this->user()]));
+        $portrait = $this->action($portrait, 'accept');
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        $this->snap('journey-accepted-profile');
+        $portrait = $this->em->find(AiPortraitRequest::class, $portraitId);
+        $character = $portrait->getAcceptedCharacter();
+        $characterId = $character->getId();
+        $original = $character->getPortrait();
+        $storage = static::getContainer()->get(AiReferenceStorage::class);
+        $originalPath = $storage->path($this->user(), $original);
+        $originalHash = hash_file('sha256', $originalPath);
+        copy($originalPath, dirname(__DIR__, 2).'/artifacts/portrait-flow/journey-original.jpg');
+
+        $prepare = function (int $revision, string $capture) use ($characterId): int {
+            $crawler = $this->client->request('GET', '/studio/creation');
+            self::assertSelectorExists('select[name="ai_idea[characterSelection][]"] option[value="'.$characterId.':'.$revision.'"]');
+            $form = $crawler->selectButton('Voir le récapitulatif')->form();
+            $values = $form->getPhpValues();
+            $values['intent'] = 'compose';
+            $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'A cat explores a garden.', 'model' => 'vidu-q1-subject', 'source' => 'subject', 'seconds' => '5', 'target' => '10', 'planCount' => '2', 'ratio' => '9:16', 'accessMode' => 'api', 'characterSelectionManaged' => '1', 'characterSelection' => [$characterId.':'.$revision], 'shots' => [['prompt' => 'A cat walks slowly across the garden.', 'seconds' => '5', 'promptOnly' => 'manual', 'characterIdsManaged' => '1', 'characterIds' => [(string) $characterId]]]]);
+            $values['ai_idea']['shots'][] = array_replace($values['ai_idea']['shots'][0], ['prompt' => 'The same cat looks up at a flower.']);
+            $this->client->request('POST', $form->getUri(), $values);
+            self::assertResponseStatusCodeSame(303);
+            $this->client->followRedirect();
+            $this->snap($capture);
+
+            return $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->user()], ['id' => 'DESC'])->getId();
+        };
+        $firstId = $prepare(1, 'journey-original-video-estimate');
+        $this->em->clear();
+        $flow = static::getContainer()->get(\App\Service\AiEpisodeFlow::class);
+        $first = $this->em->find(\App\Entity\AiEpisode::class, $firstId);
+        $firstQuote = $flow->quote($first);
+        self::assertSame(2, $firstQuote['count']);
+        self::assertSame(10, $firstQuote['seconds']);
+        self::assertSame([$original, $original], array_column($firstQuote['references'], 'start'));
+        self::assertSame($original, $firstQuote['references'][0]['start']);
+        self::assertSame(['Milo'], array_column($firstQuote['references'][0]['subjectDetails'], 'name'));
+        self::assertSame([(string) $characterId], $flow->shots($first)[0]->getInputs()['characterIds']);
+        self::assertSame('draft', $first->getFlowState());
+        self::assertNull($first->getConsentHash());
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiGeneration::class)->count(['owner' => $this->user()]));
+
+        // The accepted file is retained while a deliberate profile update gets a new file.
+        (new Process(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=blue:s=1024x1024', '-frames:v', '1', '-threads', '1', $this->image]))->mustRun();
+        $characters = static::getContainer()->get(\App\Service\AiCharacters::class);
+        $changed = $characters->save($this->user(), $characterId, 1, 'Milo updated', 'Blue cat wearing a green jacket.', new \Symfony\Component\HttpFoundation\File\UploadedFile($this->image, 'replacement.jpg', test: true), []);
+        $replacement = $changed->getPortrait();
+        copy($storage->path($this->user(), $replacement), dirname(__DIR__, 2).'/artifacts/portrait-flow/journey-replacement.jpg');
+        self::assertNotSame($original, $replacement);
+        self::assertNotSame($originalHash, hash_file('sha256', $storage->path($this->user(), $replacement)));
+        self::assertSame($firstQuote, $flow->quote($first));
+        $secondId = $prepare(2, 'journey-updated-video-estimate');
+        $this->em->clear();
+        $first = $this->em->find(\App\Entity\AiEpisode::class, $firstId);
+        $second = $this->em->find(\App\Entity\AiEpisode::class, $secondId);
+        $secondQuote = $flow->quote($second);
+        self::assertSame([$replacement, $replacement], array_column($secondQuote['references'], 'start'));
+        self::assertSame($replacement, $secondQuote['references'][0]['start']);
+        self::assertSame(['Milo updated'], array_column($secondQuote['references'][0]['subjectDetails'], 'name'));
+        self::assertNotSame($firstQuote['hash'], $secondQuote['hash']);
+        self::assertSame($firstQuote, $flow->quote($first));
+
+        $characters->archive($this->user(), $characterId, 2, true);
+        $this->em->clear();
+        foreach ([$firstId => $firstQuote, $secondId => $secondQuote] as $id => $quote) {
+            $episode = $this->em->find(\App\Entity\AiEpisode::class, $id);
+            self::assertSame($quote, $flow->quote($episode));
+            self::assertSame('draft', $episode->getFlowState());
+            self::assertNull($episode->getConsentHash());
+        }
+        $acceptedAgain = $this->flow()->accept($this->user(), $portraitId);
+        self::assertSame($characterId, $acceptedAgain->getId());
+        self::assertTrue($acceptedAgain->isArchived());
+        self::assertSame($replacement, $acceptedAgain->getPortrait());
+        self::assertSame(1, $this->em->getRepository(AiCharacter::class)->count(['owner' => $this->user()]));
+        self::assertSame($originalHash, hash_file('sha256', $originalPath));
+
+        $sessions = sys_get_temp_dir().'/portrait-journey-'.bin2hex(random_bytes(4));
+        mkdir($sessions);
+        try {
+            touch($originalPath, time() - 40 * 86400);
+            touch($storage->path($this->user(), $replacement), time() - 40 * 86400);
+            self::assertSame(0, (new AiReferenceMaintenance($this->em, $storage, $sessions))->inspect($this->user(), true)['files']);
+            self::assertFileExists($originalPath);
+            self::assertFileExists($storage->path($this->user(), $replacement));
+        } finally {
+            rmdir($sessions);
+        }
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiGeneration::class)->count(['owner' => $this->user()]));
+        self::assertCount(1, array_filter($this->calls, fn (array $call): bool => 'POST' === $call['method']));
+        self::assertCount(4, $this->calls);
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/portrait-flow/journey-quotes.json', json_encode(['characterId' => $characterId, 'portraitRequest' => $portraitId, 'originalSha256' => $originalHash, 'firstQuote' => $firstQuote, 'secondQuote' => $secondQuote, 'acceptedSnapshot' => $this->em->find(AiPortraitRequest::class, $portraitId)->getSnapshot()], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
     }
 }

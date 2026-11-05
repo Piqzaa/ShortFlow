@@ -46,3 +46,5 @@ Cadrage livré uniquement. Aucun code applicatif, schéma, service ou test modif
 **Prochain point exact : vérifier et documenter le contrat d’un modèle image, puis préparer le premier sous-lot simulé.** Aucun appel fournisseur, coût, email réel, activation, publication, migration, cache dev actualisé, worker redémarré, push ou déploiement.
 
 Suite du 5 novembre : [contrat du candidat image documenté](r7-personnages-idee-contrat.md), avec tarif public daté et première connexion limitée à la clé API. Les décisions ci-dessus étaient celles du cadrage initial ; aucune génération implémentée, R7.3b reste ouvert.
+
+Suite du 5 novembre : [recette finale et bilan R7.3b](r7-portraits-recette-finale.md), terminé sur le périmètre technique local simulé. Génération réelle désactivée, essais humains et qualité audiovisuelle distincts ; prochain point technique R7.3c.
