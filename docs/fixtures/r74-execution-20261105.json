@@ -1,7 +1,7 @@
 {
   "date": "2026-11-05",
   "stage": "R7.4",
-  "status": "eight_real_clips_and_four_local_assemblies_ready_human_review_pending",
+  "status": "real_pilot_complete_owner_reports_weak_videos_good_identity_scale_defects",
   "authorization": {
     "source": "Explicit owner reply to the exact launch question in chat",
     "reply": "Oui, lancer ces 8 clips",
@@ -806,5 +806,14 @@
     "docs/pilotes/r74-videos/clip-17-2.jpg": "6b0e1b91b583454afc421014529e491ba8126c47686679539efaeb0d89d1d577",
     "docs/pilotes/r74-videos/clip-18-1.jpg": "c0d4d66400c580f36289fb787857d8ef40e4e4e27d143f1c77d5c100ea546af1",
     "docs/pilotes/r74-videos/clip-18-2.jpg": "bfd9246a48af1ce03591a18da1eca69da7b05ac1e7d74c7e958f8b3792d7bdb4"
+  },
+  "ownerFeedback": {
+    "date": "2026-11-05",
+    "source": "owner_chat",
+    "overall": "Vidéos jugées un peu nulles et absence de son relevée",
+    "characterIdentity": "Personnages jugés bien respectés",
+    "relativeScale": "Dans deux plans, Nox plus petite que Milo ; même taille dans les autres selon le propriétaire",
+    "approvalToPublish": false,
+    "newGenerationAuthorized": false
   }
 }

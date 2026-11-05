@@ -2,7 +2,7 @@
 
 5 novembre 2026. Le propriétaire a répondu **« Oui, lancer ces 8 clips »** à l’accord explicite des seuls brouillons 15–18 : Vidu Q1 Référence de personnage, huit demandes de cinq secondes, Milo/Nox, clé VydFlow attestée du compte Fal Alex Berrel, **3,20 USD estimés, plafond 4 USD hors taxes/conversion**, sans voix ni publication. Cet accord est consommé ; aucune reprise payante ou variante supplémentaire n’est autorisée.
 
-**Les huit demandes ont réussi et les quatre épisodes sont `ready`. R7.4 reste ouvert pour la relecture humaine et le bilan visuel ; grand R7, R7.2/R7.3/R7.3c/R7.5 ne sont pas clôturés.** Ce premier essai confirme un parcours technique réel, avec des limites de rendu observées.
+**Les huit demandes ont réussi et les quatre épisodes sont `ready`. Premier retour humain reçu : rendu peu convaincant, identités respectées, tailles instables. R7.4 reste ouvert pour le bilan visuel ; grand R7, R7.2/R7.3/R7.3c/R7.5 ne sont pas clôturés.** Ce premier essai confirme un parcours technique réel, avec des limites de rendu observées.
 
 ## Résultats dans VydFlow
 
@@ -48,6 +48,6 @@ Inspection par l’agent de cinq images par clip, à 0–4 s, conservées dans [
 
 ## Suite sans nouvelle dépense
 
-Le propriétaire peut regarder les quatre épisodes et indiquer, pour chacun : personnages reconnaissables, geste compréhensible, défaut le plus gênant, résultat utilisable ou non. Aucun retour humain n’est encore enregistré. Ensuite, établir le bilan R7.4–R7.5 et préparer les améliorations de cadrage/proportions/prompts ; tout nouvel essai payant nécessite un autre accord concret.
+Retour du propriétaire le 5 novembre : vidéos jugées « un peu nul » et absence de son relevée ; personnages « bien respecter ». Il relève Nox plus petite que Milo dans deux plans, et de même taille dans les autres, sans identifier les deux plans. Cette appréciation humaine confirme un problème de proportions, sans validation globale du rendu ni publication autorisée. Le son était exclu de ce protocole visuel. Prochaine étape : bilan R7.4–R7.5 et préparation des améliorations de cadrage/proportions/prompts ; tout nouvel essai payant nécessite un autre accord concret.
 
 Aucun code applicatif/frontend/schéma modifié. Pas de nouvelle suite PHP/frontend/build/lint, recette navigateur, revue indépendante ou essai matériel pour cette exécution de contenu ; les 36 PHP/627 assertions et 196 frontend restent historiques. Aucun cache web dev actualisé, email, publication, activation d’indexation, migration, push ou déploiement.
