@@ -1,0 +1,503 @@
+{
+  "date": "2026-11-05",
+  "stage": "R7.4b preparation",
+  "status": "two_unconfirmed_drafts_ready_price_checked_no_execution_authorized",
+  "authorized_to_execute": false,
+  "new_budget_approved": false,
+  "new_generation_count": 0,
+  "old_authorization_consumed": true,
+  "estimatedCents": 248,
+  "estimatedCentsByModel": {
+    "vidu": 80,
+    "kling": 168
+  },
+  "capApprovedCents": null,
+  "publicPricing": {
+    "checkedDate": "2026-11-05",
+    "vidu5SecondsUsd": 0.4,
+    "klingAudioPerSecondUsd": 0.168,
+    "sources": [
+      "https://fal.ai/models/fal-ai/vidu/q1/reference-to-video",
+      "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video",
+      "https://fal.ai/explore/image-to-video-apis"
+    ],
+    "genericPricingPageNotUsedForQuote": "https://fal.ai/pricing lists a different generic base rate; endpoint-specific audio rate retained"
+  },
+  "references": {
+    "frameProvenance": {
+      "source": {
+        "kind": "clip",
+        "episodeId": 18,
+        "shotId": 37,
+        "position": 1,
+        "generationId": 11,
+        "videoId": 16,
+        "path": "var/storage/videos/dev/6b4212e6f090c2807720eaa2ca17d8c3ad1a683e86090ab5.mp4",
+        "sha256": "6688e5e13ead5e89f3814dd5792ff0f8ebfe00a9c9cfdbd68ef4b8e5d3ec66ee",
+        "bytes": 3095733,
+        "duration": 5.375,
+        "width": 1080,
+        "height": 1920,
+        "codec": "h264"
+      },
+      "frameIndex": 0,
+      "operation": "Lossless PNG decode of first existing video frame, no generated image",
+      "path": "artifacts/r74-comparatif/cadre-commun-source.png",
+      "sha256": "fe2293b42d7d12003b0b4207d15a4c7a697a9b75cf2e65c1ff3a18b1e7fe37d9"
+    },
+    "privateNormalized": {
+      "name": "77b60ade9a553788d58abc1ceaa934658a6597f282c37461.jpg",
+      "sha256": "59badb2751dab80e9f748dd95a34a9b1ec47f08b5200054844a8441d42fc27ba",
+      "bytes": 147333
+    },
+    "reviewCopy": "docs/pilotes/r74-comparatif/cadre-commun-v1.jpg",
+    "reviewCopySha256": "59badb2751dab80e9f748dd95a34a9b1ec47f08b5200054844a8441d42fc27ba",
+    "humanApproved": false,
+    "agentObserved": "Near-equal standing height, full bodies, Milo left/Nox right; Nox right paw close to frame edge; not a calibrated height chart"
+  },
+  "preparation": {
+    "mode": "service_preparation_committed",
+    "before": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 14,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 30,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "during": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 16,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 34,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "after": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 16,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 34,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "episodes": {
+      "vidu": {
+        "id": 21,
+        "url": "/studio/series/episodes/21?review=1",
+        "title": "R7.4b — Duo proportions Vidu",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            },
+            {
+              "id": 2,
+              "revision": 1,
+              "name": "Nox",
+              "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.",
+              "portrait": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original 3D animated cats: Milo orange with blue hoodie; Nox charcoal with orange apron. Equal standing height. Fixed full-body framing.",
+          "montage": {
+            "sourceVolume": 0,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "cea25e0810c6955943790b0448a9dc8084bbe989b19605c0d1413d372f27094c",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Exactly two cats: Milo left, Nox right, equal standing height and head size, paws on the same floor line at the same camera distance. Locked full-body two-shot in a bright kitchen; no zoom, crossing or stepping. Milo slowly raises his right paw once, lowers it, then both hold still. Keep Nox still and both bodies fully visible. No speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Exactly two cats: Milo left, Nox right, equal standing height and head size, paws on the same floor line at the same camera distance. Locked full-body two-shot in a bright kitchen; no zoom, crossing or stepping. Nox slowly raises her right paw once, lowers it, then both hold still. Keep Milo still and both bodies fully visible. No speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        },
+        "catalogPriceChecked": "2026-10-24",
+        "catalogPriceExpired": false
+      },
+      "kling": {
+        "id": 22,
+        "url": "/studio/series/episodes/22?review=1",
+        "title": "R7.4b — Duo cadre commun et ambiance Kling",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": false,
+        "recipe": {
+          "model": "kling-3-image",
+          "seconds": 3,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [],
+          "visualContext": "Original 3D animated cats: Milo orange with blue hoodie; Nox charcoal with orange apron. Equal standing height. Fixed full-body framing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "9a0c14bc0f1cd0076b3727be7512f134e89d456c45527df7790421640841f5f8",
+          "cents": 168,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "kling-3-image",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Begin at the supplied first frame. Keep the visible subject consistent. Respect the end frame when supplied.\nScene: Exactly two cats: Milo left, Nox right, equal standing height and head size, paws on the same floor line at the same camera distance. Locked full-body two-shot in a bright kitchen; no zoom, crossing or stepping. Milo slowly raises his right paw once, lowers it, then both hold still. Keep Nox still and both bodies fully visible. Preserve the starting frame layout. Soft kitchen room tone and a brief cloth rustle with the gesture. No speech or music.",
+              "start": "77b60ade9a553788d58abc1ceaa934658a6597f282c37461.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [],
+              "fromPrevious": false,
+              "role": "cadres"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "kling-3-image",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Begin at the supplied first frame. Keep the visible subject consistent. Respect the end frame when supplied.\nScene: Exactly two cats: Milo left, Nox right, equal standing height and head size, paws on the same floor line at the same camera distance. Locked full-body two-shot in a bright kitchen; no zoom, crossing or stepping. Nox slowly raises her right paw once, lowers it, then both hold still. Keep Milo still and both bodies fully visible. Preserve the starting frame layout. Soft kitchen room tone and a brief cloth rustle with the gesture. No speech or music.",
+              "start": "77b60ade9a553788d58abc1ceaa934658a6597f282c37461.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [],
+              "fromPrevious": false,
+              "role": "cadres"
+            }
+          ]
+        },
+        "catalogPriceChecked": "2026-11-05",
+        "catalogPriceExpired": false
+      }
+    },
+    "frame": {
+      "name": "77b60ade9a553788d58abc1ceaa934658a6597f282c37461.jpg",
+      "sha256": "59badb2751dab80e9f748dd95a34a9b1ec47f08b5200054844a8441d42fc27ba",
+      "bytes": 147333
+    },
+    "existingPaidEpisodesUnchanged": true,
+    "networkAttempts": 0,
+    "authorizedToExecute": false,
+    "keyDecrypted": false,
+    "generationFlagsDisabledInProcess": true
+  },
+  "verification": {
+    "draftsUnconfirmed": true,
+    "quotesIdentical": true,
+    "newGenerations": 0,
+    "networkAttempts": 0,
+    "html": {
+      "vidu": {
+        "status": 200,
+        "sha256": "9004ce2361d4ee2d3d87a36ebe7d2e35e6f82abd3d54f23ab4c6782c60a0f4a6"
+      },
+      "kling": {
+        "status": 200,
+        "sha256": "609ed77e4f1effeef4df7dddc5072e5c23dd6cd50b976e44171b2f0f42d135cc"
+      }
+    },
+    "messageCount": 0
+  },
+  "preview": {
+    "before": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 14,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 30,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "during": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 16,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 34,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "after": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 14,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 30,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "rollbackAllCountsEqual": true,
+    "networkAttempts": 0
+  },
+  "comparisonLimitations": [
+    "Vidu uses two independent portraits; Kling uses joint starting frame without custom elements. Model, reference mode and audio differ; no causal model ranking or price explanation is possible.",
+    "No actual improved quality observed, no test run authorized",
+    "Kling custom elements are not tested here; current characters lack extra distinct views.",
+    "Chinese/English native voice support only documented for Kling; ambience only, no French speech promised."
+  ],
+  "applicationChanged": {
+    "file": "src/Service/AiCatalog.php",
+    "change": "Only kling-3-image checked date 2026-10-20 -> 2026-11-05; rate, endpoint, audio and schema unchanged; no global cache refresh or worker restart"
+  },
+  "checksNotReplayed": [
+    "Full PHP suite",
+    "frontend suite/build",
+    "new browser visual pass",
+    "independent review"
+  ],
+  "sha256": {
+    "artifacts/r74-comparatif/prepare.php": "37b2b79e0fa0a679b1ee89e286d15011d7079d0383e60f107ca6c3584b6f6e46",
+    "artifacts/r74-comparatif/verify.php": "ff50c4018b658219d4978ebf573380ec21cfb3c1ae0e74853b0baa12c6bb7692",
+    "artifacts/r74-comparatif/extract.php": "31d3b9a318f863a886491432fd42dd264dc4d887a85a3bc250e24d8f4e705d49",
+    "artifacts/r74-comparatif/refresh-quotes.php": "71453acf4e4380f2c4986c8cc2175f2bb2086d391a022b2e73c238212bd3d4b2"
+  },
+  "quoteRefresh": {
+    "changes": {
+      "vidu": {
+        "previousHash": "cea25e0810c6955943790b0448a9dc8084bbe989b19605c0d1413d372f27094c",
+        "refreshedHash": "cea25e0810c6955943790b0448a9dc8084bbe989b19605c0d1413d372f27094c",
+        "amountUnchanged": true,
+        "oldChecked": "2026-10-24",
+        "newChecked": "2026-10-24"
+      },
+      "kling": {
+        "previousHash": "e8786c88b59f5784bd31d71a0e9b2bc009e67252f4a5e9d0f1649700fc358a65",
+        "refreshedHash": "9a0c14bc0f1cd0076b3727be7512f134e89d456c45527df7790421640841f5f8",
+        "amountUnchanged": true,
+        "oldChecked": "2026-10-20",
+        "newChecked": "2026-11-05"
+      }
+    },
+    "networkAttempts": 0,
+    "businessWrites": 0
+  },
+  "targetedTests": {
+    "tests": 8,
+    "assertions": 133,
+    "result": "pass",
+    "classes": [
+      "AiPriceFreshnessTest",
+      "AiCatalogGroupsTest",
+      "AiShotPromptsTest"
+    ]
+  }
+}
