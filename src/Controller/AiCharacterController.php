@@ -83,6 +83,6 @@ final class AiCharacterController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        return new BinaryFileResponse($path, headers: ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
+        return new BinaryFileResponse($path, headers: ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'], public: false);
     }
 }

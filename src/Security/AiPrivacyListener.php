@@ -16,7 +16,7 @@ final class AiPrivacyListener
     public function __invoke(RequestEvent $event): void
     {
         $request = $event->getRequest();
-        if (str_starts_with($request->getPathInfo(), '/studio/connexions/ia') || str_starts_with($request->getPathInfo(), '/studio/ia') || str_starts_with($request->getPathInfo(), '/studio/creation')) {
+        if (str_starts_with($request->getPathInfo(), '/studio/connexions/ia') || str_starts_with($request->getPathInfo(), '/studio/ia') || str_starts_with($request->getPathInfo(), '/studio/creation') || str_starts_with($request->getPathInfo(), '/studio/personnages')) {
             $this->profiler?->disable();
             if ('/studio/connexions/ia/fal/retour' === $request->getPathInfo()) {
                 $query = $request->query->all();

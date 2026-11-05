@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Form\AiPortraitDraftType;
 use App\Service\AiPortraitDrafts;
 use App\Service\AiPortraitQuotes;
+use App\Service\AiPortraits;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -31,7 +32,7 @@ final class AiPortraitDraftController extends AbstractController
 
     #[Route('/studio/personnages/idees/nouveau', name: 'app_character_idea_new', methods: ['GET', 'POST'])]
     #[Route('/studio/personnages/idees/{id}', name: 'app_character_idea_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function edit(Request $request, #[CurrentUser] User $owner, AiPortraitDrafts $drafts, AiPortraitQuotes $quotes, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, ?int $id = null): Response
+    public function edit(Request $request, #[CurrentUser] User $owner, AiPortraitDrafts $drafts, AiPortraitQuotes $quotes, AiPortraits $portraits, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, ?int $id = null): Response
     {
         $draft = null !== $id ? ($drafts->owned($owner, $id) ?? throw $this->createNotFoundException()) : null;
         $form = $this->createForm(AiPortraitDraftType::class, ['name' => $draft?->getName() ?? '', 'idea' => $draft?->getIdea() ?? '', 'appearance' => $draft?->getAppearance() ?? '', 'style' => $draft?->getStyle() ?? '', 'customPrompt' => $draft?->getCustomPrompt() ?? '', 'revision' => (string) ($draft?->getRevision() ?? 0)]);
@@ -50,6 +51,6 @@ final class AiPortraitDraftController extends AbstractController
             }
         }
 
-        return $this->render('character/idea.html.twig', ['draft' => $draft, 'draftForm' => $form, 'quoteStatus' => $draft ? $quotes->status($draft) : null, 'savedPrompt' => $draft ? $quotes->prompt($draft) : null], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('character/idea.html.twig', ['draft' => $draft, 'draftForm' => $form, 'quoteStatus' => $draft ? $quotes->status($draft) : null, 'savedPrompt' => $draft ? $quotes->prompt($draft) : null, 'portraitEnabled' => $portraits->enabled(), 'portraits' => $draft ? $portraits->recent($draft) : []], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 }

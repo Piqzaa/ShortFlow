@@ -54,14 +54,8 @@ final class AiReferenceStorage
         if ($file->getSize() > 10485760 || !is_array($size) || min($size[0], $size[1]) < 300 || max($size[0], $size[1]) > 4096 || $size[0] / $size[1] < 0.4 || $size[0] / $size[1] > 2.5 || !in_array($size['mime'], ['image/jpeg', 'image/png', 'image/webp'], true)) {
             throw new \RuntimeException('Choisis un JPG, PNG ou WebP de 10 Mo maximum, de 300 à 4 096 pixels par côté, dans un format entre 2:5 et 5:2.');
         }
+        $this->assertCapacity($owner);
         $directory = $this->directory($owner);
-        $used = 0;
-        foreach (glob($directory.'/*.jpg') ?: [] as $existing) {
-            $used += (int) filesize($existing);
-        }
-        if ($used + 2097152 > 104857600) {
-            throw new \RuntimeException('La limite de 100 Mo d’images de référence est atteinte pour ce compte.');
-        }
         $name = bin2hex(random_bytes(24)).'.jpg';
         $path = $directory.'/'.$name;
         try {
@@ -77,6 +71,17 @@ final class AiReferenceStorage
         } catch (\Throwable) {
             @unlink($path);
             throw new \RuntimeException('Impossible de préparer cette image. Essaie une image plus légère.');
+        }
+    }
+
+    public function assertCapacity(User $owner): void
+    {
+        $used = 0;
+        foreach (glob($this->directory($owner).'/*.jpg') ?: [] as $existing) {
+            $used += (int) filesize($existing);
+        }
+        if ($used + 2097152 > 104857600) {
+            throw new \RuntimeException('La limite de 100 Mo d’images de référence est atteinte pour ce compte.');
         }
     }
 

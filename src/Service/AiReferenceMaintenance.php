@@ -51,6 +51,7 @@ final class AiReferenceMaintenance
             $keep = $this->sessionReferences();
             $queries = [
                 'SELECT row_to_json(c)::text FROM ai_character c WHERE c.owner_id = :owner',
+                'SELECT row_to_json(p)::text FROM ai_portrait_request p WHERE p.owner_id = :owner',
                 'SELECT row_to_json(g)::text FROM ai_generation g WHERE g.owner_id = :owner',
                 'SELECT row_to_json(a)::text FROM ai_series a WHERE a.owner_id = :owner',
                 'SELECT row_to_json(e)::text FROM ai_episode e LEFT JOIN ai_series a ON a.id = e.series_id WHERE COALESCE(e.owner_id,a.owner_id) = :owner',

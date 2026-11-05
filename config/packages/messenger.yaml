@@ -2,6 +2,15 @@ framework:
     messenger:
         failure_transport: publication_failures
         transports:
+            portrait_generation:
+                dsn: 'doctrine://default'
+                options:
+                    queue_name: portrait_generation
+                    auto_setup: false
+                    redeliver_timeout: 600
+                    use_notify: false
+                retry_strategy:
+                    max_retries: 0
             story_writing:
                 dsn: 'doctrine://default'
                 options:
@@ -48,6 +57,7 @@ framework:
                     auto_setup: false
                     use_notify: false
         routing:
+            App\Message\GenerateAiPortrait: portrait_generation
             App\Message\PrepareSeriesEpisode: story_writing
             App\Message\InspectSeriesWriting: background
             App\Message\WriteStoryProposal: story_writing

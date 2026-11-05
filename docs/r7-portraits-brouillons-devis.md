@@ -55,3 +55,5 @@ Pour rejouer : `docker compose exec -T php php vendor/bin/phpunit tests/Function
 Prochain sous-lot R7.3b : confirmation distincte, demande asynchrone avec fournisseur simulé, récupération idempotente, stockage privé borné des résultats non acceptés et validation explicite vers une fiche. Le quota et la maintenance de ces futurs résultats doivent être traités avant toute récupération d’image. Les épisodes et devis vidéo déjà préparés restent intacts.
 
 Aucun coût, appel fournisseur réel, clé réelle consultée, email réel, activation, publication, push ou déploiement. Le générateur de portraits reste non implémenté et aucune qualité de rendu n’est déduite de ce brouillon.
+
+Suite du 5 novembre : [confirmation, suivi et acceptation implémentés avec fournisseur simulé](r7-portraits-confirmation-suivi.md). Génération réelle toujours désactivée ; R7.3b ouvert pour la recette finale de réutilisation dans une scène.

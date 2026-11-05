@@ -33,3 +33,5 @@
 .character-pool select,.shot-card select[multiple]{max-width:100%;width:100%;min-width:0}.character-review-strip{display:flex;flex-wrap:wrap;gap:12px;margin-block:12px}.character-review-strip img{width:72px;height:72px;object-fit:cover;border-radius:8px}
 
 .portrait-estimate{margin-top:32px;max-width:760px;overflow-wrap:anywhere}.portrait-prompt{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.7;max-width:100%}
+
+.portrait-result { display: block; width: min(100%, 32rem); height: auto; border-radius: 1rem; margin-block: 1.5rem; }
