@@ -55,3 +55,5 @@ Repère Symfony : `KernelBrowser` traverse les véritables routes, contrôleurs,
 Le raccord manquant est vérifié ; **R7.3b est clôturé techniquement en local simulé**, avec les limites ci-dessus. La génération réelle reste désactivée. **Prochain travail technique : R7.3c**, consolider la recette des personnages (modèles, anciennes données, personnages présents, confirmations). Ses essais audiovisuels réels appartiennent aux portes distinctes R7.4–R7.5, après accord sur compte et budget ; aucune qualité commerciale n’en est déduite. R7.2/R7.3 restent ouverts, essais humains reportés.
 
 Aucun appel fournisseur réel, clé réelle consultée, coût, email réel, activation, publication, migration, cache dev actualisé, worker démarré/redémarré, push ou déploiement.
+
+Suite du 5 novembre : [recette consolidée des personnages R7.3c](r7-personnages-recette-consolidee.md). Volet automatisé vérifié ; R7.3c reste ouvert pour les observations audiovisuelles réelles autorisées/budgétées séparément.

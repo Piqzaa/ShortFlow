@@ -182,12 +182,12 @@ final class AiCharactersTest extends WebTestCase
         self::assertSame([], $library->resolve($owner, ['characterSelectionManaged' => '1', 'characterSelection' => []], ['characterPool' => $pool]));
         self::assertNull($library->resolve($owner, []));
         self::assertSame($pool, $library->resolve($owner, [], ['characterPool' => $pool]));
-        foreach ([[$foreign->getId().':1'], [$aId.':1'], [$b->getId().':1', $b->getId().':1']] as $tokens) {
+        foreach ([[[$foreign->getId().':1'], 'indisponible'], [[$aId.':1'], 'changé'], [[$b->getId().':1', $b->getId().':1'], 'une seule version']] as [$tokens, $expectedError]) {
             try {
                 $library->resolve($owner, ['characterSelectionManaged' => '1', 'characterSelection' => $tokens]);
                 self::fail('Invalid selection accepted.');
-            } catch (\RuntimeException) {
-                self::assertTrue(true);
+            } catch (\RuntimeException $error) {
+                self::assertStringContainsString($expectedError, $error->getMessage());
             }
         }
     }
@@ -372,9 +372,151 @@ final class AiCharactersTest extends WebTestCase
         try {
             $inputs->resolve($episode, $shot, 0, 1);
             self::fail('Missing frozen image must not be replaced.');
-        } catch (\RuntimeException) {
-            self::assertTrue(true);
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('Image indisponible', $error->getMessage());
         }
+    }
+
+    public function testModelChangeRejectsMissingViewsThenRequiresANewQuoteForExplicitNewVersion(): void
+    {
+        $character = $this->create();
+        $characterId = $character->getId();
+        $portrait = $character->getPortrait();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $crawler->selectButton('Voir le récapitulatif')->form()->getPhpValues();
+        $values['intent'] = 'compose';
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'A cat explores a garden.', 'model' => 'vidu-q1-subject', 'source' => 'subject', 'seconds' => '5', 'target' => '10', 'planCount' => '2', 'ratio' => '9:16', 'accessMode' => 'api', 'characterSelectionManaged' => '1', 'characterSelection' => [$characterId.':1'], 'shots' => array_fill(0, 2, ['prompt' => 'A cat walks slowly across the garden.', 'seconds' => '5', 'promptOnly' => 'manual', 'characterIdsManaged' => '1', 'characterIds' => [(string) $characterId]])]);
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(303);
+        $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner]);
+        $episodeId = $episode->getId();
+        $flow = static::getContainer()->get(\App\Service\AiEpisodeFlow::class);
+        $oldQuote = $flow->quote($episode);
+        $url = '/studio/series/episodes/'.$episodeId;
+        $crawler = $this->client->request('GET', $url);
+        $values = $crawler->selectButton('Voir le récapitulatif')->form()->getPhpValues();
+        $values['intent'] = 'compose';
+        $values['ai_idea']['model'] = 'kling-3-image';
+        $values['ai_idea']['source'] = 'image';
+        foreach ($values['ai_idea']['shots'] as &$row) {
+            $row['startReference'] = $portrait;
+        }
+        unset($row);
+        $this->client->request('POST', $url, $values);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('form#ai-idea-form');
+        self::assertSelectorNotExists('#story-quote');
+        $this->snap('r73c-model-refused');
+        $this->em->clear();
+        $episode = $this->em->find(\App\Entity\AiEpisode::class, $episodeId);
+        self::assertSame('kling-3-image', $episode->getFlowRecipe()['model']);
+        self::assertSame($portrait, $episode->getFlowRecipe()['characterPool'][0]['portrait']);
+        try {
+            $flow->quote($episode);
+            self::fail('The saved draft must not receive a quote without Kling views.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('vues', $error->getMessage());
+        }
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiGeneration::class)->count(['owner' => $this->owner]));
+        $owner = $this->em->find(User::class, $this->owner);
+        $changed = static::getContainer()->get(AiCharacters::class)->save($owner, $characterId, 1, 'Milo', 'Orange cat wearing a blue jacket.', null, [$this->image()]);
+        $views = $changed->getViews();
+        $crawler = $this->client->request('GET', $url);
+        $values = $crawler->selectButton('Voir le récapitulatif')->form()->getPhpValues();
+        $values['intent'] = 'compose';
+        $values['ai_idea']['model'] = 'kling-3-image';
+        $values['ai_idea']['source'] = 'image';
+        $values['ai_idea']['characterSelection'] = [$characterId.':2'];
+        foreach ($values['ai_idea']['shots'] as &$row) {
+            $row['startReference'] = $portrait;
+        }
+        unset($row);
+        $this->client->request('POST', $url, $values);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        $this->snap('r73c-model-new-quote');
+        $this->em->clear();
+        $episode = $this->em->find(\App\Entity\AiEpisode::class, $episodeId);
+        $newQuote = $flow->quote($episode);
+        self::assertSame('kling-3-image', $episode->getFlowRecipe()['model']);
+        self::assertSame(2, $episode->getFlowRecipe()['characterPool'][0]['revision']);
+        self::assertNotSame($oldQuote['hash'], $newQuote['hash']);
+        foreach ($newQuote['references'] as $reference) {
+            self::assertSame($portrait, $reference['start']);
+            self::assertSame(['Milo'], array_column($reference['subjectDetails'], 'name'));
+            self::assertSame($views, $reference['subjectDetails'][0]['views']);
+        }
+        try {
+            $flow->confirm($episode, $oldQuote['hash']);
+            self::fail('Changing the model must not reuse the old quote consent.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('changé', $error->getMessage());
+        }
+        self::assertNull($episode->getConsentHash());
+        self::assertSame('draft', $episode->getFlowState());
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiGeneration::class)->count(['owner' => $this->owner]));
+        $media = [];
+        foreach ([$portrait, ...$views] as $file) {
+            $media[$file] = 'r73c-'.$file;
+            copy(static::getContainer()->get(AiReferenceStorage::class)->path($this->em->find(User::class, $this->owner), $file), dirname(__DIR__, 2).'/artifacts/characters/'.$media[$file]);
+        }
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/characters/r73c-model-media.json', json_encode($media, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/characters/r73c-model-quotes.json', json_encode(['old' => $oldQuote, 'new' => $newQuote], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+    }
+
+    public function testPersistedLegacyFramesStayDistinctFromMissingOrExplicitEmptyCharacterPresence(): void
+    {
+        [$a, $b] = $this->cast();
+        $owner = $this->em->find(User::class, $this->owner);
+        $recipe = ['model' => 'kling-25-image', 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'reference' => $a->getPortrait(), 'endReference' => null, 'imageFit' => 'crop'];
+        $episode = new \App\Entity\AiEpisode($owner, 1, 'Legacy garden', 'A cat walks in a garden.', $recipe);
+        $episode->configurePreparation($recipe, 'A cat walks in a garden.', 'independent', false);
+        $this->em->persist($episode);
+        $shot = new \App\Entity\AiShot($episode, 1, 5);
+        $shot->revise('A cat walks slowly across the garden.', 5);
+        $this->em->persist($shot);
+        $this->em->flush();
+        $id = $episode->getId();
+        $shotId = $shot->getId();
+        $this->em->clear();
+        $episode = $this->em->find(\App\Entity\AiEpisode::class, $id);
+        $shot = $this->em->find(\App\Entity\AiShot::class, $shotId);
+        $inputs = static::getContainer()->get(\App\Service\AiPlanInputs::class);
+        $resolved = $inputs->resolve($episode, $shot, 0, 1);
+        self::assertArrayNotHasKey('characterPool', $episode->getFlowRecipe());
+        self::assertArrayNotHasKey('characterIds', $shot->getInputs());
+        self::assertSame($a->getPortrait(), $resolved['start']);
+        self::assertSame([], $resolved['subjectDetails']);
+        self::assertSame([], $resolved['subjects']);
+        $recipe['inputVersion'] = 4;
+        $recipe['characterPool'] = [];
+        $episode->configurePreparation($recipe, $episode->getPrompt(), 'independent', false);
+        $shot->configureInputs(['startReference' => $a->getPortrait()]);
+        $this->em->flush();
+        $this->em->clear();
+        $episode = $this->em->find(\App\Entity\AiEpisode::class, $id);
+        $shot = $this->em->find(\App\Entity\AiShot::class, $shotId);
+        try {
+            $inputs->resolve($episode, $shot, 0, 1);
+            self::fail('Missing scene presence must not be inferred from an explicit pool.');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('Choisis les personnages', $error->getMessage());
+        }
+        $shot->configureInputs(['startReference' => $a->getPortrait(), 'characterIds' => []]);
+        $this->em->flush();
+        $this->em->clear();
+        $episode = $this->em->find(\App\Entity\AiEpisode::class, $id);
+        $shot = $this->em->find(\App\Entity\AiShot::class, $shotId);
+        self::assertSame([], $episode->getFlowRecipe()['characterPool']);
+        self::assertSame([], $shot->getInputs()['characterIds']);
+        $empty = $inputs->resolve($episode, $shot, 0, 1);
+        self::assertSame($a->getPortrait(), $empty['start']);
+        self::assertSame([], $empty['subjectDetails']);
+        self::assertSame([], $empty['subjects']);
+        self::assertStringNotContainsString($b->getPortrait(), json_encode($empty, JSON_THROW_ON_ERROR));
     }
 
     public function testCrudStaleFormsArchiveAndPrivateImages(): void
