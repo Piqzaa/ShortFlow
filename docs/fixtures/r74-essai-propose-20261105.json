@@ -1,8 +1,8 @@
 {
   "date": "2026-11-05",
   "stage": "R7.4",
-  "status": "four_drafts_and_quotes_ready_owner_account_attested_pending_explicit_video_launch_consent",
-  "authorized_to_execute": false,
+  "status": "authorized_scope_consumed_eight_clips_complete_human_review_pending",
+  "authorized_to_execute": true,
   "proposal": {
     "provider": "fal",
     "model_id": "vidu-q1-subject",
@@ -34,7 +34,7 @@
     "taxes_and_fx_excluded": true,
     "provider_hard_cap_configured": false,
     "actual_credits_or_account_rate_checked": false,
-    "approval_scope": "budget retained for preparation, no paid launch consent"
+    "approval_scope": "explicit video launch authorized for exactly these eight clips, cap 4 USD excluding taxes and conversion"
   },
   "references": {
     "milo": {
@@ -251,8 +251,8 @@
     ]
   },
   "pending": [
-    "Explicit owner authorization to launch only the eight clips in drafts 15-18, with these portraits/quotes, Vidu Q1, 5 seconds each, selected Fal account, estimated 3.20 USD and 4 USD cap excluding tax/conversion.",
-    "At any later launch, recheck quotes/states/portrait files/credential version and isolate approved jobs; do not process the old prepared generation or other work."
+    "Relecture humaine des quatre épisodes et notation des limites visuelles",
+    "Bilan R7.4–R7.5 sans nouvelle génération implicite"
   ],
   "execution_rules": [
     "Use VydFlow pipeline, not a connector-side generation that bypasses its private workflow.",
@@ -354,5 +354,39 @@
       "consent_hash": null,
       "state": "draft"
     }
+  },
+  "authorization": {
+    "source": "Explicit owner reply to the exact launch question in chat",
+    "reply": "Oui, lancer ces 8 clips",
+    "scope": {
+      "episode_ids": [
+        15,
+        16,
+        17,
+        18
+      ],
+      "provider": "fal",
+      "endpoint": "fal-ai/vidu/q1/reference-to-video",
+      "request_count_max": 8,
+      "seconds_each": 5,
+      "estimated_total_usd": 3.2,
+      "usage_cap_usd": 4,
+      "taxes_and_conversion_excluded": true,
+      "selected_account": "Alex Berrel",
+      "new_images": 0,
+      "new_variations": 0,
+      "publication": false
+    },
+    "method": "VydFlow existing services; only approved IDs; no general queue consumer",
+    "consumed": true
+  },
+  "execution": {
+    "report": "docs/fixtures/r74-execution-20261105.json",
+    "post_count": 8,
+    "clips_available": 8,
+    "assemblies_ready": 4,
+    "estimated_usd": 3.2,
+    "billing_verified": false,
+    "further_generations_authorized": false
   }
 }

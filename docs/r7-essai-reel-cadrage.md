@@ -1,5 +1,7 @@
 # R7.4 — proposition d’essai réel limité
 
+> État historique de préparation. Le propriétaire a ensuite autorisé les seuls huit clips, exécutés le 5 novembre : [résultats réels et limites](r7-essai-reel-resultats.md). Cet accord est consommé ; aucune génération supplémentaire autorisée.
+
 5 novembre 2026. **Cadrage préparé, essai non autorisé et non lancé. R7.4 reste ouvert.** Le propriétaire a retenu un plafond de préparation de 4 USD et désigné le compte Fal d’Alex Berrel. Deux portraits ont été créés avec l’outil intégré `image_gen` et importés localement ; voir [leur provenance](pilotes/r74-personnages/README.md). Le propriétaire a ensuite attesté le rattachement de la clé VydFlow et les quatre brouillons/devis 15–18 sont prêts. Il reste à recueillir l’accord distinct de lancement, puis recontrôler états, devis et empreinte de clé avant traitement. Aucun achat de crédits, upload Fal, appel d’inférence Fal ou activation effectué ici.
 
 ## Proposition à relire

@@ -1,0 +1,810 @@
+{
+  "date": "2026-11-05",
+  "stage": "R7.4",
+  "status": "eight_real_clips_and_four_local_assemblies_ready_human_review_pending",
+  "authorization": {
+    "source": "Explicit owner reply to the exact launch question in chat",
+    "reply": "Oui, lancer ces 8 clips",
+    "scope": {
+      "episode_ids": [
+        15,
+        16,
+        17,
+        18
+      ],
+      "provider": "fal",
+      "endpoint": "fal-ai/vidu/q1/reference-to-video",
+      "request_count_max": 8,
+      "seconds_each": 5,
+      "estimated_total_usd": 3.2,
+      "usage_cap_usd": 4,
+      "taxes_and_conversion_excluded": true,
+      "selected_account": "Alex Berrel",
+      "new_images": 0,
+      "new_variations": 0,
+      "publication": false
+    },
+    "method": "VydFlow existing services; only approved IDs; no general queue consumer"
+  },
+  "execution": {
+    "startUtc": "2026-11-05T13:30:59+00:00",
+    "endUtc": "2026-11-05T13:43:03+00:00",
+    "complete": true,
+    "postIntents": {
+      "5": {
+        "episodeId": 15,
+        "shotId": 31,
+        "at": "2026-11-05T13:31:13+00:00",
+        "estimatedCents": 40,
+        "payloadSha256": "702f2bb44480f5e88c44cce5e626554eb9209832ef6e98f6dfabddc58827b0d1",
+        "referenceSha256": [
+          "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849"
+        ]
+      },
+      "6": {
+        "episodeId": 16,
+        "shotId": 33,
+        "at": "2026-11-05T13:32:12+00:00",
+        "estimatedCents": 40,
+        "payloadSha256": "4447cdb6c1b8f1c0f6614d8d8ee05d6512eabd25dca3a3fedeacda442665cd9a",
+        "referenceSha256": [
+          "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849"
+        ]
+      },
+      "7": {
+        "episodeId": 17,
+        "shotId": 35,
+        "at": "2026-11-05T13:32:50+00:00",
+        "estimatedCents": 40,
+        "payloadSha256": "290e8bf756dcdfef615670fa0881e404cc51c67dd5dc1de45fa2e89a61babd44",
+        "referenceSha256": [
+          "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849",
+          "43575b438ae465a935388a36a2324ad685612c388f919cd598256dcdf5b2c0d2"
+        ]
+      },
+      "8": {
+        "episodeId": 15,
+        "shotId": 32,
+        "at": "2026-11-05T13:34:28+00:00",
+        "estimatedCents": 40,
+        "payloadSha256": "55054bfbae45015ec93a942708539b2d0bb3313b1d17ec7e98745dfc03ff4f94",
+        "referenceSha256": [
+          "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849"
+        ]
+      },
+      "9": {
+        "episodeId": 16,
+        "shotId": 34,
+        "at": "2026-11-05T13:34:59+00:00",
+        "estimatedCents": 40,
+        "payloadSha256": "63b4a7e456a555d2710c32333db72e8f73f6135774fcad614e009229b5dcbcea",
+        "referenceSha256": [
+          "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849"
+        ]
+      },
+      "10": {
+        "episodeId": 17,
+        "shotId": 36,
+        "at": "2026-11-05T13:35:51+00:00",
+        "estimatedCents": 40,
+        "payloadSha256": "2f0ab07511b34784979e14c4a94e1a9d86b89de92c6c94660ee15502908fd3c7",
+        "referenceSha256": [
+          "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849",
+          "43575b438ae465a935388a36a2324ad685612c388f919cd598256dcdf5b2c0d2"
+        ]
+      },
+      "11": {
+        "episodeId": 18,
+        "shotId": 37,
+        "at": "2026-11-05T13:37:05+00:00",
+        "estimatedCents": 40,
+        "payloadSha256": "1fad22782b117516d138c68676429324fb776d344608839e45a83b6032bae898",
+        "referenceSha256": [
+          "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849",
+          "43575b438ae465a935388a36a2324ad685612c388f919cd598256dcdf5b2c0d2"
+        ]
+      },
+      "12": {
+        "episodeId": 18,
+        "shotId": 38,
+        "at": "2026-11-05T13:40:49+00:00",
+        "estimatedCents": 40,
+        "payloadSha256": "f2e19569b9122d559d4696f2c8fe393a3eabd6891f41d0148f557ccfcf120848",
+        "referenceSha256": [
+          "0a5ba2073383ccf256963b8aedf3fc85f4eb21f577e9982df7fc8715d8ec3849",
+          "43575b438ae465a935388a36a2324ad685612c388f919cd598256dcdf5b2c0d2"
+        ]
+      }
+    },
+    "httpCounts": [
+      {
+        "kind": "generation_submit",
+        "status": 200,
+        "count": 8
+      },
+      {
+        "kind": "existing_request_read",
+        "status": 202,
+        "count": 29
+      },
+      {
+        "kind": "existing_request_read",
+        "status": 200,
+        "count": 16
+      },
+      {
+        "kind": "approved_result_download",
+        "status": 200,
+        "count": 8
+      }
+    ],
+    "episodeStates": {
+      "15": {
+        "title": "R7.4 — Milo seul 1",
+        "state": "ready",
+        "issue": null,
+        "shots": [
+          {
+            "id": 31,
+            "generationId": 5,
+            "status": "available",
+            "issue": null,
+            "remoteKnown": true,
+            "videoId": 10
+          },
+          {
+            "id": 32,
+            "generationId": 8,
+            "status": "available",
+            "issue": null,
+            "remoteKnown": true,
+            "videoId": 13
+          }
+        ],
+        "assemblyId": 51,
+        "assemblyState": "ready",
+        "outputVideoId": 17
+      },
+      "16": {
+        "title": "R7.4 — Milo seul 2",
+        "state": "ready",
+        "issue": null,
+        "shots": [
+          {
+            "id": 33,
+            "generationId": 6,
+            "status": "available",
+            "issue": null,
+            "remoteKnown": true,
+            "videoId": 11
+          },
+          {
+            "id": 34,
+            "generationId": 9,
+            "status": "available",
+            "issue": null,
+            "remoteKnown": true,
+            "videoId": 14
+          }
+        ],
+        "assemblyId": 52,
+        "assemblyState": "ready",
+        "outputVideoId": 18
+      },
+      "17": {
+        "title": "R7.4 — Milo et Nox 1",
+        "state": "ready",
+        "issue": null,
+        "shots": [
+          {
+            "id": 35,
+            "generationId": 7,
+            "status": "available",
+            "issue": null,
+            "remoteKnown": true,
+            "videoId": 12
+          },
+          {
+            "id": 36,
+            "generationId": 10,
+            "status": "available",
+            "issue": null,
+            "remoteKnown": true,
+            "videoId": 15
+          }
+        ],
+        "assemblyId": 53,
+        "assemblyState": "ready",
+        "outputVideoId": 19
+      },
+      "18": {
+        "title": "R7.4 — Milo et Nox 2",
+        "state": "ready",
+        "issue": null,
+        "shots": [
+          {
+            "id": 37,
+            "generationId": 11,
+            "status": "available",
+            "issue": null,
+            "remoteKnown": true,
+            "videoId": 16
+          },
+          {
+            "id": 38,
+            "generationId": 12,
+            "status": "available",
+            "issue": null,
+            "remoteKnown": true,
+            "videoId": 20
+          }
+        ],
+        "assemblyId": 54,
+        "assemblyState": "ready",
+        "outputVideoId": 21
+      }
+    },
+    "estimatedCents": 320,
+    "capCents": 400,
+    "billingVerified": false,
+    "accountIdentityRemoteVerified": false,
+    "accountOwnerAttested": true,
+    "generalConsumerStarted": false,
+    "workersRestarted": false,
+    "publication": false,
+    "retries": 0
+  },
+  "media": [
+    {
+      "kind": "clip",
+      "episodeId": 15,
+      "shotId": 31,
+      "position": 1,
+      "generationId": 5,
+      "videoId": 10,
+      "path": "var/storage/videos/dev/d13a52d70488c70827269c3cb90fd90186b1434e29deaedb.mp4",
+      "sha256": "8eab55e17cb4a29d129c20dc26271307fdf47ecb7c1786e659833cf6fd2ccc4d",
+      "bytes": 2400619,
+      "duration": 5.375,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "clip",
+      "episodeId": 15,
+      "shotId": 32,
+      "position": 2,
+      "generationId": 8,
+      "videoId": 13,
+      "path": "var/storage/videos/dev/87dc6c08a8a893fe8d9c5bc80c1a5e9c411760e9beabb8c8.mp4",
+      "sha256": "9e6950ca1e3580c101df36cfb42b7aef6dec5077c0731ccc4c050e08c96b437f",
+      "bytes": 3012497,
+      "duration": 5.375,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "assembly",
+      "episodeId": 15,
+      "assemblyId": 51,
+      "videoId": 17,
+      "path": "var/storage/videos/dev/fb13575b14d8ad8f93987ba4973178f4d12c3551b3d3f971.mp4",
+      "sha256": "bb39b72c635202ddad218be498bd01f8032a629d987eabd30dc2da62a9d6a66a",
+      "bytes": 1765408,
+      "duration": 10.022,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "clip",
+      "episodeId": 16,
+      "shotId": 33,
+      "position": 1,
+      "generationId": 6,
+      "videoId": 11,
+      "path": "var/storage/videos/dev/e2354d54cdc122ff7da0f279c2da670289da7813428f0c19.mp4",
+      "sha256": "5c3321d3b00ba624e170293fd4a5cadf8d50d4e91b27a895a85e5abfbf1d521f",
+      "bytes": 2558078,
+      "duration": 5.375,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "clip",
+      "episodeId": 16,
+      "shotId": 34,
+      "position": 2,
+      "generationId": 9,
+      "videoId": 14,
+      "path": "var/storage/videos/dev/58e0d1c2c176b56d8c4a1f5447937f44be879f0aac8d5c00.mp4",
+      "sha256": "64003f02e2336be96b0ade078c7eb265084437a2c30614c3c8af5cfc1bf891a8",
+      "bytes": 2353842,
+      "duration": 5.375,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "assembly",
+      "episodeId": 16,
+      "assemblyId": 52,
+      "videoId": 18,
+      "path": "var/storage/videos/dev/bfe2d78a716b246d1b45e06c54c8ab0042aa8a4b2d821131.mp4",
+      "sha256": "393ea335bd73eeabf1d6cb0ff26b8896491a2ecadfc4a3243aa7f3510570197c",
+      "bytes": 1502744,
+      "duration": 10.022,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "clip",
+      "episodeId": 17,
+      "shotId": 35,
+      "position": 1,
+      "generationId": 7,
+      "videoId": 12,
+      "path": "var/storage/videos/dev/128667596cfc44d77c76221a235c73bbda42f98a4cf81eee.mp4",
+      "sha256": "b8a7929e7454752f111897dfae7c9f734d8069c73b2e702067795405634eb9e7",
+      "bytes": 2528279,
+      "duration": 5.375,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "clip",
+      "episodeId": 17,
+      "shotId": 36,
+      "position": 2,
+      "generationId": 10,
+      "videoId": 15,
+      "path": "var/storage/videos/dev/1239d774528f83ca1025c3878b0665761791da9344038e06.mp4",
+      "sha256": "16bd91c856deba906a4b8867da69423ca5e65430685d5da09eb71b9cf5aae054",
+      "bytes": 2507657,
+      "duration": 5.375,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "assembly",
+      "episodeId": 17,
+      "assemblyId": 53,
+      "videoId": 19,
+      "path": "var/storage/videos/dev/7ecfe696ce90a522bee75c6f0a49c6b81e298b9402b0f982.mp4",
+      "sha256": "2992483d037098fbccc694c1d449270add80a36bad78fe2edb41660f7abfe71a",
+      "bytes": 1320347,
+      "duration": 10.022,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "clip",
+      "episodeId": 18,
+      "shotId": 37,
+      "position": 1,
+      "generationId": 11,
+      "videoId": 16,
+      "path": "var/storage/videos/dev/6b4212e6f090c2807720eaa2ca17d8c3ad1a683e86090ab5.mp4",
+      "sha256": "6688e5e13ead5e89f3814dd5792ff0f8ebfe00a9c9cfdbd68ef4b8e5d3ec66ee",
+      "bytes": 3095733,
+      "duration": 5.375,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "clip",
+      "episodeId": 18,
+      "shotId": 38,
+      "position": 2,
+      "generationId": 12,
+      "videoId": 20,
+      "path": "var/storage/videos/dev/817fd872aa4df48bb854a62911ff0034f8b12a9b2605b89f.mp4",
+      "sha256": "a61dc3cd8f8f575d133367f88c28d0d643e4887f5d5e1ff34d151be4ac9efe53",
+      "bytes": 2370967,
+      "duration": 5.375,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    },
+    {
+      "kind": "assembly",
+      "episodeId": 18,
+      "assemblyId": 54,
+      "videoId": 21,
+      "path": "var/storage/videos/dev/6cfe4b69a0eb90252fc056b6beec0462dbdf8b2b6edc0fdf.mp4",
+      "sha256": "bc4170ab5ddbc5673c188bab534a51ddc9e2de481a7bc4e9c50ff868c1dc0e3a",
+      "bytes": 1577710,
+      "duration": 10.022,
+      "width": 1080,
+      "height": 1920,
+      "codec": "h264"
+    }
+  ],
+  "mediaQA": [
+    {
+      "maxAudioVolume": null,
+      "videoId": 10,
+      "kind": "clip",
+      "episodeId": 15,
+      "position": 1,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "24/1",
+          "duration": "5.375000"
+        }
+      ],
+      "contactSheet": "clip-15-1.jpg",
+      "contactSheetSha256": "c2a89254f2bec0bd15a0af2b2ffae7942fed829846cdadcdaa0e46805199f657"
+    },
+    {
+      "maxAudioVolume": null,
+      "videoId": 13,
+      "kind": "clip",
+      "episodeId": 15,
+      "position": 2,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "24/1",
+          "duration": "5.375000"
+        }
+      ],
+      "contactSheet": "clip-15-2.jpg",
+      "contactSheetSha256": "02798b0a3bff3901f4e797ec5d92940ad11eae6a27eb4f3c7bb5996058c3c7a2"
+    },
+    {
+      "maxAudioVolume": "-91.0 dB",
+      "videoId": 17,
+      "kind": "assembly",
+      "episodeId": 15,
+      "position": null,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "30/1",
+          "duration": "10.000000"
+        },
+        {
+          "codec_name": "aac",
+          "codec_type": "audio",
+          "r_frame_rate": "0/0",
+          "duration": "10.000000"
+        }
+      ],
+      "contactSheet": "assembly-15-0.jpg",
+      "contactSheetSha256": "aca31091ad913def48624bb8d7716dbeb6e325100d6dd8a6db4d60d020eaf2c5"
+    },
+    {
+      "maxAudioVolume": null,
+      "videoId": 11,
+      "kind": "clip",
+      "episodeId": 16,
+      "position": 1,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "24/1",
+          "duration": "5.375000"
+        }
+      ],
+      "contactSheet": "clip-16-1.jpg",
+      "contactSheetSha256": "373b9c943968a2aa4de492200b5aa9e7b131da53679aab3a57bc8c7c9413b6c8"
+    },
+    {
+      "maxAudioVolume": null,
+      "videoId": 14,
+      "kind": "clip",
+      "episodeId": 16,
+      "position": 2,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "24/1",
+          "duration": "5.375000"
+        }
+      ],
+      "contactSheet": "clip-16-2.jpg",
+      "contactSheetSha256": "415c122470b49bc1219d0b707724bab7ec5c98484f08817318da00d77ff4fab3"
+    },
+    {
+      "maxAudioVolume": "-91.0 dB",
+      "videoId": 18,
+      "kind": "assembly",
+      "episodeId": 16,
+      "position": null,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "30/1",
+          "duration": "10.000000"
+        },
+        {
+          "codec_name": "aac",
+          "codec_type": "audio",
+          "r_frame_rate": "0/0",
+          "duration": "10.000000"
+        }
+      ],
+      "contactSheet": "assembly-16-0.jpg",
+      "contactSheetSha256": "cc7c70e4bb4d15db5722ee0163985a598c9a2f6eab8d4759043bbec77cf4fb11"
+    },
+    {
+      "maxAudioVolume": null,
+      "videoId": 12,
+      "kind": "clip",
+      "episodeId": 17,
+      "position": 1,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "24/1",
+          "duration": "5.375000"
+        }
+      ],
+      "contactSheet": "clip-17-1.jpg",
+      "contactSheetSha256": "58e88db7c065fa8ca07cc5baa9b39765639c9c683a396c0ba65b413109850ab4"
+    },
+    {
+      "maxAudioVolume": null,
+      "videoId": 15,
+      "kind": "clip",
+      "episodeId": 17,
+      "position": 2,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "24/1",
+          "duration": "5.375000"
+        }
+      ],
+      "contactSheet": "clip-17-2.jpg",
+      "contactSheetSha256": "6b0e1b91b583454afc421014529e491ba8126c47686679539efaeb0d89d1d577"
+    },
+    {
+      "maxAudioVolume": "-91.0 dB",
+      "videoId": 19,
+      "kind": "assembly",
+      "episodeId": 17,
+      "position": null,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "30/1",
+          "duration": "10.000000"
+        },
+        {
+          "codec_name": "aac",
+          "codec_type": "audio",
+          "r_frame_rate": "0/0",
+          "duration": "10.000000"
+        }
+      ],
+      "contactSheet": "assembly-17-0.jpg",
+      "contactSheetSha256": "27ed4c53ce6f4b23df954da91d2f85aaf9d53d0d39f31a103ed74849fd1fd183"
+    },
+    {
+      "maxAudioVolume": null,
+      "videoId": 16,
+      "kind": "clip",
+      "episodeId": 18,
+      "position": 1,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "24/1",
+          "duration": "5.375000"
+        }
+      ],
+      "contactSheet": "clip-18-1.jpg",
+      "contactSheetSha256": "c0d4d66400c580f36289fb787857d8ef40e4e4e27d143f1c77d5c100ea546af1"
+    },
+    {
+      "maxAudioVolume": null,
+      "videoId": 20,
+      "kind": "clip",
+      "episodeId": 18,
+      "position": 2,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "24/1",
+          "duration": "5.375000"
+        }
+      ],
+      "contactSheet": "clip-18-2.jpg",
+      "contactSheetSha256": "bfd9246a48af1ce03591a18da1eca69da7b05ac1e7d74c7e958f8b3792d7bdb4"
+    },
+    {
+      "maxAudioVolume": "-91.0 dB",
+      "videoId": 21,
+      "kind": "assembly",
+      "episodeId": 18,
+      "position": null,
+      "decodeOk": true,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "30/1",
+          "duration": "10.000000"
+        },
+        {
+          "codec_name": "aac",
+          "codec_type": "audio",
+          "r_frame_rate": "0/0",
+          "duration": "10.000000"
+        }
+      ],
+      "contactSheet": "assembly-18-0.jpg",
+      "contactSheetSha256": "500241f466de8daeec539bdb47c227c3c500f15ea56ee0de119ddae910b71df2"
+    }
+  ],
+  "stateAudit": {
+    "counts": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 14,
+      "ai_generation": 12,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 30,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 19,
+      "video_edit": 22,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "baseline": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 14,
+      "ai_generation": 4,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 30,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 7,
+      "video_edit": 18,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "oldGenerationStatusCounts": [
+      {
+        "status": "available",
+        "count": 2
+      },
+      {
+        "status": "prepared",
+        "count": 1
+      },
+      {
+        "status": "replaced",
+        "count": 1
+      }
+    ],
+    "nonTargetActiveEpisodeIds": [],
+    "generalMessageCount": 0
+  },
+  "observations": {
+    "method": "Agent inspection of five sampled frames per clip, 0–4 seconds; not human approval or exhaustive temporal assessment",
+    "identities": "Orange cat/blue hoodie and charcoal cat/orange apron recognizable on sampled frames; no observed clothing swap",
+    "limitations": [
+      "31: full-body and body turn/paw motion instead of head turn only",
+      "32: paw raise present, followed by extra walking/framing drift",
+      "33: walking present; exact three-step stop not demonstrated by sampled frames",
+      "34: picks up and places another bowl instead of just looking",
+      "35–36: relative sizes reverse strongly between shots; Nox approaches camera, Milo partly cut off",
+      "37: Nox crosses in front of Milo instead of one step forward together",
+      "38: Nox much smaller than previous shot; crouch and late paw raise"
+    ],
+    "humanApproval": null,
+    "voiceTested": false,
+    "soundQualityApproved": false
+  },
+  "checks": {
+    "newApplicationCode": false,
+    "newSchema": false,
+    "suiteReplayed": false,
+    "buildReplayed": false,
+    "newBrowserPass": false,
+    "independentReview": false,
+    "historicalTests": "36 PHP / 627 assertions; 196 frontend, not rerun here"
+  },
+  "sha256": {
+    "artifacts/r74-execution/runner.php": "1b146ede41b8faa0e2904ea0d29b04813f2a5d964f48736146450ee029c19bc4",
+    "artifacts/r74-execution/check-media.php": "4395cca64d502f710af135b79d1cd35883be068af3530671b8abbeab49e4eff0",
+    "docs/pilotes/r74-videos/clip-15-1.jpg": "c2a89254f2bec0bd15a0af2b2ffae7942fed829846cdadcdaa0e46805199f657",
+    "docs/pilotes/r74-videos/clip-15-2.jpg": "02798b0a3bff3901f4e797ec5d92940ad11eae6a27eb4f3c7bb5996058c3c7a2",
+    "docs/pilotes/r74-videos/clip-16-1.jpg": "373b9c943968a2aa4de492200b5aa9e7b131da53679aab3a57bc8c7c9413b6c8",
+    "docs/pilotes/r74-videos/clip-16-2.jpg": "415c122470b49bc1219d0b707724bab7ec5c98484f08817318da00d77ff4fab3",
+    "docs/pilotes/r74-videos/clip-17-1.jpg": "58e88db7c065fa8ca07cc5baa9b39765639c9c683a396c0ba65b413109850ab4",
+    "docs/pilotes/r74-videos/clip-17-2.jpg": "6b0e1b91b583454afc421014529e491ba8126c47686679539efaeb0d89d1d577",
+    "docs/pilotes/r74-videos/clip-18-1.jpg": "c0d4d66400c580f36289fb787857d8ef40e4e4e27d143f1c77d5c100ea546af1",
+    "docs/pilotes/r74-videos/clip-18-2.jpg": "bfd9246a48af1ce03591a18da1eca69da7b05ac1e7d74c7e958f8b3792d7bdb4"
+  }
+}

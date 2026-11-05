@@ -1,5 +1,7 @@
 # R7.4 — quatre brouillons et devis prêts à relire
 
+> État historique de préparation. Le propriétaire a ensuite autorisé les seuls huit clips, exécutés le 5 novembre : [résultats réels et limites](r7-essai-reel-resultats.md). Cet accord est consommé ; aucune génération supplémentaire autorisée.
+
 5 novembre 2026. Le propriétaire demande de poursuivre la préparation, puis **confirme que la clé Fal déjà enregistrée dans VydFlow appartient au compte « Alex Berrel »**. Cette confirmation porte sur le rattachement, sans lancement vidéo. **Huit clips proposés, 3,20 USD estimés au total, plafond retenu 4 USD hors taxes/conversion ; aucune vidéo lancée. R7.4 reste ouvert pour l’accord distinct de lancement.**
 
 ## Préparations enregistrées
