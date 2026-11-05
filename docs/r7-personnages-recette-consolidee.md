@@ -51,3 +51,5 @@ Lors d’un essai autorisé et budgété, comparer plusieurs épisodes avec un p
 Consigner chaque résultat avec son modèle, compte, paramètres, coût constaté, fichiers et observation humaine. Si le budget ou le rendu ne permet pas l’essai, laisser cette qualité **non validée** et décider avec le propriétaire ce qui pourra être présenté en R7.6. Aucun achat, compte réel ou appel payant ne découle de la réussite des simulations.
 
 **Suite exacte : cadrer R7.4 avec le propriétaire** (modèle/endpoint à revérifier, compte facturé, durée, nombre de plans, plafond de dépense ou vidéo existante). Ne rien lancer sans cet accord distinct. Les observations humaines R7.2 peuvent toujours être faites ultérieurement ; grand R7 n’est pas clôturé.
+
+Suite du 5 novembre : [protocole R7.4 préparé avec tarif public revérifié](r7-essai-reel-cadrage.md). Budget, compte et références encore à confirmer, aucune génération ni activation.

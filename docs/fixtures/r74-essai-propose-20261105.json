@@ -1,0 +1,258 @@
+{
+  "date": "2026-11-05",
+  "stage": "R7.4",
+  "status": "draft_pending_owner_budget_account_references_and_launch_consent",
+  "authorized_to_execute": false,
+  "proposal": {
+    "provider": "fal",
+    "model_id": "vidu-q1-subject",
+    "endpoint": "fal-ai/vidu/q1/reference-to-video",
+    "connection_mode": "api_in_vydflow",
+    "format": "9:16",
+    "episode_count": 4,
+    "shots_per_episode": 2,
+    "request_count_max": 8,
+    "seconds_per_request": 5,
+    "total_seconds": 40,
+    "bgm": false,
+    "movement_amplitude": "auto",
+    "enable_safety_checker": true,
+    "montage_mute": true,
+    "software_publication": false,
+    "new_image_requests": 0,
+    "automatic_rerolls": 0
+  },
+  "pricing": {
+    "source": "https://fal.ai/models/fal-ai/vidu/q1/reference-to-video",
+    "checked": "2026-11-05",
+    "currency": "USD",
+    "public_cost_per_5_second_request": 0.4,
+    "estimated_total": 3.2,
+    "proposed_usage_cap": 4,
+    "owner_approved_cap": null,
+    "taxes_and_fx_excluded": true,
+    "provider_hard_cap_configured": false,
+    "actual_credits_or_account_rate_checked": false
+  },
+  "references": {
+    "milo": {
+      "character_id": null,
+      "revision": null,
+      "sha256": null
+    },
+    "nox": {
+      "character_id": null,
+      "revision": null,
+      "sha256": null
+    }
+  },
+  "account": {
+    "selected_vydflow_user_id": null,
+    "owner_confirmed_fal_account": null,
+    "connector_account_equivalence_established": false,
+    "real_key_read": false
+  },
+  "episodes": [
+    {
+      "id": "solo-1",
+      "characters": [
+        "milo"
+      ],
+      "shots": [
+        {
+          "position": 1,
+          "seconds": 5,
+          "characters": [
+            "milo"
+          ],
+          "prompt": "Milo, a small orange anthropomorphic cat with a cream muzzle, amber eyes and a plain blue hoodie, stands in a bright simple kitchen. He slowly turns his head from left to right, then looks at the camera. Medium shot, fixed camera, gentle daylight, original 3D animation style. One character only, no text, no speaking."
+        },
+        {
+          "position": 2,
+          "seconds": 5,
+          "characters": [
+            "milo"
+          ],
+          "prompt": "Milo, the same orange cat in the same plain blue hoodie, slowly raises his right paw, holds it briefly, then lowers it. Medium shot, fixed camera, simple kitchen background. Keep his face, clothing and proportions consistent. One character only, no text, no speaking."
+        }
+      ]
+    },
+    {
+      "id": "solo-2",
+      "characters": [
+        "milo"
+      ],
+      "shots": [
+        {
+          "position": 1,
+          "seconds": 5,
+          "characters": [
+            "milo"
+          ],
+          "prompt": "Milo, the same small orange cat with a cream muzzle, amber eyes and a plain blue hoodie, walks three short steps from left to right and stops. Full body, fixed camera, bright simple kitchen, original 3D animation style. One character only, no text, no speaking."
+        },
+        {
+          "position": 2,
+          "seconds": 5,
+          "characters": [
+            "milo"
+          ],
+          "prompt": "Milo, the same orange cat in the same blue hoodie, looks down at a purple bowl on the counter, then looks back at the camera. Medium shot, fixed camera, gentle daylight. Keep his face and proportions consistent. One character only, no text, no speaking."
+        }
+      ]
+    },
+    {
+      "id": "duo-1",
+      "characters": [
+        "milo",
+        "nox"
+      ],
+      "shots": [
+        {
+          "position": 1,
+          "seconds": 5,
+          "characters": [
+            "milo",
+            "nox"
+          ],
+          "prompt": "Milo is the small orange cat with a cream muzzle, amber eyes and a plain blue hoodie, standing on the left. Nox is the charcoal cat with a small white chin patch, green eyes and a plain orange apron, standing on the right. Milo slowly turns his head toward Nox while Nox stays still. Medium two-shot, fixed camera, bright simple kitchen, original 3D animation style. Exactly two characters, keep their identities separate, no text, no speaking."
+        },
+        {
+          "position": 2,
+          "seconds": 5,
+          "characters": [
+            "milo",
+            "nox"
+          ],
+          "prompt": "Milo, the orange cat in the blue hoodie, remains on the left and stays still. Nox, the charcoal cat with a white chin patch and orange apron, remains on the right and slowly turns her head toward Milo. Medium two-shot, fixed camera, bright simple kitchen. Preserve both faces, clothes and proportions. Exactly two characters, no text, no speaking."
+        }
+      ]
+    },
+    {
+      "id": "duo-2",
+      "characters": [
+        "milo",
+        "nox"
+      ],
+      "shots": [
+        {
+          "position": 1,
+          "seconds": 5,
+          "characters": [
+            "milo",
+            "nox"
+          ],
+          "prompt": "Milo, the orange cat with amber eyes and a plain blue hoodie, stands on the left. Nox, the charcoal cat with green eyes, a white chin patch and a plain orange apron, stands on the right. Both take one slow step forward and stop, keeping their left and right positions. Full-body two-shot, fixed camera, bright simple kitchen, original 3D animation style. Exactly two characters, no identity or clothing swaps, no text, no speaking."
+        },
+        {
+          "position": 2,
+          "seconds": 5,
+          "characters": [
+            "milo",
+            "nox"
+          ],
+          "prompt": "Milo, the orange cat in the blue hoodie, stays still on the left. Nox, the charcoal cat with a white chin patch and orange apron, slowly raises one paw on the right and lowers it. Medium two-shot, fixed camera, bright simple kitchen. Preserve both characters and their clothes. Exactly two characters, no text, no speaking."
+        }
+      ]
+    }
+  ],
+  "schema_checked": {
+    "source": "fal catalog get_model_schema",
+    "fetched_at": "2026-11-05T01:25:01.074Z",
+    "endpoint": "fal-ai/vidu/q1/reference-to-video",
+    "required": [
+      "prompt",
+      "reference_image_urls"
+    ],
+    "properties": {
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "prompt": {
+        "maxLength": 1500,
+        "type": "string"
+      },
+      "movement_amplitude": {
+        "enum": [
+          "auto",
+          "small",
+          "medium",
+          "large"
+        ],
+        "type": "string",
+        "default": "auto"
+      },
+      "aspect_ratio": {
+        "enum": [
+          "16:9",
+          "9:16",
+          "1:1"
+        ],
+        "type": "string",
+        "default": "16:9"
+      },
+      "enable_safety_checker": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": true
+      },
+      "reference_image_urls": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "bgm": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "output_fields": [
+      {
+        "name": "video",
+        "type": "object",
+        "required": true
+      }
+    ]
+  },
+  "pending": [
+    "Owner budget choice: zero/new paid test.",
+    "Owner confirmation of the Fal account used by VydFlow, not inferred from the assistant connector.",
+    "Two real approved portrait references with owner, revision and hashes.",
+    "Exact prompt and final quote review; fresh price check at execution time.",
+    "Separate explicit launch authorization; no generation from this draft."
+  ],
+  "execution_rules": [
+    "Use VydFlow pipeline, not a connector-side generation that bypasses its private workflow.",
+    "Maximum eight new generation submissions; remaining budget never authorizes extra variations.",
+    "Persist each request receipt before continuing; reconcile ambiguous sends without resubmitting.",
+    "Recover existing accepted jobs with GET rather than repeating POST.",
+    "Stop on price/config/reference changes or technical uncertainty; no top-up or account switch.",
+    "Record actual cost only when independently available; estimate is not a verified invoice."
+  ],
+  "observations": [],
+  "effects": {
+    "generation_submitted": 0,
+    "files_uploaded": 0,
+    "account_balance_checked": false,
+    "credit_purchase": 0,
+    "app_code_changed": false,
+    "catalog_changed": false,
+    "flags_changed": false,
+    "worker_started_or_restarted": false,
+    "publication": false
+  }
+}
