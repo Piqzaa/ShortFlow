@@ -29,3 +29,5 @@ Ce sont des images générées par l’outil intégré puis **importées** : ell
 Le [protocole R7.4](../../r7-essai-reel-cadrage.md) référence désormais ces versions et le plafond retenu. Choix de cadrage prévu : conserver l’image entière pour les références, sans rogner les oreilles, pattes ou queue. Les quatre épisodes et leurs devis finaux restent à préparer dans VydFlow. Le lancement des huit clips exige ensuite l’accord distinct prévu dans le cadrage ; aucune vidéo n’est lancée par la création de ces portraits.
 
 [Provenance et contrôles](../../fixtures/r74-portraits-20261105.json). Aucun push, email réel, publication, migration, déploiement, achat de crédits ni activation de génération Fal.
+
+Suite du 5 novembre : [brouillons 15–18 et leurs devis préparés](../../r7-brouillons-devis-pret.md). La correspondance de la clé au compte Fal désigné est confirmée par le propriétaire ; aucune vidéo lancée.

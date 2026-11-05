@@ -1,0 +1,1159 @@
+{
+  "date": "2026-11-05",
+  "stage": "R7.4",
+  "status": "four_drafts_ready_launch_not_authorized",
+  "accountAttestation": {
+    "credential": {
+      "id": 1,
+      "owner_id": 2,
+      "provider": "fal",
+      "updated_at": "2026-10-19 16:23:38",
+      "version_sha256": "6cfd9ee2493b9ed0bb09e507b8ee94b9439d8925a9caa88f6482363fe63de53e"
+    },
+    "source": "database projection of encrypted credential version; no encrypted or plain key returned",
+    "ownerAttestedFalAccount": "Alex Berrel",
+    "attestationScope": "Owner confirmed that the already stored VydFlow key belongs to this Fal account; no video launch authorization.",
+    "providerIdentityApiCalled": false,
+    "keyDecrypted": false,
+    "networkCalled": false
+  },
+  "preview": {
+    "mode": "service_preview_rolled_back",
+    "environment": "dev",
+    "ownerId": 2,
+    "before": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 10,
+      "ai_generation": 4,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 22,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 7,
+      "video_edit": 18,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "during": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 14,
+      "ai_generation": 4,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 30,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 7,
+      "video_edit": 18,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "after": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 10,
+      "ai_generation": 4,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 22,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 7,
+      "video_edit": 18,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "networkAttempts": 0,
+    "preparationFlagsDisabled": true,
+    "observedCliFlagsBeforeOverride": {
+      "AI_GENERATION_ENABLED": true,
+      "PORTRAIT_GENERATION_ENABLED": false
+    },
+    "authorizedToExecute": false,
+    "keyDecrypted": false,
+    "remoteAccountVerified": false,
+    "episodes": {
+      "solo-1": {
+        "id": 11,
+        "title": "R7.4 — Milo seul 1",
+        "revision": 4,
+        "url": "/studio/series/episodes/11?review=1",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original playful 3D animated cats in a bright simple kitchen, gentle daylight and a fixed camera. Preserve the supplied individual character identities and clothing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "bd444f686b012756a563bbbb32f90855f24bf412b0296a0fe15da5f58f39c007",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified).\nScene: Milo, a small orange anthropomorphic cat with a cream muzzle, amber eyes and a plain blue hoodie, stands in a bright simple kitchen. He slowly turns his head from left to right, then looks at the camera. Medium shot, fixed camera, gentle daylight, original 3D animation style. One character only, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified).\nScene: Milo, the same orange cat in the same plain blue hoodie, slowly raises his right paw, holds it briefly, then lowers it. Medium shot, fixed camera, simple kitchen background. Keep his face, clothing and proportions consistent. One character only, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        }
+      },
+      "solo-2": {
+        "id": 12,
+        "title": "R7.4 — Milo seul 2",
+        "revision": 4,
+        "url": "/studio/series/episodes/12?review=1",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original playful 3D animated cats in a bright simple kitchen, gentle daylight and a fixed camera. Preserve the supplied individual character identities and clothing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "2d631bfde6ff09448701991bad996d34cff5670d167bb424f1f6a9ca9882f321",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified).\nScene: Milo, the same small orange cat with a cream muzzle, amber eyes and a plain blue hoodie, walks three short steps from left to right and stops. Full body, fixed camera, bright simple kitchen, original 3D animation style. One character only, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified).\nScene: Milo, the same orange cat in the same blue hoodie, looks down at a purple bowl on the counter, then looks back at the camera. Medium shot, fixed camera, gentle daylight. Keep his face and proportions consistent. One character only, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        }
+      },
+      "duo-1": {
+        "id": 13,
+        "title": "R7.4 — Milo et Nox 1",
+        "revision": 4,
+        "url": "/studio/series/episodes/13?review=1",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            },
+            {
+              "id": 2,
+              "revision": 1,
+              "name": "Nox",
+              "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.",
+              "portrait": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original playful 3D animated cats in a bright simple kitchen, gentle daylight and a fixed camera. Preserve the supplied individual character identities and clothing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "db3e55bcc3b186ef934afec527ed2a0ec96d2decadbc29f4b6971936f0c9587d",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Milo is the small orange cat with a cream muzzle, amber eyes and a plain blue hoodie, standing on the left. Nox is the charcoal cat with a small white chin patch, green eyes and a plain orange apron, standing on the right. Milo slowly turns his head toward Nox while Nox stays still. Medium two-shot, fixed camera, bright simple kitchen, original 3D animation style. Exactly two characters, keep their identities separate, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Milo, the orange cat in the blue hoodie, remains on the left and stays still. Nox, the charcoal cat with a white chin patch and orange apron, remains on the right and slowly turns her head toward Milo. Medium two-shot, fixed camera, bright simple kitchen. Preserve both faces, clothes and proportions. Exactly two characters, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        }
+      },
+      "duo-2": {
+        "id": 14,
+        "title": "R7.4 — Milo et Nox 2",
+        "revision": 4,
+        "url": "/studio/series/episodes/14?review=1",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            },
+            {
+              "id": 2,
+              "revision": 1,
+              "name": "Nox",
+              "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.",
+              "portrait": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original playful 3D animated cats in a bright simple kitchen, gentle daylight and a fixed camera. Preserve the supplied individual character identities and clothing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "19edbf0ecc0b82bbd1c51bc5d141b608357f9a4004fb8521be703b78551dd51e",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Milo, the orange cat with amber eyes and a plain blue hoodie, stands on the left. Nox, the charcoal cat with green eyes, a white chin patch and a plain orange apron, stands on the right. Both take one slow step forward and stop, keeping their left and right positions. Full-body two-shot, fixed camera, bright simple kitchen, original 3D animation style. Exactly two characters, no identity or clothing swaps, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Milo, the orange cat in the blue hoodie, stays still on the left. Nox, the charcoal cat with a white chin patch and orange apron, slowly raises one paw on the right and lowers it. Medium two-shot, fixed camera, bright simple kitchen. Preserve both characters and their clothes. Exactly two characters, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        }
+      }
+    },
+    "totalEstimatedCents": 320
+  },
+  "persisted": {
+    "mode": "native_forms_committed",
+    "environment": "dev",
+    "ownerId": 2,
+    "before": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 10,
+      "ai_generation": 4,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 22,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 7,
+      "video_edit": 18,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "during": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 14,
+      "ai_generation": 4,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 30,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 7,
+      "video_edit": 18,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "after": {
+      "account_token": 3,
+      "ai_character": 2,
+      "ai_credential": 2,
+      "ai_episode": 14,
+      "ai_generation": 4,
+      "ai_portrait_draft": 0,
+      "ai_portrait_request": 0,
+      "ai_series": 2,
+      "ai_shot": 30,
+      "app_user": 3,
+      "doctrine_migration_versions": 42,
+      "instagram_connection": 1,
+      "instagram_publication": 1,
+      "messenger_messages": 0,
+      "publication_draft": 5,
+      "publication_draft_item": 5,
+      "publication_statistic": 2,
+      "series_occurrence": 0,
+      "series_recurrence": 0,
+      "story_proposal": 13,
+      "tiktok_connection": 1,
+      "tiktok_publication": 1,
+      "video_asset": 7,
+      "video_edit": 18,
+      "waitlist_entry": 0,
+      "youtube_connection": 2,
+      "youtube_publication": 1
+    },
+    "networkAttempts": 0,
+    "preparationFlagsDisabled": true,
+    "observedCliFlagsBeforeOverride": {
+      "AI_GENERATION_ENABLED": true,
+      "PORTRAIT_GENERATION_ENABLED": false
+    },
+    "authorizedToExecute": false,
+    "keyDecrypted": false,
+    "remoteAccountVerified": false,
+    "episodes": {
+      "solo-1": {
+        "id": 15,
+        "title": "R7.4 — Milo seul 1",
+        "revision": 4,
+        "url": "/studio/series/episodes/15?review=1",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original playful 3D animated cats in a bright simple kitchen, gentle daylight and a fixed camera. Preserve the supplied individual character identities and clothing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "48983dadf9a07bddf851590f9b3e50f6412e04192b5446a62fc41faf543cbae1",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified).\nScene: Milo, a small orange anthropomorphic cat with a cream muzzle, amber eyes and a plain blue hoodie, stands in a bright simple kitchen. He slowly turns his head from left to right, then looks at the camera. Medium shot, fixed camera, gentle daylight, original 3D animation style. One character only, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified).\nScene: Milo, the same orange cat in the same plain blue hoodie, slowly raises his right paw, holds it briefly, then lowers it. Medium shot, fixed camera, simple kitchen background. Keep his face, clothing and proportions consistent. One character only, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        },
+        "htmlSha256": "44054efda8b6f6fd40f4314b714b663c43f1167df0b7a7d7fda8513868c78711"
+      },
+      "solo-2": {
+        "id": 16,
+        "title": "R7.4 — Milo seul 2",
+        "revision": 4,
+        "url": "/studio/series/episodes/16?review=1",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original playful 3D animated cats in a bright simple kitchen, gentle daylight and a fixed camera. Preserve the supplied individual character identities and clothing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "ce2c33e780706a2e2f5739fe38a1ff151780de32513643e592ffe878b397fab0",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified).\nScene: Milo, the same small orange cat with a cream muzzle, amber eyes and a plain blue hoodie, walks three short steps from left to right and stops. Full body, fixed camera, bright simple kitchen, original 3D animation style. One character only, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified).\nScene: Milo, the same orange cat in the same blue hoodie, looks down at a purple bowl on the counter, then looks back at the camera. Medium shot, fixed camera, gentle daylight. Keep his face and proportions consistent. One character only, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        },
+        "htmlSha256": "c845b880578718eb48eebbec6a2607930767cbfcac7ad6d31dd65139e37e8040"
+      },
+      "duo-1": {
+        "id": 17,
+        "title": "R7.4 — Milo et Nox 1",
+        "revision": 4,
+        "url": "/studio/series/episodes/17?review=1",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            },
+            {
+              "id": 2,
+              "revision": 1,
+              "name": "Nox",
+              "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.",
+              "portrait": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original playful 3D animated cats in a bright simple kitchen, gentle daylight and a fixed camera. Preserve the supplied individual character identities and clothing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "75f13d3c3c3b9578d84f730003bc671b5c6dcfeba6fd09ed057cd97dbc7084f7",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Milo is the small orange cat with a cream muzzle, amber eyes and a plain blue hoodie, standing on the left. Nox is the charcoal cat with a small white chin patch, green eyes and a plain orange apron, standing on the right. Milo slowly turns his head toward Nox while Nox stays still. Medium two-shot, fixed camera, bright simple kitchen, original 3D animation style. Exactly two characters, keep their identities separate, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Milo, the orange cat in the blue hoodie, remains on the left and stays still. Nox, the charcoal cat with a white chin patch and orange apron, remains on the right and slowly turns her head toward Milo. Medium two-shot, fixed camera, bright simple kitchen. Preserve both faces, clothes and proportions. Exactly two characters, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        },
+        "htmlSha256": "573a87be7d6651a2735a4682d2c1b99c86cd3636a4f2540e7ccdfd7a810baf9d"
+      },
+      "duo-2": {
+        "id": 18,
+        "title": "R7.4 — Milo et Nox 2",
+        "revision": 4,
+        "url": "/studio/series/episodes/18?review=1",
+        "flowState": "draft",
+        "consentHash": null,
+        "mutePlans": true,
+        "recipe": {
+          "model": "vidu-q1-subject",
+          "seconds": 5,
+          "ratio": "9:16",
+          "accessMode": "api",
+          "reference": null,
+          "endReference": null,
+          "imageFit": "contain",
+          "inputVersion": 4,
+          "subjects": [],
+          "subjectDetails": [],
+          "characterPool": [
+            {
+              "id": 1,
+              "revision": 1,
+              "name": "Milo",
+              "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.",
+              "portrait": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "views": []
+            },
+            {
+              "id": 2,
+              "revision": 1,
+              "name": "Nox",
+              "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.",
+              "portrait": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+              "views": []
+            }
+          ],
+          "visualContext": "Original playful 3D animated cats in a bright simple kitchen, gentle daylight and a fixed camera. Preserve the supplied individual character identities and clothing.",
+          "montage": {
+            "sourceVolume": 100,
+            "intro": false,
+            "fit": "contain"
+          }
+        },
+        "quote": {
+          "hash": "ce344cc23b9c9da3720ae8eddfd81c92f1bedefe23f35540e6b6de7b9568d5bf",
+          "cents": 80,
+          "seconds": 10,
+          "count": 2,
+          "redo": 0,
+          "references": [
+            {
+              "position": 1,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Milo, the orange cat with amber eyes and a plain blue hoodie, stands on the left. Nox, the charcoal cat with green eyes, a white chin patch and a plain orange apron, stands on the right. Both take one slow step forward and stop, keeping their left and right positions. Full-body two-shot, fixed camera, bright simple kitchen, original 3D animation style. Exactly two characters, no identity or clothing swaps, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            },
+            {
+              "position": 2,
+              "seconds": 5,
+              "model": "vidu-q1-subject",
+              "prompt": "5 seconds. One scene only. Complete one simple action before the final second, then hold its visible result. Reference images guide identity only; do not recreate their framing or invent accessories. Appearance of \"Milo\": \"Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style.\". Reference1=\"Milo\"(character,unspecified). Appearance of \"Nox\": \"Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style.\". Reference2=\"Nox\"(character,unspecified).\nScene: Milo, the orange cat in the blue hoodie, stays still on the left. Nox, the charcoal cat with a white chin patch and orange apron, slowly raises one paw on the right and lowers it. Medium two-shot, fixed camera, bright simple kitchen. Preserve both characters and their clothes. Exactly two characters, no text, no speaking.",
+              "start": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+              "end": null,
+              "fit": "contain",
+              "subjects": [
+                "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg"
+              ],
+              "subjectDetails": [
+                {
+                  "reference": "7fed87ac0a845687cd64835e996432fc60f9d04a00526c1f.jpg",
+                  "name": "Milo",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small orange anthropomorphic cat, cream muzzle and chin, subtle ginger stripes, amber eyes, pink nose, upward fluffy hair tuft. Plain blue pullover hoodie, hood down, no drawstrings or logo. Orange furry legs and paws, no trousers or shoes. Cheerful curious overconfident grin. Original polished 3D animation style."
+                },
+                {
+                  "reference": "664f00a89a14b5d4fa99edcb6be3c9138769ff372bd29f0d.jpg",
+                  "name": "Nox",
+                  "role": "character",
+                  "presence": "unspecified",
+                  "views": [],
+                  "description": "Small charcoal-gray anthropomorphic cat, small white chin patch, green almond-shaped eyes, dark nose, swept head-fur tuft. Plain orange bib apron and simple neck strap. Charcoal furry arms, legs and paws, no trousers or shoes. Calm witty half-smile and slightly raised eyebrow. Original polished 3D animation style."
+                }
+              ],
+              "fromPrevious": false,
+              "role": "personnage"
+            }
+          ]
+        },
+        "htmlSha256": "5feabdc2aaaea15cead2cc0d462bb12591d71f5bd40ab58242dcf2fbb98a9344"
+      }
+    },
+    "totalEstimatedCents": 320
+  },
+  "verification": {
+    "persistedDraftsVerified": {
+      "solo-1": 15,
+      "solo-2": 16,
+      "duo-1": 17,
+      "duo-2": 18
+    },
+    "quotesUnchanged": true,
+    "allUnconfirmed": true,
+    "generationsAndMessagesUnchanged": true,
+    "preparationSessionsRemoved": 1,
+    "matchingPreparationSessionsRemaining": 0,
+    "networkAttempts": 0,
+    "applicationConfigChanged": false,
+    "remoteAccountVerified": false
+  },
+  "workloadSnapshot": {
+    "checkedAtUtc": "2026-11-05T13:04:33+00:00",
+    "generationStatusCounts": [
+      {
+        "status": "available",
+        "count": 2
+      },
+      {
+        "status": "prepared",
+        "count": 1
+      },
+      {
+        "status": "replaced",
+        "count": 1
+      }
+    ],
+    "messageCount": 0,
+    "activeEpisodeIds": [],
+    "readOnly": true,
+    "providerCalled": false
+  },
+  "browser": {
+    "views": 24,
+    "screens": 4,
+    "captures": 8,
+    "overflow": 0,
+    "brokenLoadedImages": 0,
+    "failedHttp": 0,
+    "jsErrors": 0,
+    "blockedRequests": 0,
+    "onlyLocalGet": true,
+    "reflectsPreparationFlagsNotLiveWebFlags": true
+  },
+  "effects": {
+    "appCodeChanged": false,
+    "configChanged": false,
+    "schemaChanged": false,
+    "migrationRun": false,
+    "webDevCacheCleared": false,
+    "isolatedPreparationCacheCreated": true,
+    "workerStartedOrRestarted": false,
+    "newProviderCalls": 0,
+    "keyDecrypted": false,
+    "newVideoGenerations": 0,
+    "messagesDispatched": 0,
+    "email": false,
+    "publication": false,
+    "push": false,
+    "deployment": false
+  },
+  "checks": {
+    "newPhpSuiteRun": false,
+    "newFrontendOrBuildRun": false,
+    "newIndependentReview": false,
+    "nativePreparationForms": 4,
+    "freshDatabaseQuotesIdentical": true,
+    "preview27CountersRestored": true,
+    "only4Episodes8ShotsAdded": true
+  },
+  "sha256": {
+    "artifacts/r74-portraits/preview/report.json": "d793d7358aebb8846803e7b58b6647bc7b118082df9be076708f55c5b382cd6f",
+    "artifacts/r74-portraits/drafts/report.json": "738aa14f21de9653780018da13e195f37fbc5a855cb7ddd220aefc6a60fa30c1",
+    "artifacts/r74-portraits/drafts/verification.json": "04eeee2cbc3662e16b95cecd636da640e9bc8eb976de21d55b41186ae21e68ee",
+    "artifacts/r74-portraits/drafts/credential-version.json": "50ea6a80fbb88fd2d0999687d6b8b65ad95cae4d3cdfb39c2b542daecdf87cf1",
+    "artifacts/r74-portraits/drafts/workload.json": "153f301b874d5a84a21f53a410063f0ae18ddbd87e4bf245d688dbe86d10a359",
+    "artifacts/r74-portraits/drafts/browser.json": "b3380b43c8cccd49fd6aa12af000d55575d264e66f8efcd3b7979dff5080575b",
+    "artifacts/r74-portraits/drafts/duo-1.html": "573a87be7d6651a2735a4682d2c1b99c86cd3636a4f2540e7ccdfd7a810baf9d",
+    "artifacts/r74-portraits/drafts/duo-2.html": "5feabdc2aaaea15cead2cc0d462bb12591d71f5bd40ab58242dcf2fbb98a9344",
+    "artifacts/r74-portraits/drafts/solo-1.html": "44054efda8b6f6fd40f4314b714b663c43f1167df0b7a7d7fda8513868c78711",
+    "artifacts/r74-portraits/drafts/solo-2.html": "c845b880578718eb48eebbec6a2607930767cbfcac7ad6d31dd65139e37e8040",
+    "output/playwright/r74-duo-1-1280.png": "7dcd4147b1fdce4734939dce548165d23e5fab9eaabf0814c12d11f2bc15f23f",
+    "output/playwright/r74-duo-1-390.png": "c6fe98d52082b030e1331dc8097155bc0e03404326c72ccbc53173c89f625e63",
+    "output/playwright/r74-duo-2-1280.png": "5a4fdbf1b148b91369642f4af79ccea0efc5f0455efd1354c45db86e1d62c68a",
+    "output/playwright/r74-duo-2-390.png": "01320026b6aa9919b981cf916aad7e843de776479e3f32005f597f9bab752dee",
+    "output/playwright/r74-solo-1-1280.png": "8ef1645150af15576823f6752bc91579dfe297aab399efa432743e3eb3541f69",
+    "output/playwright/r74-solo-1-390.png": "a25029b5bd9ce2256ceaefeb1023aa499ef78838851624044991f0a5a52a52b9",
+    "output/playwright/r74-solo-2-1280.png": "5cef548d0e1460e24b5f1419b2120d45f1ae637e47fb36812d19d80ce9b0115c",
+    "output/playwright/r74-solo-2-390.png": "202373085360021b01d78c827cad03f5d972f485f25a7a8e80c410095c4979e6"
+  }
+}

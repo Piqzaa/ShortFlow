@@ -1,6 +1,6 @@
 # R7.4 — proposition d’essai réel limité
 
-5 novembre 2026. **Cadrage préparé, essai non autorisé et non lancé. R7.4 reste ouvert.** Le propriétaire a retenu un plafond de préparation de 4 USD et désigné le compte Fal d’Alex Berrel. Deux portraits ont été créés avec l’outil intégré `image_gen` et importés localement ; voir [leur provenance](pilotes/r74-personnages/README.md). Il reste à vérifier le lien avec la clé VydFlow, préparer les quatre devis finaux et obtenir l’accord distinct de lancement. Aucun achat de crédits, upload Fal, appel d’inférence Fal ou activation effectué ici.
+5 novembre 2026. **Cadrage préparé, essai non autorisé et non lancé. R7.4 reste ouvert.** Le propriétaire a retenu un plafond de préparation de 4 USD et désigné le compte Fal d’Alex Berrel. Deux portraits ont été créés avec l’outil intégré `image_gen` et importés localement ; voir [leur provenance](pilotes/r74-personnages/README.md). Le propriétaire a ensuite attesté le rattachement de la clé VydFlow et les quatre brouillons/devis 15–18 sont prêts. Il reste à recueillir l’accord distinct de lancement, puis recontrôler états, devis et empreinte de clé avant traitement. Aucun achat de crédits, upload Fal, appel d’inférence Fal ou activation effectué ici.
 
 ## Proposition à relire
 
@@ -22,7 +22,7 @@ Paramètres prévus : vertical 9:16, caméra fixe, actions simples, `bgm=false`,
 
 Le schéma actuel demande `prompt` et `reference_image_urls`, avec prompt limité à 1 500 caractères et jusqu’à sept références décrites. L’API documente aussi les Data URI utilisées par l’adaptateur existant. Le contrat ne fournit pas de champ de durée pour cet endpoint ; ne pas ajouter un `duration` inventé : cinq secondes est ici la durée annoncée de la sortie. Vérifier aussi la longueur du prompt final enrichi par VydFlow après sélection des fiches, pas seulement celle du texte de scène. [Contrat API officiel](https://fal.ai/models/fal-ai/vidu/q1/reference-to-video/api).
 
-Les huit prompts précis et les paramètres proposés figurent dans [le protocole JSON](fixtures/r74-essai-propose-20261105.json). Ce fichier est un **document de préparation**, avec références désormais fixées, compte Fal désigné mais lien applicatif non vérifié, devis et accord final encore absents, pas un corps de requête prêt à envoyer.
+Les huit prompts précis et les paramètres proposés figurent dans [le protocole JSON](fixtures/r74-essai-propose-20261105.json). Ce fichier est un **document de préparation**, avec références et quatre devis désormais fixés, compte Fal attesté par le propriétaire sans vérification d’identité distante, accord de lancement toujours absent, pas un corps de requête prêt à envoyer.
 
 | Épisode | Personnages | Deux actions simples | Estimation publique |
 | --- | --- | --- | --- |
@@ -66,4 +66,6 @@ Page et API publiques Vidu consultées, schéma du catalogue Fal lu via le conne
 
 Contrôles locaux du JSON : quatre épisodes, deux plans chacun, huit plans de cinq secondes, présence attendue par épisode, longueur des prompts bruts, somme des coûts, empreintes des portraits importés et accord de lancement toujours absent. Aucun code applicatif, schéma, service, test ou dépendance modifié ; aucune suite PHP/frontend/build/navigateur ou revue indépendante rejouée pour ce document. Les résultats R7.3c restent historiques.
 
-**Il reste à vérifier le rattachement de la clé VydFlow au compte Fal désigné, préparer les quatre brouillons applicatifs et leurs devis finaux, puis obtenir l’accord de lancement concret.** Le choix de budget et la création/import des portraits sont effectués ; leur existence ne vaut pas consentement de génération vidéo. Aucun coût Fal, appel vidéo, achat de crédits, email, activation, publication, migration, cache dev actualisé, worker démarré/redémarré, push ou déploiement. Les deux images de préparation proviennent de l’outil intégré, sans appel image Fal.
+**Les quatre brouillons/devis sont prêts et le rattachement de la clé est attesté par le propriétaire. Il reste l’accord distinct de lancement concret, suivi du recontrôle des états/devis/empreintes avant traitement.** Le choix de budget et la création/import des portraits sont effectués ; leur existence ne vaut pas consentement de génération vidéo. Aucun coût Fal, appel vidéo, achat de crédits, email, activation, publication, migration, cache dev actualisé, worker démarré/redémarré, push ou déploiement. Les deux images de préparation proviennent de l’outil intégré, sans appel image Fal.
+
+Suite du 5 novembre : [quatre brouillons/devis prêts](r7-brouillons-devis-pret.md), compte attesté par le propriétaire, empreinte de clé figée sans déchiffrement. Les états CLI existants ne sont pas ceux du banc isolé ; voir le constat du bilan. Lancement des huit clips toujours soumis à accord distinct.

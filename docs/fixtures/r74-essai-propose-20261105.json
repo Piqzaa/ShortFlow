@@ -1,7 +1,7 @@
 {
   "date": "2026-11-05",
   "stage": "R7.4",
-  "status": "portraits_created_and_imported_pending_owner_review_final_quotes_and_launch_consent",
+  "status": "four_drafts_and_quotes_ready_owner_account_attested_pending_explicit_video_launch_consent",
   "authorized_to_execute": false,
   "proposal": {
     "provider": "fal",
@@ -66,7 +66,13 @@
     "connector_account_equivalence_established": false,
     "real_key_read": false,
     "local_profile_display_name": "Vyd",
-    "vydflow_key_remote_account_verified": false
+    "vydflow_key_remote_account_verified": false,
+    "owner_attested_key_account": true,
+    "attestation_source": "Explicit owner reply in chat: Oui, c’est bien la clé de ce compte",
+    "verification_method": "owner_attestation_and_local_encrypted_version_fingerprint",
+    "credential_id": 1,
+    "credential_version_sha256": "6cfd9ee2493b9ed0bb09e507b8ee94b9439d8925a9caa88f6482363fe63de53e",
+    "identity_verified_via_provider_api": false
   },
   "episodes": [
     {
@@ -245,10 +251,8 @@
     ]
   },
   "pending": [
-    "Owner review of the two proposed portraits can accompany the final launch review; creative delegation does not fabricate human acceptance.",
-    "Verify the existing VydFlow key belongs to the selected Fal account before billing; no key read or decryption in this preparation.",
-    "Prepare four application drafts and final quotes with these frozen portrait versions, not just the planning JSON.",
-    "Separate explicit video launch consent under the retained 4 USD cap, excluding taxes and conversion."
+    "Explicit owner authorization to launch only the eight clips in drafts 15-18, with these portraits/quotes, Vidu Q1, 5 seconds each, selected Fal account, estimated 3.20 USD and 4 USD cap excluding tax/conversion.",
+    "At any later launch, recheck quotes/states/portrait files/credential version and isolate approved jobs; do not process the old prepared generation or other work."
   ],
   "execution_rules": [
     "Use VydFlow pipeline, not a connector-side generation that bypasses its private workflow.",
@@ -266,10 +270,10 @@
     "credit_purchase": 0,
     "app_code_changed": false,
     "catalog_changed": false,
-    "flags_changed": false,
     "worker_started_or_restarted": false,
     "publication": false,
-    "scope": "Fal execution only; the two built-in images and local imports are tracked under preparation"
+    "scope": "Fal execution only; the two built-in images and local imports are tracked under preparation",
+    "application_flags_changed": false
   },
   "preparation": {
     "image_generator": "built-in image_gen",
@@ -279,10 +283,76 @@
     "import_service": "AiCharacters + AiReferenceStorage",
     "private_import_completed": true,
     "app_portrait_requests_created": 0,
-    "video_drafts_created_this_turn": 0,
+    "video_drafts_created_this_turn": 4,
     "video_generations_created": 0,
     "messages_dispatched": 0,
     "source_hashes_checked": true,
-    "normalized_hashes_checked": true
+    "normalized_hashes_checked": true,
+    "final_quotes_prepared": true,
+    "native_forms_used": true,
+    "draft_ids": [
+      15,
+      16,
+      17,
+      18
+    ],
+    "preview_rolled_back": true,
+    "key_version_frozen_without_decryption": true,
+    "network_blocked_for_preparation": true,
+    "observed_cli_flags_before_isolation": {
+      "AI_GENERATION_ENABLED": true,
+      "PORTRAIT_GENERATION_ENABLED": false
+    },
+    "process_only_flags_override": {
+      "AI_GENERATION_ENABLED": false,
+      "PORTRAIT_GENERATION_ENABLED": false
+    },
+    "temporary_preparation_session_removed": true
+  },
+  "drafts": {
+    "solo-1": {
+      "episode_id": 15,
+      "revision": 4,
+      "url": "/studio/series/episodes/15?review=1",
+      "quote_hash": "48983dadf9a07bddf851590f9b3e50f6412e04192b5446a62fc41faf543cbae1",
+      "estimated_cents": 80,
+      "seconds": 10,
+      "shots": 2,
+      "consent_hash": null,
+      "state": "draft"
+    },
+    "solo-2": {
+      "episode_id": 16,
+      "revision": 4,
+      "url": "/studio/series/episodes/16?review=1",
+      "quote_hash": "ce2c33e780706a2e2f5739fe38a1ff151780de32513643e592ffe878b397fab0",
+      "estimated_cents": 80,
+      "seconds": 10,
+      "shots": 2,
+      "consent_hash": null,
+      "state": "draft"
+    },
+    "duo-1": {
+      "episode_id": 17,
+      "revision": 4,
+      "url": "/studio/series/episodes/17?review=1",
+      "quote_hash": "75f13d3c3c3b9578d84f730003bc671b5c6dcfeba6fd09ed057cd97dbc7084f7",
+      "estimated_cents": 80,
+      "seconds": 10,
+      "shots": 2,
+      "consent_hash": null,
+      "state": "draft"
+    },
+    "duo-2": {
+      "episode_id": 18,
+      "revision": 4,
+      "url": "/studio/series/episodes/18?review=1",
+      "quote_hash": "ce344cc23b9c9da3720ae8eddfd81c92f1bedefe23f35540e6b6de7b9568d5bf",
+      "estimated_cents": 80,
+      "seconds": 10,
+      "shots": 2,
+      "consent_hash": null,
+      "state": "draft"
+    }
   }
 }
