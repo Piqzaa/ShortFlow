@@ -323,6 +323,8 @@ final class SeriesRecurrencesTest extends WebTestCase
         $values['series_recurrence']['networks'] = ['youtube'];
         $this->client->request('POST', $url, $values);
         self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('.series-automatic-panel[open]');
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/series-episodes-recurrence-errors.html', $this->client->getResponse()->getContent());
         self::assertSame(0, $this->em->getRepository(SeriesRecurrence::class)->count([]));
         $invalid = $values;
         $invalid['series_recurrence']['limit'] = 'not a number';

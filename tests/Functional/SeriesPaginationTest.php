@@ -84,6 +84,44 @@ final class SeriesPaginationTest extends WebTestCase
         yield [25, 12, 3];
     }
 
+    public function testEpisodesComeFirstWithClearActionsAndVisibleAutomaticStatus(): void
+    {
+        [$series, $episodes] = $this->seed(7);
+        $states = ['draft', 'running', 'assembling', 'ready', 'paused', 'stopped', 'review'];
+        $labels = ['Préparer la vidéo', 'Voir la génération', 'Voir la génération', 'Voir la vidéo', 'Reprendre la préparation', 'Voir les plans', 'Préparer la vidéo'];
+        foreach ($episodes as $index => $episode) {
+            $episode->flow($states[$index]);
+        }
+        $this->em()->flush();
+        $url = '/studio/series/'.$series->getId();
+        $crawler = $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.series-add-panel:not([open]) #add-episodes');
+        self::assertSelectorExists('.series-settings-panel:not([open])');
+        self::assertSelectorExists('.series-automatic-panel:not([open])');
+        self::assertSelectorTextContains('.series-automatic-panel > summary', 'Désactivée');
+        self::assertSelectorExists('.series-settings-panel a[href="'.$url.'/configuration"]');
+        foreach ($episodes as $index => $episode) {
+            self::assertSelectorTextContains('#episode-'.$episode->getId().' > .button', $labels[$index]);
+            self::assertSelectorExists('#episode-'.$episode->getId().' > .button[href="/studio/series/episodes/'.$episode->getId().'"]');
+        }
+        $html = $this->client->getResponse()->getContent();
+        self::assertLessThan(strpos($html, 'class="series-settings-panel"'), strpos($html, 'id="episodes-title"'));
+        self::assertLessThan(strpos($html, 'class="series-automatic-panel"'), strpos($html, 'id="episodes-title"'));
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/series-episodes-inactive.html', $html);
+        $recurrence = new SeriesRecurrence($this->em()->find(AiSeries::class, $series->getId()));
+        $recurrence->activate(['mode' => 'preparation', 'weekday' => 2, 'hour' => '18:00', 'timezone' => 'Europe/Paris', 'networks' => [], 'accounts' => [], 'limit' => 4, 'tone' => 'auto', 'continuity' => 'independent'], new \DateTimeImmutable('+7 days'), new \DateTimeImmutable());
+        $this->em()->persist($recurrence);
+        $this->em()->flush();
+        $this->client->request('GET', $url);
+        self::assertSelectorExists('.series-automatic-panel:not([open])');
+        self::assertSelectorTextContains('.series-automatic-panel > summary', 'Active');
+        self::assertSelectorExists('.series-automatic-panel form[action="'.$url.'/recurrence/pause"]');
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/series-episodes-active.html', $this->client->getResponse()->getContent());
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
     #[DataProvider('volumes')]
     public function testReadIsBoundedAndKeepsTheTotal(int $total, int $visible, int $pages): void
     {
