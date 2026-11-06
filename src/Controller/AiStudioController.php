@@ -453,7 +453,7 @@ final class AiStudioController extends AbstractController
     }
 
     #[Route('/studio/ia/generations/{id}', name: 'app_ai_generation', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function generation(int $id, Request $request, #[CurrentUser] User $user, AiGenerations $generations, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, \App\Service\AiSeriesStudio $seriesStudio, EntityManagerInterface $em): Response
+    public function generation(int $id, Request $request, #[CurrentUser] User $user, AiGenerations $generations, AiCatalog $catalog, AiKeys $keys, \App\Service\AiSeriesStudio $seriesStudio, EntityManagerInterface $em): Response
     {
         $job = $generations->owned($id, $user) ?? throw $this->createNotFoundException();
         $shot = $em->getRepository(\App\Entity\AiShot::class)->findOneBy(['generation' => $job]);
@@ -493,7 +493,7 @@ final class AiStudioController extends AbstractController
 
         $model = $catalog->model($job->getModel());
 
-        return $this->render('ai/generation.html.twig', ['job' => $job, 'episode' => $episode, 'model' => $model, 'providerName' => $catalog->provider($model['provider']), 'enabled' => $generations->enabled(), 'hasKey' => $keys->hasAccess($user, $model['provider'], $job->getAccessMode()), 'mcpAccount' => 'mcp' === $job->getAccessMode() ? $falOAuth->accountId($user) : null], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/generation.html.twig', ['job' => $job, 'episode' => $episode, 'model' => $model, 'providerName' => $catalog->provider($model['provider']), 'enabled' => $generations->enabled(), 'hasKey' => $keys->hasAccess($user, $model['provider'], $job->getAccessMode())], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/creation/historique', name: 'app_ai_history', methods: ['GET'])]

@@ -10,7 +10,7 @@
 {% if job.status in ['queued','submitting','processing'] %}{% include 'ai/_progress.html.twig' %}{% endif %}
 {% if job.issue %}<p role="alert">{{ job.issue }}</p>{% endif %}
 <p class="library-note">Accès choisi : {{ job.accessMode == 'mcp' ? 'connexion navigateur Fal · compte MCP actif chez Fal' : 'clé API du fournisseur' }}.</p>
-{% if job.accessMode == 'mcp' and mcpAccount|default(null) %}<p class="library-note ai-account-id">Compte Fal autorisé : {{ mcpAccount }}. Le compte actif est revérifié avant l’envoi.</p>{% endif %}
+{% if job.accessMode == 'mcp' and hasKey %}<p class="library-note">Compte Fal connecté par navigateur. Le compte actif est revérifié avant l’envoi.</p>{% endif %}
 {% if job.status == 'prepared' %}
 {% include 'ai/_quality_notice.html.twig' only %}{% include 'ai/_speech_notice.html.twig' with {speechAudio:model.audio} only %}
 {% if episode|default(null) %}<a class="account-secondary composer-back" href="{{ path('app_series_episode',{id:episode.id}) }}">Remplacer cette préparation par une vidéo à plans, jusqu’à 60 s →</a>{% endif %}

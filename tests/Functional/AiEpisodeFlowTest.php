@@ -202,7 +202,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $quote = $this->flow()->quote($episode);
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?review=1');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.review-summary', '3 plan(s) · 30 s');
+        self::assertSelectorTextContains('.review-summary', '3 plans · 30 s');
         self::assertSelectorTextContains('.review-summary', '2,10 $ US estimés');
         self::assertSelectorTextContains('.review-summary', 'Fal · clé API enregistrée');
         self::assertSelectorExists('.review-summary a[href="#story-quote"]');

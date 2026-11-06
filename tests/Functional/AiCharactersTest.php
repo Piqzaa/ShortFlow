@@ -235,6 +235,9 @@ final class AiCharactersTest extends WebTestCase
                 self::assertResponseStatusCodeSame(303);
                 $this->client->followRedirect();
                 self::assertResponseIsSuccessful();
+                $summary = $this->client->getCrawler()->filter('.review-summary p')->first()->text();
+                self::assertSame(1, substr_count($summary, $resolution));
+                self::assertStringContainsString('1 plan · '.$seconds.' s', $summary);
                 $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner], ['id' => 'DESC']);
                 $flow = static::getContainer()->get(\App\Service\AiEpisodeFlow::class);
                 $shots = $flow->shots($episode);

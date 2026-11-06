@@ -12,7 +12,6 @@ use App\Service\AiEpisodeFlow;
 use App\Service\AiGenerations;
 use App\Service\AiKeys;
 use App\Service\EpisodePublications;
-use App\Service\FalOAuth;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -49,7 +48,7 @@ final class AiEpisodeController extends AbstractController
     }
 
     #[Route('/studio/series/episodes/{id}', name: 'app_series_episode', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiGenerations $generations, EntityManagerInterface $em, VideoAssetRepository $videos, EpisodePublications $publications, AiKeys $keys, FalOAuth $falOAuth, \App\Service\SeriesGenerationConsent $seriesConsent, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiEpisodeFlow $flow, AiGenerations $generations, EntityManagerInterface $em, VideoAssetRepository $videos, EpisodePublications $publications, AiKeys $keys, \App\Service\SeriesGenerationConsent $seriesConsent, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
     {
         $episode = $flow->owned($id, $user) ?? throw $this->createNotFoundException();
         if (!$episode->getFlowState() && $episode->getGeneration() && 'prepared' !== $episode->getGeneration()->getStatus()) {
@@ -212,7 +211,7 @@ final class AiEpisodeController extends AbstractController
         $model = AiCatalog::MODELS[$recipe['model']];
         $library = 'ready' === $episode->getFlowState() ? $videos->findBy(['owner' => $user], ['createdAt' => 'DESC'], 100) : [];
 
-        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'repairRequested' => $redo, 'error' => $error, 'rejectedCorrection' => $rejectedCorrection, 'providerName' => AiCatalog::PROVIDERS[$model['provider']], 'hasKey' => $keys->hasAccess($user, $model['provider'], $recipe['accessMode']), 'mcpAccount' => 'mcp' === $recipe['accessMode'] && $quote ? $falOAuth->accountId($user) : null, 'model' => AiCatalog::viewModels()[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'automaticOccurrence' => $em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode])?->isAutomatic() ?? false, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'repairRequested' => $redo, 'error' => $error, 'rejectedCorrection' => $rejectedCorrection, 'providerName' => AiCatalog::PROVIDERS[$model['provider']], 'hasKey' => $keys->hasAccess($user, $model['provider'], $recipe['accessMode']), 'model' => AiCatalog::viewModels()[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'automaticOccurrence' => $em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode])?->isAutomatic() ?? false, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/episodes/{id}/etat', name: 'app_series_episode_state', requirements: ['id' => '\d+'], methods: ['GET'])]

@@ -109,6 +109,14 @@ final class SocialAccountsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorCount(6, '.connection-panel');
         self::assertSelectorTextContains('.social-connection-group', 'Chaîne a');
+        self::assertSelectorTextContains('.instagram-connection', '@profil_a');
+        self::assertSelectorTextContains('[aria-labelledby="tiktok-title"]', 'TikTok a');
+        $visible = implode(' ', $this->client->getCrawler()->filter('.social-connection-group')->each(static fn (\Symfony\Component\DomCrawler\Crawler $node): string => $node->text()));
+        foreach (['youtube', 'instagram', 'tiktok'] as $network) {
+            self::assertStringNotContainsString($this->identity($network, 'a'), $visible);
+            self::assertSelectorExists('form input[name="account"][value="'.$this->identity($network, 'a').'"]');
+        }
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/connections-readable.html', $this->client->getResponse()->getContent());
         foreach ($this->connections as $connections) {
             foreach ($connections as $connection) {
                 self::assertStringNotContainsString($connection->getAccessToken(), $this->client->getResponse()->getContent());

@@ -20,6 +20,8 @@ Relecture authentifiée en transaction de lecture seule : bibliothèque, fiche `
 
 ## Préparation vidéo remise au propriétaire
 
+Mise à jour demandée ensuite : introduction raccourcie à **5 s**, réplique « Tu postes encore tes vidéos une par une ? Découvre VydFlow. » et prompt adapté dans le fichier lié ci-dessous. Les indications initiales de 10 s restent historiques ; aucun brouillon réel n’a été modifié.
+
 [Idée, réglages et prompt complet prêts à copier](studio-prompt.md). Prompt vidéo 1 119 caractères, sous la limite de 1 500 du champ. Un plan de 10 s en 9:16, modèle `gemini-omni-12-subject-1080p`, fiche Vyd seule présente, son conservé. Tarif Fal public revérifié : 0,1229 USD/s en 1080p, audio inclus et références non facturées, soit environ 1,23 USD pour 10 s. Le coût réel doit être relu dans le devis applicatif avant confirmation.
 
 La génération intégrée du portrait n’est pas une exécution du pipeline portrait Fal de VydFlow. Aucun appel d’inférence Fal, upload fournisseur, budget/lancement vidéo, voix utilisateur enregistrée, capture d’interface, publication, achat de crédits, migration ou déploiement. La fiche n’est pas une approbation humaine du portrait, ni une validation de la voix française, des mouvements ou de la qualité publicitaire. Pas de nouvelle suite de tests/build : création de contenu uniquement, pas de code applicatif changé.

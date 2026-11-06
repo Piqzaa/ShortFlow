@@ -176,6 +176,12 @@ final class FalOAuthTest extends WebTestCase
         self::assertNotNull($connection);
         self::assertStringNotContainsString('private-access-secret', $connection->getEncryptedKey());
         self::assertStringNotContainsString('private-refresh-secret', $this->client->getResponse()->getContent());
+        $job = $this->job();
+        $this->client->request('GET', '/studio/ia/generations/'.$job->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.review-summary', 'Fal · connexion navigateur enregistrée');
+        self::assertStringNotContainsString('auth0|account-one', $this->client->getResponse()->getContent());
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/fal-account-review.html', $this->client->getResponse()->getContent());
         self::assertSame(0, $this->submissions);
     }
 
