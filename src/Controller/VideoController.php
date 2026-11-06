@@ -30,16 +30,13 @@ final class VideoController extends AbstractController
     }
 
     #[Route('', name: 'app_library', methods: ['GET'])]
-    public function index(Request $request, #[CurrentUser] User $user): Response
+    public function index(Request $request): Response
     {
-        $usage = $this->videos->usage($user);
-        $query = mb_substr(trim($request->query->getString('q')), 0, 120);
-        $results = $this->videos->search($user, $query, $request->query->getInt('page', 1));
-        $pages = $results['pages'];
-        $page = $results['page'];
-        $videos = $results['items'];
+        $parameters = array_intersect_key($request->query->all(), array_flip(['q', 'page', 'choose', 'date', 'zone']));
+        $response = $this->redirectToRoute('app_dashboard', $parameters);
+        $response->headers->set('Cache-Control', 'no-store, private');
 
-        return $this->page('library/index.html.twig', ['query' => $query, 'resultCount' => $results['total'], 'videos' => $videos, 'usage' => $usage, 'page' => $page, 'pages' => $pages, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, $videos)]);
+        return $response;
     }
 
     #[Route('/importer', name: 'app_video_upload', methods: ['GET', 'POST'])]
@@ -64,7 +61,7 @@ final class VideoController extends AbstractController
                     ? $this->generateUrl('app_edit_index', ['videos' => [$video->getId()]])
                     : ('compose' === $request->query->getString('next')
                     ? $this->generateUrl('app_composer_start', array_filter(['videos' => [$video->getId()], 'date' => $request->query->getString('date'), 'zone' => $request->query->getString('zone', $user->getTimezone())]))
-                    : $this->generateUrl('app_video_show', ['id' => $video->getId()]));
+                    : $this->generateUrl('app_dashboard'));
 
                 if ($editing) {
                     try {
@@ -109,7 +106,7 @@ final class VideoController extends AbstractController
                 $this->library->rename($video, $form->getData()['title']);
                 $this->addFlash('success', 'Le nom de ta vidéo a été mis à jour.');
 
-                return $this->redirectToRoute('app_video_show', ['id' => $id], 303);
+                return $this->redirectToRoute('app_dashboard', status: 303);
             } catch (VideoLibraryException $error) {
                 $form->addError(new FormError($error->getMessage()));
             }
@@ -161,7 +158,7 @@ final class VideoController extends AbstractController
                 $this->library->delete($video);
                 $this->addFlash('success', 'Ta vidéo a été supprimée.');
 
-                return $this->redirectToRoute('app_library', status: 303);
+                return $this->redirectToRoute('app_dashboard', status: 303);
             } catch (VideoLibraryException $error) {
                 $this->addFlash('error', $error->getMessage());
 
@@ -180,7 +177,7 @@ final class VideoController extends AbstractController
         if (!$values || count($values) > 20) {
             $this->addFlash('error', 'Sélectionne entre 1 et 20 vidéos.');
 
-            return $this->redirectToRoute('app_library', status: 303);
+            return $this->redirectToRoute('app_dashboard', status: 303);
         }
         $ids = [];
         foreach ($values as $value) {
@@ -201,7 +198,7 @@ final class VideoController extends AbstractController
                 $this->library->deleteMany($videos);
                 $this->addFlash('success', count($videos).' vidéo(s) supprimée(s).');
 
-                return $this->redirectToRoute('app_library', status: 303);
+                return $this->redirectToRoute('app_dashboard', status: 303);
             } catch (VideoLibraryException $error) {
                 $this->addFlash('error', $error->getMessage());
 

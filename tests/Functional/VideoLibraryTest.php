@@ -73,8 +73,10 @@ final class VideoLibraryTest extends WebTestCase
         self::assertSelectorExists('.studio-sidebar .wordmark[href="/studio"]');
         self::assertSelectorNotExists('.studio-footer a[href="/"]');
         $this->client->request('GET', '/studio/bibliotheque');
-        self::assertSelectorTextContains('h2', 'Ton prochain flow');
-        self::assertSelectorExists('a[href="/studio/bibliotheque/importer"]');
+        self::assertResponseRedirects('/studio');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('h2', 'Ta première vidéo');
+        self::assertSelectorExists('a[href^="/studio/bibliotheque/importer"]');
     }
 
     public function testAnonymousAndUnverifiedCannotReachLibrary(): void
@@ -104,8 +106,8 @@ final class VideoLibraryTest extends WebTestCase
         $path = static::getContainer()->get(PrivateVideoStorage::class)->path($video->getStorageName());
         self::assertFileExists($path);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('h1', 'Mon premier clip');
-        self::assertSelectorExists('video[controls]');
+        self::assertSelectorTextContains('.workspace-card', 'Mon premier clip');
+        self::assertSelectorExists('.workspace-upload-card');
         $id = $video->getId();
         $this->client->request('GET', '/studio/bibliotheque/'.$id.'/lecture', server: ['HTTP_RANGE' => 'bytes=0-15']);
         self::assertResponseStatusCodeSame(206);
@@ -156,6 +158,8 @@ final class VideoLibraryTest extends WebTestCase
         $id = $video->getId();
         $this->asUser('bob@example.test');
         $this->client->request('GET', '/studio/bibliotheque');
+        self::assertResponseRedirects('/studio');
+        $this->client->followRedirect();
         self::assertSelectorTextNotContains('main', 'Confidentiel Alice');
         $this->client->request('GET', '/studio');
         self::assertSelectorTextNotContains('main', 'Confidentiel Alice');
@@ -181,17 +185,17 @@ final class VideoLibraryTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio/bibliotheque/'.$id);
         $title = '<script>alert(1)</script>';
         $this->client->submit($crawler->selectButton('Enregistrer le nom')->form(['video_rename[title]' => $title]));
-        self::assertResponseRedirects('/studio/bibliotheque/'.$id, 303);
+        self::assertResponseRedirects('/studio', 303);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('h1', $title);
-        self::assertSelectorNotExists('h1 script');
+        self::assertSelectorTextContains('.workspace-card h2', $title);
+        self::assertSelectorNotExists('.workspace-card h2 script');
         $this->client->request('POST', '/studio/bibliotheque/'.$id.'/supprimer');
         self::assertResponseStatusCodeSame(403);
         $crawler = $this->client->request('GET', '/studio/bibliotheque/'.$id.'/supprimer');
         self::assertResponseIsSuccessful();
         self::assertNotNull(static::getContainer()->get(VideoAssetRepository::class)->find($id));
         $this->client->submit($crawler->selectButton('Supprimer définitivement')->form());
-        self::assertResponseRedirects('/studio/bibliotheque', 303);
+        self::assertResponseRedirects('/studio', 303);
         self::assertNull(static::getContainer()->get(VideoAssetRepository::class)->find($id));
         self::assertFileDoesNotExist(static::getContainer()->get(PrivateVideoStorage::class)->path($name));
         $this->client->request('GET', '/studio/bibliotheque/'.$id.'/lecture');
@@ -266,9 +270,13 @@ final class VideoLibraryTest extends WebTestCase
         }
         $em->flush();
         $this->client->request('GET', '/studio/bibliotheque');
-        self::assertSelectorCount(12, '.video-card');
+        self::assertResponseRedirects('/studio');
+        $this->client->followRedirect();
+        self::assertSelectorCount(12, '.workspace-card');
         $this->client->request('GET', '/studio/bibliotheque?page=2');
-        self::assertSelectorCount(1, '.video-card');
+        self::assertResponseRedirects('/studio?page=2');
+        $this->client->followRedirect();
+        self::assertSelectorCount(1, '.workspace-card');
         for ($i = 0; $i < 11; ++$i) {
             $this->client->request('POST', '/studio/bibliotheque/importer', ['video_upload' => ['title' => 'invalid']]);
             self::assertResponseStatusCodeSame(10 === $i ? 429 : 422);
@@ -284,7 +292,7 @@ final class VideoLibraryTest extends WebTestCase
         self::assertResponseStatusCodeSame(201);
         $data = json_decode($this->client->getResponse()->getContent(), true, 8, JSON_THROW_ON_ERROR);
         self::assertSame(['redirect'], array_keys($data));
-        self::assertMatchesRegularExpression('#^/studio/bibliotheque/\d+$#D', $data['redirect']);
+        self::assertSame('/studio', $data['redirect']);
         $this->client->request('GET', $data['redirect']);
         self::assertResponseIsSuccessful();
     }
@@ -343,7 +351,7 @@ final class VideoLibraryTest extends WebTestCase
         $this->client->request('POST', '/studio/bibliotheque/supprimer-selection', $values);
         self::assertResponseStatusCodeSame(403);
         $this->client->submit($form);
-        self::assertResponseRedirects('/studio/bibliotheque', 303);
+        self::assertResponseRedirects('/studio', 303);
         foreach ($paths as $path) {
             self::assertFileDoesNotExist($path);
         }

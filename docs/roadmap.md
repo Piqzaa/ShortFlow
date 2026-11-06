@@ -1,5 +1,8 @@
 # VydFlow — feuille de route active jusqu'au déploiement
 
+6 novembre 2026, retour suivant R7.2 : **une seule vue de liste Vidéos**. Ancienne bibliothèque après suppression remplacée par redirection vers /studio avec recherche/page/contexte conservés ; retours directs après suppression simple/groupée, renommage et import simple. Imports montage/publication explicites conservés. Le décalage de cartes de l’ancienne grille n’est plus exposé. **19 fonctionnels bibliothèque / 241 assertions**, style deux PHP/PHPStan contrôleur/Twig ciblés verts ; deux largeurs navigateur sans débordement, alignement premier rang desktop vérifié. Cache dev actualisé, ancienne route avec recherche/page et quatre GET200 contrôlés en lecture seule, 27 compteurs égaux/zéro HTTP fournisseur. Aucun JS/CSS/build/worker redémarré, média propriétaire supprimé, génération/coût/migration/publication/push/déploiement. Voir docs/r72-retours-utilisateurs-20261106.md.
+
+
 6 novembre 2026, retour suivant R7.2 : bloc « Reprendre un montage » jugé encombrant par le propriétaire. Remplacé par une ligne « Mes montages » repliée ; à l’ouverture, les titres génériques sont distingués par date/heure, sans renommer les projets. Remplace la liste visible des trois derniers montages annoncée ci-dessous. Vérification ciblée sauvegarde/réouverture 1 / 11 et Twig verts, caches test/dev actualisés ; aucun changement JS/CSS, build, worker redémarré, contenu propriétaire modifié, appel fournisseur, coût, publication, push ou déploiement. Voir docs/r72-retours-utilisateurs-20261106.md.
 
 
