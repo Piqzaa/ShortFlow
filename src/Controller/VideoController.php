@@ -40,8 +40,10 @@ final class VideoController extends AbstractController
     }
 
     #[Route('/importer', name: 'app_video_upload', methods: ['GET', 'POST'])]
-    public function upload(Request $request, #[CurrentUser] User $user, #[Autowire(service: 'limiter.video_upload')] RateLimiterFactory $limiter, \App\Service\VideoEdits $edits): Response
+    public function upload(Request $request, #[CurrentUser] User $user, #[Autowire(service: 'limiter.video_upload')] RateLimiterFactory $limiter, \App\Service\VideoEdits $edits, \App\Service\VideoSeriesStudio $videoSeries): Response
     {
+        $seriesContext = 'series' === $request->query->getString('next');
+        $series = $seriesContext && $request->query->has('series') ? ($videoSeries->owned($request->query->getInt('series'), $user) ?? throw $this->createNotFoundException()) : null;
         $editing = $request->query->has('montage') ? ($edits->owned($request->query->getInt('montage'), $user) ?? throw $this->createNotFoundException()) : null;
         if ($editing && ($editing->isActive() || 'ready' === $editing->getStatus())) {
             return $this->redirectToRoute('app_edit_show', ['id' => $editing->getId()], 303);
@@ -74,7 +76,17 @@ final class VideoController extends AbstractController
                     $redirect = $this->generateUrl('app_edit_show', ['id' => $editing->getId()]);
                 }
                 if ($request->isXmlHttpRequest()) {
-                    return new JsonResponse(['redirect' => $redirect], 201, ['Cache-Control' => 'no-store, private']);
+                    $result = ['redirect' => $redirect];
+                    if ($seriesContext) {
+                        $result['redirect'] = $this->generateUrl($series ? 'app_video_series_edit' : 'app_video_series_new', array_filter(['id' => $series?->getId(), 'video' => $video->getId()]));
+                        $result['video'] = ['id' => $video->getId(), 'title' => $video->getTitle()];
+                    }
+
+                    return new JsonResponse($result, 201, ['Cache-Control' => 'no-store, private']);
+                }
+
+                if ($seriesContext) {
+                    return $this->redirectToRoute($series ? 'app_video_series_edit' : 'app_video_series_new', array_filter(['id' => $series?->getId(), 'video' => $video->getId()]), 303);
                 }
 
                 return $this->redirect($redirect, 303);

@@ -1,0 +1,10 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Créer une série — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ path('app_series') }}">← Mes séries</a>
+<div class="workspace-heading"><div><span class="eyebrow">À TON RYTHME</span><h1>Crée ta série.</h1><p>Comment veux-tu préparer tes épisodes ?</p></div></div>
+<div class="series-start-choices">
+<a class="series-start-choice" href="{{ path('app_series_new') }}"><span aria-hidden="true">✦</span><h2>Générer avec l’IA</h2><p>Décris ton univers, choisis tes personnages et prépare les vidéos de tes épisodes.</p><small>Le prix est présenté avant chaque génération.</small><strong>Préparer mes épisodes IA →</strong></a>
+<a class="series-start-choice" href="{{ path('app_video_series_new') }}"><span aria-hidden="true">▤</span><h2>Utiliser mes vidéos</h2><p>Choisis des vidéos de ta bibliothèque ou importe-les, puis organise leur ordre.</p><small>Une vidéo = un épisode.</small><strong>Choisir mes vidéos →</strong></a>
+</div>
+{% endblock %}

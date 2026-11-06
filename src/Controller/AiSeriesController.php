@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\AiEpisode;
-use App\Entity\AiSeries;
 use App\Entity\User;
 use App\Form\AiEpisodeBatchType;
 use App\Form\AiEpisodeType;
@@ -52,16 +51,9 @@ final class AiSeriesController extends AbstractController
     }
 
     #[Route('/studio/series', name: 'app_series', methods: ['GET'])]
-    public function index(Request $request, #[CurrentUser] User $user, EntityManagerInterface $em, \App\Service\EpisodeCovers $covers): Response
+    public function index(Request $request, #[CurrentUser] User $user, \App\Service\SeriesLibrary $library): Response
     {
-        $page = max(1, $request->query->getInt('page', 1));
-        $repository = $em->getRepository(AiSeries::class);
-        $pages = max(1, (int) ceil($repository->count(['owner' => $user]) / 12));
-        $page = min($page, $pages);
-
-        $seriesList = $repository->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 12, ($page - 1) * 12);
-
-        return $this->render('series/index.html.twig', ['covers' => $covers->series($user, $seriesList), 'seriesList' => $seriesList, 'page' => $page, 'pages' => $pages, 'models' => AiCatalog::viewModels()], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/index.html.twig', $library->page($user, $request->query->getInt('page', 1)) + ['models' => AiCatalog::viewModels()], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/nouvelle', name: 'app_series_new', methods: ['GET', 'POST'])]

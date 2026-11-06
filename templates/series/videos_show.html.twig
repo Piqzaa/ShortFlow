@@ -1,0 +1,7 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}{{ series.name }} — Mes séries{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ path('app_series') }}">← Mes séries</a>
+<div class="workspace-heading"><div><span class="eyebrow">AVEC TES VIDÉOS</span><h1>{{ series.name }}</h1><p>{{ episodes|length }} épisode{{ episodes|length > 1 ? 's' : '' }} · Dans l’ordre de ta série.</p></div><a class="button" href="{{ path('app_video_series_edit',{id:series.id}) }}">Ajouter ou organiser les épisodes</a></div>
+<div class="series-episodes" data-controller="video-thumbnails">{% for episode in episodes %}<section class="series-episode series-video-episode">{% include 'ai/_cover.html.twig' with {videoId:episode.video.id} %}<div><span class="eyebrow">ÉPISODE {{ loop.index }}</span><h2>{{ episode.video.title }}</h2><p class="library-note">{{ episode.video.duration|number_format(1,',') }} s</p><div class="series-actions"><a class="account-secondary" href="{{ path('app_video_show',{id:episode.video.id}) }}">Voir la vidéo ↗</a><a class="account-secondary" href="{{ path('app_composer_start',{videos:[episode.video.id]}) }}">Préparer la publication →</a></div></div></section>{% else %}<p class="library-note">Les vidéos de cette série ne sont plus dans ta bibliothèque. Ajoute de nouveaux épisodes pour continuer.</p>{% endfor %}</div>
+{% endblock %}

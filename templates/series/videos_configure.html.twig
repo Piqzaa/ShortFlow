@@ -1,0 +1,30 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}{{ series ? 'Organiser les épisodes' : 'Série avec mes vidéos' }} — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ series ? path('app_video_series_show',{id:series.id}) : path('app_series_choose') }}">← {{ series ? 'Ma série' : 'Choisir mon point de départ' }}</a>
+<div class="workspace-heading"><div><span class="eyebrow">TES VIDÉOS, UNE SÉRIE</span><h1>{{ series ? 'Organise tes épisodes.' : 'Crée ta série avec tes vidéos.' }}</h1><p>Une vidéo par épisode. Choisis les vidéos, puis leur ordre.</p></div></div>
+<div class="series-config" data-controller="series-videos" data-action="change->series-videos#selection">
+{{ form_start(seriesForm,{attr:{class:'account-form','data-series-videos-target':'form','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}
+{{ form_errors(seriesForm) }}{{ form_row(seriesForm.name) }}
+<section class="series-config-section"><h2>Choisis tes vidéos</h2>
+<p><a class="account-secondary" href="#series-video-import" data-action="series-videos#openImport">Importer une vidéo depuis mon appareil +</a></p>
+<label for="series-video-search">Trouver une vidéo</label><input type="search" id="series-video-search" placeholder="Rechercher par nom…" data-series-videos-target="search" data-action="input->series-videos#search keydown.enter->series-videos#preventSubmit">
+{{ form_errors(seriesForm.videos) }}
+<div class="series-video-choices" data-series-videos-target="choices">{% for field in seriesForm.videos %}<label data-series-video-choice>{{ form_widget(field) }}<span>{{ field.vars.label|split(' · #')|first }}</span></label>{% endfor %}</div>
+{% do seriesForm.videos.setRendered() %}
+<p class="library-note" data-series-videos-target="empty"{% if seriesForm.videos|length %} hidden{% endif %}>Aucune vidéo dans ta bibliothèque. Importe ta première vidéo ci-dessous.</p>
+<p class="library-note" data-series-videos-target="noResults" hidden>Aucune vidéo ne correspond à ta recherche.</p>
+</section>
+<section class="series-config-section"><h2>L’ordre des épisodes</h2><p class="library-note">Utilise Monter et Descendre pour organiser ta série. Retirer un épisode conserve sa vidéo dans ta bibliothèque.</p>
+<ol class="series-video-order" data-series-videos-target="list"></ol><p class="library-note" data-series-videos-target="prompt">Coche tes vidéos pour préparer les épisodes.</p>
+{{ form_widget(seriesForm.order,{attr:{'data-series-videos-target':'order'}}) }}{{ form_errors(seriesForm.order) }}</section>
+<button class="button" type="submit">{{ series ? 'Enregistrer les épisodes' : 'Créer ma série →' }}</button>
+{{ form_end(seriesForm) }}
+<details id="series-video-import" class="creation-details series-video-import" data-series-videos-target="uploadPanel"{% if not seriesForm.videos|length %} open{% endif %}><summary>Importer une vidéo depuis mon appareil +</summary>
+<p class="library-note">MP4 ou WebM · 100 Mo maximum · 3 minutes maximum. La vidéo sera ajoutée à ta bibliothèque et à ta sélection.</p>
+{{ form_start(uploadForm,{attr:{class:'account-form','data-action':'submit->series-videos#import','data-series-videos-target':'upload'}}) }}
+{{ form_errors(uploadForm) }}{{ form_row(uploadForm.file) }}{{ form_row(uploadForm.title) }}<button class="account-secondary" type="submit" data-series-videos-target="uploadButton">Importer et sélectionner</button>{{ form_end(uploadForm) }}
+<p class="library-note" role="status" aria-live="polite" data-series-videos-target="status"></p>
+</details>
+</div>
+{% endblock %}

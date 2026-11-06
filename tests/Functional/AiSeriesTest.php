@@ -364,7 +364,7 @@ final class AiSeriesTest extends WebTestCase
     public function testCreatesThreeDurablePrivateEpisodesWithoutGenerationOrMessages(): void
     {
         $this->client->request('GET', '/studio/series');
-        self::assertSelectorTextContains('h2', 'Pose le décor');
+        self::assertSelectorTextContains('h2', 'Donne une suite à tes vidéos');
         $series = $this->createSeries();
         $episodes = $this->episodes($series);
         self::assertCount(3, $episodes);
