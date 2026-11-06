@@ -17,6 +17,8 @@ Le 6 novembre 2026, le propriétaire transmet les retours de sa compagne après 
 
 ## Correctifs locaux de ce lot
 
+Retour suivant du propriétaire, après capture : le bloc « Reprendre un montage » prend trop de place et les noms « Mon montage » répétés n’aident pas. **La liste visible des trois projets décrite ci-dessous est remplacée par une seule ligne « Mes montages » repliée par défaut.** À l’ouverture, les titres génériques sont affichés avec la date/heure de dernière modification ; aucun titre enregistré ni contenu du projet n’est changé. Test ciblé de sauvegarde/réouverture 1 / 11 et lint Twig verts, caches test/dev actualisés. Aucun build frontend ou redémarrage worker nécessaire pour cette finition Twig.
+
 Lecture seule du poste : plusieurs projets ont effectivement leurs cinq sous-titres persistés, dont un brouillon à taille 5 et un export à taille 4. Cela ne prouve pas ce qui s’est passé à chaque clic du propriétaire. Aucun projet réel n’a été modifié. Le point de reprise était replié et « Éditer » une vidéo source ouvre un nouveau montage : la confusion projet/source/export explique plausiblement le ressenti, sans conclure à une perte réelle ni prétendre avoir reproduit l’incident exact.
 
 - Les trois derniers projets sont visibles dans « Reprendre un montage » ; les suivants restent repliés pour éviter une longue liste. Le retour d’enregistrement précise qu’un export crée la vidéo finale.

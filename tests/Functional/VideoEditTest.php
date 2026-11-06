@@ -446,7 +446,7 @@ final class VideoEditTest extends WebTestCase
         $this->client->request('POST', '/studio/montage/'.$id, $values, [], ['HTTP_ACCEPT' => 'application/json']);
         self::assertResponseIsSuccessful();
         $this->client->request('GET', '/studio');
-        self::assertSelectorExists('.edit-projects > a[href="/studio/montage/'.$id.'"]');
+        self::assertSelectorExists('details.edit-projects:not([open]) > a[href="/studio/montage/'.$id.'"]');
         $crawler = $this->client->request('GET', '/studio/montage/'.$id);
         self::assertSelectorTextContains('[data-caption-text]', 'Découvre VydFlow.');
         self::assertSame(5.3, (float) $crawler->filter('[name="video_edit[captionSize]"]')->attr('value'));
