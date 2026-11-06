@@ -58,6 +58,27 @@ test('initial proposal notifies autosave and an edited prompt needs explicit rep
   assert.equal(controller.proposalTarget.hidden, true);
 });
 
+test('shot options follow image mode and preserve stored instructions and errors', () => {
+  const {controller,selected}=setup();
+  controller.element.hasAttribute=()=>true;
+  controller.element.dataset={shotOptionsInvalid:'false'};
+  const stored={value:''};
+  controller.row.querySelector=()=>stored;
+  selected.value='text';controller.refresh();
+  assert.equal(controller.element.hidden,true);
+  selected.value='image';controller.refresh();
+  assert.equal(controller.element.hidden,false);
+  selected.value='subject';controller.refresh();
+  assert.equal(controller.element.hidden,true);
+  controller.promptTarget.value='My saved framing instructions';controller.refresh();
+  assert.equal(controller.element.hidden,false);
+  assert.equal(controller.promptTarget.value,'My saved framing instructions');
+  controller.promptTarget.value='';stored.value='saved-frame.jpg';controller.refresh();
+  assert.equal(controller.element.hidden,false);
+  stored.value='';controller.element.dataset.shotOptionsInvalid='true';controller.refresh();
+  assert.equal(controller.element.hidden,false);
+});
+
 test('a changed scene cannot apply a stale image proposal over human instructions', () => {
   const { controller, scene } = setup();
   controller.promptTarget.value = 'Conserver le costume';

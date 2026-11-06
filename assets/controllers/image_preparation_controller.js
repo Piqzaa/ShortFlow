@@ -29,6 +29,10 @@ export default class extends Controller {
 
   refresh() {
     const subject = this.mode === 'subject';
+    if (this.element.hasAttribute?.('data-shot-options')) {
+      const stored = Boolean(this.promptTarget.value.trim() || ['startReference', 'endReference'].some(name => this.row.querySelector(`[name$="[${name}]"]`)?.value) || this.row.querySelector('[name$="[referenceFit]"]')?.value === 'contain');
+      this.element.hidden = this.mode !== 'image' && !stored && this.element.dataset.shotOptionsInvalid !== 'true';
+    }
     this.proposeTarget.disabled = subject || this.linked;
     this.chooseModeTarget.hidden = this.mode !== 'text' || !this.field('[data-creation-target="source"]');
     this.noticeTarget.textContent = subject ? 'Le mode personnage utilise des références d’identité communes, sans image de début propre à chaque plan. Prépare-les dans « Personnages et objets de référence ».'

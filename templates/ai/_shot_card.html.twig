@@ -1,7 +1,6 @@
 <section class="story-shot shot-card" data-shot-editor-row data-action="input->shot-editor#update change->shot-editor#update">
   <header class="shot-card-heading"><h3 data-shot-heading>Plan {{ shotNumber|default('') }}</h3><div class="shot-card-duration">{{ form_row(shotForm.seconds) }}</div></header>
   {{ form_errors(shotForm) }}
-  <div data-character-scene{% if not shotForm.characterIds.vars.choices|length or (ideaForm is defined and ideaForm.source.vars.value != 'subject') or (ideaForm is not defined and not model.subjectReference|default(false)) %} hidden{% endif %}>{% include 'ai/_character_choices.html.twig' with {field:shotForm.characterIds} %}</div>{{ form_widget(shotForm.characterIdsManaged) }}
   {{ form_widget(shotForm.translatedIdentity) }}{{ form_errors(shotForm.translatedIdentity) }}
   {{ form_widget(shotForm.translationSource) }}{{ form_errors(shotForm.translationSource) }}
   {{ form_widget(shotForm.promptOnly) }}{{ form_errors(shotForm.promptOnly) }}
@@ -12,7 +11,8 @@
     {% set promptAttrs = {'data-shot-prompt':'',placeholder:englishPrompt ? 'Décris en anglais l’action et le mouvement de caméra…' : 'Décris l’action et le mouvement de caméra…'} %}
     {% if singlePrepared|default(false) and shotNumber|default(0) == 1 %}{% set promptAttrs = promptAttrs|merge({autofocus:true}) %}{% endif %}
     {{ form_row(shotForm.prompt,{label:englishPrompt ? 'Décris ton plan en anglais' : 'Décris ton plan',attr:promptAttrs}) }}
-    <p class="library-note" data-shot-language-help>{{ englishPrompt ? 'Ce modèle documente des consignes visuelles en anglais. Garde les dialogues et textes souhaités dans leur langue.' : 'Décris l’action et le mouvement de caméra. Garde les dialogues et textes souhaités dans leur langue.' }}</p>
+    <details class="shot-prompt-help"><summary>Aide à la rédaction</summary><p class="library-note" data-shot-language-help>{{ englishPrompt ? 'Ce modèle documente des consignes visuelles en anglais. Garde les dialogues et textes souhaités dans leur langue.' : 'Décris l’action et le mouvement de caméra. Garde les dialogues et textes souhaités dans leur langue.' }}</p></details>
+    <div data-character-scene{% if not shotForm.characterIds.vars.choices|length or (ideaForm is defined and ideaForm.source.vars.value != 'subject') or (ideaForm is not defined and not model.subjectReference|default(false)) %} hidden{% endif %}>{% include 'ai/_character_choices.html.twig' with {field:shotForm.characterIds} %}</div>{{ form_widget(shotForm.characterIdsManaged) }}
     {% include 'ai/_shot_references.html.twig' %}
     <div class="story-row-actions">
       <button type="submit" class="account-secondary" name="plan_action" value="up:{{ shotIndex|default(0) }}" data-action="shot-editor#act">Monter</button>
