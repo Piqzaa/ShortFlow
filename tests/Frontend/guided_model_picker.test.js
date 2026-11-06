@@ -4,11 +4,11 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {GuidedModelPicker} from '../../assets/guided-model-picker.js';
 
-test('selected model explains audio and French limits without changing the chosen model', () => {
+test('selected model only shows concrete limitations and no generic audio disclaimer', () => {
   const Picker=GuidedModelPicker(class {});
   const c=new Picker();
   const note={};
-  c.element={querySelector:()=>note};
+  c.element={querySelector:selector=>selector==='[data-selected-model-speech]'?note:null};
   c.hasRecommendationsTarget=true;
   c.recommendationsTarget={}; c.recommendationTargets=[];
   c.selectedModelTarget={};
@@ -20,11 +20,10 @@ test('selected model explains audio and French limits without changing the chose
   };
   c.modelTarget={value:'kling-o3-subject'};
   c.updateRecommendations();
-  assert.match(note.textContent,/Français déconseillé/);
+  assert.equal(note.textContent,'');
+  assert.equal(note.hidden,true);
   assert.equal(c.modelTarget.value,'kling-o3-subject');
   c.modelTarget.value='veo-31-subject-720p'; c.updateRecommendations();
-  assert.match(note.textContent,/Dialogues et sons natifs/);
-  assert.match(note.textContent,/non validés/);
   assert.match(note.textContent,/17\/11\/2026/);
   c.modelTarget.value='vidu-q1-subject'; c.updateRecommendations();
   assert.match(note.textContent,/Sans audio/);
@@ -51,6 +50,16 @@ function picker(name) {
 }
 
 for(const name of ['creation','series_settings']) {
+  test(`${name}: visible resolution control preserves the family and refuses incompatible models`,()=>{
+    const c=picker(name);
+    c.changeRecommendationResolution({currentTarget:{value:'a'}});
+    assert.equal(c.modelTarget.value,'a');
+    assert.equal(c.modelTarget.lastEvent,'change');
+    c.changeRecommendationResolution({currentTarget:{value:'a1080'}});
+    assert.equal(c.modelTarget.value,'a1080');
+    c.changeRecommendationResolution({currentTarget:{value:'b'}});
+    assert.equal(c.modelTarget.value,'a1080');
+  });
   test(`${name}: picker keeps exact saved configuration and searches without changing it`,()=>{
     const c=picker(name);
     c.refreshPickerAvailability();

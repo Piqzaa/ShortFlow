@@ -254,7 +254,11 @@ final class AiCharactersTest extends WebTestCase
         foreach (['text', 'image', 'subject', 'frames'] as $source) {
             $ids = $crawler->filter('.creation-recommendations button')->each(static fn ($button): string => $button->attr('data-'.$source.'-model'));
             self::assertCount(3, array_unique($ids));
-            self::assertStringStartsWith('gemini-omni-12-', $ids[0]);
+            self::assertFalse($catalog->model($ids[0])['audio']);
+            self::assertSame('720p', $catalog->model($ids[1])['quality']);
+            self::assertTrue($catalog->model($ids[1])['audio']);
+            self::assertSame('1080p', $catalog->model($ids[2])['quality']);
+            self::assertTrue($catalog->model($ids[2])['audio']);
             foreach ($ids as $id) {
                 $model = $catalog->model($id);
                 self::assertSame('frames' === $source ? 'image' : $source, $catalog->referenceMode($id));

@@ -1,6 +1,4 @@
 {% if not model.audio %}Sans audio : ce modèle ne génère ni voix ni dialogues.
-{% elseif modelId == 'kling-o3-subject' %}Français déconseillé : prononciation peu intelligible lors de notre essai avec Kling O3 Standard. Audio ne signifie pas français maîtrisé.
 {% elseif modelId in ['kling-3','kling-3-image'] %}Voix annoncées en chinois ou anglais. Ce modèle ne convient pas à des dialogues français.
-{% elseif modelId starts with 'veo' %}Dialogues et sons natifs. Français, argot et voix identiques entre les plans non validés dans VydFlow.{% if modelId starts with 'veo-31-subject-' %} Retrait de cet accès Fal annoncé le 17/11/2026.{% endif %}
-{% else %}Audio généré : français et argot non validés dans VydFlow. Les mots exacts, la prononciation et une voix identique entre les plans ne sont pas garantis.
+{% elseif modelId starts with 'veo-31-subject-' %}Retrait de cet accès Fal annoncé le 17/11/2026.
 {% endif %}

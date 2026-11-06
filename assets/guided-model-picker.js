@@ -62,10 +62,34 @@ export function GuidedModelPicker(Base) {
 
   speechCaption(model, id = '') {
     if (!model?.audio) return 'Sans audio : ce modèle ne génère ni voix ni dialogues.';
-    if (id === 'kling-o3-subject') return 'Français déconseillé : prononciation peu intelligible lors de notre essai avec Kling O3 Standard. Audio ne signifie pas français maîtrisé.';
     if (id === 'kling-3' || id === 'kling-3-image') return 'Voix annoncées en chinois ou anglais. Ce modèle ne convient pas à des dialogues français.';
-    if (id.startsWith('veo')) return `Dialogues et sons natifs. Français, argot et voix identiques entre les plans non validés dans VydFlow.${id.startsWith('veo-31-subject-') ? ' Retrait de cet accès Fal annoncé le 17/11/2026.' : ''}`;
-    return 'Audio généré : français et argot non validés dans VydFlow. Les mots exacts, la prononciation et une voix identique entre les plans ne sont pas garantis.';
+    if (id.startsWith('veo-31-subject-')) return 'Retrait de cet accès Fal annoncé le 17/11/2026.';
+    return '';
+  }
+
+  changeRecommendationResolution(event) {
+    const id = event.currentTarget.value;
+    const card = (this.cardTargets || []).find(card => this.variantIds(card).includes(this.modelTarget.value));
+    if (!card || !this.pickerVariants(card).includes(id)) return;
+    this.modelTarget.value = id;
+    this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+
+  updateRecommendationResolution() {
+    const panel = this.element?.querySelector('[data-recommendation-resolution]');
+    if (!panel) return;
+    const card = (this.cardTargets || []).find(card => this.variantIds(card).includes(this.modelTarget.value));
+    const ids = card ? this.pickerVariants(card) : [];
+    panel.hidden = !ids.length;
+    const select = panel.querySelector('select');
+    select.replaceChildren(...ids.map(id => {
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = this.modelsValue[id].quality === '4k' ? '4K · 2160p' : this.modelsValue[id].quality;
+      return option;
+    }));
+    select.value = this.modelTarget.value;
+    select.disabled = ids.length < 2;
   }
 
   updateRecommendations() {
@@ -94,7 +118,8 @@ export function GuidedModelPicker(Base) {
     const quality = selected?.quality === '4k' ? '4K' : selected?.quality;
     this.selectedModelTarget.textContent = selected ? `Sélection : ${selected.name}${selected.name.toLowerCase().includes(quality.toLowerCase()) ? '' : ` · ${quality}`}` : '';
     const speech = this.element?.querySelector('[data-selected-model-speech]');
-    if (speech) { speech.hidden = !selected; speech.textContent = selected ? this.speechCaption(selected, this.modelTarget.value) : ''; }
+    if (speech) { speech.textContent = selected ? this.speechCaption(selected, this.modelTarget.value) : ''; speech.hidden = !speech.textContent; }
+    this.updateRecommendationResolution();
   }
 
   syncPicker() {

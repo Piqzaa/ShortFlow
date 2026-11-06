@@ -1,5 +1,17 @@
 # Studio : modèles, langue et résultat — 6 novembre 2026
 
+## Révision après retour du propriétaire
+
+Le premier ensemble de 45 fichiers est conservé dans le commit `409c2c2`. Cette révision remplace les recommandations et le message générique décrits plus bas ; les tarifs et contrats fournisseurs restent inchangés.
+
+Les trois choix sont désormais « Sans voix · 1080p » (Vidu), « Audio · prix réduit » (Grok texte/image, LTX début-fin, Omni Référence 720p), « Audio · 1080p » (Omni). « Prix réduit » compare explicitement au choix audio 1080p proposé, pas à tout le catalogue. Les durées des exemples restent affichées, notamment 4 s Vidu début-fin et 6 s LTX. Aucune promesse de qualité artistique supérieure n’est tirée de la résolution.
+
+Un sélecteur « Résolution de ta vidéo » apparaît directement sous les recommandations après sélection : il expose uniquement les variantes compatibles de la famille retenue, conserve la sélection exacte et passe par les contrôles/prix habituels. Vidu à résolution unique affiche son 1080p sans proposer une variante fictive. Le catalogue avancé conserve ses résolutions.
+
+Sur demande explicite du propriétaire, le message générique « Audio généré : français et argot non validés… » est retiré des cartes, du modèle sélectionné et du récapitulatif. L’avertissement interne basé sur l’ancien essai Kling O3 est retiré aussi. Seules les informations concrètes sans audio, langue chinoise/anglaise documentée Kling 3 et retrait de l’accès Fal Veo concerné restent affichées. Cela ne constitue pas une validation du français par un essai réel.
+
+Contrôle ciblé : un test fonctionnel, 80 assertions ; 37 Twig et cache dev verts. 202 tests frontend, check et build verts. Seize états navigateur (quatre points de départ × quatre largeurs) : modèles exacts, coûts visibles, sélecteur accessible, aller-retour 1080p/720p, message générique masqué, aucun débordement ni erreur JS. Capture mobile relue. Les deux nouveaux tests unitaires de résolution refusent aussi une variante d’une autre famille. Aucun worker n’a besoin d’être actualisé pour ces changements d’interface. Aucun appel fournisseur ni coût.
+
 ## Périmètre livré localement
 
 Six configurations Gemini Omni 1.2 Flash chez Fal : texte, image et référence de personnage, chacune en 720p/1080p. Trois schémas publics sont conservés dans `tests/Fixtures/gemini-omni-12-contracts.json`. Les anciens identifiants restent disponibles ; aucun ancien modèle n’est redirigé vers Omni.
