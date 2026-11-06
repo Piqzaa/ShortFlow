@@ -1,0 +1,23 @@
+{
+    "ownerId": 1,
+    "ownerName": "",
+    "characterId": 2,
+    "name": "Vyd — présentateur",
+    "description": "Présentateur fictif adulte de 25–30 ans, rendu 3D semi-réaliste. Peau olive claire, yeux marron, cheveux noirs courts légèrement ondulés avec une petite mèche violette à l’avant, sourcils épais, visage rasé et sourire discret. Hoodie anthracite avec intérieur de capuche violet, sans logo ni accessoire. Face caméra, posture détendue, bureau sombre flouté et éclairage violet doux. Conserver ce visage, cette mèche, ces proportions et cette tenue dans les plans. Personnage destiné à une courte introduction VydFlow, avant une capture de l’interface commentée par le propriétaire.",
+    "revision": 1,
+    "views": [],
+    "sourceSha256": "740e7e53760cc3b8fa1c24704f9ec165ace13d7824cf1fefb5ab571336f06186",
+    "portrait": "0fd4d421b6996c62d6f76f3c573c0ac6b48728d834666df2.jpg",
+    "portraitSha256": "ceefd2b5de6c885a1418e622b198344c8b762f163a0e6477693de72f62fec027",
+    "portraitSize": [
+        941,
+        1672
+    ],
+    "portraitBytes": 139141,
+    "changedTables": {
+        "ai_character": 1
+    },
+    "tableCount": 27,
+    "providerHTTP": 0,
+    "videoGenerated": false
+}
