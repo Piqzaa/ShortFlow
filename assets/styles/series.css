@@ -22,3 +22,8 @@
 .series-pagination{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0 24px}.series-pagination>span{font-size:13px;color:var(--workspace-muted)}.series-pagination .account-secondary{display:inline-flex;align-items:center;min-height:44px}.series-occurrence-history{max-width:950px;padding:18px;margin:24px 0;border:1px solid var(--workspace-border);border-radius:12px;background:var(--workspace-panel)}.series-occurrence-history summary{cursor:pointer;min-height:44px;align-content:center;color:var(--workspace-accent)}.series-occurrence-history ul{list-style:none;margin:12px 0;padding:0}.series-occurrence-history li{padding:14px 0;border-top:1px solid var(--workspace-border);font-size:14px;line-height:1.7;overflow-wrap:anywhere}.series-occurrence-history li p{font-size:13px;color:var(--workspace-muted)}.series-occurrence-history li a{display:flex;width:fit-content;min-height:44px;align-items:center}.legacy-episode-correction{margin-top:20px}
 
 [data-controller~="subject-list"]:not(.subject-list-enhanced) button[type="button"]{display:none}
+.series-config [data-series-settings-target="images"][hidden]{display:none}
+.series-config [data-series-context]{margin-top:18px}
+.series-config .creation-details>summary{min-height:44px;align-content:center}
+.series-config .creation-details[open]>summary{margin-bottom:18px}
+.series-config [data-series-settings-target="images"]{margin-top:22px}

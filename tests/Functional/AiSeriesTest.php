@@ -110,6 +110,23 @@ final class AiSeriesTest extends WebTestCase
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
+    public function testSimplifiedCreationKeepsContextAndReopensItsErrorsWithoutGenerating(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/series/nouvelle');
+        self::assertSame(['concept', 'source', 'video', 'episodes'], $crawler->filter('[data-series-section]')->each(static fn (Crawler $section): string => $section->attr('data-series-section')));
+        self::assertSelectorNotExists('[data-series-context][open]');
+        self::assertSelectorExists('[data-series-section="source"] [data-character-pool]');
+        self::assertSelectorExists('[data-series-section="source"] input[name="ai_series[image]"]');
+        self::assertSelectorExists('[data-series-section="episodes"] input[name="ai_series[episodeCount]"]');
+        $values = $crawler->selectButton('Créer ma série →')->form(['ai_series[name]' => 'Ma série', 'ai_series[theme]' => 'Mon idée', 'ai_series[style]' => str_repeat('s', 301), 'ai_series[characters]' => 'Milo, mon personnage.'])->getPhpValues();
+        $this->client->request('POST', '/studio/series/nouvelle', $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('[data-series-context][open]');
+        self::assertSelectorTextContains('textarea[name="ai_series[characters]"]', 'Milo, mon personnage.');
+        self::assertSame(0, $this->em()->getRepository(AiSeries::class)->count([]));
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+    }
+
     public function testSeriesPickerKeepsCatalogAudioPricesAndTheExactSavedResolution(): void
     {
         $series = $this->createSeries(['ai_series[episodeCount]' => 1, 'ai_series[model]' => 'gemini-omni-12-text-720p', 'ai_series[seconds]' => 5, 'ai_series[totalSeconds]' => 10, 'ai_series[ratio]' => '9:16']);

@@ -16,7 +16,7 @@ export default class extends GuidedModelPicker(Controller) {
         }
         this.setupPicker();
         this.update(false);
-        if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = this.modelDetailsTarget.dataset.pickerInvalid === 'true' || !this.recommendationTargets.some(button => button.dataset.modelId === this.modelTarget.value);
+        if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = this.modelDetailsTarget.dataset.pickerInvalid === 'true' || Boolean(this.modelDetailsTarget.dataset.pickerExisting === 'true' && this.modelTarget.value && !this.recommendationTargets.some(button => button.dataset.modelId === this.modelTarget.value));
     }
     change() { this.update(true); }
     modelMode(model) { return model?.subject || model?.subjectReference ? 'subject' : model?.image ? 'image' : 'text'; }
@@ -26,6 +26,7 @@ export default class extends GuidedModelPicker(Controller) {
         if (!this.modelsValue[id]) return;
         this.modelTarget.value = id;
         this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
+        if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = false;
         this.ratioTarget.focus();
     }
     accessChanged() {
@@ -61,10 +62,16 @@ export default class extends GuidedModelPicker(Controller) {
         this.updateRecommendations();
         if (this.hasBillingTarget) this.billingTarget.textContent = this.connectionCaption();
         const model = this.modelsValue[this.modelTarget.value];
+        const mode = this.sourceMode();
         if (this.hasImagesTarget) {
-            this.imagesTarget.hidden = false;
+            const stored = this.imagesTarget.querySelector('[data-series-reference-original-value]:not([data-series-reference-original-value=""])');
+            const entered = [...this.imagesTarget.querySelectorAll('input')].some(input => input.type === 'file' ? input.files?.length : input.type === 'text' ? input.value : input.name?.includes('[subjects]') && input.value);
+            const invalid = this.imagesTarget.dataset.referenceInvalid === 'true';
+            this.imagesTarget.hidden = mode === 'text' && !stored && !entered && !invalid;
             for (const input of this.imagesTarget.querySelectorAll('input[type="file"][name]')) input.disabled = input.name?.endsWith('[subjectImages][]') || input.name?.endsWith('[subjectImages]') ? !(model?.subjectLimit > 0) : !model?.image || (input.name?.endsWith('[endImage]') && !model.end && !model.requiresEnd);
         }
+        if (this.hasEndPanelTarget) this.endPanelTarget.hidden = mode === 'subject';
+        if (this.hasFitPanelTarget) this.fitPanelTarget.hidden = mode === 'subject';
         if (!model) { this.hintTarget.textContent = 'Choisis explicitement un modèle compatible ci-dessus. Aucun fournisseur ni tarif n’est sélectionné automatiquement.'; return; }
         if (this.hasAccessTarget) {
             for (const option of this.accessTarget.options) option.disabled = option.value === 'mcp' && model.provider !== 'fal';

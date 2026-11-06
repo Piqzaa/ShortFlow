@@ -58,9 +58,9 @@ export default class extends Controller {
     }
     const refresh = this.element.querySelector('[data-character-refresh]'); if (refresh) refresh.hidden = false;
     // Keep older isolated imports recoverable; new subject preparations use saved fiches.
-    const legacy = Boolean(this.element.querySelector('[name$="[reference]"]')?.value || this.element.querySelector('[name$="[image]"]')?.files?.length || [...this.element.querySelectorAll('[name*="[subjects]"]')].some(input => input.value));
+    const legacy = Boolean(this.element.querySelector('[name$="[reference]"]')?.value || this.element.querySelector('[name$="[image]"]')?.files?.length || this.element.querySelector('[data-series-reference-original-value]:not([data-series-reference-original-value=""])') || [...this.element.querySelectorAll('[name*="[subjects]"]')].some(input => input.value));
     const panel = this.workspace.querySelector('[data-creation-target="referencePanel"], [data-series-settings-target="images"]');
-    if (panel && source === 'subject') panel.hidden = origin ? origin.value !== 'upload' : !legacy;
+    if (panel && source === 'subject') panel.hidden = panel.dataset.referenceInvalid === 'true' ? false : origin ? origin.value !== 'upload' : !legacy;
     const loose = this.element.querySelector('[data-controller~="subject-list"]');
     if (loose) loose.hidden = (origin ? source !== 'subject' || origin.value !== 'upload' : !legacy) || loose.dataset.subjectListAvailable === 'false';
   }

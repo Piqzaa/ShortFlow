@@ -16,8 +16,19 @@ test('changing a series model only retains supported duration and ratio and expl
     controller.hintTarget = {};
     const imageInput = { disabled: false };
     controller.hasImagesTarget = true;
-    controller.imagesTarget = { hidden: false, querySelectorAll: () => [imageInput] };
+    controller.imagesTarget = { hidden: false, dataset: {}, querySelector: () => null, querySelectorAll: () => [imageInput] };
+    controller.hasModelDetailsTarget = true;
+    controller.modelDetailsTarget = {dataset: {pickerExisting: 'false', pickerInvalid: 'false'}, open: true};
+    controller.recommendationTargets = [];
     controller.connect();
+    assert.equal(controller.modelDetailsTarget.open, false);
+    controller.modelDetailsTarget.dataset.pickerExisting = 'true';
+    controller.connect();
+    assert.equal(controller.modelDetailsTarget.open, true);
+    controller.modelDetailsTarget.dataset.pickerExisting = 'false';
+    controller.modelDetailsTarget.dataset.pickerInvalid = 'true';
+    controller.connect();
+    assert.equal(controller.modelDetailsTarget.open, true);
     assert.equal(controller.secondsTarget.value, '5'); // Preserve an invalid submitted value so the error remains understandable.
     controller.change();
     assert.equal(controller.secondsTarget.value, '6');
@@ -30,8 +41,19 @@ test('changing a series model only retains supported duration and ratio and expl
     assert.equal(controller.secondsTarget.value, '5');
     assert.equal(controller.secondsTarget.options[0].disabled, false);
     assert.match(controller.hintTarget.textContent, /n’utilise pas d’image/);
-    assert.equal(controller.imagesTarget.hidden, false);
+    assert.equal(controller.imagesTarget.hidden, true);
     assert.equal(imageInput.disabled, true);
+    imageInput.type = 'file'; imageInput.files = [{}];
+    controller.change();
+    assert.equal(controller.imagesTarget.hidden, false);
+    imageInput.files = [];
+    controller.imagesTarget.dataset.referenceInvalid = 'true';
+    controller.change();
+    assert.equal(controller.imagesTarget.hidden, false);
+    controller.imagesTarget.dataset.referenceInvalid = 'false';
+    controller.imagesTarget.querySelector = () => ({dataset: {seriesReferenceOriginalValue: '/private/saved.jpg'}});
+    controller.change();
+    assert.equal(controller.imagesTarget.hidden, false);
 });
 
 test('requesting an image reference clears an incompatible text model without silently choosing a paid model', () => {
@@ -58,7 +80,7 @@ test('series exposes the same subject and frame capabilities and refuses unsuppo
     controller.modelsValue = {kling:{image:true,end:true,subjectLimit:2,seconds:[5],ratios:['9:16']},wan:{image:true,seconds:[5],ratios:['9:16']}};
     controller.secondsTarget = {value:'5',options:[{value:'5'}]}; controller.ratioTarget = {value:'9:16',options:[{value:'9:16'}]}; controller.hintTarget = {};
     const subjectUpload = {name:'ai_series[subjectImages][]'}, firstFrame = {name:'ai_series[image]'};
-    controller.hasImagesTarget = true; controller.imagesTarget = {querySelectorAll:()=>[subjectUpload,firstFrame]};
+    controller.hasImagesTarget = true; controller.imagesTarget = {dataset:{},querySelector:()=>null,querySelectorAll:()=>[subjectUpload,firstFrame]};
     controller.connect();
     assert.equal(options[0].dataset.subjectLimit, '2');
     assert.equal(options[0].dataset.referenceMode, 'image');
