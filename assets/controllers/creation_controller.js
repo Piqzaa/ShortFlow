@@ -99,7 +99,7 @@ export default class extends GuidedModelPicker(Controller) {
       frame.style.maxWidth = `calc(var(--reference-height, 300px) * ${a / b})`;
       preview.style.objectFit = fit;
     }
-    if (this.hasFramingNoticeTarget) this.framingNoticeTarget.textContent = subject ? 'Référence d’apparence : elle ne fixe ni le début ni la fin du clip.' : ratio === 'auto'
+    if (this.hasFramingNoticeTarget) this.framingNoticeTarget.textContent = subject ? '' : ratio === 'auto'
       ? 'Format d’origine conservé. L’image de fin est ajustée au même cadre.'
       : `${ratio || 'Choisis un format'} · ${fit === 'contain' ? 'image entière, bandes noires si nécessaire' : 'recadrage centré'}. Cet aperçu sera repris au récapitulatif.`;
     if (event?.type === 'change') this.referenceTarget.dispatchEvent(new Event('change', {bubbles:true}));

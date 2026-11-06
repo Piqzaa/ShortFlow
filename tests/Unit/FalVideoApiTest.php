@@ -31,6 +31,7 @@ final class FalVideoApiTest extends TestCase
     {
         $model = AiCatalog::MODELS[$id];
         $contracts = json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/fal-video-contracts.json'), true, 64, JSON_THROW_ON_ERROR);
+        $contracts += json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/gemini-omni-12-contracts.json'), true, 64, JSON_THROW_ON_ERROR);
         $contract = $contracts[$model['endpoint']];
         $owner = new User('synthetic@example.test');
         (new \ReflectionProperty(User::class, 'id'))->setValue($owner, 42);

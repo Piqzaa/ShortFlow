@@ -300,7 +300,7 @@ final class AiEpisodeFlow
             }
             foreach ($rows as $index => $row) {
                 $shot = $shots[$index] ?? new AiShot($episode, $index + 1, $row['seconds']);
-                $shot->revise($row['prompt'], $row['seconds']);
+                $shot->revise($row['prompt'] ?? '', $row['seconds']);
                 if ('1' !== (string) ($row['characterIdsManaged'] ?? '0') && !array_key_exists('characterIds', $row) && array_key_exists('characterIds', $shot->getInputs())) {
                     $row['characterIds'] = $shot->getInputs()['characterIds'];
                 }

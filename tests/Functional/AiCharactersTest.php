@@ -220,6 +220,27 @@ final class AiCharactersTest extends WebTestCase
         $this->snap('reference-origin-upload');
     }
 
+    public function testRecapWithAnEmptyPlanPreservesDraftAndShowsValidationInsteadOf500(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+        $values['intent'] = 'compose';
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'Bendo retrouve son ami.', 'model' => 'gemini-omni-12-text-720p', 'source' => 'text', 'seconds' => '5', 'target' => '10', 'planCount' => '2', 'ratio' => '9:16', 'accessMode' => 'api', 'shots' => [['prompt' => '', 'seconds' => '5', 'promptOnly' => 'manual'], ['prompt' => 'Bendo waves and says: « Salut mon pote. »', 'seconds' => '5', 'promptOnly' => 'manual']]]);
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Complète le prompt de chaque plan');
+        $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner]);
+        $shots = static::getContainer()->get(\App\Service\AiEpisodeFlow::class)->shots($episode);
+        self::assertSame('', $shots[0]->getPrompt());
+        self::assertSame('Bendo waves and says: « Salut mon pote. »', $shots[1]->getPrompt());
+        self::assertSame('draft', $episode->getFlowState());
+        self::assertNull($episode->getGeneration());
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiGeneration::class)->count(['owner' => $this->owner]));
+        $this->snap('empty-plan-recap-validation');
+    }
+
     public function testOmni12CharacterPlansProduceAnUnconfirmedQuoteWithoutGeneration(): void
     {
         $character = $this->create();
@@ -254,13 +275,14 @@ final class AiCharactersTest extends WebTestCase
         foreach (['text', 'image', 'subject', 'frames'] as $source) {
             $ids = $crawler->filter('.creation-recommendations button')->each(static fn ($button): string => $button->attr('data-'.$source.'-model'));
             self::assertCount(3, array_unique($ids));
-            self::assertFalse($catalog->model($ids[0])['audio']);
             self::assertSame('720p', $catalog->model($ids[1])['quality']);
-            self::assertTrue($catalog->model($ids[1])['audio']);
-            self::assertSame('1080p', $catalog->model($ids[2])['quality']);
-            self::assertTrue($catalog->model($ids[2])['audio']);
+            self::assertStringStartsWith('gemini-omni-12-', $ids[1]);
+            self::assertStringStartsWith('seedance-', $ids[2]);
+            self::assertLessThan($catalog->estimate($ids[1], 5), $catalog->estimate($ids[0], $catalog->model($ids[0])['seconds'][0] < 6 ? 5 : 6));
+            self::assertGreaterThan($catalog->estimate($ids[1], 5), $catalog->estimate($ids[2], 5));
             foreach ($ids as $id) {
                 $model = $catalog->model($id);
+                self::assertTrue($model['audio']);
                 self::assertSame('frames' === $source ? 'image' : $source, $catalog->referenceMode($id));
                 self::assertFalse($catalog->priceExpired($model['checked'] ?? \App\Service\AiCatalog::CHECKED), $id);
                 self::assertStringNotContainsString('veo', $id);

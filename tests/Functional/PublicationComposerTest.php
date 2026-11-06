@@ -315,6 +315,7 @@ final class PublicationComposerTest extends WebTestCase
         $crawler = $this->client->request('GET', '/studio');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.workspace-grid', 'Source privée');
+        self::assertSelectorExists('.workspace-grid > .workspace-upload-card:first-child');
         self::assertStringNotContainsString('Invisible', $crawler->html());
         $this->client->request('GET', '/studio/composer', ['date' => '2026-10-20', 'zone' => 'America/Toronto']);
         self::assertResponseStatusCodeSame(303);
