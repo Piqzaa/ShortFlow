@@ -486,7 +486,7 @@ export default class extends Controller {
         if(this.disconnected)return false;
         if(this.hasRevisionTarget)this.revisionTarget.value=String(state.revision);
         this.dirty=(this.changeSerial||0)!==serial;
-        this.noticeTarget.textContent=this.dirty?'Modifications en attente…':'Montage enregistré';
+        this.noticeTarget.textContent=this.dirty?'Modifications en attente…':'Projet enregistré · exporte pour créer la vidéo finale';
         if(state.status==='transcribing'){this.setTranscribing(true);this.pollCaptions();}
         else if(['queued','rendering'].includes(state.status))window.location.assign(this.formTarget.action);
         return true;
@@ -559,7 +559,8 @@ export default class extends Controller {
       if(position>=start && position<end) {text=row.querySelector('[data-caption-text]').value;this.currentCaption=row;break;}
     }
     if(!text)this.currentCaption=null;
-    this.captionTextTarget.textContent=text; this.captionTextTarget.hidden=!text;this.captionTextTarget.classList.toggle('is-transform-selected',this.transformLayer?.kind==='caption'&&!this.playing);
+    const content=this.captionTextTarget.querySelector?.('[data-caption-content]')||this.captionTextTarget;
+    content.textContent=text; this.captionTextTarget.hidden=!text;this.captionTextTarget.classList.toggle('is-transform-selected',this.transformLayer?.kind==='caption'&&!this.playing);
     if(this.hasCaptionXTarget&&this.hasCanvasTarget){this.positionOverlay(this.captionTextTarget,Number(this.currentCaption?.querySelector('[data-caption-x]')?.value||this.captionXTarget.value),Number(this.currentCaption?.querySelector('[data-caption-y]')?.value||this.captionYTarget.value),Number(this.captionSizeTarget.value));}
     const type=this.element?.querySelector('[data-type-kind=caption]');if(type)this.styleOverlay(this.captionTextTarget,this.readTypography(type));
     if(this.hasTextOverlaysTarget)this.paintTextLayers(position);
@@ -672,6 +673,21 @@ export default class extends Controller {
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();event.stopPropagation();const key=event.currentTarget.closest('[data-text-id]').dataset.textId,row=this.layerRow('text',key);if(!row)return;this.remember();
     const horizontal=['ArrowLeft','ArrowRight'].includes(event.key),field=horizontal?row.querySelector('[data-type-width]'):row.querySelector('[data-text-size]'),delta=(['ArrowLeft','ArrowUp'].includes(event.key)?-1:1)*(horizontal?(event.shiftKey?5:1):(event.shiftKey?.5:.1));field.value=Math.max(horizontal?10:2,Math.min(horizontal?95:10,Number(field.value)+delta));this.textChange();
   }
+  captionSizePreset(event) {this.remember();this.captionSizeTarget.value=event.currentTarget.dataset.captionSize;this.captionChange();this.scheduleSave();}
+  resizeCaptionKey(event) {
+    if(this.transcribing||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
+    event.preventDefault();event.stopPropagation();this.remember();
+    const delta=(['ArrowLeft','ArrowUp'].includes(event.key)?-1:1)*(event.shiftKey?.5:.1);
+    this.captionSizeTarget.value=Math.round(Math.max(2,Math.min(10,Number(this.captionSizeTarget.value)+delta))*10)/10;
+    this.captionChange();this.scheduleSave();
+  }
+  beginCaptionResize(event,layer) {
+    event.preventDefault();this.remember();this.selectLayer('caption',layer.key);this.transformLayer=layer;
+    const font=Number(this.captionSizeTarget.value),x=event.clientX,y=event.clientY,rect=this.canvasTarget.getBoundingClientRect();
+    const move=next=>{const delta=((next.clientX-x)+(next.clientY-y))*20/rect.height;this.captionSizeTarget.value=Math.round(Math.max(2,Math.min(10,font+delta))*10)/10;this.captionChange();this.scheduleSave();};
+    const end=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);this.endOverlayDrag=null;};
+    this.endOverlayDrag=end;window.addEventListener('pointermove',move);window.addEventListener('pointerup',end,{once:true});window.addEventListener('pointercancel',end,{once:true});
+  }
   applyTypePreset(event) {
     const container=event.currentTarget.closest('[data-type-controls]'),key=container.querySelector('[data-type-preset]').value;
     const stored=this.stylesValue?.[key]?.style,style=stored?{...stored,font:stored.font.replace(/-bold$/,''),bold:stored.bold||stored.font.endsWith('-bold')}:null;if(!style)return;this.remember();for(const [name,value] of Object.entries(style)){const field=container.querySelector(`[data-type-${name}]`);if(field)field.value=String(typeof value==='boolean'?Number(value):value);}this.typographyChange({currentTarget:container});
@@ -688,7 +704,7 @@ export default class extends Controller {
   overlayContext(node) {return node.dataset.textId?{kind:'text',key:node.dataset.textId}:{kind:'caption',key:String(this.layerRows('caption').indexOf(this.currentCaption))};}
   beginOverlayDrag(event) {
     if(this.transcribing)return;event.preventDefault();event.stopPropagation();this.endOverlayDrag?.();const node=event.currentTarget,layer=this.overlayContext(node);
-    if(layer.key==='-1')return;if(event.target.closest('[data-resize-text]'))return this.beginTextResize(event,layer);this.remember();this.selectLayer(layer.kind,layer.key);this.transformLayer=layer;this.paintText(Number(this.playheadTarget.value));node.focus();
+    if(layer.key==='-1')return;if(event.target.closest('[data-resize-caption]'))return this.beginCaptionResize(event,layer);if(event.target.closest('[data-resize-text]'))return this.beginTextResize(event,layer);this.remember();this.selectLayer(layer.kind,layer.key);this.transformLayer=layer;this.paintText(Number(this.playheadTarget.value));node.focus();
     const rect=this.canvasTarget.getBoundingClientRect(),box=node.getBoundingClientRect();const minX=Math.min(.45,Math.max(.05,box.width/rect.width/2)),minY=Math.min(.45,Math.max(.05,box.height/rect.height/2));
     const move=next=>this.placeLayer(layer,Math.max(minX,Math.min(1-minX,(next.clientX-rect.left)/rect.width)),Math.max(minY,Math.min(1-minY,(next.clientY-rect.top)/rect.height)));
     const end=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);this.endOverlayDrag=null;};

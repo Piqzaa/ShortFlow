@@ -124,9 +124,6 @@ final class VideoEditController extends AbstractController
                 $intent = $request->request->getString('intent');
                 $export = 'export' === $intent;
                 $withCaptions = 'captions' === $intent || ('auto' === $intent && $request->request->getBoolean('autoCaptions'));
-                if ($export && !$request->request->getBoolean('confirm')) {
-                    throw new VideoLibraryException('Confirme l’export de cette nouvelle vidéo.');
-                }
                 $settings = array_intersect_key($data, array_flip(['background', 'fit', 'captionStyle', 'intro', 'language', 'sourceVolume', 'musicVolume', 'musicOffset', 'musicLoop', 'captionX', 'captionY', 'captionSize']));
                 $settings['typography'] = $request->request->has('caption_appearance') ? $request->request->all('caption_appearance') : ($project->getSettings()['typography'] ?? []);
                 if ('auto' === $intent && !$withCaptions) {

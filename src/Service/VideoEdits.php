@@ -103,7 +103,7 @@ final class VideoEdits
         }
         $settings['background'] ??= '#000000';
         $settings['typography'] = EditTypography::validate($settings['typography'] ?? ['color' => 'social' === ($settings['captionStyle'] ?? '') ? '#ffff00' : '#ffffff']);
-        $settings += ['language' => 'fr', 'captionX' => 0.5, 'captionY' => 0.85, 'captionSize' => 4];
+        $settings += ['language' => 'fr', 'captionX' => 0.5, 'captionY' => 0.85, 'captionSize' => 5];
         foreach (['captionX' => [0.05, 0.95], 'captionY' => [0.05, 0.95], 'captionSize' => [2, 10]] as $key => [$min, $max]) {
             if (!is_numeric($settings[$key]) || !is_finite((float) $settings[$key]) || $settings[$key] < $min || $settings[$key] > $max) {
                 throw new VideoLibraryException('Vérifie la position et la taille des sous-titres.');

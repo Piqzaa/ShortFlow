@@ -58,7 +58,7 @@ final class EditCaptions
     public function ass(array $rows, int $width, int $height, string $style, array $position = []): string
     {
         $color = 'social' === $style ? '&H0000FFFF' : '&H00FFFFFF';
-        $size = (int) round($height * ($position['size'] ?? 4) / 100);
+        $size = (int) round($height * ($position['size'] ?? 5) / 100);
         $margin = (int) round($height * 0.12);
         $result = "[Script Info]\nScriptType: v4.00+\nPlayResX: $width\nPlayResY: $height\nWrapStyle: 0\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,DejaVu Sans,$size,$color,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,3,1,2,70,70,$margin,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n";
         preg_match('/Style: Default,[^\n]+/', $result, $match);
@@ -73,7 +73,7 @@ final class EditCaptions
             $text = preg_replace('/[\x00-\x1f\x7f]/u', '', $text) ?? '';
             $x = (int) round($width * ($row['x'] ?? $position['x'] ?? 0.5));
             $y = (int) round($height * ($row['y'] ?? $position['y'] ?? 0.85));
-            $fontSize = (int) round($height * ($row['size'] ?? $position['size'] ?? 4) / 100);
+            $fontSize = (int) round($height * ($row['size'] ?? $position['size'] ?? 5) / 100);
             $hex = ltrim($appearance['color'], '#');
             $ink = strtoupper(substr($hex, 4, 2).substr($hex, 2, 2).substr($hex, 0, 2));
             $align = ['left' => 4, 'center' => 5, 'right' => 6][$appearance['align']];

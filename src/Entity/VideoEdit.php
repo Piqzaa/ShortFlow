@@ -207,7 +207,7 @@ class VideoEdit
     /** @return array{fit:string,captionStyle:string,intro:bool,language?:string,sourceVolume?:float|int,musicVolume?:float|int,musicOffset?:float|int,musicLoop?:bool,captionX?:float,captionY?:float,captionSize?:float|int,typography?:array<string,mixed>,background?:string} */
     public function getSettings(): array
     {
-        return $this->settings + ['background' => '#000000', 'captionX' => 0.5, 'captionY' => 0.85, 'captionSize' => 4, 'language' => 'fr', 'sourceVolume' => 100, 'musicVolume' => 20, 'musicOffset' => 0, 'musicLoop' => true];
+        return $this->settings + ['background' => '#000000', 'captionX' => 0.5, 'captionY' => 0.85, 'captionSize' => 5, 'language' => 'fr', 'sourceVolume' => 100, 'musicVolume' => 20, 'musicOffset' => 0, 'musicLoop' => true];
     }
 
     /** @return list<array{start:float,end:float,text:string,x?:float,y?:float}> */

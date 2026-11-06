@@ -394,7 +394,7 @@ final class VideoEditTest extends WebTestCase
         self::assertSame($project->getTexts(), $copy->getTexts());
     }
 
-    public function testCutsOrderDraftAndExportConfirmation(): void
+    public function testCutsOrderDraftAndDirectExportKeepValidation(): void
     {
         $project = $this->project();
         $id = $project->getId();
@@ -412,10 +412,6 @@ final class VideoEditTest extends WebTestCase
         self::assertSame($this->generated->getId(), $project->getClips()[0]['id']);
         $values['intent'] = 'export';
         unset($values['confirm']);
-        $this->client->request('POST', '/studio/montage/'.$id, $values);
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('.form-errors, .form-error-message, .account-form', 'Confirme l’export');
-        $values['confirm'] = '1';
         $values['clips'][0]['start'] = -2;
         $this->client->request('POST', '/studio/montage/'.$id, $values);
         self::assertResponseStatusCodeSame(422);
@@ -425,6 +421,38 @@ final class VideoEditTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
         $project = $this->edits()->owned($project->getId(), $this->owner);
         self::assertSame('draft', $project->getStatus());
+        $crawler = $this->client->request('GET', '/studio/montage/'.$id);
+        self::assertSelectorNotExists('form.edit-form input[name="confirm"]');
+        $values = $crawler->selectButton('Exporter ma vidéo →')->form()->getPhpValues();
+        $values['clips'] = $this->cuts();
+        $this->client->request('POST', '/studio/montage/'.$id, $values);
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame('queued', $this->edits()->owned($id, $this->owner)->getStatus());
+    }
+
+    public function testSavedCaptionProjectReopensWithItsTextAndSizeBeforeExport(): void
+    {
+        $project = $this->project();
+        $id = $project->getId();
+        $crawler = $this->client->request('GET', '/studio/montage/'.$id);
+        self::assertSelectorExists('form.edit-form[novalidate]');
+        self::assertSame(5.0, (float) $crawler->filter('[name="video_edit[captionSize]"]')->attr('value'));
+        $values = $crawler->selectButton('Enregistrer le montage')->form()->getPhpValues();
+        $values['clips'] = $this->cuts();
+        $values['video_edit']['captionSize'] = '5.3';
+        $values['video_edit']['captionStyle'] = 'clean';
+        $values['captions_current'] = '1';
+        $values['captions'] = [['start' => '0', 'end' => '1', 'text' => 'Découvre VydFlow.']];
+        $this->client->request('POST', '/studio/montage/'.$id, $values, [], ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/studio');
+        self::assertSelectorExists('.edit-projects > a[href="/studio/montage/'.$id.'"]');
+        $crawler = $this->client->request('GET', '/studio/montage/'.$id);
+        self::assertSelectorTextContains('[data-caption-text]', 'Découvre VydFlow.');
+        self::assertSame(5.3, (float) $crawler->filter('[name="video_edit[captionSize]"]')->attr('value'));
+        self::assertSame('draft', $this->edits()->owned($id, $this->owner)->getStatus());
+        self::assertNull($this->edits()->owned($id, $this->owner)->getOutput());
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/edit-usability.html', $this->client->getResponse()->getContent());
     }
 
     public function testRealLocalExportJoinsImportedAndAiClipsWithAudioAndIsIdempotent(): void

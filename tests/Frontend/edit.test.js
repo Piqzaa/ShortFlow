@@ -75,6 +75,27 @@ function editor(extra = {}) {
   return controller;
 }
 
+test('caption resizing changes the saved font size with pointer and keyboard', () => {
+  const listeners = new Map();
+  const c = editor({window:{addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:name=>listeners.delete(name)}});
+  c.remember=()=>{};c.selectLayer=()=>{};c.captionSizeTarget={value:'5'};
+  c.canvasTarget={getBoundingClientRect:()=>({height:400})};
+  let saves=0;c.scheduleSave=()=>{saves++;};c.captionChange=()=>{};
+  c.beginCaptionResize({clientX:0,clientY:0,preventDefault(){}},{kind:'caption',key:'0'});
+  listeners.get('pointermove')({clientX:20,clientY:20});
+  assert.equal(c.captionSizeTarget.value,7);
+  listeners.get('pointermove')({clientX:500,clientY:500});
+  assert.equal(c.captionSizeTarget.value,10);
+  listeners.get('pointercancel')();
+  assert.equal(listeners.size,0);
+  c.captionSizeTarget.value='5';
+  c.resizeCaptionKey({key:'ArrowUp',preventDefault(){},stopPropagation(){}});
+  assert.equal(c.captionSizeTarget.value,4.9);
+  c.captionSizePreset({currentTarget:{dataset:{captionSize:'6'}}});
+  assert.equal(c.captionSizeTarget.value,'6');
+  assert.equal(saves,4);
+});
+
 test('omitted clips are excluded from preview duration and editing stops playback', () => {
   const c = editor(); c.playing = true;
   c.clipTargets[1].nodes['[data-edit-omit]'].checked = true;
