@@ -69,6 +69,44 @@ function setup(count = 3) {
   return { controller, rows };
 }
 
+test('writing paths preserve the idea and existing prompts when switching modes', () => {
+  const { controller, rows } = setup(1);
+  controller.hasWritingModeTarget = true;
+  controller.writingModeTarget = { value: 'ai' };
+  controller.writingChoiceTarget = {};
+  controller.writingHelpTarget = {};
+  const idea = { value: 'My original idea.' };
+  controller.ideaPanelTarget = { querySelector: () => idea };
+  controller.storyPanelTarget = {};
+  controller.hasPlanCountTarget = true;
+  controller.planCountTarget = { value: '2' };
+  controller.updateWritingMode();
+  assert.equal(controller.ideaPanelTarget.hidden, false);
+  assert.equal(controller.storyPanelTarget.hidden, false);
+  controller.writingModeTarget.value = 'manual';
+  controller.updateWritingMode();
+  assert.equal(controller.ideaPanelTarget.hidden, true);
+  assert.equal(controller.storyPanelTarget.hidden, true);
+  assert.equal(idea.value, 'My original idea.');
+  controller.continuityTarget.value = 'single';
+  controller.updateWritingMode();
+  assert.equal(controller.writingChoiceTarget.hidden, true);
+  assert.equal(rows[0].querySelector('textarea').value, 'Scene 1.');
+  controller.wasSingleWriting = false;
+  const prompt = rows[0].querySelector('textarea');
+  Object.assign(prompt, { value: '', maxLength: 1500, dispatchEvent() {} });
+  controller.updateWritingMode();
+  assert.equal(prompt.value, idea.value);
+  prompt.value = '';
+  controller.updateWritingMode();
+  assert.equal(prompt.value, '');
+  controller.continuityTarget.value = 'independent';
+  controller.writingModeTarget.value = 'ai';
+  controller.updateWritingMode();
+  assert.equal(controller.storyPanelTarget.hidden, false);
+  assert.equal(idea.value, 'My original idea.');
+});
+
 test('the empty studio shows one model hint and an import refusal always becomes visible', () => {
   const {controller}=setup(0);
   controller.selectedModel=null;

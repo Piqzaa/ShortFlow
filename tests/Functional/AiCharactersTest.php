@@ -255,6 +255,33 @@ final class AiCharactersTest extends WebTestCase
         $this->snap('single-plan-resolution');
     }
 
+    public function testManualPlansNeedNoSeparateIdeaAndAiWritingRequiresOne(): void
+    {
+        foreach ([1, 2] as $count) {
+            $crawler = $this->client->request('GET', '/studio/creation');
+            $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+            $values['intent'] = 'compose';
+            $prompt = 'Bendo waves and says: « Bonjour tout le monde. »';
+            $values['ai_idea'] = array_replace($values['ai_idea'], ['writingMode' => 'manual', 'prompt' => '', 'model' => 'gemini-omni-12-text-720p', 'source' => 'text', 'seconds' => '5', 'target' => (string) (5 * $count), 'planCount' => (string) $count, 'continuity' => 1 === $count ? 'single' : 'independent', 'ratio' => '9:16', 'accessMode' => 'api', 'shots' => array_fill(0, $count, ['prompt' => $prompt, 'seconds' => '5', 'promptOnly' => 'manual'])]);
+            $this->client->request('POST', '/studio/creation', $values);
+            self::assertResponseStatusCodeSame(303);
+            $this->client->followRedirect();
+            self::assertResponseIsSuccessful();
+            $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner], ['id' => 'DESC']);
+            $flow = static::getContainer()->get(\App\Service\AiEpisodeFlow::class);
+            self::assertCount($count, $flow->shots($episode));
+            self::assertSame($prompt, $flow->shots($episode)[0]->getPrompt());
+            self::assertSame('draft', $episode->getFlowState());
+            self::assertNull($episode->getGeneration());
+        }
+        $values['ai_idea']['writingMode'] = 'ai';
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Décris ton idée pour que l’IA propose les plans');
+        self::assertSame(0, $this->http);
+        $this->snap('writing-manual-ai');
+    }
+
     public function testRecapWithAnEmptyPlanPreservesDraftAndShowsValidationInsteadOf500(): void
     {
         $crawler = $this->client->request('GET', '/studio/creation');

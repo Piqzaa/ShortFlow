@@ -17,7 +17,10 @@
 </div>
 {{ form_start(ideaForm,{attr:{id:'ai-idea-form',class:'account-form creation-form','data-controller':episode|default(null) ? 'unsaved shot-editor character-picker' : 'idea-save shot-editor character-picker', 'data-unsaved-initial':(singlePrepared|default(false) or layoutPrepared|default(false) or ideaForm.vars.submitted) ? 'true' : 'false','data-character-picker-models-value':models|json_encode,'data-character-picker-url-value':path('app_character_choices'),'data-shot-editor-model-value':models[ideaForm.model.vars.value]|default({})|json_encode,'data-idea-save-url-value':path('app_ai_save_idea'),'data-idea-save-revision-value':app.session.get('ai_idea_revision'),'data-action':episode|default(null) ? 'input->unsaved#change change->unsaved#change submit->unsaved#submit' : 'input->idea-save#change change->idea-save#change submit->idea-save#submit pagehide@window->idea-save#flush'}}) }}
 {{ form_errors(ideaForm) }}
-{% include 'ai/_character_pool.html.twig' with {poolForm:ideaForm} %}{{ form_widget(ideaForm.reference,{attr:{'data-creation-target':'reference'}}) }}{{ form_errors(ideaForm.reference) }}{{ form_widget(ideaForm.endReference,{attr:{'data-creation-target':'endReference'}}) }}{{ form_errors(ideaForm.endReference) }}{{ form_row(ideaForm.prompt) }}
+{% include 'ai/_character_pool.html.twig' with {poolForm:ideaForm} %}{{ form_widget(ideaForm.reference,{attr:{'data-creation-target':'reference'}}) }}{{ form_errors(ideaForm.reference) }}{{ form_widget(ideaForm.endReference,{attr:{'data-creation-target':'endReference'}}) }}{{ form_errors(ideaForm.endReference) }}
+<div data-preparation-target="writingChoice">{{ form_row(ideaForm.writingMode,{attr:{'data-preparation-target':'writingMode'}}) }}</div>
+<p data-preparation-target="writingHelp" class="library-note"></p>
+<div data-preparation-target="ideaPanel">{{ form_row(ideaForm.prompt) }}</div>
 {% include 'ai/_timing.html.twig' %}
 <p class="library-note" role="status" data-idea-save-target="status" hidden></p>
 <noscript><p class="library-note">Pour conserver ton idée sans JavaScript, ouvre le récapitulatif avant de quitter cette page.</p></noscript>
@@ -31,7 +34,7 @@
 <div class="catalog-connect-notice" data-creation-target="connection" role="status" tabindex="-1" hidden><p data-creation-target="connectionMessage"></p><button class="account-secondary" type="submit" name="intent" value="connect" formnovalidate data-creation-target="connectionButton">Connecter le fournisseur</button></div>
 <div hidden>{{ form_row(ideaForm.seconds,{attr:{'data-creation-target':'duration','data-action':'change->creation#estimate'}}) }}</div>
 {% include 'ai/_subjects.html.twig' with {subjectForm:ideaForm} %}
-{% include 'ai/_story_proposal.html.twig' %}
+<div data-preparation-target="storyPanel">{% include 'ai/_story_proposal.html.twig' %}</div>
 {% if not ideaForm.title.vars.valid %}{{ form_row(ideaForm.title) }}{% else %}{{ form_widget(ideaForm.title,{type:'hidden'}) }}{% endif %}
 <div class="creation-estimate" hidden role="status" aria-live="polite"><strong data-creation-target="cost">Coût calculé au récapitulatif</strong><span data-creation-target="description">Une estimation avant toute génération.</span></div>
 {% include 'ai/_preparation_plans.html.twig' %}

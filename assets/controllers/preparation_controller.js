@@ -3,7 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'writingChoice', 'writingMode', 'writingHelp', 'ideaPanel', 'storyPanel'];
   static values = { models: Object };
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasImageModeButtonTarget) this.imageModeButtonTarget.hidden = false; if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
@@ -60,7 +60,28 @@ export default class extends Controller {
     form.requestSubmit(this.singleButtonTarget);
   }
 
+  updateWritingMode() {
+    if (!this.hasWritingModeTarget) return;
+    const single = this.desiredCount === 1;
+    const ai = !single && this.writingModeTarget.value === 'ai';
+    this.writingChoiceTarget.hidden = single;
+    this.ideaPanelTarget.hidden = !ai;
+    this.storyPanelTarget.hidden = !ai;
+    this.writingHelpTarget.textContent = single ? 'Plan unique : décris directement ta vidéo dans le prompt du plan ci-dessous.' : ai ? 'Décris ton idée, puis demande une proposition de plans à l’IA.' : 'Écris directement les prompts de chaque plan ci-dessous.';
+    const idea = this.ideaPanelTarget.querySelector('textarea');
+    const enteringSingle = single && !this.wasSingleWriting;
+    this.wasSingleWriting = single && this.editor?.rows().length === 1;
+    if (enteringSingle && this.editor?.rows().length === 1) {
+      const prompt = this.editor.rows()[0].querySelector('textarea');
+      if (!prompt.value.trim() && idea.value.trim() && idea.value.length <= Number(prompt.maxLength || 0)) {
+        prompt.value = idea.value;
+        prompt.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  }
+
   refresh() {
+    this.updateWritingMode();
     this.noticeTarget.hidden = false;
     const model = this.model;
     if (this.hasCountPanelTarget) this.countPanelTarget.hidden = false;

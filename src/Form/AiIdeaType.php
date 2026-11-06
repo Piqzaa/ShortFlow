@@ -51,7 +51,8 @@ final class AiIdeaType extends AbstractType
             ->add('useEnd', CheckboxType::class, ['label' => 'Ajouter une image de fin', 'required' => false])
             ->add('imageFit', ChoiceType::class, ['label' => 'Ajustement des images', 'choices' => ['Recadrage centré' => 'crop', 'Image entière (bandes)' => 'contain'], 'placeholder' => false, 'required' => false, 'empty_data' => 'crop'])
             ->add('title', TextType::class, ['label' => 'Nom de ta création', 'required' => false, 'help' => 'Facultatif : un nom sera proposé à partir de ton idée.', 'constraints' => [new Assert\Length(max: 120, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['maxlength' => 120]])
-            ->add('prompt', TextareaType::class, ['label' => 'Ton idée', 'help' => 'Quelques mots suffisent pour proposer un scénario. Tu peux aussi écrire tes scènes toi-même.', 'constraints' => [new Assert\NotBlank(normalizer: 'trim'), new Assert\Length(max: 1500, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['rows' => 4, 'maxlength' => 1500, 'placeholder' => 'Milo, mon chat blanc joueur, découvre un aspirateur robot…']])
+            ->add('writingMode', ChoiceType::class, ['label' => 'Comment veux-tu écrire ta vidéo ?', 'choices' => ['Décrire mon idée à l’IA' => 'ai', 'Écrire mes plans moi-même' => 'manual'], 'placeholder' => false, 'required' => false, 'empty_data' => 'manual'])
+            ->add('prompt', TextareaType::class, ['label' => 'Ton idée pour l’IA', 'required' => false, 'empty_data' => '', 'help' => 'Décris ton histoire : l’IA te proposera les différents plans, que tu pourras modifier.', 'constraints' => [new Assert\Length(max: 1500, groups: ['Default', 'connection', 'autosave'])], 'attr' => ['rows' => 4, 'maxlength' => 1500, 'placeholder' => 'Milo, mon chat blanc joueur, découvre un aspirateur robot…']])
             ->add('model', ChoiceType::class, ['label' => 'Modèle, résolution et fournisseur', 'placeholder' => 'Choisir un modèle', 'choices' => $choices, 'choice_attr' => static fn (string $id): array => isset($options['connected_providers'][AiCatalog::MODELS[$id]['provider']]) && !$options['connected_providers'][AiCatalog::MODELS[$id]['provider']] ? ['class' => 'catalog-option-disconnected'] : [], 'constraints' => [new Assert\NotBlank(groups: ['Default', 'connection'])]])
             ->add('accessMode', ChoiceType::class, ['label' => 'Connexion à utiliser', 'choices' => ['Ma clé API' => 'api', 'Mon compte Fal connecté par navigateur' => 'mcp'], 'help' => 'Un seul accès suffit. Pour Fal, la connexion navigateur évite de copier une clé ; vérifie le compte et ses crédits chez Fal.', 'constraints' => [new Assert\NotBlank()]])
             ->add('seconds', ChoiceType::class, ['label' => 'Durée du plan', 'placeholder' => 'Choisir une durée', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', (new AiCatalog())->durations()), (new AiCatalog())->durations()), 'constraints' => [new Assert\NotBlank()]])
@@ -59,6 +60,14 @@ final class AiIdeaType extends AbstractType
         $builder->add('characterSelection', AiCharacterPoolType::class, ['choices' => $options['character_choices']]);
         $builder->add('referenceOrigin', ChoiceType::class, ['label' => 'Comment veux-tu choisir ton personnage ?', 'choices' => ['Importer une image' => 'upload', 'Utiliser mes personnages' => 'library'], 'placeholder' => 'Choisir une option', 'required' => false]);
         $builder->add('characterSelectionManaged', HiddenType::class, ['data' => '1', 'required' => false, 'empty_data' => '0']);
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, static function (FormEvent $event): void {
+            $data = $event->getData() ?? [];
+            if (!isset($data['writingMode'])) {
+                $hasPrompts = array_filter($data['shots'] ?? [], static fn (array $shot): bool => '' !== trim($shot['prompt'] ?? ''));
+                $data['writingMode'] = $hasPrompts ? 'manual' : 'ai';
+                $event->setData($data);
+            }
+        });
         $builder->addEventListener(FormEvents::PRE_SUBMIT, static function (FormEvent $event): void {
             if (is_array($event->getData()) && !in_array('autosave', $event->getForm()->getConfig()->getOption('validation_groups') ?? [], true)) {
                 $event->setData(\App\Service\AiCharacterSelection::activeReferenceData($event->getData()));
@@ -98,6 +107,9 @@ final class AiIdeaType extends AbstractType
                 return;
             }
             try {
+                if ('ai' === ($data['writingMode'] ?? 'manual') && 'single' !== ($data['continuity'] ?? '') && 1 !== (int) ($data['planCount'] ?? 0) && '' === trim($data['prompt'] ?? '')) {
+                    $form->get('prompt')->addError(new FormError('Décris ton idée pour que l’IA propose les plans, ou choisis d’écrire tes plans toi-même.'));
+                }
                 (new AiCatalog())->validatePrompt($data['model'], $data['prompt'] ?? '');
             } catch (\InvalidArgumentException $error) {
                 $form->get('prompt')->addError(new FormError($error->getMessage()));

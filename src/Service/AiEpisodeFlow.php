@@ -44,6 +44,10 @@ final class AiEpisodeFlow
             throw new \RuntimeException('Choisis un format final explicite : vertical 9:16, paysage 16:9 ou carré 1:1. Le format original de l’image ne garantit pas celui du montage.');
         }
         $rows = array_values($data['shots'] ?? []);
+        $data['prompt'] = trim($data['prompt'] ?? '');
+        if ('' === $data['prompt']) {
+            $data['prompt'] = mb_substr(trim($rows[0]['prompt'] ?? '') ?: 'Préparation manuelle', 0, 1500);
+        }
         if (!$rows || count($rows) > 8) {
             throw new \RuntimeException('Prépare de 1 à 8 plans dans le même écran.');
         }
