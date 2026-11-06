@@ -129,6 +129,27 @@ test('pending single conversion keeps the original cards until the server accept
   assert.equal(controller.recapTarget.disabled,false);
 });
 
+test('choosing one plan requests safe server merging and never drops written scenes locally', () => {
+  const {controller,rows}=setup();
+  let requests=0;
+  controller.hasPlanCountTarget=true;
+  controller.planCountTarget={value:'1',options:[]};
+  controller.hasCountPanelTarget=true;controller.countPanelTarget={};
+  controller.singleButtonTarget.form={requestSubmit(){requests++;}};
+  controller.planCountChanged();
+  assert.equal(requests,1);
+  assert.equal(controller.continuityTarget.value,'single');
+  assert.equal(controller.countPanelTarget.hidden,false);
+  assert.equal(rows.length,3);
+  assert.equal(rows[2].querySelector('textarea').value,'Scene 3.');
+  assert.equal(controller.recapTarget.disabled,true);
+  controller.totalTarget.value='5';
+  controller.planCountChanged();
+  assert.equal(requests,1);
+  assert.equal(rows.length,3);
+  assert.match(controller.singleStatusTarget.textContent,/15 s au total/);
+});
+
 test('choosing a frame bridge explains its image requirement without changing a text or subject source', () => {
   for (const mode of ['text','subject']) {
     const {controller}=setup();

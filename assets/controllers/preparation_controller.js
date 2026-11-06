@@ -32,7 +32,12 @@ export default class extends Controller {
     if (this.continuityTarget.value === 'single' && event.target.matches('[data-preparation-target="continuity"]')) this.applySingle();
     if (this.continuityTarget.value !== 'single' && event.target.matches('[data-creation-target="model"]') && this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) this.redistribute();
   }
-  input() { this.refresh(); }
+  input(event) {
+    // A select emits input before change. Keep its new value intact until the
+    // resolution action has applied it to the model, then refresh from change.
+    if (event?.target?.closest('[data-recommendation-resolution]')) return;
+    this.refresh();
+  }
   duration(event) {
     if (this.continuityTarget.value === 'single') {
       const row = this.editor?.rows().length === 1 ? this.editor.rows()[0] : null;
@@ -58,7 +63,12 @@ export default class extends Controller {
   refresh() {
     this.noticeTarget.hidden = false;
     const model = this.model;
-    if (this.hasCountPanelTarget) this.countPanelTarget.hidden = this.continuityTarget.value === 'single';
+    if (this.hasCountPanelTarget) this.countPanelTarget.hidden = false;
+    if (this.hasPlanCountTarget && this.continuityTarget.value === 'single') {
+      this.planCountTarget.value = '1';
+      for (const option of this.planCountTarget.options) { option.hidden = option.disabled = false; }
+      if (this.hasCountApplyTarget) this.countApplyTarget.hidden = true;
+    }
     if (this.hasCountInfoTarget) this.countInfoTarget.hidden = this.continuityTarget.value === 'single' || !model;
     if (this.hasAudioHelpTarget) {
       this.audioHelpTarget.hidden = !model;
@@ -113,6 +123,7 @@ export default class extends Controller {
       option.hidden = !valid && !option.selected;
     }
     this.editor.update();
+    this.application?.getControllerForElementAndIdentifier(this.element, 'creation')?.updateRecommendations();
     const total = this.editor.rows().reduce((sum, row) => sum + Number(row.querySelector('select').value), 0);
     const allowed = model.seconds.every((seconds, i) => i === 0 || seconds === model.seconds[i - 1] + 1) && model.seconds.length > 2 ? `${Math.min(...model.seconds)} à ${Math.max(...model.seconds)} s` : `${model.seconds.join(' ou ')} s`;
     if (this.hasSingleActionTarget) {
@@ -139,11 +150,11 @@ export default class extends Controller {
         const valid = Boolean(proposePlan(desired, model.seconds, Number(option.value)).parts);
         if (valid) possibleCounts.push(Number(option.value));
         option.hidden = option.disabled = !valid && !option.selected;
-        option.textContent = `${option.value} plans${!valid && option.selected ? ' · à ajuster' : ''}`;
+        option.textContent = `${option.value} ${option.value === '1' ? 'plan' : 'plans'}${!valid && option.selected ? ' · à ajuster' : ''}`;
       }
       const ready = this.desiredCount && this.editor.rows().length === this.desiredCount && total === desired && !invalid;
       const loss = proposal.parts && this.editor.rows().slice(proposal.parts.length).some(row => this.rowHasContent(row));
-      this.countStatusTarget.textContent = !this.desiredCount ? possibleCounts.length ? 'Choisis combien de plans préparer. La durée sera répartie avant la proposition de scénario ; tes scènes actuelles restent conservées.' : `Aucun découpage de ${desired} s en 2 à 8 plans n’est compatible avec ce modèle. Augmente la durée totale ou choisis un plan unique ; tes scènes restent conservées.`
+      this.countStatusTarget.textContent = !this.desiredCount ? possibleCounts.length ? 'Choisis combien de plans préparer. La durée sera répartie avant la proposition de scénario ; tes scènes actuelles restent conservées.' : `Aucun découpage de ${desired} s en 1 à 8 plans n’est compatible avec ce modèle. Ajuste la durée totale ; tes scènes restent conservées.`
         : !proposal.parts ? `Ce modèle ne répartit pas ${desired} s en ${this.desiredCount} plans. Choisis un autre nombre ou un total proche : ${proposal.nearby.join(' ou ')} s.`
           : loss ? 'Ce nombre retirerait des plans déjà renseignés. Conserve le nombre actuel ou reporte leurs textes et images dans les plans conservés avant de réduire. Rien n’a été effacé.'
           : ready ? `${this.desiredCount} plans · ${this.editor.rows().map(row => row.querySelector('select').value).join(' + ')} = ${desired} s.`
@@ -158,14 +169,24 @@ export default class extends Controller {
     if (this.continuityTarget.value === 'linked' && !possible) this.showNotice('Le raccord demande un modèle image compatible et une image de début.');
   }
 
-  planCountChanged(event) { this.redistribute(event); }
+  planCountChanged(event) {
+    if (Number(this.planCountTarget.value) === 1) {
+      this.continuityTarget.value = 'single';
+      if (this.editor?.rows().length > 1 && this.editor.rows().slice(1).some(row => this.rowHasContent(row))) {
+        this.refresh();
+        this.applySingle();
+        return;
+      }
+    } else if (this.continuityTarget.value === 'single') this.continuityTarget.value = 'independent';
+    this.redistribute(event);
+  }
 
   rowHasContent(row) {
     return Boolean(selectedCharacters(row).length || row.querySelector('textarea').value.trim() || row.querySelector('[name$="[referenceFit]"]')?.value === 'contain' || ['startReference', 'endReference', 'imagePrompt', 'sceneDescription', 'translatedIdentity', 'translationSource'].some(name => row.querySelector(`[name$="[${name}]"]`)?.value.trim()));
   }
 
   countFromCards() {
-    if (this.hasPlanCountTarget) this.planCountTarget.value = this.editor.rows().length > 1 ? String(this.editor.rows().length) : '';
+    if (this.hasPlanCountTarget) this.planCountTarget.value = this.editor.rows().length ? String(this.editor.rows().length) : '';
     this.refresh();
   }
 

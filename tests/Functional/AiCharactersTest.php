@@ -220,6 +220,38 @@ final class AiCharactersTest extends WebTestCase
         $this->snap('reference-origin-upload');
     }
 
+    public function testSinglePlanNativeDurationsAndResolutionPricesReachAnUnconfirmedRecap(): void
+    {
+        foreach (['720p' => [5 => 41, 10 => 82], '1080p' => [5 => 62, 10 => 123]] as $resolution => $prices) {
+            foreach ($prices as $seconds => $cents) {
+                $crawler = $this->client->request('GET', '/studio/creation');
+                self::assertSelectorExists('select[name="ai_idea[planCount]"] option[value="1"]');
+                $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+                $values['intent'] = 'compose';
+                $prompt = 'Bendo waves and says: « Salut mon pote. »';
+                $model = 'gemini-omni-12-text-'.$resolution;
+                $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'Une seule scène avec Bendo.', 'model' => $model, 'source' => 'text', 'seconds' => (string) $seconds, 'target' => (string) $seconds, 'planCount' => '1', 'continuity' => 'single', 'ratio' => '9:16', 'accessMode' => 'api', 'shots' => [['prompt' => $prompt, 'seconds' => (string) $seconds, 'promptOnly' => 'manual']]]);
+                $this->client->request('POST', '/studio/creation', $values);
+                self::assertResponseStatusCodeSame(303);
+                $this->client->followRedirect();
+                self::assertResponseIsSuccessful();
+                $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner], ['id' => 'DESC']);
+                $flow = static::getContainer()->get(\App\Service\AiEpisodeFlow::class);
+                $shots = $flow->shots($episode);
+                self::assertCount(1, $shots);
+                self::assertSame($seconds, $shots[0]->getSeconds());
+                self::assertSame($prompt, $shots[0]->getPrompt());
+                self::assertSame('single', $episode->getContinuity());
+                self::assertSame($model, $episode->getFlowRecipe()['model']);
+                self::assertSame($cents, $flow->quote($episode)['cents']);
+                self::assertSame('draft', $episode->getFlowState());
+                self::assertNull($episode->getGeneration());
+            }
+        }
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiGeneration::class)->count(['owner' => $this->owner]));
+        $this->snap('single-plan-resolution');
+    }
+
     public function testRecapWithAnEmptyPlanPreservesDraftAndShowsValidationInsteadOf500(): void
     {
         $crawler = $this->client->request('GET', '/studio/creation');

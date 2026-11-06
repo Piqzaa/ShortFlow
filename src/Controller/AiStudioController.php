@@ -65,7 +65,7 @@ final class AiStudioController extends AbstractController
                 // An incompatible total remains visible until explicitly adjusted.
             }
         }
-        $idea['planCount'] ??= count($idea['shots']) > 1 ? count($idea['shots']) : null;
+        $idea['planCount'] ??= count($idea['shots']) ?: null;
         $connected = [];
         foreach (AiCatalog::PROVIDERS as $id => $name) {
             $connected[$id] = $apiConnections[$id] || ('fal' === $id && null !== $falConnection);

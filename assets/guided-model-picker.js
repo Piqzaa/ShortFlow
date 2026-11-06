@@ -85,11 +85,20 @@ export function GuidedModelPicker(Base) {
     select.replaceChildren(...ids.map(id => {
       const option = document.createElement('option');
       option.value = id;
-      option.textContent = this.modelsValue[id].quality === '4k' ? '4K · 2160p' : this.modelsValue[id].quality;
+      option.textContent = this.recommendationEstimate(this.modelsValue[id]);
       return option;
     }));
     select.value = this.modelTarget.value;
     select.disabled = ids.length < 2;
+    const price = panel.querySelector('[data-selected-model-price]');
+    if (price) price.textContent = this.modelsValue[this.modelTarget.value] ? `Exemple de prix pour ta sélection : ${this.recommendationEstimate(this.modelsValue[this.modelTarget.value])}. Le récapitulatif calcule le total de tes plans.` : '';
+  }
+
+  recommendationEstimate(model) {
+    const current = Number(this.element?.querySelector('[data-shot-editor-row] select[name$="[seconds]"]')?.value);
+    const seconds = model.seconds.includes(current) ? current : model.seconds.find(value => value >= 5) ?? model.seconds[0];
+    const cents = model.pricesCents?.[seconds] ?? Math.ceil(((model.rateMicros || 0) * seconds + (model.fixedMicros || 0) + (model.subjectReference ? model.referenceMicros || 0 : 0)) / 10000);
+    return `${model.quality === '4k' ? '4K' : model.quality} · ${seconds} s · ${Number.isFinite(cents) ? (cents / 100).toLocaleString('fr-FR', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' $ US estimés' : 'coût au récapitulatif'}${model.subjectReference && model.referenceMicros ? ' · avec 1 référence' : ''}`;
   }
 
   updateRecommendations() {
@@ -97,7 +106,9 @@ export function GuidedModelPicker(Base) {
     this.recommendationsTarget.hidden = false;
     const image = this.sourceMode() !== 'text';
     this.recommendationTargets.forEach(button => {
-      const id = this.sourceMode() === 'subject' ? button.dataset.subjectModel : image ? (this.hasUseEndTarget && this.useEndTarget.checked ? button.dataset.framesModel : button.dataset.imageModel) : button.dataset.textModel;
+      const baseId = this.sourceMode() === 'subject' ? button.dataset.subjectModel : image ? (this.hasUseEndTarget && this.useEndTarget.checked ? button.dataset.framesModel : button.dataset.imageModel) : button.dataset.textModel;
+      const family = (this.cardTargets || []).find(card => this.variantIds(card).includes(baseId));
+      const id = family && this.pickerVariants(family).includes(this.modelTarget.value) ? this.modelTarget.value : baseId;
       const model = this.modelsValue[id];
       button.hidden = !model;
       button.dataset.modelId = id;
@@ -109,11 +120,7 @@ export function GuidedModelPicker(Base) {
       const access = button.querySelector('[data-recommendation-access]');
       if (access && model) access.textContent = `${this.providersValue?.[model.provider] || model.provider} · ${this.pickerConnected(model) ? 'connexion enregistrée' : 'à connecter'}`;
       const example = button.querySelector('[data-recommendation-example]');
-      if (example && model) {
-        const seconds = model.seconds.find(value => value >= 5) ?? model.seconds[0];
-        const cents = model.pricesCents?.[seconds] ?? Math.ceil(((model.rateMicros || 0) * seconds + (model.fixedMicros || 0) + (model.subjectReference ? model.referenceMicros || 0 : 0)) / 10000);
-        example.textContent = `${seconds} s · ${model.quality === '4k' ? '4K' : model.quality} · ${Number.isFinite(cents) ? (cents / 100).toLocaleString('fr-FR', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' $ US estimés' : 'coût au récapitulatif'}${model.subjectReference && model.referenceMicros ? ' · exemple avec 1 référence' : ''}`;
-      }
+      if (example && model) example.textContent = this.recommendationEstimate(model);
     });
     const selected = this.modelsValue[this.modelTarget.value];
     this.selectedModelTarget.hidden = !selected;
