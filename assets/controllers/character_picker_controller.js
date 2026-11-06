@@ -62,7 +62,7 @@ export default class extends Controller {
     const panel = this.workspace.querySelector('[data-creation-target="referencePanel"], [data-series-settings-target="images"]');
     if (panel && source === 'subject') panel.hidden = origin ? origin.value !== 'upload' : !legacy;
     const loose = this.element.querySelector('[data-controller~="subject-list"]');
-    if (loose) loose.hidden = origin ? source !== 'subject' || origin.value !== 'upload' : !legacy;
+    if (loose) loose.hidden = (origin ? source !== 'subject' || origin.value !== 'upload' : !legacy) || loose.dataset.subjectListAvailable === 'false';
   }
 
   clear(event) {

@@ -48,7 +48,7 @@ export default class extends Controller {
 
   defaultName(primary) {
     const used = new Set(this.profiles().map(row => row.querySelector('[data-subject-name]')?.value.trim().toLocaleLowerCase('fr')).filter(Boolean));
-    const base = primary ? 'Sujet principal' : 'Sujet';
+    const base = primary ? 'Personnage principal' : 'Référence';
     let index = primary ? 0 : 1;
     let name;
     do { name = index ? `${base} ${index}` : base; index++; } while (used.has(name.toLocaleLowerCase('fr')));
@@ -66,7 +66,9 @@ export default class extends Controller {
     const name = profile.querySelector('[data-subject-name]');
     if (!name.value.trim()) name.value = this.defaultName(primary);
     const heading = profile.querySelector('[data-subject-profile-title]');
-    if (heading) heading.textContent = primary ? 'Identité du sujet principal' : 'Nom et rôle de cette référence';
+    if (heading) heading.textContent = primary ? 'Personnage de l’image importée au début' : 'Personnage ou objet supplémentaire';
+    const originHelp = profile.querySelector('[data-subject-origin-help]');
+    if (originHelp) originHelp.textContent = primary ? 'C’est la référence principale que tu as déjà choisie au début. Donne-lui un nom pour la désigner dans tes plans ; inutile de réimporter sa photo.' : 'Cette image s’ajoute à la référence principale. Donne-lui un nom différent pour la désigner dans tes plans.';
     if (profile.parentElement !== destination) destination.append(profile);
     profile.hidden = false;
     profile.querySelectorAll('input,select,textarea').forEach(input => { input.disabled = false; });
@@ -96,12 +98,15 @@ export default class extends Controller {
     const limit = Math.max(0, Number(model?.dataset.subjectLimit || 0) - (identity ? 1 : 0));
     const rows = this.rows();
     const primaryReference = identity ? this.primaryReference() : '';
-    this.element.hidden = limit === 0 && rows.length === 0 && !identity;
+    const available = limit > 0 || identity || rows.length > 0;
+    const origin = this.form.elements?.namedItem(`${this.namespaceValue}[referenceOrigin]`);
+    this.element.hidden = !available || Boolean(origin && origin.value !== 'upload');
+    if (this.element.dataset) this.element.dataset.subjectListAvailable = String(available);
     this.addTarget.disabled = rows.length >= limit;
     this.noticeTarget.textContent = identity
-      ? `Identité commune : une image principale et jusqu’à ${limit} autre(s) référence(s). Les images ne fixent pas les cadres des scènes.`
-      : limit ? `${rows.length} / ${limit} sujet(s) de référence. L’image de début peut être un décor ; ces références guident séparément l’identité.`
-        : 'Ce modèle ne reçoit pas de sujet séparé. Retire les anciennes références ou choisis un modèle compatible.';
+      ? `L’image choisie au début est ta référence principale. Tu peux ajouter jusqu’à ${limit} autre(s) personnage(s) ou objet(s).`
+      : limit ? `${rows.length} / ${limit} référence(s) supplémentaire(s). Ajoute les personnages ou objets à reconnaître dans tes plans.`
+        : !model?.value ? 'Choisis un modèle pour connaître les références disponibles.' : 'Ce modèle n’accepte pas de références supplémentaires. Retire les anciennes références ou choisis un modèle compatible.';
     if (rows.length > limit) this.noticeTarget.textContent += ' Retire les références incompatibles avant le devis.';
     if (!this.hasDetailsListTarget || !this.hasDetailsPrototypeTarget) return;
     const active = new Set();
@@ -123,7 +128,7 @@ export default class extends Controller {
       const visible = Array.from(presence?.options || []).find(option => option.value === 'visible');
       if (visible) visible.textContent = identity ? 'Visible dès le début de la scène' : 'Déjà visible dans l’image de début';
       const help = profile.querySelector('[data-subject-presence-help]');
-      if (help) help.textContent = identity ? 'Utilise ce nom dans tes scènes. La présence guide leur action ; cette référence d’identité ne fixe aucun premier cadre.' : 'Utilise ce nom dans tes scènes. Si l’image de début montre un décor vide, choisis une entrée pendant l’action. Pour commencer avec le sujet déjà visible, fournis un premier cadre qui le contient.';
+      if (help) help.textContent = 'Précise dans chaque plan qui apparaît et quand. Exemple : « Plan 3 : le voisin entre par la droite ». Ajouter sa photo ne choisit pas ses plans.';
       const count = views.querySelectorAll('[data-subject-view]').length;
       const kling = model?.value === 'kling-3-image';
       views.hidden = !kling && count === 0;

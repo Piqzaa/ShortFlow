@@ -104,6 +104,8 @@ export function GuidedModelPicker(Base) {
       button.setAttribute('aria-pressed', String(this.modelTarget.value === id));
       const name = button.querySelector('[data-recommendation-name]');
       if (name && model) name.textContent = model.name;
+      const audio = button.querySelector('[data-recommendation-audio]');
+      if (audio && model) audio.textContent = model.audio ? 'Avec audio' : 'Sans audio · aucune voix';
       const access = button.querySelector('[data-recommendation-access]');
       if (access && model) access.textContent = `${this.providersValue?.[model.provider] || model.provider} · ${this.pickerConnected(model) ? 'connexion enregistrée' : 'à connecter'}`;
       const example = button.querySelector('[data-recommendation-example]');

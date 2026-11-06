@@ -22,7 +22,7 @@ test('series and studio identity limits reserve the main Vidu image and count Kl
   const { controller, model } = setup(7, 'subject', 6);
   controller.update();
   assert.equal(controller.addTarget.disabled, true);
-  assert.match(controller.noticeTarget.textContent, /une image principale.*6 autre/);
+  assert.match(controller.noticeTarget.textContent, /référence principale.*6 autre/);
   model.dataset.referenceMode = 'image'; model.dataset.subjectLimit = '2';
   controller.update();
   assert.match(controller.noticeTarget.textContent, /Retire les références incompatibles/);
@@ -34,7 +34,7 @@ test('changing to an unsupported model preserves existing subjects and lets the 
   model.dataset.subjectLimit = '0'; controller.update();
   assert.equal(controller.element.hidden, false);
   assert.equal(controller.addTarget.disabled, true);
-  assert.match(controller.noticeTarget.textContent, /ne reçoit pas de sujet séparé/);
+  assert.match(controller.noticeTarget.textContent, /n’accepte pas de références supplémentaires/);
   controller.remove({ currentTarget: { closest: () => ({ remove: () => rows.splice(0, 1) }) } });
   assert.equal(controller.element.hidden, true);
 });
@@ -45,4 +45,22 @@ test('a new series primary upload uses a form-only reference until it is stored'
   assert.equal(controller.primaryReference(), 'primary');
   fields['[name="ai_series[removeImage]"]'] = { checked: true };
   assert.equal(controller.primaryReference(), '');
+});
+
+test('empty model and library origins do not expose redundant upload controls or discard stored rows', () => {
+  const {controller,model,rows}=setup(0,'text');
+  controller.element.dataset={}; model.value='';
+  controller.update();
+  assert.equal(controller.element.hidden,true);
+  assert.equal(controller.element.dataset.subjectListAvailable,'false');
+  assert.match(controller.noticeTarget.textContent,/Choisis un modèle/);
+  model.value='omni';model.dataset.referenceMode='subject';model.dataset.subjectLimit='7';
+  const origin={value:'library'};
+  controller.form.elements={namedItem:()=>origin};
+  rows.push({});controller.update();
+  assert.equal(controller.element.hidden,true);
+  assert.equal(rows.length,1);
+  origin.value='upload';controller.update();
+  assert.equal(controller.element.hidden,false);
+  assert.equal(rows.length,1);
 });

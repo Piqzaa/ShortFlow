@@ -1,9 +1,11 @@
 <section class="subject-profile" data-subject-profile>
-<h3 data-subject-profile-title>Nom et rôle de cette référence</h3>
+<h3 data-subject-profile-title>Personnage ou objet supplémentaire</h3>
+<p class="library-note" data-subject-origin-help>Cette image est une référence supplémentaire pour ta vidéo.</p>
 {{ form_widget(detailForm.reference,{attr:{'data-subject-profile-reference':''}}) }}{{ form_errors(detailForm.reference) }}
 {{ form_row(detailForm.name,{attr:{'data-subject-name':''}}) }}
-<div class="series-two-columns">{{ form_row(detailForm.role) }}{{ form_row(detailForm.presence,{label:'Présence dans la scène'}) }}</div>
-<p class="library-note" data-subject-presence-help>Utilise ce nom dans tes scènes. La présence décrit l’action souhaitée ; la photo de référence ne remplace pas les éléments de l’image de début.</p>
+{{ form_row(detailForm.role) }}
+{% if detailForm.presence.vars.value in ['visible','enters'] %}<details class="creation-details"><summary>Ancien réglage commun à tous les plans</summary>{{ form_row(detailForm.presence,{label:'Ancienne indication de présence (tous les plans)'}) }}<p class="library-note">Choisis « À préciser dans les scènes » pour définir sa présence dans chaque plan.</p></details>{% else %}<span hidden>{{ form_widget(detailForm.presence) }}</span>{% endif %}
+<p class="library-note" data-subject-presence-help>Précise dans chaque plan qui apparaît et quand. Exemple : « Plan 3 : le voisin entre par la droite ». Ajouter sa photo ne choisit pas ses plans.</p>
 <section class="subject-views" data-subject-views>
 <h4>Vues complémentaires du même sujet</h4><p class="library-note" data-subject-views-notice>Selon le modèle, des vues complémentaires peuvent être nécessaires.</p>
 <div data-subject-views-list>{% for field in detailForm.views %}<div data-subject-view>{% include 'ai/_reference_picker.html.twig' with {field:field,kind:'view',label:'Vue complémentaire du sujet',removable:false} %}<button class="account-secondary" type="button" data-action="subject-list#removeView">Retirer cette vue</button></div>{% endfor %}</div>
