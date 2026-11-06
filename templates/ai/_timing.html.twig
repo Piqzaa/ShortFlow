@@ -7,10 +7,10 @@
   <div data-preparation-target="continuityPanel">{{ form_row(ideaForm.continuity,{label:'Enchaînement des plans',attr:{'data-preparation-target':'continuity'}}) }}</div>
   {% include 'ai/_plan_count.html.twig' %}
 </div>
-<details class="creation-details" data-continuity-options{% if ideaForm.continuity.vars.value == 'linked' or not ideaForm.continuity.vars.valid %} open{% endif %}><summary>Options avancées · raccord entre les plans</summary>
+<div class="continuity-explanation" data-continuity-options data-preparation-target="continuityOptions"{% if ideaForm.continuity.vars.value != 'linked' %} hidden{% endif %}>
   <p data-preparation-target="continuityHelp" hidden></p>
   <button type="button" class="account-secondary" data-preparation-target="fixContinuity imageModeButton" data-action="preparation#imageMode" hidden>Choisir un modèle image et sa référence</button>
-</details>
+</div>
 {% include 'ai/_plan_count_status.html.twig' %}
 <p class="library-note preparation-feedback" data-preparation-target="notice" role="status">Choisis un modèle pour préparer tes plans.</p>
 <p data-preparation-target="single" hidden></p>

@@ -3,7 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'writingChoice', 'writingMode', 'writingHelp', 'ideaPanel', 'storyPanel', 'singleCount'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'writingChoice', 'writingMode', 'writingHelp', 'ideaPanel', 'storyPanel', 'singleCount', 'continuityOptions'];
   static values = { models: Object };
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasImageModeButtonTarget) this.imageModeButtonTarget.hidden = false; if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
@@ -97,13 +97,14 @@ export default class extends Controller {
     if (this.hasCountInfoTarget) this.countInfoTarget.hidden = this.continuityTarget.value === 'single' || !model;
     if (this.hasAudioHelpTarget) {
       this.audioHelpTarget.hidden = !model;
-      this.audioHelpTarget.textContent = model?.audio ? 'Audio généré par clip ; le raccord ne transmet pas le son précédent.' : 'Ce modèle génère des clips sans audio.';
+      this.audioHelpTarget.textContent = model?.audio ? 'Ce modèle génère des clips avec audio.' : 'Ce modèle génère des clips sans audio.';
     }
     const reference = this.element.querySelector('[data-creation-target="reference"]').value;
     const firstFrame = this.editor?.rows()[0]?.querySelector('[name$="[startReference]"]')?.value;
     const possible = Boolean(model?.image && (reference || firstFrame) && !model.subjectReference && !model.requiresEnd);
     const single = !this.editor || this.editor.rows().length <= 1;
     this.continuityPanelTarget.hidden = false;
+    if (this.hasContinuityOptionsTarget) this.continuityOptionsTarget.hidden = this.continuityTarget.value !== 'linked';
     this.singleTarget.hidden = true;
     this.singleTarget.textContent = this.editor?.rows().length === 1 ? 'Un seul clip : aucun enchaînement à régler.' : 'Le découpage sera proposé avec ton modèle.';
     this.fixContinuityTarget.hidden = single || possible || this.continuityTarget.value !== 'linked';

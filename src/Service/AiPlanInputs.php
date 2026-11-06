@@ -136,7 +136,7 @@ final class AiPlanInputs
         $identity = $row['translatedIdentity'] ?? '';
         $source = $row['translationSource'] ?? '';
         if (!is_string($identity) || mb_strlen($identity) > 300 || !is_string($source) || ('' !== $source && !preg_match('/^[a-f0-9]{64}$/D', $source)) || ('manual' !== ($row['promptOnly'] ?? '') && (('' !== trim($identity)) !== ('' !== $source)))) {
-            throw new \RuntimeException('Le contexte traduit du plan est incomplet. Propose un nouveau scénario ou utilise « Reprise manuelle » après relecture de tes prompts.');
+            throw new \RuntimeException('Le contexte traduit du plan est incomplet. Propose un nouveau scénario ou confirme tes prompts relus dans le Studio.');
         }
         if ('' !== trim($identity) || ('manual' === ($row['promptOnly'] ?? '') && '' !== $source)) {
             $result['translatedIdentity'] = trim($identity);

@@ -112,12 +112,17 @@ test('single-plan mode locks the count and enables its submitted mirror', () => 
   controller.hasPlanCountTarget=true;controller.planCountTarget={value:'1',options:[]};
   controller.hasSingleCountTarget=true;controller.singleCountTarget={disabled:true};
   controller.countStatusTarget={};
+  controller.hasContinuityOptionsTarget=true;controller.continuityOptionsTarget={};
   controller.continuityTarget.value='single';controller.refresh();
   assert.equal(controller.planCountTarget.disabled,true);
   assert.equal(controller.singleCountTarget.disabled,false);
+  assert.equal(controller.continuityOptionsTarget.hidden,true);
   controller.continuityTarget.value='independent';controller.refresh();
   assert.equal(controller.planCountTarget.disabled,false);
   assert.equal(controller.singleCountTarget.disabled,true);
+  assert.equal(controller.continuityOptionsTarget.hidden,true);
+  controller.continuityTarget.value='linked';controller.refresh();
+  assert.equal(controller.continuityOptionsTarget.hidden,false);
 });
 
 test('the empty studio shows one model hint and an import refusal always becomes visible', () => {

@@ -49,3 +49,5 @@
 .studio-plan-settings label{display:block;line-height:1.4;min-height:2.8em}
 
 .studio-model-dialog:not([open]),.studio-connection-status[hidden]{display:none!important}
+
+.preparation-plans .preparation-add{margin:16px 0 24px}.preparation-plans .prompt-review-notice{padding:16px 0 20px;border-top:1px solid var(--workspace-border)}.prompt-review-notice button{margin-top:12px}.studio-v2 .creation-audio{margin:24px 0!important;padding-top:12px}.creation-form .ai-actions{margin-top:24px}.continuity-explanation{padding:12px 0 20px}.continuity-explanation[hidden]{display:none!important}.continuity-explanation button{margin-top:12px}

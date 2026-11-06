@@ -28,7 +28,7 @@ final class VideoPromptLanguage
                 $this->requireDirections($identity, $episode->getPrompt(), $this->context($episode));
             }
             if ('manual' !== ($shot->getInputs()['promptOnly'] ?? '') && ($shot->getInputs()['translationSource'] ?? '') !== StoryTextChecks::translationSource($episode->getPrompt(), $this->context($episode))) {
-                throw new VideoPromptReviewRequired('Le contexte source a changé depuis sa traduction. '.('1' === ($shot->getInputs()['promptOnly'] ?? '') ? 'Propose un nouveau scénario ou utilise « Reprise manuelle » après relecture de tes prompts.' : 'Propose un nouveau scénario ou détache le contexte traduit pour reprendre manuellement.').' Tes textes sont conservés.');
+                throw new VideoPromptReviewRequired('Le contexte source a changé depuis sa traduction. '.('1' === ($shot->getInputs()['promptOnly'] ?? '') ? 'Propose un nouveau scénario ou confirme tes prompts relus dans le Studio.' : 'Propose un nouveau scénario ou détache le contexte traduit pour reprendre manuellement.').' Tes textes sont conservés.');
             }
         }
     }

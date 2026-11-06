@@ -267,8 +267,19 @@ final class AiStudioController extends AbstractController
         $jobs = $em->getRepository(AiGeneration::class)->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 1);
 
         $projects = $episode ? [] : $em->getRepository(AiEpisode::class)->findBy(['owner' => $user], ['id' => 'DESC'], 4);
+        $manualPromptReview = false;
+        $context = $episode ? (new \App\Service\VideoPromptLanguage())->context($episode) : [];
+        $source = \App\Service\StoryTextChecks::translationSource($form->get('prompt')->getData() ?? '', $context);
+        foreach ($form->get('shots')->getData() ?? [] as $row) {
+            $identity = trim($row['translatedIdentity'] ?? '');
+            $translationSource = $row['translationSource'] ?? '';
+            if ('manual' !== ($row['promptOnly'] ?? '') && (('' !== $identity) !== ('' !== $translationSource) || ('' !== $translationSource && $translationSource !== $source))) {
+                $manualPromptReview = true;
+                break;
+            }
+        }
 
-        return $this->render('ai/studio.html.twig', ['writerAvailable' => $writer->available(), 'layoutPrepared' => $layoutPrepared, 'singlePrepared' => $singlePrepared, 'projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::viewModels(), 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/studio.html.twig', ['manualPromptReview' => $manualPromptReview, 'writerAvailable' => $writer->available(), 'layoutPrepared' => $layoutPrepared, 'singlePrepared' => $singlePrepared, 'projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::viewModels(), 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/creation/idee', name: 'app_ai_save_idea', methods: ['POST'])]
