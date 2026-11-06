@@ -1,0 +1,5 @@
+<div class="character-image-upload" data-controller="subject-upload">
+{{ form_row(field,{attr:{'data-subject-upload-target':'input','data-action':'change->subject-upload#render'}}) }}
+<div class="character-images" data-subject-upload-target="preview" aria-live="polite"></div>
+<p class="library-note" data-subject-upload-target="status" role="status"></p>
+</div>
