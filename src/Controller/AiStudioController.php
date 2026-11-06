@@ -76,6 +76,7 @@ final class AiStudioController extends AbstractController
         $layoutPrepared = false;
         $connecting = $request->isMethod('POST') && 'connect' === $request->request->getString('intent');
         $visualContext = $episode ? ($episode->getFlowRecipe()['visualContext'] ?? ($episode->isStandalone() ? $episode->getPrompt() : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle())) : ($idea['prompt'] ?? '');
+        $idea['referenceOrigin'] ??= !empty($idea['characterPool']) ? 'library' : (!empty($idea['reference']) || !empty($idea['subjects']) ? 'upload' : '');
         $idea = $this->characterSelection->formData($idea);
         $characterChoices = $this->characterSelection->choices($user, $idea['characterPool'] ?? []);
         $form = $this->createForm(AiIdeaType::class, $idea, ['character_choices' => $characterChoices, 'validation_groups' => $connecting ? ['connection'] : ['Default'], 'visual_context' => $visualContext, 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites(), 'composed' => in_array($request->request->getString('intent'), ['compose', 'replan', 'single'], true) || $request->request->has('plan_action'), 'csrf_token_id' => $episode ? 'prepare_episode_'.$episode->getId() : 'ai_idea'])->handleRequest($request);
@@ -267,7 +268,7 @@ final class AiStudioController extends AbstractController
 
         $projects = $episode ? [] : $em->getRepository(AiEpisode::class)->findBy(['owner' => $user], ['id' => 'DESC'], 4);
 
-        return $this->render('ai/studio.html.twig', ['writerAvailable' => $writer->available(), 'layoutPrepared' => $layoutPrepared, 'singlePrepared' => $singlePrepared, 'projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/studio.html.twig', ['writerAvailable' => $writer->available(), 'layoutPrepared' => $layoutPrepared, 'singlePrepared' => $singlePrepared, 'projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::viewModels(), 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/creation/idee', name: 'app_ai_save_idea', methods: ['POST'])]
@@ -510,7 +511,7 @@ final class AiStudioController extends AbstractController
         $projectPage = min(max(1, $request->query->getInt('plans', 1)), $projectPages);
         $projects = $projectQuery->orderBy('p.id', 'DESC')->setFirstResult(($projectPage - 1) * 12)->setMaxResults(12)->getQuery()->getResult();
 
-        return $this->render('ai/history.html.twig', ['projects' => $projects, 'projectPage' => $projectPage, 'projectPages' => $projectPages, 'history' => $jobs->history($user, $query, $status, $request->query->getInt('page', 1)), 'query' => $query, 'status' => $status, 'labels' => AiGeneration::LABELS, 'models' => AiCatalog::MODELS, 'providers' => AiCatalog::PROVIDERS], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/history.html.twig', ['projects' => $projects, 'projectPage' => $projectPage, 'projectPages' => $projectPages, 'history' => $jobs->history($user, $query, $status, $request->query->getInt('page', 1)), 'query' => $query, 'status' => $status, 'labels' => AiGeneration::LABELS, 'models' => AiCatalog::viewModels(), 'providers' => AiCatalog::PROVIDERS], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/ia/generations/{id}/etat', name: 'app_ai_status', requirements: ['id' => '\d+'], methods: ['GET'])]

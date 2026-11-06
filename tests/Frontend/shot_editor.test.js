@@ -29,6 +29,23 @@ function setup() {
   return { editor, row, prompt, description, status, review, references };
 }
 
+test('prompt language follows model metadata while preserving the exact French dialogue', () => {
+  const {editor,row,prompt}=setup();
+  const label={textContent:''}; const help={textContent:''};
+  prompt.labels=[label]; prompt.value='Bendo says: « Retourne à la cité. »';
+  const query=row.querySelector.bind(row);
+  row.querySelector=selector=>selector==='[data-shot-prompt]'?prompt:selector==='[data-shot-language-help]'?help:query(selector);
+  editor.modelValue.promptLanguage='en'; editor.update();
+  assert.equal(label.textContent,'Décris ton plan en anglais');
+  assert.match(prompt.placeholder,/en anglais/);
+  assert.match(help.textContent,/dialogues.*leur langue/);
+  delete editor.modelValue.promptLanguage; editor.update();
+  assert.equal(label.textContent,'Décris ton plan');
+  assert.doesNotMatch(prompt.placeholder,/anglais/);
+  assert.doesNotMatch(help.textContent,/anglais/);
+  assert.equal(prompt.value,'Bendo says: « Retourne à la cité. »');
+});
+
 test('focusing a card targets the prompt and edits preserve the stored French summary', () => {
   const { editor, row, prompt, description } = setup();
   editor.update();

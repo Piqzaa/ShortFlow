@@ -63,6 +63,19 @@ export default class extends Controller {
     const rows = this.rows();
     let seconds = 0, cents = 0;
     rows.forEach((row, index) => {
+      const prompt = row.querySelector('[data-shot-prompt]');
+      const help = row.querySelector('[data-shot-language-help]');
+      const english = this.modelValue.promptLanguage === 'en';
+      if (prompt) {
+        prompt.placeholder = english ? 'Décris en anglais l’action et le mouvement de caméra…' : 'Décris l’action et le mouvement de caméra…';
+        const label = prompt.labels?.[0];
+        const caption = english ? 'Décris ton plan en anglais' : 'Décris ton plan';
+        if (label && label.textContent !== caption) label.textContent = caption;
+      }
+      if (help) {
+        const caption = english ? 'Ce modèle documente des consignes visuelles en anglais. Garde les dialogues et textes souhaités dans leur langue.' : 'Décris l’action et le mouvement de caméra. Garde les dialogues et textes souhaités dans leur langue.';
+        if (help.textContent !== caption) help.textContent = caption;
+      }
       const references = row.querySelector('[data-shot-reference-summary]');
       if (references) {
         const source = this.element.querySelector('[data-creation-target="source"]')?.value || (this.modelValue.subjectReference ? 'subject' : this.modelValue.image ? 'image' : 'text');

@@ -7,6 +7,21 @@ use PHPUnit\Framework\TestCase;
 
 final class AiCatalogGroupsTest extends TestCase
 {
+    public function testPromptLanguagePresentationPreservesEveryDurableModelContract(): void
+    {
+        $catalog = new AiCatalog();
+        $contracts = array_map($catalog->contract(...), array_keys(AiCatalog::MODELS));
+        $display = AiCatalog::viewModels();
+        self::assertSame('en', $display['veo-31-subject-720p']['promptLanguage']);
+        self::assertArrayNotHasKey('promptLanguage', $display['kling-o3-subject']);
+        foreach ($display as &$model) {
+            unset($model['promptLanguage']);
+        }
+        unset($model);
+        self::assertSame(AiCatalog::MODELS, $display);
+        self::assertSame($contracts, array_map($catalog->contract(...), array_keys(AiCatalog::MODELS)));
+    }
+
     public function testEveryDurableExecutionChoiceRemainsInOneProviderGroup(): void
     {
         $groups = (new AiCatalog())->groups();

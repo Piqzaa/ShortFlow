@@ -33,12 +33,24 @@ export default class extends GuidedModelPicker(Controller) {
 
   sourceMode() { return this.hasSourceTarget ? this.sourceTarget.value || 'text' : 'text'; }
 
+  changeReferenceOrigin(event) {
+    const origin = this.element?.querySelector('[name$="[referenceOrigin]"]');
+    const subject = this.sourceMode() === 'subject';
+    if (origin) origin.required = subject;
+    const choices = this.element?.querySelector('[data-reference-origin-panel]');
+    if (choices) choices.hidden = !subject;
+    if (this.hasReferencePanelTarget) this.referencePanelTarget.hidden = this.sourceMode() === 'text' || Boolean(subject && origin && origin.value !== 'upload');
+    // Notify the form even though the selector is displayed above it.
+    if (event) this.element.querySelector('#ai-idea-form')?.dispatchEvent(new Event('change', {bubbles: true}));
+  }
+
   changeSource() {
     if (!this.hasSourceTarget) return;
     if (this.sourceMode() !== 'image' && this.hasUseEndTarget) this.useEndTarget.checked = false;
     if (this.hasEndOptionTarget) this.endOptionTarget.hidden = this.sourceMode() !== 'image';
     const image = this.sourceMode() !== 'text';
     this.referencePanelTarget.hidden = !image;
+    this.changeReferenceOrigin();
     if (this.hasImageSettingsTarget) this.imageSettingsTarget.hidden = this.sourceMode() !== 'image';
     const allowed = Object.keys(this.modelsValue).filter(id => this.modelMode(this.modelsValue[id]) === this.sourceMode() && (!image || !this.hasUseEndTarget || !this.useEndTarget.checked || this.modelsValue[id].endImageField));
     if (!allowed.includes(this.modelTarget.value)) {
@@ -138,6 +150,7 @@ export default class extends GuidedModelPicker(Controller) {
     const quality = model.quality === '4k' ? '4K' : model.quality;
     set('[data-card-quality]', quality);
     set('[data-card-description]', model.description);
+    set('[data-card-speech]', this.speechCaption(model, id));
     set('[data-card-capabilities]', `${model.seconds.length > 4 ? `${model.seconds[0]}–${model.seconds.at(-1)}` : model.seconds.join(' / ')} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.ratios.map(ratio => ratio === 'auto' ? 'Image d’origine' : ratio).join(' · ')}`);
     const price = model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.money(c)} $ US`).join(' · ') : `${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3}).format(model.rateMicros / 1000000)} $ US / s${model.fixedMicros ? ` + ${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:3}).format(model.fixedMicros / 1000000)} $ US par demande` : ''}`;
     set('[data-card-price]', price + (model.referenceMicros ? ` + ${this.money(model.referenceMicros / 10000)} $ US par référence` : ''));

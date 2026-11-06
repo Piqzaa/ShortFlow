@@ -1,0 +1,207 @@
+{
+  "google/gemini-omni-flash/v1.2/text-to-video": {
+    "required": [
+      "prompt"
+    ],
+    "x-fal-order-properties": [
+      "prompt",
+      "aspect_ratio",
+      "resolution",
+      "duration"
+    ],
+    "title": "Omni12FlashTextToVideoInput",
+    "type": "object",
+    "properties": {
+      "resolution": {
+        "description": "The resolution of the generated video.",
+        "default": "720p",
+        "title": "Resolution",
+        "type": "string",
+        "enum": [
+          "360p",
+          "720p",
+          "1080p",
+          "4k"
+        ]
+      },
+      "aspect_ratio": {
+        "description": "The aspect ratio of the generated video.",
+        "default": "16:9",
+        "title": "Aspect Ratio",
+        "type": "string",
+        "enum": [
+          "16:9",
+          "9:16"
+        ]
+      },
+      "duration": {
+        "description": "The duration of the generated video, in seconds.",
+        "default": 8,
+        "maximum": 15,
+        "title": "Duration",
+        "type": "integer",
+        "minimum": 3
+      },
+      "prompt": {
+        "examples": [
+          "A cinematic wide shot of a lighthouse on a rocky cliff at dusk, waves crashing below, the beam sweeping across the dark sea."
+        ],
+        "description": "The text prompt describing the video you want to generate.",
+        "title": "Prompt",
+        "maxLength": 20000,
+        "type": "string"
+      }
+    }
+  },
+  "google/gemini-omni-flash/v1.2/image-to-video": {
+    "required": [
+      "prompt",
+      "image_url"
+    ],
+    "x-fal-order-properties": [
+      "prompt",
+      "image_url",
+      "end_image_url",
+      "aspect_ratio",
+      "resolution",
+      "duration"
+    ],
+    "title": "Omni12FlashImageToVideoInput",
+    "type": "object",
+    "properties": {
+      "resolution": {
+        "description": "The resolution of the generated video.",
+        "default": "720p",
+        "title": "Resolution",
+        "type": "string",
+        "enum": [
+          "360p",
+          "720p",
+          "1080p",
+          "4k"
+        ]
+      },
+      "aspect_ratio": {
+        "description": "The aspect ratio of the generated video.",
+        "default": "16:9",
+        "title": "Aspect Ratio",
+        "type": "string",
+        "enum": [
+          "16:9",
+          "9:16"
+        ]
+      },
+      "duration": {
+        "description": "The duration of the generated video, in seconds. At most 10 seconds when an end image is provided.",
+        "default": 8,
+        "maximum": 15,
+        "title": "Duration",
+        "type": "integer",
+        "minimum": 3
+      },
+      "end_image_url": {
+        "description": "Optional URL of the end frame. When provided, the model interpolates between the two images in their listed order and the duration is capped at 10 seconds.",
+        "title": "End Image URL",
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "prompt": {
+        "examples": [
+          "The dog turns its head and wags its tail in warm sunlight."
+        ],
+        "description": "The text prompt describing how the first image should be animated or interpolated into the optional end image.",
+        "title": "Prompt",
+        "maxLength": 20000,
+        "type": "string"
+      },
+      "image_url": {
+        "examples": [
+          "https://storage.googleapis.com/falserverless/example_inputs/dog.png"
+        ],
+        "description": "URL of the first frame to animate.",
+        "title": "Image URL",
+        "type": "string"
+      }
+    }
+  },
+  "google/gemini-omni-flash/v1.2/reference-to-video": {
+    "required": [
+      "prompt"
+    ],
+    "x-fal-order-properties": [
+      "prompt",
+      "image_urls",
+      "reference_video_urls",
+      "aspect_ratio",
+      "resolution",
+      "duration"
+    ],
+    "title": "Omni12FlashReferenceToVideoInput",
+    "type": "object",
+    "properties": {
+      "resolution": {
+        "description": "The resolution of the generated video.",
+        "default": "720p",
+        "title": "Resolution",
+        "type": "string",
+        "enum": [
+          "360p",
+          "720p",
+          "1080p",
+          "4k"
+        ]
+      },
+      "reference_video_urls": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 3,
+        "description": "URLs of up to three reference videos. Each video must be at most 15 seconds long.",
+        "title": "Reference Video URLs",
+        "type": "array"
+      },
+      "duration": {
+        "description": "The duration of the generated video, in seconds.",
+        "default": 8,
+        "maximum": 15,
+        "title": "Duration",
+        "type": "integer",
+        "minimum": 3
+      },
+      "aspect_ratio": {
+        "description": "The aspect ratio of the generated video.",
+        "default": "16:9",
+        "title": "Aspect Ratio",
+        "type": "string",
+        "enum": [
+          "16:9",
+          "9:16"
+        ]
+      },
+      "image_urls": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 10,
+        "description": "URLs of up to ten reference images to incorporate.",
+        "title": "Image URLs",
+        "type": "array"
+      },
+      "prompt": {
+        "examples": [
+          "A cat inspired by <IMAGE_REF_0> walks through the setting in <VIDEO_REF_0>."
+        ],
+        "description": "The text prompt describing the video. Reference media is sent in list order before the prompt.",
+        "title": "Prompt",
+        "maxLength": 20000,
+        "type": "string"
+      }
+    }
+  }
+}

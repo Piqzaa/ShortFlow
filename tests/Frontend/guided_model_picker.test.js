@@ -4,6 +4,34 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {GuidedModelPicker} from '../../assets/guided-model-picker.js';
 
+test('selected model explains audio and French limits without changing the chosen model', () => {
+  const Picker=GuidedModelPicker(class {});
+  const c=new Picker();
+  const note={};
+  c.element={querySelector:()=>note};
+  c.hasRecommendationsTarget=true;
+  c.recommendationsTarget={}; c.recommendationTargets=[];
+  c.selectedModelTarget={};
+  c.sourceMode=()=> 'subject';
+  c.modelsValue={
+    'kling-o3-subject':{name:'Kling O3 Standard',quality:'720p',audio:true},
+    'veo-31-subject-720p':{name:'Veo 3.1',quality:'720p',audio:true},
+    'vidu-q1-subject':{name:'Vidu Q1',quality:'1080p',audio:false},
+  };
+  c.modelTarget={value:'kling-o3-subject'};
+  c.updateRecommendations();
+  assert.match(note.textContent,/Français déconseillé/);
+  assert.equal(c.modelTarget.value,'kling-o3-subject');
+  c.modelTarget.value='veo-31-subject-720p'; c.updateRecommendations();
+  assert.match(note.textContent,/Dialogues et sons natifs/);
+  assert.match(note.textContent,/non validés/);
+  assert.match(note.textContent,/17\/11\/2026/);
+  c.modelTarget.value='vidu-q1-subject'; c.updateRecommendations();
+  assert.match(note.textContent,/Sans audio/);
+  c.modelTarget.value=''; c.updateRecommendations();
+  assert.equal(note.hidden,true);
+});
+
 function picker(name) {
   const source=readFileSync(new URL(`../../assets/controllers/${name}_controller.js`,import.meta.url),'utf8').replace("import { Controller } from '@hotwired/stimulus';",'').replace("import { GuidedModelPicker } from '../guided-model-picker.js';",'').replace('export default class','class Picker');
   const Type=runInNewContext(`${source}\nPicker`,{Controller:class {},GuidedModelPicker});

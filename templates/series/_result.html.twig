@@ -1,0 +1,17 @@
+{% set result = episode.approvedVideo ?: (episode.assembly ? episode.assembly.output : null) %}
+<section class="story-result" aria-labelledby="story-result-title">
+<h2 id="story-result-title">Ta vidéo est générée</h2>
+<p>La génération est terminée. Tu peux regarder et télécharger ta vidéo, ou refaire uniquement les plans qui ne te conviennent pas.</p>
+{% if result %}<video class="story-player" controls playsinline preload="metadata" src="{{ path('app_video_stream',{id:result.id}) }}" aria-label="Vidéo générée : {{ result.title }}"></video><p>{{ result.title }} · {{ result.duration|number_format(1,',',' ') }} s réelles</p>{% endif %}
+<div class="story-result-actions">
+{% if result %}<a class="account-secondary" href="{{ path('app_video_download',{id:result.id}) }}" download>Télécharger la vidéo ↓</a>{% endif %}
+{% if episode.assembly %}<a class="account-secondary" href="{{ path('app_edit_show',{id:episode.assembly.id}) }}">Modifier le montage ↗</a>{% endif %}
+<a class="account-secondary" href="#generated-plans">Voir les plans et en refaire un ↓</a>
+{% if episode.approvedVideo %}<form method="post" action="{{ path('app_episode_publication',{id:episode.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('episode_publication_' ~ episode.id) }}"><input type="hidden" name="revision" value="{{ episode.revision }}"><button class="button" type="submit">Préparer et programmer la publication →</button></form>{% endif %}
+</div>
+{% if episode.approvedVideo %}<p class="library-note">Cette version est choisie pour la publication. Tu choisiras encore les réseaux, les textes et la date avant de confirmer l’envoi.</p>{% endif %}
+<details class="story-publication-choice"><summary>{{ episode.approvedVideo ? 'Changer la version à publier' : 'Préparer la publication (facultatif)' }}</summary>
+<p class="library-note">Ta vidéo est déjà générée et téléchargeable. Ce choix sert uniquement à préparer sa publication : il ne relance aucune génération et ne publie rien.</p>
+<form method="post" class="account-form"><input type="hidden" name="_token" value="{{ csrf_token('episode_flow_' ~ episode.id) }}"><input type="hidden" name="revision" value="{{ episode.revision }}"><label for="episode-final-video">Version à utiliser pour la publication</label><select id="episode-final-video" name="video" required>{% for video in library %}<option value="{{ video.id }}"{% if result and result.id == video.id %} selected{% endif %}>{{ video.title }} · {{ video.duration|number_format(1,',',' ') }} s</option>{% endfor %}</select><p class="library-note">Si tu as exporté une nouvelle version depuis le montage, tu peux la choisir ici.</p><button class="button" type="submit" name="intent" value="approve">Choisir cette version pour la publication →</button></form>
+</details>
+</section>

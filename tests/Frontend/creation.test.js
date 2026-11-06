@@ -230,6 +230,32 @@ test('model search exposes clickable results and picking one changes the real co
   assert.equal(c.resolutionTarget.focused, true);
 });
 
+test('reference origin shows only the chosen input without clearing either reference', () => {
+  const c = creation();
+  const origin = {value: ''};
+  const choices = {hidden: true};
+  let changes = 0;
+  const form = {dispatchEvent: () => { changes++; }};
+  c.element = {querySelector: selector => selector.includes('referenceOrigin') ? origin : selector === '#ai-idea-form' ? form : choices};
+  c.hasSourceTarget = true;
+  c.sourceTarget = {value: 'subject'};
+  c.hasReferencePanelTarget = true;
+  c.referencePanelTarget = {hidden: false};
+  c.referenceTarget = {value: 'saved-private-image.jpg'};
+  c.changeReferenceOrigin();
+  assert.equal(choices.hidden, false);
+  assert.equal(c.referencePanelTarget.hidden, true);
+  origin.value = 'upload'; c.changeReferenceOrigin({});
+  assert.equal(c.referencePanelTarget.hidden, false);
+  origin.value = 'library'; c.changeReferenceOrigin({});
+  assert.equal(c.referencePanelTarget.hidden, true);
+  assert.equal(c.referenceTarget.value, 'saved-private-image.jpg');
+  c.sourceTarget.value = 'image'; c.changeReferenceOrigin();
+  assert.equal(choices.hidden, true);
+  assert.equal(c.referencePanelTarget.hidden, false);
+  assert.equal(changes, 2);
+});
+
 test('changing source filters models and requires an explicit compatible model choice', () => {
   const c = creation();
   c.modelsValue.image = {...c.modelsValue.kling,image:true,ratios:['auto']};
@@ -353,7 +379,7 @@ test('recommendations follow image/end-frame capabilities and keep the chosen ac
   const c = creation();
   c.modelsValue.image = {...c.modelsValue.kling, name:'Kling Image', image:true, endImageField:'tail_image_url'};
   c.modelsValue.frames = {...c.modelsValue.kling, name:'Pika Frames', image:true, requiresEnd:true, endImageField:'image_urls'};
-  const button = {dataset:{textModel:'kling', imageModel:'image', framesModel:'frames'},attrs:{},setAttribute(k,v){this.attrs[k]=v;},querySelector(selector){return selector === '[data-recommendation-access]' ? (this.access ||= {}) : (this.label ||= {});}};
+  const button = {dataset:{textModel:'kling', imageModel:'image', framesModel:'frames'},attrs:{},setAttribute(k,v){this.attrs[k]=v;},querySelector(selector){return selector === '[data-recommendation-access]' ? (this.access ||= {}) : selector === '[data-recommendation-name]' ? (this.label ||= {}) : null;}};
   Object.assign(c,{hasRecommendationsTarget:true,recommendationsTarget:{hidden:true},recommendationTargets:[button],selectedModelTarget:{},hasSourceTarget:true,sourceTarget:{value:'text'},hasUseEndTarget:true,useEndTarget:{checked:false},accessTarget:{value:'mcp'}});
   c.updateRecommendations(); assert.equal(button.dataset.modelId, 'kling'); assert.equal(button.attrs['aria-pressed'], 'true');
   c.sourceTarget.value='image'; c.useEndTarget.checked=true; c.modelTarget.value='frames';

@@ -172,12 +172,12 @@ final class AiEpisodeController extends AbstractController
                             $em->lock($user, LockMode::PESSIMISTIC_WRITE);
                             $em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
                             if ($episode->getRevision() !== $request->request->getInt('revision')) {
-                                throw new \RuntimeException('Cet épisode a changé. Vérifie à nouveau le résultat avant de le valider.');
+                                throw new \RuntimeException('Cet épisode a changé. Revois la vidéo avant de choisir la version à publier.');
                             }
                             $episode->approve($video);
                             $em->flush();
                         });
-                        $this->addFlash('success', 'Cette version de l’épisode est validée. Tu peux préparer sa publication et choisir une date.');
+                        $this->addFlash('success', 'Cette version est choisie pour la publication. Tu peux maintenant choisir les réseaux, les textes et la date.');
                     } else {
                         throw $this->createAccessDeniedException();
                     }
@@ -212,7 +212,7 @@ final class AiEpisodeController extends AbstractController
         $model = AiCatalog::MODELS[$recipe['model']];
         $library = 'ready' === $episode->getFlowState() ? $videos->findBy(['owner' => $user], ['createdAt' => 'DESC'], 100) : [];
 
-        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'repairRequested' => $redo, 'error' => $error, 'rejectedCorrection' => $rejectedCorrection, 'providerName' => AiCatalog::PROVIDERS[$model['provider']], 'hasKey' => $keys->hasAccess($user, $model['provider'], $recipe['accessMode']), 'mcpAccount' => 'mcp' === $recipe['accessMode'] && $quote ? $falOAuth->accountId($user) : null, 'model' => $model, 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'automaticOccurrence' => $em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode])?->isAutomatic() ?? false, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'repairRequested' => $redo, 'error' => $error, 'rejectedCorrection' => $rejectedCorrection, 'providerName' => AiCatalog::PROVIDERS[$model['provider']], 'hasKey' => $keys->hasAccess($user, $model['provider'], $recipe['accessMode']), 'mcpAccount' => 'mcp' === $recipe['accessMode'] && $quote ? $falOAuth->accountId($user) : null, 'model' => AiCatalog::viewModels()[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'automaticOccurrence' => $em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode])?->isAutomatic() ?? false, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/episodes/{id}/etat', name: 'app_series_episode_state', requirements: ['id' => '\d+'], methods: ['GET'])]

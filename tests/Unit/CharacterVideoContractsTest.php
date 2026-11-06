@@ -9,12 +9,81 @@ use App\Service\AiReferenceStorage;
 use App\Service\AiShotPrompts;
 use App\Service\CharacterVideoModels;
 use App\Service\FalVideoApi;
+use App\Service\GeminiOmni12Models;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 
 final class CharacterVideoContractsTest extends TestCase
 {
+    public static function omniConfigurations(): iterable
+    {
+        foreach (GeminiOmni12Models::MODELS + GeminiOmni12Models::REFERENCE_MODELS as $id => $model) {
+            foreach ([$model['seconds'][0], $model['seconds'][array_key_last($model['seconds'])]] as $seconds) {
+                foreach (isset($model['endImageField']) ? [false, true] : [false] as $end) {
+                    yield $id.'-'.$seconds.'-'.(int) $end => [$id, $seconds, $end];
+                }
+            }
+        }
+    }
+
+    #[DataProvider('omniConfigurations')]
+    public function testOmni12TextImageAndReferencesMatchTheirPublicSchemas(string $id, int $seconds, bool $end): void
+    {
+        $catalog = new AiCatalog();
+        $model = $catalog->model($id);
+        $directory = sys_get_temp_dir().'/vydflow-omni12-'.bin2hex(random_bytes(8));
+        mkdir($directory.'/42', 0750, true);
+        $names = [str_repeat('a', 48).'.jpg', str_repeat('b', 48).'.jpg'];
+        foreach ($names as $name) {
+            copy(dirname(__DIR__).'/Fixtures/reference.jpg', $directory.'/42/'.$name);
+        }
+        try {
+            $owner = new User('synthetic-omni12@example.test');
+            (new \ReflectionProperty(User::class, 'id'))->setValue($owner, 42);
+            $prompt = 'Bendo waves and says: « Retourne à la cité. »';
+            $job = new AiGeneration($owner, 'Omni 1.2 contract', $prompt, $id, $seconds, '9:16', $catalog->estimate($id, $seconds, 2));
+            if ($model['image'] ?? false) {
+                $job->attachReference($names[0]);
+                if ($end) {
+                    $job->attachEndReference($names[1]);
+                }
+            }
+            if ($model['subjectReference'] ?? false) {
+                $job->attachSubjects([$names[1]]);
+            }
+            $api = new FalVideoApi(new MockHttpClient(static fn () => throw new \LogicException('No real HTTP.')), $catalog, new AiReferenceStorage($directory));
+            $input = $api->input($job);
+            $schemas = json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/gemini-omni-12-contracts.json'), true, flags: JSON_THROW_ON_ERROR);
+            $this->assertSchema($input, $schemas[$model['endpoint']]);
+            self::assertSame($prompt, $input['prompt']);
+            self::assertSame($seconds, $input['duration']);
+            self::assertSame($model['quality'], $input['resolution']);
+            self::assertArrayNotHasKey('generate_audio', $input);
+            self::assertArrayNotHasKey('enable_safety_checker', $input);
+            self::assertSame($end, isset($input['end_image_url']));
+            self::assertLessThanOrEqual(32, strlen($id));
+            self::assertSame('2026-11-06', $model['checked']);
+        } finally {
+            foreach ($names as $name) {
+                unlink($directory.'/42/'.$name);
+            }
+            rmdir($directory.'/42');
+            rmdir($directory);
+        }
+    }
+
+    public function testOmni12PricesIncludeAudioAndDoNotAddReferenceFees(): void
+    {
+        $catalog = new AiCatalog();
+        self::assertSame(41, $catalog->estimate('gemini-omni-12-text-720p', 5));
+        self::assertSame(62, $catalog->estimate('gemini-omni-12-image-1080p', 5));
+        self::assertSame(123, $catalog->estimate('gemini-omni-12-subject-720p', 15, 7));
+        self::assertSame($catalog->estimate('gemini-omni-12-subject-720p', 5, 1), $catalog->estimate('gemini-omni-12-subject-720p', 5, 7));
+        $this->expectException(\InvalidArgumentException::class);
+        $catalog->validate('gemini-omni-12-image-720p', 15, '9:16');
+    }
+
     public static function configurations(): iterable
     {
         foreach (CharacterVideoModels::MODELS as $id => $model) {
@@ -47,6 +116,7 @@ final class CharacterVideoContractsTest extends TestCase
             $api = new FalVideoApi(new MockHttpClient(static fn () => throw new \LogicException('No real HTTP.')), $catalog, new AiReferenceStorage($directory));
             $input = $api->input($job);
             $contracts = json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/character-video-contracts.json'), true, flags: JSON_THROW_ON_ERROR);
+            $contracts += json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/gemini-omni-12-contracts.json'), true, flags: JSON_THROW_ON_ERROR);
             $this->assertSchema($input, $contracts[$model['endpoint']]);
             self::assertArrayNotHasKey('start_image_url', $input);
             self::assertArrayNotHasKey('video_urls', $input);

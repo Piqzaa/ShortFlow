@@ -1,0 +1,15 @@
+# Studio : choisir une image ou les personnages enregistrés
+
+6 novembre 2026. Retour propriétaire : le téléversement de l'image principale et la bibliothèque affichés ensemble font croire qu'il faut renseigner les deux. L'aide doit être placée juste après « Point de départ » et apparaître au survol, sans clic nécessaire.
+
+En mode personnage, le Studio présente désormais « Comment veux-tu choisir ton personnage ? » avec « Importer une image » ou « Utiliser mes personnages ». Avec JavaScript, seul le groupe choisi est affiché ; tant que le choix est vide, les deux sont masqués. Le passage d'une option à l'autre ne vide pas les champs dans la page. Au récapitulatif, seule la source choisie entre dans la préparation : les imports sont écartés pour la bibliothèque, les fiches et présences sont écartées pour l'import. L'autosave conserve les saisies ; les anciennes données sans ce nouveau champ gardent leurs validations. Le changement de source ne confirme ni ne lance une génération.
+
+Le « ? » est maintenant accolé au libellé dans le Studio et les réglages de séries. L'aide s'affiche au survol et au focus du bouton, sans comportement de clic qui ouvre/ferme un panneau. Le texte reste associé au bouton par `aria-describedby`. L'accès tactile repose sur le focus, sans nouvelle validation matérielle revendiquée.
+
+Contrôles finaux : **65 tests PHP personnages + Studio / 875 assertions verts**, **198 tests frontend verts**, syntaxe JS et build verts, 37 Twig valides, PHPStan des cinq fichiers PHP concernés et style ciblé verts. Le passage PHP final dure 14 min 20 s et inclut les médias synthétiques des adaptateurs. Les 17 tests / 252 assertions du passage personnages antérieur se chevauchent et ne s'ajoutent pas à ce total. Les erreurs HTTP attendues de propriété/accès figurent dans le journal ; aucune erreur ni échec PHPUnit final.
+
+Recette Playwright sur HTML Symfony synthétique authentifié : 320/390/768/1280 px, choix vide/image/bibliothèque, conservation du champ image et de la case cochée, aide au survol et au clavier, proximité du libellé et bornes de l'infobulle. Aucun débordement ni erreur JavaScript observé. Requêtes interceptées localement, mutations simulées, aucune génération réelle. Captures mobile et ordinateur relues. Sans JS, le choix est natif et appliqué à la soumission ; le masquage interactif nécessite JS.
+
+Le banc a d'abord révélé le schéma test ancien (table `ai_character` absente), puis un cache test ancien avec contrôleurs non à jour : les trois migrations additives existantes ont été appliquées en test, puis le cache test sans debug reconstruit. Deux régressions de la première reprise exploitable ont ensuite été corrigées : relecture de l'entité après requête et conservation des sélections historiques lors d'un autosave ancien. Les premiers passages ne sont pas présentés comme réussis.
+
+Cache web dev actualisé. Aucune nouvelle migration créée, aucun worker redémarré, aucun appel fournisseur réel, consentement, génération, coût, publication, push ou déploiement. Pas de suite PHP globale ni revue indépendante.

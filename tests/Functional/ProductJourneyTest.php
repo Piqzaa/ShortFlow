@@ -432,7 +432,7 @@ final class ProductJourneyTest extends WebTestCase
         $crawler = $this->client->request('GET', $url);
         $this->snapshot('series-result-unapproved');
         self::assertSelectorNotExists('form[action$="/publication"]');
-        $this->client->submit($crawler->selectButton('Valider cette version →')->form());
+        $this->client->submit($crawler->selectButton('Choisir cette version pour la publication →')->form());
         self::assertResponseStatusCodeSame(303);
         $crawler = $this->client->followRedirect();
         $this->snapshot('series-result-approved');

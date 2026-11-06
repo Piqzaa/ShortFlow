@@ -146,7 +146,9 @@ final class AiCharactersTest extends WebTestCase
         self::assertSelectorTextContains('.character-form details summary', 'Description et vues supplémentaires');
         $form = $crawler->selectButton('Enregistrer le personnage')->form();
         $form['ai_character[name]'] = 'Quick Milo';
-        $form['ai_character[portrait]']->upload($this->image()->getPathname());
+        $portrait = $form['ai_character[portrait]'];
+        self::assertInstanceOf(\Symfony\Component\DomCrawler\Field\FileFormField::class, $portrait);
+        $portrait->upload($this->image()->getPathname());
         $this->client->submit($form);
         self::assertResponseStatusCodeSame(303);
         $this->client->request('GET', '/studio/personnages/choix');
@@ -175,12 +177,132 @@ final class AiCharactersTest extends WebTestCase
         $this->snap('empty-reference-library');
     }
 
+    public function testExplicitReferenceOriginUsesOnlyTheChosenImagesAndCanReplaceALibraryPreparation(): void
+    {
+        [$a, $b] = $this->cast();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        self::assertSelectorExists('.source-help-heading label + .source-help button[aria-describedby]');
+        self::assertSelectorExists('[role="tooltip"]');
+        $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+        $values['intent'] = 'compose';
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'A cat waves.', 'model' => 'vidu-q1-subject', 'source' => 'subject', 'referenceOrigin' => 'library', 'reference' => $b->getPortrait(), 'seconds' => '5', 'target' => '5', 'ratio' => '9:16', 'accessMode' => 'api', 'characterSelectionManaged' => '1', 'characterSelection' => [$a->getId().':1'], 'shots' => [['prompt' => 'A cat waves slowly.', 'seconds' => '5', 'promptOnly' => 'manual', 'characterIdsManaged' => '1', 'characterIds' => [(string) $a->getId()]]]]);
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(303);
+        $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner]);
+        $flow = static::getContainer()->get(\App\Service\AiEpisodeFlow::class);
+        $libraryQuote = $flow->quote($episode);
+        self::assertSame($a->getPortrait(), $libraryQuote['references'][0]['start']);
+        self::assertNull($episode->getPreparationRecipe()['reference']);
+        $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertSelectorExists('[data-creation-target="referencePanel"][hidden]');
+        self::assertSelectorExists('[data-character-pool]:not([hidden])');
+        $this->snap('reference-origin-library');
+        $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+        $values['intent'] = 'compose';
+        $values['ai_idea']['referenceOrigin'] = 'upload';
+        $values['ai_idea']['reference'] = $b->getPortrait();
+        // Keep the old checked characters in the payload: hidden inputs must not leak into the quote.
+        $this->client->request('POST', '/studio/series/episodes/'.$episode->getId(), $values);
+        self::assertResponseStatusCodeSame(303);
+        $episode = $this->em->find(\App\Entity\AiEpisode::class, $episode->getId());
+        $this->em->refresh($episode);
+        $recipe = $episode->getPreparationRecipe();
+        self::assertArrayNotHasKey('characterPool', $recipe);
+        self::assertSame($b->getPortrait(), $recipe['reference']);
+        self::assertSame([], $flow->shots($episode)[0]->getInputs()['characterIds']);
+        $uploadQuote = $flow->quote($episode);
+        self::assertSame($b->getPortrait(), $uploadQuote['references'][0]['start']);
+        self::assertNotSame($libraryQuote['hash'], $uploadQuote['hash']);
+        self::assertSame('draft', $episode->getFlowState());
+        $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertSelectorExists('[data-character-pool][hidden]');
+        self::assertSelectorExists('[data-creation-target="referencePanel"]:not([hidden])');
+        $this->snap('reference-origin-upload');
+    }
+
+    public function testOmni12CharacterPlansProduceAnUnconfirmedQuoteWithoutGeneration(): void
+    {
+        $character = $this->create();
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+        $values['intent'] = 'compose';
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'Bendo retrouve son ami.', 'model' => 'gemini-omni-12-subject-720p', 'source' => 'subject', 'referenceOrigin' => 'library', 'seconds' => '5', 'target' => '10', 'planCount' => '2', 'ratio' => '9:16', 'accessMode' => 'api', 'characterSelectionManaged' => '1', 'characterSelection' => [$character->getId().':1'], 'shots' => array_fill(0, 2, ['prompt' => 'Bendo waves and says: « Salut mon pote. »', 'seconds' => '5', 'promptOnly' => 'manual', 'characterIdsManaged' => '1', 'characterIds' => [(string) $character->getId()]])]);
+        $this->client->request('POST', '/studio/creation', $values);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        $episode = $this->em->getRepository(\App\Entity\AiEpisode::class)->findOneBy(['owner' => $this->owner]);
+        $quote = static::getContainer()->get(\App\Service\AiEpisodeFlow::class)->quote($episode);
+        self::assertSame(82, $quote['cents']);
+        self::assertSame(2, $quote['count']);
+        self::assertSame('draft', $episode->getFlowState());
+        self::assertNull($episode->getGeneration());
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiGeneration::class)->count(['owner' => $this->owner]));
+        foreach ($quote['references'] as $reference) {
+            self::assertSame($character->getPortrait(), $reference['start']);
+            self::assertStringContainsString('Salut mon pote.', $reference['prompt']);
+        }
+        $this->snap('omni12-reference-review');
+    }
+
+    public function testThreeGuidedModelsAreCompatibleAndHaveFreshPricesForEachStartingMode(): void
+    {
+        $crawler = $this->client->request('GET', '/studio/creation');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(3, '.creation-recommendations button');
+        $catalog = static::getContainer()->get(\App\Service\AiCatalog::class);
+        foreach (['text', 'image', 'subject', 'frames'] as $source) {
+            $ids = $crawler->filter('.creation-recommendations button')->each(static fn ($button): string => $button->attr('data-'.$source.'-model'));
+            self::assertCount(3, array_unique($ids));
+            self::assertStringStartsWith('gemini-omni-12-', $ids[0]);
+            foreach ($ids as $id) {
+                $model = $catalog->model($id);
+                self::assertSame('frames' === $source ? 'image' : $source, $catalog->referenceMode($id));
+                self::assertFalse($catalog->priceExpired($model['checked'] ?? \App\Service\AiCatalog::CHECKED), $id);
+                self::assertStringNotContainsString('veo', $id);
+                self::assertStringNotContainsString('kling', $id);
+                if ('frames' === $source) {
+                    self::assertArrayHasKey('endImageField', $model);
+                }
+            }
+        }
+        $this->snap('three-guided-models');
+    }
+
+    public function testManualPromptHelpFollowsTheModelWithoutTranslatingFrenchDialogue(): void
+    {
+        $dialogue = 'Bendo says: « Retourne à la cité. »';
+        $crawler = $this->client->request('GET', '/studio/creation');
+        $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
+        $values += ['revision' => $crawler->filter('#ai-idea-form')->attr('data-idea-save-revision-value'), 'editor' => str_repeat('f', 32), 'sequence' => '1'];
+        $values['ai_idea'] = array_replace($values['ai_idea'], ['prompt' => 'Bendo se fait recadrer.', 'model' => 'veo-31-subject-720p', 'source' => 'subject', 'referenceOrigin' => 'upload', 'seconds' => '8', 'ratio' => '9:16', 'accessMode' => 'api', 'shots' => [['prompt' => $dialogue, 'seconds' => '8', 'promptOnly' => 'manual']]]);
+        $this->client->request('POST', '/studio/creation/idee', $values);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorTextContains('label[for="ai_idea_shots_0_prompt"]', 'Décris ton plan en anglais');
+        self::assertSelectorTextContains('[data-shot-language-help]', 'consignes visuelles en anglais');
+        self::assertSelectorTextContains('#ai_idea_shots_0_prompt', $dialogue);
+        $this->snap('prompt-language-english');
+        $values['sequence'] = '2';
+        $values['ai_idea']['model'] = 'kling-o3-subject';
+        $values['ai_idea']['seconds'] = $values['ai_idea']['shots'][0]['seconds'] = '5';
+        $this->client->request('POST', '/studio/creation/idee', $values);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorTextContains('label[for="ai_idea_shots_0_prompt"]', 'Décris ton plan');
+        self::assertSelectorNotExists('#ai_idea_shots_0_prompt[placeholder*="anglais"]');
+        self::assertSelectorTextNotContains('[data-shot-language-help]', 'anglais');
+        self::assertSelectorTextContains('#ai_idea_shots_0_prompt', $dialogue);
+        self::assertSame(0, $this->em->getRepository(\App\Entity\AiEpisode::class)->count(['owner' => $this->owner]));
+        $this->snap('prompt-language-generic');
+    }
+
     public function testNewReferenceChoicesFitDurableGenerationStorage(): void
     {
         $catalog = static::getContainer()->get(\App\Service\AiCatalog::class);
         $owner = $this->em->find(User::class, $this->owner);
         $ids = [];
-        foreach (\App\Service\CharacterVideoModels::MODELS as $id => $model) {
+        foreach (\App\Service\CharacterVideoModels::MODELS + \App\Service\GeminiOmni12Models::MODELS as $id => $model) {
             $job = new \App\Entity\AiGeneration($owner, 'Synthetic storage contract', 'A cat waves.', $id, $model['seconds'][0], $model['ratios'][0], $catalog->estimate($id, $model['seconds'][0], 1));
             $this->em->persist($job);
             $ids[] = $id;

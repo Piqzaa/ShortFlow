@@ -35,11 +35,12 @@ export default class extends Controller {
 
   update() {
     const source = this.workspace.querySelector('[name$="[source]"]')?.value || this.modeValue;
-    const supported = source === 'subject';
+    const origin = this.workspace.querySelector('[name$="[referenceOrigin]"]');
+    const supported = source === 'subject' && (!origin || origin.value === 'library');
     const chosen = selectedCharacters(this.element, 'characterSelection');
     const ids = new Set(chosen.map(input => input.value.split(':')[0]));
     if (this.pool) this.pool.hidden = !supported;
-    if (this.notice) this.notice.hidden = supported || !chosen.length;
+    if (this.notice) this.notice.hidden = source === 'subject' || !chosen.length;
     if (this.notice && !this.notice.hidden) { const text = `${chosen.length} personnage(s) conservé(s). Choisis « Garder un personnage de référence » pour les utiliser ici, ou retire cette sélection.`; const span = this.notice.querySelector('span'); if (span.textContent !== text) span.textContent = text; }
     for (const group of this.sceneGroups()) {
       group.parentElement.hidden = !supported || !group.querySelector('input[type="checkbox"]');
@@ -59,9 +60,9 @@ export default class extends Controller {
     // Keep older isolated imports recoverable; new subject preparations use saved fiches.
     const legacy = Boolean(this.element.querySelector('[name$="[reference]"]')?.value || this.element.querySelector('[name$="[image]"]')?.files?.length || [...this.element.querySelectorAll('[name*="[subjects]"]')].some(input => input.value));
     const panel = this.workspace.querySelector('[data-creation-target="referencePanel"], [data-series-settings-target="images"]');
-    if (panel && source === 'subject') panel.hidden = !legacy;
+    if (panel && source === 'subject') panel.hidden = origin ? origin.value !== 'upload' : !legacy;
     const loose = this.element.querySelector('[data-controller~="subject-list"]');
-    if (loose) loose.hidden = !legacy;
+    if (loose) loose.hidden = origin ? source !== 'subject' || origin.value !== 'upload' : !legacy;
   }
 
   clear(event) {

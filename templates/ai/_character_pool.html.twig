@@ -1,4 +1,4 @@
-<section class="story-context character-pool" data-character-pool{% if poolForm.source.vars.value != 'subject' %} hidden{% endif %}><h2>Mes personnages</h2>
+<section class="story-context character-pool" data-character-pool{% if poolForm.source.vars.value != 'subject' or (poolForm.referenceOrigin is defined and poolForm.referenceOrigin.vars.value == 'upload') %} hidden{% endif %}><h2>Mes personnages</h2>
 {% if not poolForm.characterSelection.vars.choices|length %}<p class="library-note" data-character-empty>Aucun personnage enregistré.</p>{% endif %}
 {{ form_widget(poolForm.characterSelectionManaged) }}
 <div class="character-picker-actions"><a class="account-secondary" href="{{ path('app_character_new',{rapide:1}) }}" target="_blank" rel="noopener" data-action="character-picker#creating">{{ poolForm.characterSelection.vars.choices|length ? 'Ajouter un personnage' : 'Créer mon premier personnage' }} ↗</a><button type="button" class="account-secondary" data-character-refresh data-action="character-picker#refresh" hidden>Actualiser la liste</button></div>

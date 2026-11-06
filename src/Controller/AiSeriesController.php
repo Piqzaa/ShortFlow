@@ -61,7 +61,7 @@ final class AiSeriesController extends AbstractController
 
         $seriesList = $repository->findBy(['owner' => $user], ['createdAt' => 'DESC', 'id' => 'DESC'], 12, ($page - 1) * 12);
 
-        return $this->render('series/index.html.twig', ['covers' => $covers->series($user, $seriesList), 'seriesList' => $seriesList, 'page' => $page, 'pages' => $pages, 'models' => AiCatalog::MODELS], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/index.html.twig', ['covers' => $covers->series($user, $seriesList), 'seriesList' => $seriesList, 'page' => $page, 'pages' => $pages, 'models' => AiCatalog::viewModels()], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/nouvelle', name: 'app_series_new', methods: ['GET', 'POST'])]
@@ -100,7 +100,7 @@ final class AiSeriesController extends AbstractController
             }
         }
 
-        return $this->render('series/configure.html.twig', ['series' => $series, 'seriesForm' => $form, 'models' => AiCatalog::MODELS, 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/configure.html.twig', ['series' => $series, 'seriesForm' => $form, 'models' => AiCatalog::viewModels(), 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/series/{id}/episodes', name: 'app_series_add_episodes', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -235,7 +235,7 @@ final class AiSeriesController extends AbstractController
         }
         $model = AiCatalog::MODELS[$series->getRecipe()['model']];
 
-        return $this->render('series/show.html.twig', ['writerAvailable' => $writer->available(), 'accountNames' => array_map('array_flip', $accountChoices), 'episodeCovers' => $covers->episodes($user, $episodes), 'recurrenceTotalCents' => ($recurrencePreview['cents'] ?? 0) * (is_int($recurrenceForm->get('limit')->getData()) ? $recurrenceForm->get('limit')->getData() : 0), 'recurrence' => $recurrence, 'recurrenceForm' => $recurrencePreview ? $recurrenceForm->createView() : null, 'recurrencePreview' => $recurrencePreview, 'recurrenceError' => $recurrenceError, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'pagination' => $pagination, 'navigationBlocked' => $invalid, 'occurrenceHistory' => $occurrenceHistory, 'historyOpen' => $request->query->has('occurrencePage'), 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::MODELS, 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/show.html.twig', ['writerAvailable' => $writer->available(), 'accountNames' => array_map('array_flip', $accountChoices), 'episodeCovers' => $covers->episodes($user, $episodes), 'recurrenceTotalCents' => ($recurrencePreview['cents'] ?? 0) * (is_int($recurrenceForm->get('limit')->getData()) ? $recurrenceForm->get('limit')->getData() : 0), 'recurrence' => $recurrence, 'recurrenceForm' => $recurrencePreview ? $recurrenceForm->createView() : null, 'recurrencePreview' => $recurrencePreview, 'recurrenceError' => $recurrenceError, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'pagination' => $pagination, 'navigationBlocked' => $invalid, 'occurrenceHistory' => $occurrenceHistory, 'historyOpen' => $request->query->has('occurrencePage'), 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::viewModels(), 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     private function positiveNumber(mixed $value, int $fallback = 1): int

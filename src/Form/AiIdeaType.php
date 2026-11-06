@@ -45,7 +45,7 @@ final class AiIdeaType extends AbstractType
         $builder
             ->add('subjectDetails', CollectionType::class, ['entry_type' => AiSubjectType::class, 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'label' => false, 'constraints' => [new Assert\Count(max: 7)]])
             ->add('subjects', CollectionType::class, ['entry_type' => HiddenType::class, 'allow_add' => true, 'allow_delete' => true, 'required' => false, 'constraints' => [new Assert\Count(max: 7)], 'entry_options' => ['required' => false, 'constraints' => [new Assert\Regex('/^[a-f0-9]{48}\.jpg$/D')]]])
-            ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire avec du texte' => 'text', 'Animer une image de début' => 'image', 'Garder un personnage de référence' => 'subject'], 'help' => 'Le texte seul suffit pour commencer. Pour retrouver les mêmes personnages sur plusieurs plans, privilégie un mode avec images de référence. Elles aident la cohérence visuelle, sans garantir les mouvements ni les voix. Les modes image et personnage demandent une image principale.', 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
+            ->add('source', ChoiceType::class, ['label' => 'Point de départ', 'choices' => ['Décrire avec du texte' => 'text', 'Animer une image de début' => 'image', 'Garder un personnage de référence' => 'subject'], 'help' => 'Le texte seul suffit pour commencer. En mode personnage, importe une image ou utilise tes personnages enregistrés. Les références aident la cohérence visuelle, sans garantir les mouvements ni les voix.', 'placeholder' => false, 'required' => false, 'empty_data' => 'text'])
             ->add('reference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
             ->add('endReference', HiddenType::class, ['required' => false, 'constraints' => [new Assert\Regex(pattern: '/^[a-f0-9]{48}\.jpg$/D', groups: ['Default', 'connection', 'autosave'])]])
             ->add('useEnd', CheckboxType::class, ['label' => 'Ajouter une image de fin', 'required' => false])
@@ -57,7 +57,13 @@ final class AiIdeaType extends AbstractType
             ->add('seconds', ChoiceType::class, ['label' => 'Durée du plan', 'placeholder' => 'Choisir une durée', 'choices' => array_combine(array_map(static fn (int $s): string => $s.' secondes', (new AiCatalog())->durations()), (new AiCatalog())->durations()), 'constraints' => [new Assert\NotBlank()]])
             ->add('ratio', ChoiceType::class, ['label' => 'Format', 'placeholder' => 'Choisir un format', 'choices' => ['Vertical · 9:16' => '9:16', 'Paysage · 16:9' => '16:9', 'Carré · 1:1' => '1:1', 'Celui de l’image' => 'auto'], 'constraints' => [new Assert\NotBlank()]]);
         $builder->add('characterSelection', AiCharacterPoolType::class, ['choices' => $options['character_choices']]);
+        $builder->add('referenceOrigin', ChoiceType::class, ['label' => 'Comment veux-tu choisir ton personnage ?', 'choices' => ['Importer une image' => 'upload', 'Utiliser mes personnages' => 'library'], 'placeholder' => 'Choisir une option', 'required' => false]);
         $builder->add('characterSelectionManaged', HiddenType::class, ['data' => '1', 'required' => false, 'empty_data' => '0']);
+        $builder->addEventListener(FormEvents::PRE_SUBMIT, static function (FormEvent $event): void {
+            if (is_array($event->getData()) && !in_array('autosave', $event->getForm()->getConfig()->getOption('validation_groups') ?? [], true)) {
+                $event->setData(\App\Service\AiCharacterSelection::activeReferenceData($event->getData()));
+            }
+        });
         $builder->addEventListener(FormEvents::POST_SUBMIT, static function (FormEvent $event): void {
             $data = $event->getData();
             $form = $event->getForm();

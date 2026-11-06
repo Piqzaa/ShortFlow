@@ -774,12 +774,22 @@ final class AiEpisodeFlowTest extends WebTestCase
         $this->flow()->advance($episode->getId());
         self::assertSame($assembly->getId(), $episode->getAssembly()->getId());
         $crawler = $this->client->request('GET', '/studio/series/episodes/'.$episode->getId());
+        self::assertSelectorTextContains('.story-result h2', 'Ta vidéo est générée');
+        self::assertSelectorExists('.story-result video[controls]');
+        self::assertSelectorExists('.story-result-actions a[download]');
+        self::assertSelectorTextContains('.story-publication-choice summary', 'facultatif');
+        self::assertStringNotContainsString('Ta vidéo attend ta validation', $this->client->getResponse()->getContent());
+        self::assertLessThan(strpos($this->client->getResponse()->getContent(), 'id="generated-plans"'), strpos($this->client->getResponse()->getContent(), 'id="story-result-title"'));
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/episode-result-before.html', $this->client->getResponse()->getContent());
         self::assertSelectorNotExists('a[href*="publications/preparer"]');
         self::assertSelectorNotExists('form[action$="/publication"]');
-        $this->client->submit($crawler->selectButton('Valider cette version →')->form());
+        $this->client->submit($crawler->selectButton('Choisir cette version pour la publication →')->form());
         self::assertResponseStatusCodeSame(303);
         $this->client->followRedirect();
         self::assertSelectorExists('form[method="post"][action="/studio/series/episodes/'.$episode->getId().'/publication"] button[type="submit"]');
+        self::assertSelectorTextContains('.story-result h2', 'Ta vidéo est générée');
+        self::assertSelectorCount(4, '.story-result-actions > a, .story-result-actions > form');
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/episode-result-after.html', $this->client->getResponse()->getContent());
         self::assertNotNull($this->fresh($episode)->getApprovedVideo());
         self::assertSame(3, $this->submissions);
     }

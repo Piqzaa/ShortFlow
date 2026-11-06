@@ -42,7 +42,32 @@ final class AiCharacterSelection
 
     public function formData(array $data): array
     {
-        $data['characterSelection'] = array_map(static fn (array $row): string => $row['id'].':'.$row['revision'], $data['characterPool'] ?? []);
+        if ('upload' !== ($data['referenceOrigin'] ?? null) || !array_key_exists('characterSelection', $data)) {
+            $data['characterSelection'] = array_map(static fn (array $row): string => $row['id'].':'.$row['revision'], $data['characterPool'] ?? []);
+        }
+
+        return $data;
+    }
+
+    /** Only the chosen reference source may enter a new preparation. Older forms keep their existing validation. */
+    public static function activeReferenceData(array $data): array
+    {
+        if ('subject' !== ($data['source'] ?? null)) {
+            return $data;
+        }
+        if ('library' === ($data['referenceOrigin'] ?? null)) {
+            $data['reference'] = '';
+            $data['subjects'] = $data['subjectDetails'] = [];
+        } elseif ('upload' === ($data['referenceOrigin'] ?? null)) {
+            unset($data['characterPool']);
+            $data['characterSelection'] = [];
+            foreach (is_array($data['shots'] ?? null) ? $data['shots'] : [] as $index => $shot) {
+                if (is_array($shot)) {
+                    $data['shots'][$index]['characterIds'] = [];
+                    $data['shots'][$index]['characterIdsManaged'] = '1';
+                }
+            }
+        }
 
         return $data;
     }
@@ -50,6 +75,9 @@ final class AiCharacterSelection
     /** Resolve only server-owned snapshots from the previous database/session value. */
     public function resolve(User $owner, array $data, array $previous = []): ?array
     {
+        if ('subject' === ($data['source'] ?? null) && 'upload' === ($data['referenceOrigin'] ?? null)) {
+            return null;
+        }
         if ('1' !== (string) ($data['characterSelectionManaged'] ?? '0')) {
             return $previous['characterPool'] ?? null;
         }

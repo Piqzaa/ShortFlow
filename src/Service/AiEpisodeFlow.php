@@ -35,6 +35,7 @@ final class AiEpisodeFlow
     /** @param array<string,mixed> $data */
     public function prepare(User $owner, array $data, ?AiEpisode $episode = null): AiEpisode
     {
+        $data = AiCharacterSelection::activeReferenceData($data);
         $model = $this->catalog->model($data['model']);
         if (isset($model['operation'])) {
             throw new \RuntimeException('Une extension native se prépare depuis une vidéo existante de la bibliothèque.');

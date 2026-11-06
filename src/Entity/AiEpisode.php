@@ -286,7 +286,7 @@ class AiEpisode
     public function getStatusLabel(): string
     {
         if ($this->flowState) {
-            return ['review' => 'Devis des plans restants', 'draft' => 'Plans à préparer', 'running' => 'Génération des plans', 'paused' => 'En pause', 'stopped' => 'Arrêté', 'assembling' => 'Assemblage en cours', 'ready' => $this->approvedVideo ? 'Validé' : 'À valider'][$this->flowState];
+            return ['review' => 'Devis des plans restants', 'draft' => 'Plans à préparer', 'running' => 'Génération des plans', 'paused' => 'En pause', 'stopped' => 'Arrêté', 'assembling' => 'Assemblage en cours', 'ready' => $this->approvedVideo ? 'Version choisie pour la publication' : 'Vidéo générée'][$this->flowState];
         }
 
         return $this->generation ? AiGeneration::LABELS[$this->generation->getStatus()] : 'À préparer';

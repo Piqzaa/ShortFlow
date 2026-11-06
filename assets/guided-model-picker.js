@@ -60,6 +60,14 @@ export function GuidedModelPicker(Base) {
     }
   }
 
+  speechCaption(model, id = '') {
+    if (!model?.audio) return 'Sans audio : ce modèle ne génère ni voix ni dialogues.';
+    if (id === 'kling-o3-subject') return 'Français déconseillé : prononciation peu intelligible lors de notre essai avec Kling O3 Standard. Audio ne signifie pas français maîtrisé.';
+    if (id === 'kling-3' || id === 'kling-3-image') return 'Voix annoncées en chinois ou anglais. Ce modèle ne convient pas à des dialogues français.';
+    if (id.startsWith('veo')) return `Dialogues et sons natifs. Français, argot et voix identiques entre les plans non validés dans VydFlow.${id.startsWith('veo-31-subject-') ? ' Retrait de cet accès Fal annoncé le 17/11/2026.' : ''}`;
+    return 'Audio généré : français et argot non validés dans VydFlow. Les mots exacts, la prononciation et une voix identique entre les plans ne sont pas garantis.';
+  }
+
   updateRecommendations() {
     if (!this.hasRecommendationsTarget) return;
     this.recommendationsTarget.hidden = false;
@@ -74,11 +82,19 @@ export function GuidedModelPicker(Base) {
       if (name && model) name.textContent = model.name;
       const access = button.querySelector('[data-recommendation-access]');
       if (access && model) access.textContent = `${this.providersValue?.[model.provider] || model.provider} · ${this.pickerConnected(model) ? 'connexion enregistrée' : 'à connecter'}`;
+      const example = button.querySelector('[data-recommendation-example]');
+      if (example && model) {
+        const seconds = model.seconds.find(value => value >= 5) ?? model.seconds[0];
+        const cents = model.pricesCents?.[seconds] ?? Math.ceil(((model.rateMicros || 0) * seconds + (model.fixedMicros || 0) + (model.subjectReference ? model.referenceMicros || 0 : 0)) / 10000);
+        example.textContent = `${seconds} s · ${model.quality === '4k' ? '4K' : model.quality} · ${Number.isFinite(cents) ? (cents / 100).toLocaleString('fr-FR', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' $ US estimés' : 'coût au récapitulatif'}${model.subjectReference && model.referenceMicros ? ' · exemple avec 1 référence' : ''}`;
+      }
     });
     const selected = this.modelsValue[this.modelTarget.value];
     this.selectedModelTarget.hidden = !selected;
     const quality = selected?.quality === '4k' ? '4K' : selected?.quality;
     this.selectedModelTarget.textContent = selected ? `Sélection : ${selected.name}${selected.name.toLowerCase().includes(quality.toLowerCase()) ? '' : ` · ${quality}`}` : '';
+    const speech = this.element?.querySelector('[data-selected-model-speech]');
+    if (speech) { speech.hidden = !selected; speech.textContent = selected ? this.speechCaption(selected, this.modelTarget.value) : ''; }
   }
 
   syncPicker() {

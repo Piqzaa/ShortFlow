@@ -7,8 +7,12 @@
   {{ form_widget(shotForm.promptOnly) }}{{ form_errors(shotForm.promptOnly) }}
   <div class="shot-card-details" data-shot-details>
     {{ form_widget(shotForm.sceneDescription) }}{{ form_errors(shotForm.sceneDescription) }}
-    {{ form_row(shotForm.prompt,{attr:singlePrepared|default(false) and shotNumber|default(0) == 1 ? {autofocus:true} : {}}) }}
-    <p class="library-note">Rédige les consignes vidéo en anglais, comme les propositions du scénario. Garde les dialogues et textes souhaités dans leur langue.</p>
+    {% set shotModel = ideaForm is defined ? models[ideaForm.model.vars.value]|default({}) : model|default({}) %}
+    {% set englishPrompt = shotModel.promptLanguage|default('') == 'en' %}
+    {% set promptAttrs = {'data-shot-prompt':'',placeholder:englishPrompt ? 'Décris en anglais l’action et le mouvement de caméra…' : 'Décris l’action et le mouvement de caméra…'} %}
+    {% if singlePrepared|default(false) and shotNumber|default(0) == 1 %}{% set promptAttrs = promptAttrs|merge({autofocus:true}) %}{% endif %}
+    {{ form_row(shotForm.prompt,{label:englishPrompt ? 'Décris ton plan en anglais' : 'Décris ton plan',attr:promptAttrs}) }}
+    <p class="library-note" data-shot-language-help>{{ englishPrompt ? 'Ce modèle documente des consignes visuelles en anglais. Garde les dialogues et textes souhaités dans leur langue.' : 'Décris l’action et le mouvement de caméra. Garde les dialogues et textes souhaités dans leur langue.' }}</p>
     {% include 'ai/_shot_references.html.twig' %}
     <div class="story-row-actions">
       <button type="submit" class="account-secondary" name="plan_action" value="up:{{ shotIndex|default(0) }}" data-action="shot-editor#act">Monter</button>
