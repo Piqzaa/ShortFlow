@@ -62,7 +62,7 @@ final class AiStudioTest extends WebTestCase
         self::assertSame(0, $this->submissions);
     }
 
-    public function testStudioShowsFourRecentProjectsAndKeepsTheRestInHistory(): void
+    public function testStudioFocusesOnCreationAndKeepsProjectsInHistory(): void
     {
         for ($i = 1; $i <= 8; ++$i) {
             $this->em()->persist(new \App\Entity\AiEpisode($this->owner, $i, 'Projet performance '.$i));
@@ -70,9 +70,10 @@ final class AiStudioTest extends WebTestCase
         $this->em()->flush();
         $this->client->request('GET', '/studio/creation');
         self::assertResponseIsSuccessful();
-        self::assertSelectorCount(4, '.recent-creation');
-        self::assertSelectorTextContains('.recent-creations', 'Projet performance 8');
-        self::assertSelectorTextNotContains('.recent-creations', 'Projet performance 1');
+        self::assertSelectorNotExists('.recent-creations');
+        self::assertSelectorNotExists('.ai-history-list');
+        self::assertSelectorExists('.creation-heading a[href="/studio/creation/historique"]');
+        self::assertSelectorExists('.creation-heading a[href="/studio"]');
         $this->client->request('GET', '/studio/creation/historique');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Projet performance 1', $this->client->getResponse()->getContent());

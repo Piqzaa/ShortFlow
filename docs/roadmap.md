@@ -1,5 +1,8 @@
 # VydFlow — feuille de route active jusqu'au déploiement
 
+6 novembre 2026 : **R7.3 Studio, partie 1 validée et livrée localement**. Blocs « Reprendre une création » en haut et « Mes dernières vidéos à plans » en bas retirés ; liens Historique/Mes vidéos conservés. Aucun projet supprimé. Test fonctionnel adapté 1 / 8 et Twig ciblé verts ; caches test/dev actualisés. Aucun JS/CSS/build/worker redémarré/appel fournisseur/coût/publication/push/déploiement. Les autres parties du plan attendent la validation distincte du propriétaire. Voir docs/r72-retours-utilisateurs-20261106.md.
+
+
 6 novembre 2026, retour suivant R7.2 : **une seule vue de liste Vidéos**. Ancienne bibliothèque après suppression remplacée par redirection vers /studio avec recherche/page/contexte conservés ; retours directs après suppression simple/groupée, renommage et import simple. Imports montage/publication explicites conservés. Le décalage de cartes de l’ancienne grille n’est plus exposé. **19 fonctionnels bibliothèque / 241 assertions**, style deux PHP/PHPStan contrôleur/Twig ciblés verts ; deux largeurs navigateur sans débordement, alignement premier rang desktop vérifié. Cache dev actualisé, ancienne route avec recherche/page et quatre GET200 contrôlés en lecture seule, 27 compteurs égaux/zéro HTTP fournisseur. Aucun JS/CSS/build/worker redémarré, média propriétaire supprimé, génération/coût/migration/publication/push/déploiement. Voir docs/r72-retours-utilisateurs-20261106.md.
 
 

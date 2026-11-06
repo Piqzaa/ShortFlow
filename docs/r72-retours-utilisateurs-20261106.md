@@ -39,6 +39,8 @@ Cache dev actualisé et seul `edit-worker` déjà actif redémarré après garde
 
 ## Prochain lot R7.3
 
+Studio, partie 1 validée explicitement par le propriétaire : les blocs « Reprendre une création » en haut et « Mes dernières vidéos à plans » en bas sont retirés. Les accès « Historique » et « Mes vidéos » restent dans l’en-tête ; aucune création n’est supprimée. Le test fonctionnel existant est adapté pour vérifier l’absence des listes, les deux accès et la présence des anciens projets dans l’historique. Les parties suivantes (ordre du parcours, modèles et cartes des plans) attendent chacune une validation du propriétaire avant modification.
+
 1. Réduire les écrans initiaux de Studio et Séries à une intention et aux réglages essentiels ; conserver les saisies et l’accès aux paramètres avancés.
 2. Présenter les prix en euros avec conversion datée et explication de la monnaie facturée. Choisir la source et la politique de rafraîchissement avant implémentation.
 3. Rendre l’entrée connexion Fal compréhensible sans jargon ; garder les clés API en option avancée.
