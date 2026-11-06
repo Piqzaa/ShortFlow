@@ -107,6 +107,19 @@ test('writing paths preserve the idea and existing prompts when switching modes'
   assert.equal(idea.value, 'My original idea.');
 });
 
+test('single-plan mode locks the count and enables its submitted mirror', () => {
+  const {controller}=setup(1);
+  controller.hasPlanCountTarget=true;controller.planCountTarget={value:'1',options:[]};
+  controller.hasSingleCountTarget=true;controller.singleCountTarget={disabled:true};
+  controller.countStatusTarget={};
+  controller.continuityTarget.value='single';controller.refresh();
+  assert.equal(controller.planCountTarget.disabled,true);
+  assert.equal(controller.singleCountTarget.disabled,false);
+  controller.continuityTarget.value='independent';controller.refresh();
+  assert.equal(controller.planCountTarget.disabled,false);
+  assert.equal(controller.singleCountTarget.disabled,true);
+});
+
 test('the empty studio shows one model hint and an import refusal always becomes visible', () => {
   const {controller}=setup(0);
   controller.selectedModel=null;

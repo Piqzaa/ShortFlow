@@ -26,8 +26,15 @@ export default class extends GuidedModelPicker(Controller) {
     this.changeSource();
     this.changeModel();
     this.filter();
-    if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = this.modelDetailsTarget.dataset.pickerInvalid === 'true' || Boolean(this.modelTarget.value && !this.recommendationTargets.some(button => button.dataset.modelId === this.modelTarget.value));
+    this.element.querySelectorAll('[data-model-dialog-control]').forEach(button => { button.hidden = false; });
+    if (this.hasModelDetailsTarget && this.modelDetailsTarget.tagName === 'DIALOG') {
+      this.modelDetailsTarget.close();
+      if (this.modelDetailsTarget.dataset.pickerInvalid === 'true') this.openModels();
+    } else if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = this.modelDetailsTarget.dataset.pickerInvalid === 'true' || Boolean(this.modelTarget.value && !this.recommendationTargets.some(button => button.dataset.modelId === this.modelTarget.value));
   }
+
+  openModels() { if (this.catalogTarget.tagName === 'DIALOG') { if (!this.catalogTarget.open) this.catalogTarget.showModal(); } else this.catalogTarget.open = true; }
+  closeModels() { if (this.catalogTarget.tagName === 'DIALOG') this.catalogTarget.close(); else this.catalogTarget.open = false; }
 
   modelMode(model) { return model?.subjectReference ? 'subject' : model?.image ? 'image' : 'text'; }
 
@@ -174,7 +181,7 @@ export default class extends GuidedModelPicker(Controller) {
   }
 
   showFourK() {
-    this.catalogTarget.open = true;
+    this.openModels();
     this.qualityTarget.value = '4k'; this.searchTarget.value = ''; this.providerTarget.value = '';
     this.audioTarget.value = ''; this.minimumTarget.value = ''; this.onlyConnectedTarget.checked = false;
     this.onlyFavoritesTarget.checked = false; this.comparisonTarget.value = '6';
@@ -220,6 +227,7 @@ export default class extends GuidedModelPicker(Controller) {
     if (!this.modelsValue[id]) return;
     this.modelTarget.value = id;
     this.modelTarget.dispatchEvent(new Event('change', { bubbles: true }));
+    if (this.hasModelDetailsTarget && this.modelDetailsTarget.tagName === 'DIALOG') this.closeModels();
     if (this.hasModelDetailsTarget && event.currentTarget.classList.contains('creation-recommendation')) this.modelDetailsTarget.open = false;
     if (this.hasConnectionTarget && !this.connectionTarget.hidden) {
       this.connectionTarget.focus();
@@ -296,15 +304,17 @@ export default class extends GuidedModelPicker(Controller) {
     const connected = model?.provider === 'fal' ? (mcp ? this.connectedValue['fal-mcp'] : this.connectedValue['fal-api'] ?? this.connectedValue.fal) : this.connectedValue[model?.provider];
     if (this.hasAccessDetailsTarget && !this.accessTarget.value) this.accessDetailsTarget.open = true;
     if (this.hasBillingTarget) {
-      this.billingTarget.textContent = this.connectionCaption();
+      const compact = this.billingTarget.hasAttribute?.('data-compact-connection');
+      this.billingTarget.textContent = compact ? (model ? `${this.providersValue?.[model.provider] || model.provider} · ${connected ? 'Connecté' : 'À connecter'}` : '') : this.connectionCaption();
+      if (compact) { this.billingTarget.hidden = !model; this.billingTarget.closest('.studio-connection-status').hidden = !model; }
     }
     this.connectTarget.hidden = Boolean(this.hasConnectionTarget || (model && connected));
     this.connectTarget.textContent = mcp ? 'Connecter Fal en gardant l’idée' : 'Ajouter ma clé en gardant l’idée';
     if (this.hasConnectionTarget) {
       this.connectionTarget.hidden = !model || Boolean(connected);
       const name = this.providersValue?.[model?.provider] || model?.provider || '';
-      this.connectionMessageTarget.textContent = mcp ? 'Pour générer la vidéo, connecte ton compte Fal. La proposition de texte reste locale.' : `Pour générer la vidéo, ajoute ta clé ${name}. La proposition de texte reste locale.`;
-      this.connectionButtonTarget.textContent = mcp ? 'Connecter mon compte Fal' : `Connecter ${name}`;
+      this.connectionMessageTarget.textContent = mcp ? 'Connecte ton compte Fal pour générer la vidéo.' : `Connecte ${name} pour générer la vidéo.`;
+      this.connectionButtonTarget.textContent = mcp ? 'Connecter mon compte' : `Connecter ${name}`;
     }
     if (!model || !Number.isSafeInteger(model.rateMicros) || model.rateMicros < 0 || !model.seconds.includes(seconds)) {
       this.costTarget.textContent = model ? 'Choisis une durée compatible pour voir l’estimation' : 'Choisis un modèle pour voir l’estimation';

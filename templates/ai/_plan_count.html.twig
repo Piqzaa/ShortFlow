@@ -1,3 +1,4 @@
 <div class="preparation-count" data-preparation-target="countPanel">
   {{ form_row(ideaForm.planCount,{label:'Nombre de plans',attr:{'data-preparation-target':'planCount','data-action':'change->preparation#planCountChanged'}}) }}
+  <input type="hidden" name="{{ ideaForm.planCount.vars.full_name }}" value="1" data-preparation-target="singleCount" disabled>
 </div>

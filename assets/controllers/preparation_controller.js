@@ -3,7 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'writingChoice', 'writingMode', 'writingHelp', 'ideaPanel', 'storyPanel'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'writingChoice', 'writingMode', 'writingHelp', 'ideaPanel', 'storyPanel', 'singleCount'];
   static values = { models: Object };
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasImageModeButtonTarget) this.imageModeButtonTarget.hidden = false; if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
@@ -29,7 +29,9 @@ export default class extends Controller {
     if (this.hasPlanCountTarget && event.target.matches('[data-preparation-target="continuity"]') && this.continuityTarget.value !== 'single' && this.editor?.rows().length === 1) this.planCountTarget.value = '';
     if (this.continuityTarget.value === 'single' && this.editor?.rows().length === 1 && event.target.matches('[name*="[shots]"][name$="[seconds]"]') && this.model?.seconds.includes(Number(event.target.value))) this.totalTarget.value = event.target.value;
     this.refresh();
-    if (this.continuityTarget.value === 'single' && event.target.matches('[data-preparation-target="continuity"]')) this.applySingle();
+    if (this.continuityTarget.value === 'single' && event.target.matches('[data-preparation-target="continuity"]')) {
+      if (this.hasPlanCountTarget) this.planCountChanged(event); else this.applySingle();
+    }
     if (this.continuityTarget.value !== 'single' && event.target.matches('[data-creation-target="model"]') && this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) this.redistribute();
   }
   input(event) {
@@ -84,6 +86,8 @@ export default class extends Controller {
     this.updateWritingMode();
     this.noticeTarget.hidden = false;
     const model = this.model;
+    if (this.hasPlanCountTarget) this.planCountTarget.disabled = this.continuityTarget.value === 'single';
+    if (this.hasSingleCountTarget) this.singleCountTarget.disabled = this.continuityTarget.value !== 'single';
     if (this.hasCountPanelTarget) this.countPanelTarget.hidden = false;
     if (this.hasPlanCountTarget && this.continuityTarget.value === 'single') {
       this.planCountTarget.value = '1';

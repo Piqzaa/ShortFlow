@@ -9,6 +9,7 @@ function creation() {
     .replace("import { Controller } from '@hotwired/stimulus';", '').replace("import { GuidedModelPicker } from '../guided-model-picker.js';", '').replace('export default class', 'class CreationController');
   const Creation = runInNewContext(`${source}\nCreationController;`, { Controller: class {}, GuidedModelPicker, Intl, Event: class {} });
   const controller = new Creation();
+  controller.element = {querySelectorAll:()=>[],querySelector:()=>null};
   controller.modelsValue = { kling: { name: 'Kling', maker: 'Kling', rateMicros: 70000, audio: false, seconds: [5, 10], ratios: ['9:16','16:9','1:1'], provider: 'fal', quality: 'Pro' }, wan: { name: 'Wan', maker: 'Alibaba', rateMicros: 100000, audio: true, seconds: [5, 10], ratios: ['9:16','16:9'], provider: 'replicate', quality: '720p' }, long: { name: 'Kling 3', maker: 'Kling', rateMicros: 168000, audio: true, seconds: [3,5,10,15], ratios: ['9:16','16:9'], provider: 'fal', quality: 'Pro' } };
   controller.connectedValue = { fal: true, replicate: false };
   controller.connectTarget = {}; controller.filtersTarget = {}; controller.chooseTargets = [];
@@ -130,7 +131,7 @@ test('missing access explains the chosen provider and never substitutes another 
   controller.providersValue = {fal:'Fal',replicate:'Replicate'};
   controller.modelTarget.value = 'wan'; controller.estimate();
   assert.equal(controller.connectionTarget.hidden, false);
-  assert.match(controller.connectionMessageTarget.textContent, /clé Replicate/);
+  assert.match(controller.connectionMessageTarget.textContent, /Connecte Replicate/);
   assert.equal(controller.connectionButtonTarget.textContent, 'Connecter Replicate');
   controller.modelTarget.value = 'kling'; controller.estimate();
   assert.equal(controller.connectionTarget.hidden, true);

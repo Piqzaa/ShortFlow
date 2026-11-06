@@ -42,4 +42,10 @@
 .story-writing { margin:16px 0; }.story-spinner { display:inline-block; width:18px; height:18px; margin-right:12px; border:2px solid var(--workspace-border); border-top-color:var(--workspace-accent); border-radius:50%; animation:story-spin .9s linear infinite; }@keyframes story-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.story-spinner{animation:none}}
 @media(max-width:650px){.story-assistant{padding:16px}.story-assistant h2{font-size:19px}}
 
-.studio-start-settings{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:700px){.studio-start-settings{grid-template-columns:1fr 1fr}.studio-start-settings>div:nth-child(2){grid-column:auto;grid-row:auto}.studio-start-settings .preparation-count{grid-column:1/-1;grid-row:auto}}
+
+.studio-start-settings,.studio-plan-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.studio-plan-settings{margin-top:16px}.studio-plan-settings select:disabled{opacity:.5;cursor:not-allowed}.studio-plan-settings .preparation-count{grid-column:auto;grid-row:auto}@media(max-width:700px){.studio-start-settings>div:nth-child(2),.studio-plan-settings>div:nth-child(2){grid-column:auto;grid-row:auto}.studio-plan-settings .preparation-count{grid-column:auto;grid-row:auto}}
+.studio-model-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:20px 0}.studio-connection-status{display:flex;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px}.studio-connection-status details{margin:0}.studio-model-dialog{width:min(1100px,calc(100% - 32px));max-height:85vh;overflow:auto;padding:24px;border:1px solid var(--line);border-radius:12px;background:var(--bg,#101017);color:var(--text,#eee);box-sizing:border-box}.studio-model-dialog::backdrop{background:#000a}.studio-model-dialog-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}.studio-model-dialog-heading h2{font-size:24px;margin:0}.studio-model-dialog .creation-model-grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}@media(max-width:600px){.studio-model-dialog{padding:16px}.studio-model-dialog .catalog-filters{grid-template-columns:1fr}}
+
+.studio-plan-settings label{display:block;line-height:1.4;min-height:2.8em}
+
+.studio-model-dialog:not([open]),.studio-connection-status[hidden]{display:none!important}
