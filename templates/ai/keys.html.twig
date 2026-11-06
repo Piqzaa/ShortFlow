@@ -1,13 +1,26 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}Mes connexions IA — VydFlow{% endblock %}
 {% block studio_content %}
-<a class="account-secondary" href="{{ path('app_connections') }}">← Connexions</a><div class="studio-heading"><div><span class="eyebrow">TES COMPTES IA</span><h1>Mes connexions IA.</h1><p>Un compte fournisseur suffit pour commencer. Choisis celui que tu veux utiliser.</p></div></div>
-{% set requested = app.request.query.get('provider') %}{% if requested in ['replicate','ltx'] %}<p class="account-notice">Ton modèle utilise {{ providers[requested] }}. <a href="#ai-{{ requested }}-title">Configurer ce compte ci-dessous ↓</a></p>{% endif %}
-<div class="ai-billing-guide"><strong>Qui paie quoi ?</strong><p>Les générations sont payées chez ton fournisseur. Aucun abonnement VydFlow n’est facturé dans cette bêta.</p><p>Connecter un compte ne lance aucune vidéo. Coût estimé avant chaque confirmation.</p></div>
-<section class="ai-key-panel ai-fal-primary" aria-labelledby="ai-fal-title"><span class="eyebrow">RECOMMANDÉ POUR COMMENCER</span><h2 id="ai-fal-title">Fal</h2><p>Un compte pour de nombreux modèles intégrés : Kling, Pika, Wan et d’autres.</p><p>{{ falMcpConnected|default(false) ? 'Connexion navigateur enregistrée. Vérifie les crédits du compte utilisé chez Fal.' : 'Connecte ton compte Fal par navigateur, puis autorise VydFlow. Tu n’as pas de clé à recopier.' }}</p><a class="button" href="{{ path('app_ai_fal_connect',{next:back}) }}">{{ falMcpConnected|default(false) ? 'Gérer mon compte Fal connecté' : 'Connecter mon compte Fal' }} ↗</a><p class="library-note">Les crédits de ton compte Fal financent les vidéos. Vérifie le compte actif et son budget chez Fal.</p>
-<details class="creation-details ai-key-guide"><summary>Comment commencer avec Fal ?</summary><ol><li>Ouvre « Connecter mon compte Fal » et autorise VydFlow sur le site de Fal.</li><li>Vérifie le compte actif et ajoute des crédits chez Fal si nécessaire.</li><li>Reviens à ton idée, choisis tes réglages puis vérifie le coût avant de générer.</li></ol><p>Cette connexion utilise MCP en arrière-plan. Aucun serveur ni connecteur à installer dans VydFlow.</p></details>
-<div class="ai-api-alternative"><h3>Clé API Fal</h3>{% include 'ai/_key_provider.html.twig' with {provider:'fal',name:'Fal',connection:connections.fal} %}</div></section>
-<div class="ai-other-providers">{% for provider,name in providers %}{% if provider != 'fal' %}<section class="ai-key-panel" aria-labelledby="ai-{{ provider }}-title"><h2 id="ai-{{ provider }}-title">{{ name }}</h2>{% include 'ai/_key_provider.html.twig' with {provider:provider,name:name,connection:connections[provider]} %}</section>{% endif %}{% endfor %}</div>
-<p class="library-note">Le futur abonnement VydFlow couvrira le logiciel ; les générations IA resteront payées séparément chez ton fournisseur.</p>
+<a class="account-secondary" href="{{ path('app_connections') }}">← Connexions</a>
+<div class="studio-heading"><div><span class="eyebrow">TES COMPTES IA</span><h1>Mes connexions IA.</h1><p>Connecte un compte pour générer tes vidéos. Un seul suffit pour commencer.</p></div></div>
+{% set requested = app.request.query.get('provider') %}
+{% if requested in ['replicate','ltx'] %}<p class="account-notice">Le modèle choisi utilise {{ providers[requested] }}. <a href="#ai-{{ requested }}-title">Configurer ce compte ↓</a></p>{% endif %}
+<section class="ai-key-panel ai-fal-primary" aria-labelledby="ai-fal-title">
+  <span class="eyebrow">LE PLUS SIMPLE POUR COMMENCER</span><h2 id="ai-fal-title">Fal</h2>
+  <p>Accède à de nombreux modèles vidéo avec une seule connexion.</p>
+  <p class="ai-connection-state">{{ falMcpConnected|default(false) ? 'Connexion enregistrée' : 'À connecter' }}</p>
+  <p>{{ falMcpConnected|default(false) ? 'Ton autorisation est enregistrée. Vérifie les crédits et le compte actif chez Fal avant de générer.' : 'Connecte-toi sur le site de Fal et autorise VydFlow. Aucun code technique à recopier.' }}</p>
+  <a class="button" href="{{ path('app_ai_fal_connect',{next:back}) }}">{{ falMcpConnected|default(false) ? 'Gérer ma connexion Fal' : 'Connecter mon compte Fal' }} ↗</a>
+  <details class="creation-details ai-key-guide"><summary>Comment ça se passe ?</summary><ol><li>Connecte-toi chez Fal et autorise VydFlow.</li><li>Vérifie le compte actif et ajoute des crédits chez Fal si nécessaire.</li><li>Reviens dans le Studio et vérifie le prix avant de générer.</li></ol></details>
+</section>
+<div class="ai-billing-guide"><strong>Les générations sont payées chez ton fournisseur.</strong><p>Connecter un compte ne lance aucune vidéo. Tu confirmes le coût avant chaque génération.</p><p>Aucun abonnement VydFlow n’est facturé dans cette bêta.</p></div>
+{% if connections.fal %}<section class="ai-key-panel ai-api-alternative"><h2>Accès Fal par clé déjà enregistré</h2>{% include 'ai/_key_provider.html.twig' with {provider:'fal',name:'Fal',connection:connections.fal} %}</section>{% endif %}
+<div class="ai-other-providers">{% for provider,name in providers %}{% if provider != 'fal' and connections[provider] %}<section class="ai-key-panel" aria-labelledby="ai-{{ provider }}-title"><h2 id="ai-{{ provider }}-title">{{ name }} · accès enregistré</h2>{% include 'ai/_key_provider.html.twig' with {provider:provider,name:name,connection:connections[provider]} %}</section>{% endif %}{% endfor %}</div>
+<details class="creation-details ai-advanced-connections"{% if requested in providers|keys or app.request.method == 'POST' %} open{% endif %}><summary>Options avancées · connexions par clé API</summary>
+  <p class="library-note">Une clé API est un code privé fourni par un service pour autoriser VydFlow à utiliser ton compte. Tu n’en as pas besoin avec la connexion Fal ci-dessus.</p>
+  <p class="library-note">Dans VydFlow, les accès Replicate et LTX utilisent une clé. Choisis-les si ton modèle en a besoin ou si tu préfères ces fournisseurs.</p>
+  {% if not connections.fal %}<div class="ai-api-alternative"><h3>Fal avec une clé API</h3>{% include 'ai/_key_provider.html.twig' with {provider:'fal',name:'Fal',connection:connections.fal} %}</div>{% endif %}
+  <div class="ai-other-providers">{% for provider,name in providers %}{% if provider != 'fal' and not connections[provider] %}<section class="ai-key-panel" aria-labelledby="ai-{{ provider }}-title"><h2 id="ai-{{ provider }}-title">{{ name }}</h2>{% include 'ai/_key_provider.html.twig' with {provider:provider,name:name,connection:connections[provider]} %}</section>{% endif %}{% endfor %}</div>
+</details>
 <a class="account-secondary" href="{{ back and back != 'idea' ? path('app_ai_generation',{id:back}) : path('app_studio') }}">{{ back ? 'Revenir à mon idée conservée' : 'Ouvrir le Studio' }} →</a>
 {% endblock %}

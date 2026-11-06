@@ -561,6 +561,8 @@ final class AiStudioTest extends WebTestCase
     public function testKeyIsEncryptedNeverRedisplayedAndRemovalIsOwnerScoped(): void
     {
         $crawler = $this->client->request('GET', '/studio/connexions/ia');
+        self::assertSelectorExists('.ai-advanced-connections:not([open]) #ai-api-key-fal');
+        self::assertSelectorExists('.ai-fal-primary a[href^="/studio/connexions/ia/fal"]');
         $form = $crawler->selectButton('Enregistrer ma clé')->form(['apiKey' => self::KEY]);
         $data = $form->getPhpValues();
         unset($data['_token']);

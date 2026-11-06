@@ -5,7 +5,7 @@
 <div class="studio-heading"><div><span class="eyebrow">TON COMPTE FOURNISSEUR</span><h1>Connecter Fal.</h1><p>Autorise VydFlow chez Fal, sans copier de clé API.</p></div></div>
 <section class="ai-key-panel">
 {% if connected %}<p class="ai-key-status">Connexion navigateur enregistrée.</p>{% endif %}
-<p>Fal utilise les crédits de ton compte MCP actif, commun à tes applications connectées. Vérifie ce compte chez Fal avant de lancer une vidéo. VydFlow ne change pas ce réglage.</p>
+<p>Fal utilise les crédits du compte actif pour tes applications connectées. Vérifie ce compte chez Fal avant de lancer une vidéo. VydFlow ne change pas ce réglage.</p>
 <form method="post" class="account-form"><input type="hidden" name="_token" value="{{ csrf_token('fal_mcp') }}"><button class="button" name="intent" value="start">{{ connected ? 'Reconnecter mon compte Fal' : 'Connecter mon compte Fal' }}</button></form>
 <p class="library-note">Tu seras redirigé vers Fal pour autoriser VydFlow, puis ramené ici automatiquement. Aucun code d’appareil à saisir.</p>
 <p class="library-note">Cette étape autorise l’accès et le suivi en arrière-plan. Elle ne génère aucune vidéo. Ta clé API Fal existante est conservée ; tu choisis le mode d’accès dans le Studio.</p>
