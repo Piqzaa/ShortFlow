@@ -112,7 +112,7 @@ export function GuidedModelPicker(Base) {
       if (example && model) {
         const seconds = model.seconds.find(value => value >= 5) ?? model.seconds[0];
         const cents = model.pricesCents?.[seconds] ?? Math.ceil(((model.rateMicros || 0) * seconds + (model.fixedMicros || 0) + (model.subjectReference ? model.referenceMicros || 0 : 0)) / 10000);
-        example.textContent = `${seconds} s · ${model.quality === '4k' ? '4K' : model.quality} · ${model.audio ? 'avec audio' : 'sans audio'} · ${Number.isFinite(cents) ? (cents / 100).toLocaleString('fr-FR', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' $ US estimés' : 'coût au récapitulatif'}${model.subjectReference && model.referenceMicros ? ' · exemple avec 1 référence' : ''}`;
+        example.textContent = `${seconds} s · ${model.quality === '4k' ? '4K' : model.quality} · ${Number.isFinite(cents) ? (cents / 100).toLocaleString('fr-FR', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' $ US estimés' : 'coût au récapitulatif'}${model.subjectReference && model.referenceMicros ? ' · exemple avec 1 référence' : ''}`;
       }
     });
     const selected = this.modelsValue[this.modelTarget.value];

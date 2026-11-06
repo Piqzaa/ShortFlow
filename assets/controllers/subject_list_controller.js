@@ -48,8 +48,8 @@ export default class extends Controller {
 
   defaultName(primary) {
     const used = new Set(this.profiles().map(row => row.querySelector('[data-subject-name]')?.value.trim().toLocaleLowerCase('fr')).filter(Boolean));
-    const base = primary ? 'Personnage principal' : 'Référence';
-    let index = primary ? 0 : 1;
+    const base = primary ? 'Personnage principal' : 'Sujet secondaire';
+    let index = 0;
     let name;
     do { name = index ? `${base} ${index}` : base; index++; } while (used.has(name.toLocaleLowerCase('fr')));
     return name;
@@ -64,7 +64,7 @@ export default class extends Controller {
     profile.dataset.subjectPrimary = String(primary);
     profile.querySelector('[data-subject-profile-reference]').value = primary ? 'primary' : reference;
     const name = profile.querySelector('[data-subject-name]');
-    if (!name.value.trim()) name.value = this.defaultName(primary);
+    if (!name.value.trim() && !primary) name.value = this.defaultName(false);
     const heading = profile.querySelector('[data-subject-profile-title]');
     if (heading) heading.textContent = primary ? 'Personnage de l’image importée au début' : 'Personnage ou objet supplémentaire';
     const originHelp = profile.querySelector('[data-subject-origin-help]');
