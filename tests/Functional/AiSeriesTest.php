@@ -110,6 +110,42 @@ final class AiSeriesTest extends WebTestCase
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
+    public function testSeriesPickerKeepsCatalogAudioPricesAndTheExactSavedResolution(): void
+    {
+        $series = $this->createSeries(['ai_series[episodeCount]' => 1, 'ai_series[model]' => 'gemini-omni-12-text-720p', 'ai_series[seconds]' => 5, 'ai_series[totalSeconds]' => 10, 'ai_series[ratio]' => '9:16']);
+        $crawler = $this->client->request('GET', '/studio/series/'.$series->getId().'/configuration');
+        self::assertResponseIsSuccessful();
+        $settings = json_decode($crawler->filter('[data-series-settings-models-value]')->attr('data-series-settings-models-value'), true, flags: JSON_THROW_ON_ERROR);
+        foreach (\App\Service\AiCatalog::viewModels() as $id => $model) {
+            self::assertSame($model, array_intersect_key($settings[$id], $model), $id);
+        }
+        self::assertTrue($settings['gemini-omni-12-text-720p']['audio']);
+        self::assertFalse($settings['vidu-q1']['audio']);
+        self::assertSame(81900, $settings['gemini-omni-12-text-720p']['rateMicros']);
+        self::assertSame(122900, $settings['gemini-omni-12-text-1080p']['rateMicros']);
+        self::assertSame(2000, $settings['grok-image-720']['fixedMicros']);
+        self::assertSame(10000, $settings['grok-15-subject-720p']['referenceMicros']);
+        self::assertArrayHasKey('pricesCents', $settings['ltx-23-ingredient-subject']);
+        self::assertSelectorExists('[data-selected-model-price]');
+        $directory = dirname(__DIR__, 2).'/artifacts';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0750, true);
+        }
+        file_put_contents($directory.'/series-model-settings.html', $this->client->getResponse()->getContent());
+        $form = $crawler->selectButton('Enregistrer la configuration')->form(['ai_series[model]' => 'gemini-omni-12-text-1080p', 'ai_series[seconds]' => 10]);
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        $series = $this->em()->find(AiSeries::class, $series->getId());
+        self::assertInstanceOf(AiSeries::class, $series);
+        self::assertSame('gemini-omni-12-text-1080p', $series->getRecipe()['model']);
+        self::assertSame(10, $series->getRecipe()['seconds']);
+        $this->client->request('GET', '/studio/series/episodes/'.$this->episodes($series)[0]->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('select[name="ai_idea[model]"] option[value="gemini-omni-12-text-1080p"][selected]');
+        self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
     public function testSharedGuidedChoiceKeepsUnconnectedSeriesConfigurationAndDoesNotGenerate(): void
     {
         $series = $this->createSeries(['ai_series[episodeCount]' => 0, 'ai_series[model]' => 'kling-3', 'ai_series[seconds]' => 10, 'ai_series[totalSeconds]' => 40, 'ai_series[ratio]' => '16:9']);
