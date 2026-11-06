@@ -1,5 +1,8 @@
+import { displayMoney } from './display-money.js';
+
 export function GuidedModelPicker(Base) {
   return class extends Base {
+  displayPrice(cents, decimals = 2) { return displayMoney(cents, decimals); }
   setupPicker() {
     if (!this.hasPickerTarget) return;
     this.pickerTarget.hidden = false;
@@ -98,7 +101,7 @@ export function GuidedModelPicker(Base) {
     const current = Number(this.element?.querySelector('[data-shot-editor-row] select[name$="[seconds]"]')?.value);
     const seconds = model.seconds.includes(current) ? current : model.seconds.find(value => value >= 5) ?? model.seconds[0];
     const cents = model.pricesCents?.[seconds] ?? Math.ceil(((model.rateMicros || 0) * seconds + (model.fixedMicros || 0) + (model.subjectReference ? model.referenceMicros || 0 : 0)) / 10000);
-    return `${model.quality === '4k' ? '4K' : model.quality} · ${seconds} s · ${Number.isFinite(cents) ? (cents / 100).toLocaleString('fr-FR', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' $ US estimés' : 'coût au récapitulatif'}${model.subjectReference && model.referenceMicros ? ' · avec 1 référence' : ''}`;
+    return `${model.quality === '4k' ? '4K' : model.quality} · ${seconds} s · ${Number.isFinite(cents) ? this.displayPrice(cents) + ' estimés' : 'coût au récapitulatif'}${model.subjectReference && model.referenceMicros ? ' · avec 1 référence' : ''}`;
   }
 
   updateRecommendations() {

@@ -1,5 +1,6 @@
 import { selectedCharacters } from '../character-choices.js';
 import { Controller } from '@hotwired/stimulus';
+import { displayMoney } from '../display-money.js';
 
 export default class extends Controller {
   static targets = ['list', 'prototype', 'summary', 'add'];
@@ -102,7 +103,7 @@ export default class extends Controller {
       cents += !this.modelValue.seconds?.includes(duration) ? NaN : this.modelValue.pricesCents?.[duration] ?? Math.ceil(((this.modelValue.rateMicros || 0) * duration + (this.modelValue.fixedMicros || 0) + (this.modelValue.referenceMicros || 0) * selectedCharacters(row).length) / 10000);
     });
     this.addTarget.disabled = rows.length >= 8;
-    this.summaryTarget.textContent = `${rows.length} plan(s) · ${seconds} s au total · ${Number.isFinite(cents) ? (cents / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $ US estimés' : 'estimation à vérifier après ajustement des durées'}. ${seconds > 60 ? 'Réduis la durée totale à 60 secondes maximum avant de continuer.' : 'Aucun lancement avant confirmation.'}`;
+    this.summaryTarget.textContent = `${rows.length} plan(s) · ${seconds} s au total · ${Number.isFinite(cents) ? displayMoney(cents) + ' estimés' : 'estimation à vérifier après ajustement des durées'}. ${seconds > 60 ? 'Réduis la durée totale à 60 secondes maximum avant de continuer.' : 'Aucun lancement avant confirmation.'}`;
     this.summaryTarget.classList.toggle('error', seconds > 60);
   }
 }

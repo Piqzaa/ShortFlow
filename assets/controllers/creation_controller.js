@@ -159,8 +159,8 @@ export default class extends GuidedModelPicker(Controller) {
     set('[data-card-description]', model.description);
     set('[data-card-speech]', this.speechCaption(model, id));
     set('[data-card-capabilities]', `${model.seconds.length > 4 ? `${model.seconds[0]}–${model.seconds.at(-1)}` : model.seconds.join(' / ')} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.ratios.map(ratio => ratio === 'auto' ? 'Image d’origine' : ratio).join(' · ')}`);
-    const price = model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.money(c)} $ US`).join(' · ') : `${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3}).format(model.rateMicros / 1000000)} $ US / s${model.fixedMicros ? ` + ${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:3}).format(model.fixedMicros / 1000000)} $ US par demande` : ''}`;
-    set('[data-card-price]', price + (model.referenceMicros ? ` + ${this.money(model.referenceMicros / 10000)} $ US par référence` : ''));
+    const price = model.pricesCents ? Object.entries(model.pricesCents).map(([s,c])=>`${s} s : ${this.displayPrice(c)}`).join(' · ') : `${this.displayPrice(model.rateMicros / 10000,3)} / s${model.fixedMicros ? ` + ${this.displayPrice(model.fixedMicros / 10000,3)} par demande` : ''}`;
+    set('[data-card-price]', price + (model.referenceMicros ? ` + ${this.displayPrice(model.referenceMicros / 10000)} par référence` : ''));
     const select = card.querySelector?.('.catalog-variant'); if (select) select.value = id;
     const button = card.querySelector?.('[data-creation-target="choose"]'); if (button) button.dataset.modelId = id;
   }
@@ -281,7 +281,7 @@ export default class extends GuidedModelPicker(Controller) {
         const note = card.querySelector('[data-comparison-price]');
         if (!note) return;
         const cents = price(card);
-        note.textContent = cents === null ? `Indisponible pour ${seconds} s` : `${seconds} s : ${this.money(cents)} $ US estimés`;
+        note.textContent = cents === null ? `Indisponible pour ${seconds} s` : `${seconds} s : ${this.displayPrice(cents)} estimés`;
       });
     }
   }
@@ -327,8 +327,7 @@ export default class extends GuidedModelPicker(Controller) {
       this.descriptionTarget.textContent = 'Aucune génération sans estimation disponible.';
       return;
     }
-    const amount = this.money(cents);
-    this.costTarget.textContent = `Estimation : ${amount} $ US`;
+    this.costTarget.textContent = `Estimation : ${this.displayPrice(cents)}`;
     this.descriptionTarget.textContent = `${seconds} s · ${model.audio ? 'Audio généré' : 'Sans audio'} · ${model.quality === '4k' ? '4K' : model.quality} · Facturé par ${this.providersValue?.[model.provider] || model.provider}`;
   }
 }

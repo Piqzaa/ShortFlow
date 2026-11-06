@@ -1,0 +1,2 @@
+{% set exchange = ai_exchange() %}
+<p class="library-note ai-currency-note">{% if exchange %}Estimation en euros · taux BCE du {{ exchange.date|date('d/m/Y') }}. Facturation fournisseur en dollars, hors frais de conversion et taxes éventuels.{% else %}Conversion en euros indisponible : montants affichés en dollars. Le taux indicatif doit être actualisé.{% endif %}</p>
