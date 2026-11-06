@@ -1,11 +1,15 @@
-<div class="preparation-timing">
+<div class="preparation-timing studio-start-settings">
+  <div>{{ form_row(ideaForm.ratio,{attr:{form:'ai-idea-form','data-creation-target':'ratio','data-action':'change->creation#frameChanged'}}) }}</div>
   <div>{{ form_row(ideaForm.target,{label:'Durée totale',attr:{'data-preparation-target':'total','data-action':'change->preparation#duration'}}) }}</div>
-  <div data-preparation-target="continuityPanel">{{ form_row(ideaForm.continuity,{label:'Mode de génération',attr:{'data-preparation-target':'continuity'}}) }}</div>
   {% include 'ai/_plan_count.html.twig' %}
 </div>
+<div data-creation-target="imageSettings">{{ form_row(ideaForm.imageFit,{attr:{form:'ai-idea-form','data-creation-target':'imageFit','data-action':'change->creation#frameChanged'}}) }}</div>
+<details class="creation-details" data-continuity-options{% if ideaForm.continuity.vars.value == 'linked' or not ideaForm.continuity.vars.valid %} open{% endif %}><summary>Options avancées · raccord entre les plans</summary>
+  <div data-preparation-target="continuityPanel">{{ form_row(ideaForm.continuity,{label:'Enchaînement des plans',attr:{'data-preparation-target':'continuity'}}) }}</div>
+  <p data-preparation-target="continuityHelp" hidden></p>
+  <button type="button" class="account-secondary" data-preparation-target="fixContinuity imageModeButton" data-action="preparation#imageMode" hidden>Choisir un modèle image et sa référence</button>
+</details>
 {% include 'ai/_plan_count_status.html.twig' %}
 <p class="library-note preparation-feedback" data-preparation-target="notice" role="status">Choisis un modèle pour préparer tes plans.</p>
 <p data-preparation-target="single" hidden></p>
-<p data-preparation-target="continuityHelp" hidden></p>
 {% include 'ai/_single_plan.html.twig' %}
-<button type="button" class="account-secondary" data-preparation-target="fixContinuity imageModeButton" data-action="preparation#imageMode" hidden>Choisir un modèle image et sa référence</button>

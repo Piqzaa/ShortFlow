@@ -41,3 +41,5 @@
 .story-proposal summary { cursor:pointer; min-height:40px; align-content:center; }
 .story-writing { margin:16px 0; }.story-spinner { display:inline-block; width:18px; height:18px; margin-right:12px; border:2px solid var(--workspace-border); border-top-color:var(--workspace-accent); border-radius:50%; animation:story-spin .9s linear infinite; }@keyframes story-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.story-spinner{animation:none}}
 @media(max-width:650px){.story-assistant{padding:16px}.story-assistant h2{font-size:19px}}
+
+.studio-start-settings{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:700px){.studio-start-settings{grid-template-columns:1fr 1fr}.studio-start-settings>div:nth-child(2){grid-column:auto;grid-row:auto}.studio-start-settings .preparation-count{grid-column:1/-1;grid-row:auto}}
