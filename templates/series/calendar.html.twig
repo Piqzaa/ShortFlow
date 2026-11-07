@@ -1,0 +1,20 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Calendrier de {{ series.name }} — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ path('app_series_show',{id:series.id}) }}">← {{ series.name }}</a>
+<div class="workspace-heading"><div><span class="eyebrow">LE CALENDRIER DE TA SÉRIE</span><h1>Un rythme pour tes épisodes.</h1><p>Choisis les dates prévues, puis vérifie l’ordre des épisodes.</p></div></div>
+{% include 'series/_destinations_summary.html.twig' with {seriesConfigurationRoute:'app_series_edit'} %}
+<p class="account-notice">Ce calendrier prépare les dates. La génération des vidéos et la publication seront à confirmer séparément.</p>
+{{ form_start(form,{attr:{class:'account-form series-config','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}{{ form_errors(form) }}
+<div class="series-two-columns">{{ form_row(form.start) }}{{ form_row(form.end) }}</div>
+<div role="group" aria-labelledby="series-calendar-days-label"><span id="series-calendar-days-label">Jours de publication prévus</span>{{ form_errors(form.weekdays) }}<div class="series-network-choices">{% for day in form.weekdays %}<label>{{ form_widget(day) }}{{ day.vars.label }}</label>{% endfor %}</div></div><p class="library-note">Tous les jours pour un rythme quotidien, un seul jour pour un rendez-vous hebdomadaire. Un épisode par jour choisi.</p>
+<div class="series-two-columns">{{ form_row(form.hour) }}{{ form_row(form.timezone) }}</div>{{ form_row(form.count) }}
+<p class="library-note">Prévisions dans les 90 prochains jours. Les épisodes sont placés dans leur ordre ; les publications déjà confirmées gardent leurs dates. Les créneaux suivants indiquent les épisodes restant à préparer.</p>
+<div class="series-actions"><button class="account-secondary" name="intent" value="preview" type="submit">Voir les dates proposées →</button>{% if preview %}<button class="button" name="intent" value="save" type="submit">Enregistrer ces dates prévues</button>{% endif %}</div>
+{% if preview %}<p class="library-note">Après un changement, actualise l’aperçu avant d’enregistrer.</p>{% endif %}
+{{ form_end(form) }}
+{% set plan = preview ?: saved %}
+{% if plan.slots|default([]) %}<section class="story-context" aria-labelledby="series-dates-title"><h2 id="series-dates-title">{{ preview ? 'Aperçu des dates' : 'Dates prévues enregistrées' }}</h2><p class="library-note">{{ plan.rules.timezone }} · {{ plan.slots|length }} épisode{{ plan.slots|length > 1 ? 's' : '' }} · Prévisions à confirmer avant publication</p>
+{% if not preview %}<p class="library-note">Aperçu enregistré le {{ saved.savedAt|date('d/m/Y à H:i',plan.rules.timezone) }}. Si les épisodes ont changé, actualise les dates proposées.</p>{% endif %}
+<ol class="series-episodes">{% for slot in plan.slots %}<li class="story-shot"><strong>Épisode {{ slot.number }} · {{ slot.at|date('d/m/Y à H:i',plan.rules.timezone) }}</strong><p>{{ slot.title }}</p><span class="library-note">{{ slot.episode ? 'Épisode existant · à vérifier avant publication' : 'Épisode à créer et à préparer' }}</span></li>{% endfor %}</ol></section>{% endif %}
+{% endblock %}

@@ -7,6 +7,23 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 class AiSeries
 {
+    /** @var array<string,mixed> */
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $calendarPlan = [];
+
+    /** @return array<string,mixed> */
+    public function getCalendarPlan(): array
+    {
+        return $this->calendarPlan;
+    }
+
+    /** @param array<string,mixed> $plan */
+    public function planCalendar(array $plan): void
+    {
+        $this->calendarPlan = $plan;
+        ++$this->revision;
+    }
+
     /** @var array{networks?:list<string>,accounts?:array<string,?string>} */
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $publicationSettings = [];
