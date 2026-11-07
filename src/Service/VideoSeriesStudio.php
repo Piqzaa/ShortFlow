@@ -26,6 +26,42 @@ final class VideoSeriesStudio
         return $this->em->createQueryBuilder()->select('e', 'v')->from(VideoSeriesEpisode::class, 'e')->join('e.video', 'v')->where('e.series = :series')->andWhere('e.active = true')->andWhere('v.owner = :owner')->setParameter('series', $series)->setParameter('owner', $series->getOwner())->orderBy('e.position', 'ASC')->getQuery()->getResult();
     }
 
+    public function sourceEpisode(int $id, User $owner, VideoAsset $video): ?VideoSeriesEpisode
+    {
+        $episode = $this->em->getRepository(VideoSeriesEpisode::class)->findOneBy(['id' => $id, 'video' => $video, 'active' => true]);
+
+        return $episode?->getSeries()->getOwner()->getId() === $owner->getId() ? $episode : null;
+    }
+
+    public function append(User $owner, VideoSeries $series, int $videoId): VideoSeriesEpisode
+    {
+        return $this->em->getConnection()->transactional(function () use ($owner, $series, $videoId): VideoSeriesEpisode {
+            $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
+            $video = $this->em->getRepository(VideoAsset::class)->findOneBy(['id' => $videoId, 'owner' => $owner]);
+            if ($series->getOwner()->getId() !== $owner->getId() || !$video) {
+                throw new VideoLibraryException('Cette vidéo ou cette série est indisponible.');
+            }
+
+            $episode = $this->em->getRepository(VideoSeriesEpisode::class)->findOneBy(['series' => $series, 'video' => $video]);
+            if ($episode?->isActive()) {
+                return $episode;
+            }
+            $active = $this->episodes($series);
+            if (count($active) >= 100) {
+                throw new VideoLibraryException('Cette série contient déjà 100 épisodes.');
+            }
+            $position = $active ? $active[array_key_last($active)]->getPosition() + 1 : 1;
+            $episode ??= new VideoSeriesEpisode($series, $video, $position);
+            $episode->place($position);
+            $this->em->persist($episode);
+            $series->revise($series->getName());
+            $this->em->flush();
+
+            return $episode;
+        });
+    }
+
     /** @param list<string> $selected */
     public function save(User $owner, string $name, array $selected, string $order, int $revision, ?VideoSeries $series = null, ?array $publication = null): VideoSeries
     {

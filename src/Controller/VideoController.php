@@ -42,9 +42,11 @@ final class VideoController extends AbstractController
     #[Route('/importer', name: 'app_video_upload', methods: ['GET', 'POST'])]
     public function upload(Request $request, #[CurrentUser] User $user, #[Autowire(service: 'limiter.video_upload')] RateLimiterFactory $limiter, \App\Service\VideoEdits $edits, \App\Service\VideoSeriesStudio $videoSeries): Response
     {
-        $seriesContext = 'series' === $request->query->getString('next');
-        $series = $seriesContext && $request->query->has('series') ? ($videoSeries->owned($request->query->getInt('series'), $user) ?? throw $this->createNotFoundException()) : null;
-        $editing = $request->query->has('montage') ? ($edits->owned($request->query->getInt('montage'), $user) ?? throw $this->createNotFoundException()) : null;
+        $next = $request->query->getString('next');
+        $seriesContext = 'series' === $next;
+        $appendToSeries = 'series-append' === $next;
+        $series = $appendToSeries || ($seriesContext && $request->query->has('series')) ? ($videoSeries->owned($request->query->getInt('series'), $user) ?? throw $this->createNotFoundException()) : null;
+        $editing = !$appendToSeries && $request->query->has('montage') ? ($edits->owned($request->query->getInt('montage'), $user) ?? throw $this->createNotFoundException()) : null;
         if ($editing && ($editing->isActive() || 'ready' === $editing->getStatus())) {
             return $this->redirectToRoute('app_edit_show', ['id' => $editing->getId()], 303);
         }
@@ -75,11 +77,21 @@ final class VideoController extends AbstractController
                     }
                     $redirect = $this->generateUrl('app_edit_show', ['id' => $editing->getId()]);
                 }
+                if ($appendToSeries && $series) {
+                    try {
+                        $episode = $videoSeries->append($user, $series, (int) $video->getId());
+                        $this->addFlash('success', 'Ta vidéo a été ajoutée à la fin de la série.');
+                        $redirect = $this->generateUrl('app_video_series_show', ['id' => $series->getId(), '_fragment' => 'video-episode-'.$episode->getId()]);
+                    } catch (VideoLibraryException $error) {
+                        $this->addFlash('error', $error->getMessage().' La vidéo reste dans ta bibliothèque.');
+                        $redirect = $this->generateUrl('app_video_series_add', ['id' => $series->getId()]);
+                    }
+                }
                 if ($request->isXmlHttpRequest()) {
                     $result = ['redirect' => $redirect];
                     if ($seriesContext) {
                         $result['redirect'] = $this->generateUrl($series ? 'app_video_series_edit' : 'app_video_series_new', array_filter(['id' => $series?->getId(), 'video' => $video->getId()]));
-                        $result['video'] = ['id' => $video->getId(), 'title' => $video->getTitle()];
+                        $result['video'] = ['id' => $video->getId(), 'title' => $video->getTitle(), 'preview' => $this->generateUrl('app_video_stream', ['id' => $video->getId()]).'#t=0.1'];
                     }
 
                     return new JsonResponse($result, 201, ['Cache-Control' => 'no-store, private']);
@@ -105,26 +117,29 @@ final class VideoController extends AbstractController
             return new JsonResponse(['message' => implode(' ', array_unique($errors)) ?: 'L’import n’a pas abouti. Vérifie le fichier.'], $status, ['Cache-Control' => 'no-store, private']);
         }
 
-        return $this->page('library/upload.html.twig', ['form' => $form], $status);
+        return $this->page('library/upload.html.twig', ['form' => $form, 'appendSeries' => $appendToSeries ? $series : null], $status);
     }
 
     #[Route('/{id}', name: 'app_video_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, \App\Service\VideoSeriesStudio $series): Response
     {
         $video = $this->owned($id, $user);
+        $episodeId = $request->query->getInt('episode');
+        $episode = $episodeId > 0 ? $series->sourceEpisode($episodeId, $user, $video) : null;
+        $seriesReturn = $episode ? $this->generateUrl('app_video_series_show', ['id' => $episode->getSeries()->getId(), '_fragment' => 'video-episode-'.$episode->getId()]) : null;
         $form = $this->createForm(VideoRenameType::class, ['title' => $video->getTitle()])->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             try {
                 $this->library->rename($video, $form->getData()['title']);
                 $this->addFlash('success', 'Le nom de ta vidéo a été mis à jour.');
 
-                return $this->redirectToRoute('app_dashboard', status: 303);
+                return $seriesReturn ? $this->redirect($seriesReturn, 303) : $this->redirectToRoute('app_dashboard', status: 303);
             } catch (VideoLibraryException $error) {
                 $form->addError(new FormError($error->getMessage()));
             }
         }
 
-        return $this->page('library/show.html.twig', ['video' => $video, 'form' => $form, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, [$video])], $form->isSubmitted() ? 422 : 200);
+        return $this->page('library/show.html.twig', ['video' => $video, 'form' => $form, 'seriesReturn' => $seriesReturn, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, [$video])], $form->isSubmitted() ? 422 : 200);
     }
 
     #[Route('/{id}/lecture', name: 'app_video_stream', requirements: ['id' => '\d+'], methods: ['GET', 'HEAD'])]

@@ -3,7 +3,7 @@
 {% block studio_content %}
 <a class="account-secondary composer-back" href="{{ series ? path('app_video_series_show',{id:series.id}) : path('app_series_choose') }}">← {{ series ? 'Ma série' : 'Choisir mon point de départ' }}</a>
 <div class="workspace-heading"><div><span class="eyebrow">TES VIDÉOS, UNE SÉRIE</span><h1>{{ series ? 'Organise tes épisodes.' : 'Crée ta série avec tes vidéos.' }}</h1><p>Une vidéo par épisode. Choisis les vidéos, puis leur ordre.</p></div></div>
-<div class="series-config" data-controller="series-videos" data-action="change->series-videos#selection">
+<div class="series-config" data-controller="series-videos video-thumbnails">
 {{ form_start(seriesForm,{attr:{class:'account-form','data-series-videos-target':'form','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}
 {{ form_errors(seriesForm) }}{{ form_row(seriesForm.name) }}
 {% include 'series/_publication_settings.html.twig' with {publicationForm:seriesForm.publication} %}
@@ -11,13 +11,15 @@
 <p><a class="account-secondary" href="#series-video-import" data-action="series-videos#openImport">Importer une vidéo depuis mon appareil +</a></p>
 <label for="series-video-search">Trouver une vidéo</label><input type="search" id="series-video-search" placeholder="Rechercher par nom…" data-series-videos-target="search" data-action="input->series-videos#search keydown.enter->series-videos#preventSubmit">
 {{ form_errors(seriesForm.videos) }}
-<div class="series-video-choices" data-series-videos-target="choices">{% for field in seriesForm.videos %}<label data-series-video-choice>{{ form_widget(field) }}<span>{{ field.vars.label|split(' · #')|first }}</span></label>{% endfor %}</div>
+<div class="series-video-choices" data-series-videos-target="choices" data-action="change->series-videos#selection">{% for field in seriesForm.videos %}{% set video = videos[field.vars.value] %}<label data-series-video-choice>{{ form_widget(field) }}{% include 'ai/_cover.html.twig' with {videoId:video.id} only %}<span data-series-video-title>{{ video.title }}</span></label>{% endfor %}</div>
+<template data-series-videos-target="choiceTemplate"><label data-series-video-choice><input type="checkbox" name="{{ seriesForm.videos.vars.full_name }}[]">{% include 'ai/_cover.html.twig' with {videoId:1} only %}<span data-series-video-title></span></label></template>
 {% do seriesForm.videos.setRendered() %}
 <p class="library-note" data-series-videos-target="empty"{% if seriesForm.videos|length %} hidden{% endif %}>Aucune vidéo dans ta bibliothèque. Importe ta première vidéo ci-dessous.</p>
 <p class="library-note" data-series-videos-target="noResults" hidden>Aucune vidéo ne correspond à ta recherche.</p>
 </section>
-<section class="series-config-section"><h2>L’ordre des épisodes</h2><p class="library-note">Utilise Monter et Descendre pour organiser ta série. Retirer un épisode conserve sa vidéo et ses brouillons. Une publication programmée ou à vérifier doit d’abord être annulée ou terminée.</p>
+<section class="series-config-section"><h2>L’ordre des épisodes</h2><p class="library-note">Les vidéos s’ajoutent dans l’ordre où tu les coches. Glisse un épisode par sa poignée ou utilise Monter et Descendre.</p><p class="library-note">Retirer un épisode conserve sa vidéo et ses brouillons. Une publication programmée ou à vérifier doit d’abord être annulée ou terminée.</p>
 <ol class="series-video-order" data-series-videos-target="list"></ol><p class="library-note" data-series-videos-target="prompt">Coche tes vidéos pour préparer les épisodes.</p>
+<span class="visually-hidden" data-series-videos-target="orderStatus" role="status"></span>
 {{ form_widget(seriesForm.order,{attr:{'data-series-videos-target':'order'}}) }}{{ form_errors(seriesForm.order) }}</section>
 <button class="button" type="submit">{{ series ? 'Enregistrer les épisodes' : 'Créer ma série →' }}</button>
 {{ form_end(seriesForm) }}

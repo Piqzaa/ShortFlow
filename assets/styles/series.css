@@ -38,3 +38,20 @@
 .account-form.series-calendar-form .series-two-columns>div{margin-top:0}.series-calendar-form .series-two-columns{align-items:start}.series-calendar-dates{margin:24px 0}.series-calendar-date{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:20px;padding:20px 0;border-top:1px solid var(--workspace-border)}.account-form .series-calendar-date>div{margin-top:0;min-width:0}.series-calendar-date p{margin:8px 0}.series-calendar-date input{min-height:48px;max-width:100%}.series-calendar-rhythm{margin:24px 0}.series-calendar-rhythm .account-secondary{margin-bottom:18px}@media(max-width:650px){.series-calendar-date{grid-template-columns:1fr;gap:12px}}
 .series-calendar-form .series-two-columns input,.series-calendar-form .series-two-columns select{height:52px}
 .series-calendar-date>div>strong{display:block;margin-bottom:8px}
+
+.series-video-choices .creation-cover,.series-add-results .creation-cover{width:52px;height:62px;border-radius:7px}
+.series-video-choices .creation-cover-fallback,.series-add-results .creation-cover-fallback{font-size:20px}
+.workspace-heading .series-video-heading-actions{max-width:100%;justify-content:flex-end;margin:0}
+.series-add-results{display:grid;gap:8px;margin:18px 0}
+.series-add-result{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--workspace-border);border-radius:8px}
+.series-add-result strong{overflow-wrap:anywhere}
+.series-add-result form{margin:0}
+.series-video-order li{position:relative}
+.series-video-order-heading{display:flex;align-items:center;gap:12px}
+.series-video-order-heading .series-video-grip{min-width:44px;min-height:44px;padding:0;flex-shrink:0;justify-content:center;font-size:20px;cursor:grab;touch-action:none;user-select:none}
+.series-video-order .is-dragged{opacity:.55}
+.series-video-order .is-dragged .series-video-grip{cursor:grabbing}
+.series-video-order .drop-before::after,.series-video-order .drop-after::after{content:"";position:absolute;inset-inline:0;height:2px;background:var(--workspace-accent);pointer-events:none}
+.series-video-order .drop-before::after{top:0}
+.series-video-order .drop-after::after{bottom:0}
+@media(max-width:650px){.workspace-heading .series-video-heading-actions{justify-content:flex-start}.series-add-result{padding:8px;gap:8px}}

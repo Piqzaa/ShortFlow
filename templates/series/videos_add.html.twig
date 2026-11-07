@@ -1,0 +1,50 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Ajouter un épisode — {{ series.name }}{% endblock %}
+{% block studio_content %}
+<a class="account-secondary composer-back" href="{{ path('app_video_series_show',{id:series.id}) }}">← Revenir à la série</a>
+<div class="workspace-heading"><div><span class="eyebrow">{{ series.name }}</span><h1>Ajouter un épisode</h1><p>Choisis une vidéo existante ou importe-en une. Elle s’ajoutera à la fin de ta série.</p></div></div>
+<div class="series-config">
+<section class="series-config-section" aria-labelledby="series-add-library">
+<h2 id="series-add-library">Choisir dans ma bibliothèque</h2>
+<form class="account-form" method="get" action="{{ path('app_video_series_add',{id:series.id}) }}">
+<label for="series-add-search">Trouver une vidéo</label>
+<input type="search" id="series-add-search" name="q" value="{{ query }}" maxlength="120" placeholder="Rechercher par nom…">
+<button class="account-secondary" type="submit">Rechercher</button>
+</form>
+<div class="series-add-results" data-controller="video-thumbnails">
+{% for video in library.items %}
+<div class="series-add-result">
+{% include 'ai/_cover.html.twig' with {videoId:video.id} only %}
+<strong>{{ video.title }}</strong>
+{% if video.id in activeVideoIds %}
+<span class="library-note">Déjà dans la série</span>
+{% else %}
+<form method="post">
+<input type="hidden" name="_token" value="{{ csrf_token('video_series_add_' ~ series.id) }}">
+<button class="account-secondary" type="submit" name="video" value="{{ video.id }}" aria-label="Ajouter {{ video.title }}">Ajouter</button>
+</form>
+{% endif %}
+</div>
+{% else %}
+<p class="library-note">{{ query ? 'Aucune vidéo ne correspond à cette recherche.' : 'Ta bibliothèque est vide.' }}</p>
+{% endfor %}
+</div>
+{% if library.pages > 1 %}
+<nav class="series-actions" aria-label="Pages de la bibliothèque">
+{% if library.page > 1 %}<a class="account-secondary" href="{{ path('app_video_series_add',{id:series.id,q:query,page:library.page - 1}) }}">← Précédente</a>{% endif %}
+<span class="library-note">{{ library.page }} / {{ library.pages }}</span>
+{% if library.page < library.pages %}<a class="account-secondary" href="{{ path('app_video_series_add',{id:series.id,q:query,page:library.page + 1}) }}">Suivante →</a>{% endif %}
+</nav>
+{% endif %}
+</section>
+<details class="creation-details series-video-import"{% if not library.total and not query %} open{% endif %}>
+<summary>Importer depuis mon appareil</summary>
+<p class="library-note">MP4 ou WebM · 100 Mo maximum · 3 minutes maximum.</p>
+{{ form_start(uploadForm,{attr:{class:'account-form'}}) }}
+{{ form_row(uploadForm.file) }}
+{{ form_row(uploadForm.title) }}
+<button class="button" type="submit">Importer et ajouter à la série</button>
+{{ form_end(uploadForm) }}
+</details>
+</div>
+{% endblock %}

@@ -86,6 +86,7 @@ final class VideoSeriesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('select[name="ai_series[model]"]');
         self::assertSelectorExists('a[aria-current="page"][href="/studio/series"]');
+        self::assertSelectorExists('video[data-preview-src="/studio/bibliotheque/'.$a->getId().'/lecture#t=0.1"]');
         self::assertStringNotContainsString('Secret étranger', $this->client->getResponse()->getContent());
         file_put_contents(dirname(__DIR__, 2).'/artifacts/video-series-new.html', $this->client->getResponse()->getContent());
         $values = $crawler->selectButton('Créer ma série →')->form(['video_series[name]' => 'Mes aventures', 'video_series[order]' => $b->getId().','.$a->getId()])->getPhpValues();
@@ -182,6 +183,7 @@ final class VideoSeriesTest extends WebTestCase
         self::assertResponseStatusCodeSame(201);
         $result = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
         self::assertSame('Nouveau clip', $result['video']['title']);
+        self::assertSame('/studio/bibliotheque/'.$result['video']['id'].'/lecture#t=0.1', $result['video']['preview']);
         $video = $this->em()->find(VideoAsset::class, $result['video']['id']);
         self::assertInstanceOf(VideoAsset::class, $video);
         self::assertSame($this->owner->getId(), $video->getOwner()->getId());
@@ -193,6 +195,70 @@ final class VideoSeriesTest extends WebTestCase
         self::assertResponseStatusCodeSame(303);
         self::assertSame(1, $this->em()->getRepository(VideoSeriesEpisode::class)->count([]));
         self::assertSame(0, $this->em()->getRepository(AiGeneration::class)->count([]));
+    }
+
+    public function testQuickAddKeepsTheOrderAndReturnsToTheEpisode(): void
+    {
+        $first = $this->video('Premier épisode');
+        $next = $this->video('Deuxième aperçu');
+        $foreign = $this->video('Vidéo étrangère', $this->other);
+        $studio = static::getContainer()->get(VideoSeriesStudio::class);
+        $series = $studio->save($this->owner, 'Série rapide', [(string) $first->getId()], '', 0);
+        $firstId = $studio->episodes($series)[0]->getId();
+        $seriesPath = '/studio/series/videos/'.$series->getId();
+        $crawler = $this->client->request('GET', $seriesPath);
+        self::assertSelectorExists('a[href="'.$seriesPath.'/ajouter"]');
+        $this->client->click($crawler->selectLink('Voir la vidéo ↗')->link());
+        self::assertSelectorExists('a[href="'.$seriesPath.'#video-episode-'.$firstId.'"]');
+        $this->client->request('GET', '/studio/bibliotheque/'.$next->getId().'?episode='.$firstId);
+        self::assertSelectorNotExists('a[href="'.$seriesPath.'#video-episode-'.$firstId.'"]');
+
+        $crawler = $this->client->request('GET', $seriesPath.'/ajouter?q=aperçu');
+        self::assertSelectorExists('video[data-preview-src="/studio/bibliotheque/'.$next->getId().'/lecture#t=0.1"]');
+        self::assertSelectorNotExists('button[name="video"][value="'.$first->getId().'"]');
+        self::assertStringNotContainsString('Vidéo étrangère', (string) $this->client->getResponse()->getContent());
+        $form = $crawler->filter('button[name="video"][value="'.$next->getId().'"]')->form();
+        $values = $form->getPhpValues();
+        $this->client->request('POST', $form->getUri(), array_replace($values, ['video' => (string) $foreign->getId()]));
+        self::assertResponseStatusCodeSame(422);
+        $this->client->request('POST', $form->getUri(), array_replace($values, ['_token' => 'invalid']));
+        self::assertResponseStatusCodeSame(403);
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        $episodes = $studio->episodes($series);
+        self::assertSame([$first->getId(), $next->getId()], array_map(static fn (VideoSeriesEpisode $episode): ?int => $episode->getVideo()->getId(), $episodes));
+        self::assertSame($firstId, $episodes[0]->getId());
+        self::assertResponseRedirects($seriesPath.'#video-episode-'.$episodes[1]->getId());
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(303);
+        self::assertCount(2, $studio->episodes($series));
+        $this->client->loginUser($this->other);
+        $this->client->request('GET', $seriesPath.'/ajouter');
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testQuickImportAppendsThePrivateVideoAndReturnsToTheSeries(): void
+    {
+        $first = $this->video('Vidéo déjà dans la série');
+        $studio = static::getContainer()->get(VideoSeriesStudio::class);
+        $series = $studio->save($this->owner, 'Série avec import rapide', [(string) $first->getId()], '', 0);
+        $seriesPath = '/studio/series/videos/'.$series->getId();
+        $crawler = $this->client->request('GET', $seriesPath.'/ajouter');
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/video-series-add.html', $this->client->getResponse()->getContent());
+        $form = $crawler->selectButton('Importer et ajouter à la série')->form(['video_upload[title]' => 'Mon nouvel épisode']);
+        $path = tempnam(sys_get_temp_dir(), 'series-append-');
+        copy(dirname(__DIR__).'/Fixtures/library-valid.mp4', $path);
+        $this->files[] = $path;
+        $this->client->request('POST', $form->getUri(), $form->getPhpValues(), ['video_upload' => ['file' => new UploadedFile($path, 'clip.mp4', 'video/mp4', null, true)]]);
+        self::assertResponseStatusCodeSame(303);
+        $episodes = $studio->episodes($series);
+        self::assertCount(2, $episodes);
+        $appended = $episodes[1]->getVideo();
+        $this->files[] = static::getContainer()->get(PrivateVideoStorage::class)->path($appended->getStorageName());
+        self::assertSame('Mon nouvel épisode', $appended->getTitle());
+        self::assertSame($this->owner->getId(), $appended->getOwner()->getId());
+        self::assertResponseRedirects($seriesPath.'#video-episode-'.$episodes[1]->getId());
+        self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
     public function testMixedPaginationAndVideoDeletionKeepTheSeriesPrivate(): void
