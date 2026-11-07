@@ -8,6 +8,23 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'video_series_owner', columns: ['owner_id'])]
 class VideoSeries
 {
+    /** @var array<string,string> */
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $editorialProfile = [];
+
+    /** @return array<string,string> */
+    public function getEditorialProfile(): array
+    {
+        return $this->editorialProfile;
+    }
+
+    /** @param array<string,string> $profile */
+    public function configureEditorial(array $profile): void
+    {
+        $this->editorialProfile = $profile;
+        ++$this->revision;
+    }
+
     /** @var array{networks?:list<string>,accounts?:array<string,?string>} */
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $publicationSettings = [];

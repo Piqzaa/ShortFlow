@@ -1,5 +1,7 @@
 # Audit produit : une série doit mener à la publication
 
+Suivi suivant du 7 novembre : **lot 2 livré localement pour relecture**, aide aux textes des vidéos importées, style partagé et application contrôlée. Voir `series-textes-importes-20261107.md`. Le prochain lot après retour propriétaire est la cadence/programmation groupée ; les constats d’origine restent historiques.
+
 Suivi du 7 novembre : **lot 1 réalisé localement, relecture propriétaire attendue**. Voir `series-publication-parcours-20261107.md` pour le périmètre livré, les preuves et les limites. Les constats d’origine ci-dessous décrivent l’état avant ce lot ; l’aide IA aux textes importés et la cadence groupée restent à traiter.
 
 7 novembre 2026 — analyse demandée par le propriétaire après les simplifications d’interface. Lecture du code et des formulaires ; aucune modification applicative, requête propriétaire, inférence ou publication exécutée. Les constats ci-dessous décrivent les chemins du code, pas une recette sociale réelle.

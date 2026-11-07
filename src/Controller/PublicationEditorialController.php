@@ -22,10 +22,11 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class PublicationEditorialController extends AbstractController
 {
     #[Route('/studio/series/{id}/textes', name: 'app_series_editorial', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function profile(int $id, Request $request, #[CurrentUser] User $owner, AiSeriesStudio $seriesStudio, PublicationTexts $texts, EntityManagerInterface $em): Response
+    #[Route('/studio/series/videos/{id}/textes', name: 'app_video_series_editorial', defaults: ['imported' => true], requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function profile(int $id, Request $request, #[CurrentUser] User $owner, AiSeriesStudio $seriesStudio, \App\Service\VideoSeriesStudio $videoSeriesStudio, PublicationTexts $texts, EntityManagerInterface $em, bool $imported = false): Response
     {
-        $series = $seriesStudio->owned($id, $owner) ?? throw $this->createNotFoundException();
-        $form = $this->createForm(SeriesEditorialType::class, $texts->profile($series->getEditorialProfile()) + ['revision' => (string) $series->getRevision()], ['csrf_token_id' => 'editorial_profile_'.$id])->handleRequest($request);
+        $series = ($imported ? $videoSeriesStudio : $seriesStudio)->owned($id, $owner) ?? throw $this->createNotFoundException();
+        $form = $this->createForm(SeriesEditorialType::class, $texts->profile($series->getEditorialProfile()) + ['revision' => (string) $series->getRevision()], ['csrf_token_id' => ($imported ? 'video_' : '').'editorial_profile_'.$id])->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             try {
                 $data = $form->getData();
@@ -41,13 +42,13 @@ final class PublicationEditorialController extends AbstractController
                 });
                 $this->addFlash('success', 'Style des textes enregistré. Les textes existants restent à relire avant toute nouvelle application.');
 
-                return $this->redirectToRoute('app_series_editorial', ['id' => $id], 303);
+                return $this->redirectToRoute($imported ? 'app_video_series_editorial' : 'app_series_editorial', ['id' => $id], 303);
             } catch (PublicationException $error) {
                 $form->addError(new FormError($error->getMessage()));
             }
         }
 
-        return $this->render('series/editorial.html.twig', ['series' => $series, 'form' => $form], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/editorial.html.twig', ['series' => $series, 'form' => $form, 'seriesReturnRoute' => $imported ? 'app_video_series_show' : 'app_series_show'], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/brouillons/{draft}/textes/{id}', name: 'app_publication_editorial_status', requirements: ['draft' => '\d+', 'id' => '[a-f0-9]{32}'], methods: ['GET'])]

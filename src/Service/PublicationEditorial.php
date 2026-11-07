@@ -20,6 +20,20 @@ final class PublicationEditorial
     /** @return array{source:array<string,mixed>,profile:array<string,string>,networks:list<string>,hash:string} */
     private function snapshot(PublicationDraft $draft): array
     {
+        if ($imported = $draft->getVideoEpisode()) {
+            $series = $imported->getSeries();
+            $video = $imported->getVideo();
+            if ('draft' !== $draft->getStatus() || !$imported->isActive() || $series->getOwner()->getId() !== $draft->getOwner()->getId() || $video->getOwner()->getId() !== $draft->getOwner()->getId() || $draft->videoIds() !== [$video->getId()]) {
+                throw new PublicationException('Cet épisode est indisponible pour une nouvelle proposition. Ses textes sont conservés.');
+            }
+            $networks = $draft->getNetworks();
+            $this->texts->schema($networks);
+            $profile = $this->texts->profile($series->getEditorialProfile());
+            // Reordering and renaming the series do not change the depicted content.
+            $source = ['videoEpisode' => $imported->getId(), 'video' => $video->getId(), 'title' => $video->getTitle(), 'videoTitle' => $video->getTitle(), 'scenes' => [], 'description' => $draft->getEditorial()['brief'] ?? ''];
+
+            return ['source' => $source, 'profile' => $profile, 'networks' => $networks, 'hash' => hash('sha256', serialize([$source, $profile, $networks, PublicationTexts::VERSION]))];
+        }
         $episode = $draft->getEpisode();
         if ('draft' !== $draft->getStatus() || !$episode || 'ready' !== $episode->getFlowState() || !$episode->getApprovedVideo() || $episode->getOwner()->getId() !== $draft->getOwner()->getId() || $draft->videoIds() !== [$episode->getApprovedVideo()->getId()]) {
             throw new PublicationException('Les textes doivent être préparés depuis la version actuellement validée de l’épisode. Les anciens brouillons conservent leur vidéo et leurs textes.');
@@ -46,6 +60,25 @@ final class PublicationEditorial
                 $this->em->refresh($episode->getSeries());
             }
         }
+        if ($episode = $draft->getVideoEpisode()) {
+            $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($episode->getSeries(), LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($episode->getVideo());
+        }
+    }
+
+    public function saveBrief(User $owner, PublicationDraft $draft, string $brief): void
+    {
+        if (mb_strlen($brief) > 700) {
+            throw new PublicationException('Décris cette version en 700 caractères maximum.');
+        }
+        $this->em->getConnection()->transactional(function () use ($owner, $draft, $brief): void {
+            $this->refresh($draft, $owner);
+            $metadata = $draft->getEditorial();
+            $metadata['brief'] = trim($brief);
+            $draft->setEditorial($metadata);
+            $this->em->flush();
+        });
     }
 
     public function request(User $owner, PublicationDraft $draft, string $brief = ''): StoryProposal
@@ -62,6 +95,11 @@ final class PublicationEditorial
 
         return $this->em->getConnection()->transactional(function () use ($owner, $draft, $brief): StoryProposal {
             $this->refresh($draft, $owner);
+            if ($draft->getVideoEpisode()) {
+                $source = $this->snapshot($draft)['source'];
+                $source['description'] = trim($brief);
+                $this->texts->requireContext($source);
+            }
             $metadata = $draft->getEditorial();
             $metadata['brief'] = trim($brief);
             $draft->setEditorial($metadata);

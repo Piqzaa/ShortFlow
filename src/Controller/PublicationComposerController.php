@@ -219,6 +219,9 @@ final class PublicationComposerController extends AbstractController
             try {
                 if ('refresh' !== $intent) {
                     $stored = $drafts->save($user, $next['ids'], $next['networks'], array_intersect_key($next['content'], MultiNetworkPublishing::LABELS), $next['accounts'], $next['title'], $next['persistentId'], $next['persistentRevision']);
+                    if ($stored->getVideoEpisode()) {
+                        $editorial->saveBrief($user, $stored, $request->request->getString('editorial_brief'));
+                    }
                     $next['persistentId'] = $stored->getId();
                     $next['persistentRevision'] = $stored->getRevision();
                     // Save the draft before planning; a bad date must never lose edited text.
@@ -270,7 +273,7 @@ final class PublicationComposerController extends AbstractController
             }
         }
 
-        return $this->render('publication/composer.html.twig', $context + ['sourceVideoEpisode' => $stored?->getVideoEpisode(), 'sourceEpisode' => $stored?->getEpisode(), 'editorial' => $stored?->getEpisode() ? $editorial->view($stored) : null, 'editorialDraft' => $stored, 'form' => $form, 'key' => $key, 'selectedNetworks' => $selected, 'state' => $state, 'networkLabels' => MultiNetworkPublishing::LABELS, 'accountChanged' => $accountChanged], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'no-store, private']));
+        return $this->render('publication/composer.html.twig', $context + ['sourceVideoEpisode' => $stored?->getVideoEpisode(), 'sourceEpisode' => $stored?->getEpisode(), 'editorial' => $stored?->hasEpisodeSource() ? $editorial->view($stored) : null, 'editorialDraft' => $stored, 'form' => $form, 'key' => $key, 'selectedNetworks' => $selected, 'state' => $state, 'networkLabels' => MultiNetworkPublishing::LABELS, 'accountChanged' => $accountChanged], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'no-store, private']));
     }
 
     /** @param array<string, mixed> $state */
