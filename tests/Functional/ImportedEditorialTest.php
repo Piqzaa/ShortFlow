@@ -103,6 +103,7 @@ final class ImportedEditorialTest extends WebTestCase
         $this->client->request('GET', '/studio/composer', ['draft' => $this->draft->getId()]);
         $crawler = $this->client->followRedirect();
         self::assertSelectorExists('#editorial-brief');
+        file_put_contents('/app/artifacts/imported-editorial-initial.html', $this->client->getResponse()->getContent());
         self::assertSelectorExists('a[href="/studio/series/videos/'.$this->series->getId().'/textes"]');
         $values = $crawler->selectButton('Enregistrer le brouillon')->form()->getPhpValues();
         $values['editorial_brief'] = 'Un mug bleu tourne sur une table.';
