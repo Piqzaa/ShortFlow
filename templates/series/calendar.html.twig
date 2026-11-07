@@ -2,14 +2,18 @@
 {% block title %}Calendrier de {{ series.name }} — VydFlow{% endblock %}
 {% block studio_content %}
 <a class="account-secondary composer-back" href="{{ path('app_series_show',{id:series.id}) }}">← {{ series.name }}</a>
-<div class="workspace-heading"><div><span class="eyebrow">LE CALENDRIER DE TA SÉRIE</span><h1>Un rythme pour tes épisodes.</h1><p>Choisis les dates prévues, puis vérifie l’ordre des épisodes.</p></div></div>
+<div class="workspace-heading"><div><span class="eyebrow">LE CALENDRIER DE TA SÉRIE</span><h1>Choisis les dates de tes épisodes.</h1><p>Règle la date et l’heure de chaque épisode, puis vérifie l’aperçu.</p></div></div>
 {% include 'series/_destinations_summary.html.twig' with {seriesConfigurationRoute:'app_series_edit'} %}
-<p class="account-notice">Ce calendrier prépare les dates. La génération des vidéos et la publication seront à confirmer séparément.</p>
-{{ form_start(form,{attr:{class:'account-form series-config','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}{{ form_errors(form) }}
+<p class="library-note">Ces dates restent des prévisions : la génération et la publication seront à confirmer séparément.</p>
+{{ form_start(form,{attr:{class:'account-form series-config series-calendar-form','data-controller':'unsaved','data-unsaved-initial':preview ? 'true':'false','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}{{ form_errors(form) }}
+<div class="series-two-columns">{{ form_row(form.count) }}{{ form_row(form.timezone) }}</div>
+<button class="account-secondary" name="intent" value="resize" type="submit">Afficher ce nombre d’épisodes</button>
+<p class="library-note">Dates dans les 90 prochains jours, dans l’ordre des épisodes. Les publications déjà confirmées gardent leurs dates.</p>
+{{ form_errors(form.dates) }}<div class="series-calendar-dates">{% for date in form.dates %}{% set target = targets[loop.index0]|default({number:loop.index,title:'Épisode à préparer',episode:null}) %}<div class="series-calendar-date"><div><strong>Épisode {{ target.number }}</strong>{% if target.episode and target.title != ('Épisode ' ~ target.number) %}<p class="library-note">{{ target.title }}</p>{% endif %}<span class="library-note">{{ target.episode ? 'Épisode existant' : 'À créer et à préparer' }}</span></div><div>{{ form_label(date,'Date et heure de l’épisode ' ~ target.number) }}{{ form_errors(date) }}{{ form_widget(date,{type:'datetime-local'}) }}</div></div>{% endfor %}</div>
+<details class="creation-details series-calendar-rhythm"{% if rhythmOpen %} open{% endif %}><summary>Remplir les dates avec un rythme (facultatif)</summary><p class="library-note">Propose des dates en une fois. Tu pourras ajuster chaque épisode ci-dessus avant d’enregistrer.</p>
 <div class="series-two-columns">{{ form_row(form.start) }}{{ form_row(form.end) }}</div>
-<div role="group" aria-labelledby="series-calendar-days-label"><span id="series-calendar-days-label">Jours de publication prévus</span>{{ form_errors(form.weekdays) }}<div class="series-network-choices">{% for day in form.weekdays %}<label>{{ form_widget(day) }}{{ day.vars.label }}</label>{% endfor %}</div></div><p class="library-note">Tous les jours pour un rythme quotidien, un seul jour pour un rendez-vous hebdomadaire. Un épisode par jour choisi.</p>
-<div class="series-two-columns">{{ form_row(form.hour) }}{{ form_row(form.timezone) }}</div>{{ form_row(form.count) }}
-<p class="library-note">Prévisions dans les 90 prochains jours. Les épisodes sont placés dans leur ordre ; les publications déjà confirmées gardent leurs dates. Les créneaux suivants indiquent les épisodes restant à préparer.</p>
+<div role="group" aria-labelledby="series-calendar-days-label"><span id="series-calendar-days-label">Jours proposés</span>{{ form_errors(form.weekdays) }}<div class="series-network-choices">{% for day in form.weekdays %}<label>{{ form_widget(day) }}{{ day.vars.label }}</label>{% endfor %}</div></div>{{ form_row(form.hour) }}
+<button class="account-secondary" name="intent" value="fill" type="submit">Proposer les dates avec ce rythme</button></details>
 <div class="series-actions"><button class="account-secondary" name="intent" value="preview" type="submit">Voir les dates proposées →</button>{% if preview %}<button class="button" name="intent" value="save" type="submit">Enregistrer ces dates prévues</button>{% endif %}</div>
 {% if preview %}<p class="library-note">Après un changement, actualise l’aperçu avant d’enregistrer.</p>{% endif %}
 {{ form_end(form) }}

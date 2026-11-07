@@ -16,10 +16,18 @@ final class SeriesCalendar
     }
 
     /** @param array<string,mixed> $data
-     * @return array{start:string,end:?string,weekdays:list<int>,hour:string,timezone:string,count:int}
+     * @return array<string,mixed>
      */
     private function rules(array $data): array
     {
+        if (array_key_exists('dates', $data)) {
+            $dates = $data['dates'];
+            if (!is_array($dates) || !array_is_list($dates) || !is_int($data['count'] ?? null) || $data['count'] < 1 || $data['count'] > 90 || count($dates) !== $data['count'] || array_filter($dates, static fn ($date): bool => !is_string($date) || 16 !== strlen($date)) || !is_string($data['timezone'] ?? null) || !in_array($data['timezone'], \DateTimeZone::listIdentifiers(), true)) {
+                throw new PublicationException('Choisis une date et une heure pour chaque épisode, puis vérifie le nombre et le fuseau.');
+            }
+
+            return ['mode' => 'manual', 'dates' => $dates, 'timezone' => $data['timezone'], 'count' => $data['count']];
+        }
         $days = $data['weekdays'] ?? [];
         if (!is_array($days) || !$days || count($days) > 7 || array_filter($days, static fn ($day): bool => !is_int($day) || $day < 1 || $day > 7) || count(array_unique($days)) !== count($days) || !is_int($data['count'] ?? null) || $data['count'] < 1 || $data['count'] > 90) {
             throw new PublicationException('Choisis les jours et un nombre de 1 à 90 épisodes.');
@@ -45,6 +53,23 @@ final class SeriesCalendar
     public function dates(array $data): array
     {
         $rules = $this->rules($data);
+        if (isset($rules['dates'])) {
+            $dates = [];
+            foreach ($rules['dates'] as $i => $local) {
+                try {
+                    $at = $this->time->resolve($local, $rules['timezone']);
+                    $this->time->validateFuture($at);
+                } catch (PublicationException $error) {
+                    throw new PublicationException('Épisode '.($i + 1).' : '.$error->getMessage());
+                }
+                if ($dates && $at <= new \DateTimeImmutable($dates[array_key_last($dates)])) {
+                    throw new PublicationException('Choisis des dates et heures distinctes, dans l’ordre des épisodes.');
+                }
+                $dates[] = $at->format(DATE_ATOM);
+            }
+
+            return $dates;
+        }
         $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $rules['start'], new \DateTimeZone('UTC'));
         $end = $rules['end'] ? \DateTimeImmutable::createFromFormat('!Y-m-d', $rules['end'], new \DateTimeZone('UTC')) : null;
         if (!$date || $date->format('Y-m-d') !== $rules['start'] || (null !== $rules['end'] && (!$end || $end->format('Y-m-d') !== $rules['end'] || $end < $date))) {
@@ -82,17 +107,32 @@ final class SeriesCalendar
     {
         $rules = $this->rules($data);
         $dates = $this->dates($rules);
-        // A confirmed source, including a partial/failed dispatched publication, keeps its own calendar.
-        $episodes = $this->em->createQueryBuilder()->select('e.id', 'e.number', 'e.title')->from(AiEpisode::class, 'e')->where('e.series = :series')->andWhere("NOT EXISTS (SELECT d.id FROM App\Entity\PublicationDraft d WHERE d.episode = e AND d.status NOT IN ('draft', 'cancelled'))")->setParameter('series', $series)->orderBy('e.number', 'ASC')->addOrderBy('e.id', 'ASC')->setMaxResults($rules['count'])->getQuery()->getArrayResult();
-        $next = 1 + (int) $this->em->createQuery('SELECT MAX(e.number) FROM App\Entity\AiEpisode e WHERE e.series = :series')->setParameter('series', $series)->getSingleScalarResult();
+        $targets = $this->targets($series, $rules['count']);
         $slots = [];
         foreach ($dates as $i => $at) {
-            $episode = $episodes[$i] ?? null;
-            $slots[] = ['episode' => $episode ? (int) $episode['id'] : null, 'number' => $episode ? (int) $episode['number'] : $next++, 'title' => $episode['title'] ?? 'Épisode à préparer', 'at' => $at];
+            $slots[] = $targets[$i] + ['at' => $at];
         }
         $plan = ['rules' => $rules, 'slots' => $slots];
 
         return $plan + ['hash' => hash('sha256', serialize([$series->getId(), $series->getRevision(), $plan]))];
+    }
+
+    /** @return list<array{episode:?int,number:int,title:string}> */
+    public function targets(AiSeries $series, int $count): array
+    {
+        if ($count < 1 || $count > 90) {
+            throw new PublicationException('Choisis de 1 à 90 épisodes.');
+        }
+        // A confirmed source, including a partial/failed dispatched publication, keeps its own calendar.
+        $episodes = $this->em->createQueryBuilder()->select('e.id', 'e.number', 'e.title')->from(AiEpisode::class, 'e')->where('e.series = :series')->andWhere("NOT EXISTS (SELECT d.id FROM App\Entity\PublicationDraft d WHERE d.episode = e AND d.status NOT IN ('draft', 'cancelled'))")->setParameter('series', $series)->orderBy('e.number', 'ASC')->addOrderBy('e.id', 'ASC')->setMaxResults($count)->getQuery()->getArrayResult();
+        $next = 1 + (int) $this->em->createQuery('SELECT MAX(e.number) FROM App\Entity\AiEpisode e WHERE e.series = :series')->setParameter('series', $series)->getSingleScalarResult();
+        $slots = [];
+        for ($i = 0; $i < $count; ++$i) {
+            $episode = $episodes[$i] ?? null;
+            $slots[] = ['episode' => $episode ? (int) $episode['id'] : null, 'number' => $episode ? (int) $episode['number'] : $next++, 'title' => $episode['title'] ?? 'Épisode à préparer'];
+        }
+
+        return $slots;
     }
 
     /** @param array<string,mixed> $data */

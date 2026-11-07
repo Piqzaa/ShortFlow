@@ -65,6 +65,7 @@ final class SeriesCalendarJourneyTest extends WebTestCase
         $values['series_calendar']['timezone'] = 'Europe/Paris';
         $values['series_calendar']['weekdays'] = ['1', '3'];
         $values['series_calendar']['count'] = '4';
+        $values['series_calendar']['dates'] = ['2026-11-09T18:00', '2026-11-11T18:00', '2026-11-16T18:00', '2026-11-18T18:00'];
         $values['intent'] = 'preview';
 
         return $values;
@@ -97,7 +98,7 @@ final class SeriesCalendarJourneyTest extends WebTestCase
         self::assertSame(3, $this->em()->getRepository(AiEpisode::class)->count(['series' => $stored]));
         $before = $stored->getCalendarPlan();
         $invalid = $this->input();
-        $invalid['series_calendar']['end'] = '2026-11-08';
+        $invalid['series_calendar']['dates'][1] = '2026-11-08T18:00';
         $this->client->request('POST', $this->url, $invalid);
         self::assertResponseStatusCodeSame(422);
         self::assertSame($before, $this->em()->find(AiSeries::class, $this->series->getId())->getCalendarPlan());
@@ -114,7 +115,7 @@ final class SeriesCalendarJourneyTest extends WebTestCase
         $save = $crawler->selectButton('Enregistrer ces dates prévues')->form()->getPhpValues();
         $save['intent'] = 'save';
         $changed = $save;
-        $changed['series_calendar']['hour'] = '19:00';
+        $changed['series_calendar']['dates'][0] = '2026-11-09T19:00';
         $this->client->request('POST', $this->url, $changed);
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('form[name="series_calendar"]', 'nouvel aperçu');
@@ -159,5 +160,48 @@ final class SeriesCalendarJourneyTest extends WebTestCase
         self::assertSame('scheduled', $draft->getStatus());
         self::assertSame('2026-11-12T17:00:00+00:00', $draft->getScheduledAt()->format(DATE_ATOM));
         self::assertSame(0, (int) $this->em()->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testRhythmFillsEditableDatesAndCustomTimesSurviveSave(): void
+    {
+        $input = $this->input();
+        $input['intent'] = 'fill';
+        $crawler = $this->client->request('POST', $this->url, $input);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[name="series_calendar[dates][1]"][type="datetime-local"][value="2026-11-11T18:00"]');
+        $custom = $crawler->selectButton('Voir les dates proposées →')->form()->getPhpValues();
+        $custom['series_calendar']['dates'][1] = '2026-11-12T10:15';
+        $custom['series_calendar']['start'] = '';
+        $custom['series_calendar']['hour'] = '';
+        $custom['series_calendar']['weekdays'] = [];
+        $custom['intent'] = 'preview';
+        $crawler = $this->client->request('POST', $this->url, $custom);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.story-context', '12/11/2026 à 10:15');
+        file_put_contents('/app/artifacts/series-calendar-custom.html', $this->client->getResponse()->getContent());
+        $save = $crawler->selectButton('Enregistrer ces dates prévues')->form()->getPhpValues();
+        $save['intent'] = 'save';
+        $this->client->request('POST', $this->url, $save);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertSelectorExists('input[name="series_calendar[dates][1]"][value="2026-11-12T10:15"]');
+        $stored = $this->em()->find(AiSeries::class, $this->series->getId());
+        self::assertSame('manual', $stored->getCalendarPlan()['rules']['mode']);
+        self::assertSame('2026-11-12T09:15:00+00:00', $stored->getCalendarPlan()['slots'][1]['at']);
+        self::assertSame(0, (int) $this->em()->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testResizePreservesEnteredDatesWithoutCreatingEpisodes(): void
+    {
+        $input = $this->input();
+        $input['series_calendar']['count'] = '6';
+        $input['intent'] = 'resize';
+        $this->client->request('POST', $this->url, $input);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(6, '.series-calendar-date');
+        self::assertSelectorExists('input[name="series_calendar[dates][0]"][value="2026-11-09T18:00"]');
+        self::assertSelectorExists('input[name="series_calendar[dates][5]"]:not([value])');
+        self::assertSame(3, $this->em()->getRepository(AiEpisode::class)->count([]));
+        self::assertSame([], $this->em()->find(AiSeries::class, $this->series->getId())->getCalendarPlan());
     }
 }

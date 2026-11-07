@@ -23,18 +23,36 @@ final class SeriesCalendarController extends AbstractController
         $series = $studio->owned($id, $owner) ?? throw $this->createNotFoundException();
         $saved = $series->getCalendarPlan();
         $defaults = ['start' => $clock->now()->setTimezone(new \DateTimeZone($owner->getTimezone()))->modify('+1 day')->format('Y-m-d'), 'end' => null, 'weekdays' => [1, 2, 3, 4, 5, 6, 7], 'hour' => '18:00', 'timezone' => $owner->getTimezone(), 'count' => 4];
-        $form = $this->createForm(SeriesCalendarType::class, ($saved['rules'] ?? $defaults) + ['revision' => (string) $series->getRevision(), 'snapshot' => ''], ['csrf_token_id' => 'series_calendar_'.$id])->handleRequest($request);
+        $initial = array_replace($defaults, array_intersect_key($saved['rules'] ?? [], $defaults));
+        $initial['dates'] = $saved ? array_map(static fn (array $slot): string => (new \DateTimeImmutable($slot['at']))->setTimezone(new \DateTimeZone($initial['timezone']))->format('Y-m-d\TH:i'), $saved['slots']) : array_fill(0, $initial['count'], '');
+        $initial += ['revision' => (string) $series->getRevision(), 'snapshot' => ''];
+        $intent = $request->request->getString('intent');
+        $options = ['csrf_token_id' => 'series_calendar_'.$id, 'validation_groups' => 'fill' === $intent ? ['Default', 'rhythm'] : ['Default']];
+        $form = $this->createForm(SeriesCalendarType::class, $initial, $options)->handleRequest($request);
         $preview = null;
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             try {
-                if ('save' === $request->request->getString('intent')) {
+                if ('save' === $intent) {
                     $calendar->save($owner, $series, $data);
                     $this->addFlash('success', 'Dates prévues enregistrées. Aucune génération ni publication n’a été activée.');
 
                     return $this->redirectToRoute('app_series_calendar', ['id' => $id], 303);
                 }
-                $preview = $calendar->preview($series, $data);
+                if ('resize' === $intent) {
+                    $data['dates'] = array_pad(array_slice($data['dates'], 0, $data['count']), $data['count'], '');
+                    $data['snapshot'] = '';
+                    $form = $this->createForm(SeriesCalendarType::class, $data, $options);
+                } else {
+                    if ('fill' === $intent) {
+                        $rhythm = $data;
+                        unset($rhythm['dates']);
+                        $generated = $calendar->preview($series, $rhythm);
+                        $data['dates'] = array_map(static fn (array $slot): string => (new \DateTimeImmutable($slot['at']))->setTimezone(new \DateTimeZone($data['timezone']))->format('Y-m-d\TH:i'), $generated['slots']);
+                        $form = $this->createForm(SeriesCalendarType::class, $data, $options);
+                    }
+                    $preview = $calendar->preview($series, $data);
+                }
             } catch (PublicationException $error) {
                 $form->addError(new FormError($error->getMessage()));
                 try {
@@ -49,6 +67,9 @@ final class SeriesCalendarController extends AbstractController
             $view->children['snapshot']->vars['value'] = $preview['hash'];
         }
 
-        return $this->render('series/calendar.html.twig', ['series' => $series, 'form' => $view, 'preview' => $preview, 'saved' => $saved], new Response(status: $form->isSubmitted() && !$form->isValid() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        $count = $form->get('count')->getData();
+        $targets = $calendar->targets($series, is_int($count) && $count >= 1 && $count <= 90 ? $count : 4);
+
+        return $this->render('series/calendar.html.twig', ['series' => $series, 'form' => $view, 'preview' => $preview, 'saved' => $saved, 'targets' => $targets, 'rhythmOpen' => 'fill' === $intent || ($form->isSubmitted() && !$form->isValid())], new Response(status: $form->isSubmitted() && !$form->isValid() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 }

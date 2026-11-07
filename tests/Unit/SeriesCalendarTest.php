@@ -56,4 +56,23 @@ final class SeriesCalendarTest extends TestCase
             }
         }
     }
+
+    public function testExactDatesMayHaveDifferentHoursAndShareADay(): void
+    {
+        self::assertSame(['2026-11-09T09:15:00+00:00', '2026-11-09T17:00:00+00:00'], $this->dates(['dates' => ['2026-11-09T10:15', '2026-11-09T18:00'], 'count' => 2]));
+    }
+
+    public function testExactDatesRejectMissingDuplicateUnorderedAndAmbiguousTimes(): void
+    {
+        foreach ([[''], ['2026-11-09T18:00', '2026-11-09T18:00'], ['2026-11-10T18:00', '2026-11-09T18:00'], ['2026-11-07T08:00'], ['2026-02-30T18:00']] as $dates) {
+            try {
+                $this->dates(['dates' => $dates, 'count' => count($dates)]);
+                self::fail('Invalid exact dates must not create partial plans.');
+            } catch (PublicationException $error) {
+                self::assertNotSame('', $error->getMessage());
+            }
+        }
+        $this->expectException(PublicationException::class);
+        $this->dates(['dates' => ['2027-03-28T02:30'], 'count' => 1], '2027-03-26T08:00:00Z');
+    }
 }
