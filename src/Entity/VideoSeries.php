@@ -8,6 +8,22 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'video_series_owner', columns: ['owner_id'])]
 class VideoSeries
 {
+    /** @var array{networks?:list<string>,accounts?:array<string,?string>} */
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $publicationSettings = [];
+
+    /** @return array{networks?:list<string>,accounts?:array<string,?string>} */
+    public function getPublicationSettings(): array
+    {
+        return $this->publicationSettings;
+    }
+
+    /** @param array{networks:list<string>,accounts:array<string,?string>} $settings */
+    public function setPublicationSettings(array $settings): void
+    {
+        $this->publicationSettings = $settings;
+    }
+
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]

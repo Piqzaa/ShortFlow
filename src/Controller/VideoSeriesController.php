@@ -26,7 +26,7 @@ final class VideoSeriesController extends AbstractController
 
     #[Route('/studio/series/videos/nouvelle', name: 'app_video_series_new', methods: ['GET', 'POST'])]
     #[Route('/studio/series/videos/{id}/modifier', name: 'app_video_series_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function configure(Request $request, #[CurrentUser] User $user, VideoSeriesStudio $studio, VideoAssetRepository $videos, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, ?int $id = null): Response
+    public function configure(Request $request, #[CurrentUser] User $user, VideoSeriesStudio $studio, VideoAssetRepository $videos, \App\Service\SeriesPublicationSettings $publicationSettings, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, ?int $id = null): Response
     {
         $series = null === $id ? null : ($studio->owned($id, $user) ?? throw $this->createNotFoundException());
         $choices = [];
@@ -38,14 +38,15 @@ final class VideoSeriesController extends AbstractController
         if ($imported && !in_array((string) $imported->getId(), $selected, true)) {
             $selected[] = (string) $imported->getId();
         }
-        $form = $this->createForm(VideoSeriesType::class, ['name' => $series?->getName(), 'videos' => $selected, 'order' => implode(',', $selected), 'revision' => (string) ($series?->getRevision() ?? 0)], ['videos' => $choices, 'csrf_token_id' => 'video_series_'.($id ?? 'new')])->handleRequest($request);
+        $publication = $series?->getPublicationSettings() ?? [];
+        $form = $this->createForm(VideoSeriesType::class, ['name' => $series?->getName(), 'publication' => $publication, 'videos' => $selected, 'order' => implode(',', $selected), 'revision' => (string) ($series?->getRevision() ?? 0)], ['publication_accounts' => $publicationSettings->choices($user, $publication['accounts'] ?? []), 'videos' => $choices, 'csrf_token_id' => 'video_series_'.($id ?? 'new')])->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             try {
                 if (!$limiter->create('video-series-config-'.$user->getId())->consume()->isAccepted()) {
                     throw new \RuntimeException('Trop de demandes rapprochées. Réessaie dans quelques minutes.');
                 }
                 $data = $form->getData();
-                $saved = $studio->save($user, $data['name'], $data['videos'], $data['order'] ?? '', (int) $data['revision'], $series);
+                $saved = $studio->save($user, $data['name'], $data['videos'], $data['order'] ?? '', (int) $data['revision'], $series, $data['publication']);
                 $this->addFlash('success', 'Ta série est enregistrée. Chaque vidéo forme un épisode.');
 
                 return $this->redirectToRoute('app_video_series_show', ['id' => $saved->getId()], 303);
@@ -58,10 +59,33 @@ final class VideoSeriesController extends AbstractController
     }
 
     #[Route('/studio/series/videos/{id}', name: 'app_video_series_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(int $id, #[CurrentUser] User $user, VideoSeriesStudio $studio): Response
+    public function show(int $id, #[CurrentUser] User $user, VideoSeriesStudio $studio, \App\Service\EpisodePublications $publications): Response
     {
         $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
 
-        return $this->render('series/videos_show.html.twig', ['series' => $series, 'episodes' => $studio->episodes($series)], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        $episodes = $studio->episodes($series);
+
+        return $this->render('series/videos_show.html.twig', ['series' => $series, 'episodes' => $episodes, 'publicationSummaries' => $publications->videoSummaries($episodes)], new Response(headers: ['Cache-Control' => 'private, no-store']));
+    }
+
+    #[Route('/studio/series/videos/episodes/{id}/publication', name: 'app_video_episode_publication', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function publication(int $id, Request $request, #[CurrentUser] User $user, \Doctrine\ORM\EntityManagerInterface $em, \App\Service\EpisodePublications $publications): Response
+    {
+        $episode = $em->getRepository(\App\Entity\VideoSeriesEpisode::class)->find($id);
+        if (!$episode || $episode->getSeries()->getOwner()->getId() !== $user->getId()) {
+            throw $this->createNotFoundException();
+        }
+        if (!$this->isCsrfTokenValid('video_episode_publication_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        try {
+            $draft = $publications->prepareVideo($user, $episode, $request->request->getInt('revision'));
+
+            return $this->redirectToRoute('draft' === $draft->getStatus() ? 'app_composer_start' : 'app_draft', ['draft' === $draft->getStatus() ? 'draft' : 'id' => $draft->getId()], 303);
+        } catch (\App\Service\PublicationException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_video_series_show', ['id' => $episode->getSeries()->getId()], 303);
     }
 }

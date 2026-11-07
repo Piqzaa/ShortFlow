@@ -71,6 +71,8 @@ import SeriesSettingsController from './controllers/series_settings_controller.j
 app.register('series-settings', SeriesSettingsController);
 import SeriesVideosController from './controllers/series_videos_controller.js';
 app.register('series-videos', SeriesVideosController);
+import SeriesDestinationsController from './controllers/series_destinations_controller.js';
+app.register('series-destinations', SeriesDestinationsController);
 import './styles/episode.css';
 import EpisodeWatchController from './controllers/episode_watch_controller.js';
 app.register('episode-watch', EpisodeWatchController);

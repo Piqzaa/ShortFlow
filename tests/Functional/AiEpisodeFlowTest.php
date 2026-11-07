@@ -777,12 +777,12 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSelectorTextContains('.story-result h2', 'Ta vidéo est générée');
         self::assertSelectorExists('.story-result video[controls]');
         self::assertSelectorExists('.story-result-actions a[download]');
-        self::assertSelectorTextContains('.story-publication-choice summary', 'facultatif');
+        self::assertSelectorTextContains('.story-publication-choice summary', 'Choisir une autre version');
         self::assertStringNotContainsString('Ta vidéo attend ta validation', $this->client->getResponse()->getContent());
         self::assertLessThan(strpos($this->client->getResponse()->getContent(), 'id="generated-plans"'), strpos($this->client->getResponse()->getContent(), 'id="story-result-title"'));
         file_put_contents(dirname(__DIR__, 2).'/artifacts/episode-result-before.html', $this->client->getResponse()->getContent());
         self::assertSelectorNotExists('a[href*="publications/preparer"]');
-        self::assertSelectorNotExists('form[action$="/publication"]');
+        self::assertSelectorExists('form[action$="/publication"] input[name="video"]');
         $this->client->submit($crawler->selectButton('Choisir cette version pour la publication →')->form());
         self::assertResponseStatusCodeSame(303);
         $this->client->followRedirect();
@@ -941,7 +941,7 @@ final class AiEpisodeFlowTest extends WebTestCase
         $url = '/studio/series/'.$seriesId.'/montage';
         $crawler = $this->client->request('GET', $url);
         self::assertResponseIsSuccessful();
-        $this->client->submit($crawler->selectButton('Enregistrer le profil de montage')->form(['series_montage[sourceVolume]' => 0, 'series_montage[intro]' => '1', 'series_montage[fit]' => 'cover']));
+        $this->client->submit($crawler->selectButton('Enregistrer les réglages de montage')->form(['series_montage[sourceVolume]' => 0, 'series_montage[intro]' => '1', 'series_montage[fit]' => 'cover']));
         self::assertResponseStatusCodeSame(303);
         $series = $this->em()->find(AiSeries::class, $seriesId);
         self::assertSame(0, $series->getRecipe()['montage']['sourceVolume']);

@@ -133,6 +133,9 @@ final class PublicationComposerController extends AbstractController
         if (null !== $editSource && !in_array($editSource, $state['ids'], true)) {
             throw $this->createNotFoundException();
         }
+        if (null !== $editSource && $stored?->hasEpisodeSource()) {
+            throw $this->createAccessDeniedException('La préparation conserve la vidéo de son épisode. Modifie la vidéo depuis la série.');
+        }
         $partial = null !== $editSource || in_array($intent, ['refresh', 'save', 'editorial', 'editorial_apply'], true);
         $selected = $state['networks'];
         if ($submitted) {
@@ -267,7 +270,7 @@ final class PublicationComposerController extends AbstractController
             }
         }
 
-        return $this->render('publication/composer.html.twig', $context + ['sourceEpisode' => $stored?->getEpisode(), 'editorial' => $stored?->getEpisode() ? $editorial->view($stored) : null, 'editorialDraft' => $stored, 'form' => $form, 'key' => $key, 'selectedNetworks' => $selected, 'state' => $state, 'networkLabels' => MultiNetworkPublishing::LABELS, 'accountChanged' => $accountChanged], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'no-store, private']));
+        return $this->render('publication/composer.html.twig', $context + ['sourceVideoEpisode' => $stored?->getVideoEpisode(), 'sourceEpisode' => $stored?->getEpisode(), 'editorial' => $stored?->getEpisode() ? $editorial->view($stored) : null, 'editorialDraft' => $stored, 'form' => $form, 'key' => $key, 'selectedNetworks' => $selected, 'state' => $state, 'networkLabels' => MultiNetworkPublishing::LABELS, 'accountChanged' => $accountChanged], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'no-store, private']));
     }
 
     /** @param array<string, mixed> $state */

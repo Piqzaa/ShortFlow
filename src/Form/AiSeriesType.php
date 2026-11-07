@@ -42,6 +42,7 @@ final class AiSeriesType extends AbstractType
             $models[AiCatalog::PROVIDERS[$model['provider']]][(in_array($id, $favorites, true) ? '★ ' : '').$model['name'].$resolution.(!$hint ? ' · à connecter' : '')] = $id;
         }
         $catalog = new AiCatalog();
+        $builder->add('publication', SeriesPublicationType::class, ['account_choices' => $options['publication_accounts']]);
         if ($options['creating']) {
             $builder->add('episodeCount', IntegerType::class, ['label' => 'Combien d’épisodes veux-tu préparer ?', 'help' => 'De 0 à 12 pour commencer. Tu pourras en ajouter ensuite.', 'constraints' => [new Assert\NotNull(), new Assert\Range(min: 0, max: 12)], 'attr' => ['min' => 0, 'max' => 12]]);
         }
@@ -100,6 +101,8 @@ final class AiSeriesType extends AbstractType
         $resolver->setDefault('creating', false);
         $resolver->setAllowedTypes('creating', 'bool');
         $resolver->setDefault('subjects', []);
+        $resolver->setDefault('publication_accounts', []);
+        $resolver->setAllowedTypes('publication_accounts', 'array');
         $resolver->setAllowedTypes('subjects', 'array');
     }
 }

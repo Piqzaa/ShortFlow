@@ -11,6 +11,20 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'video_series_video', columns: ['series_id', 'video_id'])]
 class VideoSeriesEpisode
 {
+    #[ORM\Column(options: ['default' => true])]
+    private bool $active = true;
+
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function place(int $position, bool $active = true): void
+    {
+        $this->position = $position;
+        $this->active = $active;
+    }
+
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]

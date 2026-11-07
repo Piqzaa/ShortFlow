@@ -37,7 +37,7 @@ final class AiEpisodeController extends AbstractController
             throw $this->createAccessDeniedException();
         }
         try {
-            $draft = $publications->prepare($user, $episode, $request->request->getInt('revision'));
+            $draft = $publications->prepare($user, $episode, $request->request->getInt('revision'), $request->request->has('video') ? $request->request->getInt('video') : null);
 
             return $this->redirectToRoute('draft' === $draft->getStatus() ? 'app_composer_start' : 'app_draft', ['draft' === $draft->getStatus() ? 'draft' : 'id' => $draft->getId()], 303);
         } catch (\App\Service\PublicationException $error) {

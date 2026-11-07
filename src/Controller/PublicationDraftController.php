@@ -148,7 +148,7 @@ final class PublicationDraftController extends AbstractController
     {
         $draft = $repository->owned($id, $user) ?? throw $this->createNotFoundException();
         if ('dispatched' === $draft->getStatus()) {
-            return $this->redirectToRoute('app_publications', status: 303);
+            return $this->seriesReturn($draft) ?? $this->redirectToRoute('app_publications', status: 303);
         }
         if ('draft' !== $draft->getStatus()) {
             return $this->redirectToRoute('app_draft', ['id' => $id], 303);
@@ -165,6 +165,10 @@ final class PublicationDraftController extends AbstractController
                 $scheduled = null !== $draft->getScheduledAt();
                 $service->confirm($user, $id, (int) $form->getData()['revision'], $scheduled);
                 $this->addFlash('success', $scheduled ? 'Programmation confirmée. Les envois démarreront au créneau indiqué.' : 'Les publications sont dans la file d’envoi.');
+
+                if ($return = $this->seriesReturn($draft)) {
+                    return $return;
+                }
 
                 return $scheduled ? $this->redirectToRoute('app_draft', ['id' => $id], 303) : $this->redirectToRoute('app_publications', status: 303);
             } catch (PublicationException $error) {
@@ -229,6 +233,11 @@ final class PublicationDraftController extends AbstractController
 
             return $this->redirectToRoute('app_series_episode', ['id' => $draft->getEpisode()->getId()], 303);
         }
+        if ($draft->getVideoEpisode()) {
+            $this->addFlash('error', 'Cette préparation conserve la vidéo de son épisode. Retourne dans la série pour préparer un autre épisode.');
+
+            return $this->redirectToRoute('app_video_series_show', ['id' => $draft->getVideoEpisode()->getSeries()->getId()], 303);
+        }
         $choices = [];
         foreach ($videos->findBy(['owner' => $user], ['id' => 'DESC']) as $video) {
             $choices[$video->getTitle().' · #'.$video->getId()] = $video->getId();
@@ -254,6 +263,19 @@ final class PublicationDraftController extends AbstractController
         }
 
         return $this->page('draft/sources.html.twig', ['draft' => $draft, 'form' => $form], $form->isSubmitted() ? 422 : 200);
+    }
+
+    private function seriesReturn(\App\Entity\PublicationDraft $draft): ?Response
+    {
+        if ($episode = $draft->getVideoEpisode()) {
+            return $this->redirectToRoute('app_video_series_show', ['id' => $episode->getSeries()->getId(), '_fragment' => 'video-episode-'.$episode->getId()], 303);
+        }
+        $episode = $draft->getEpisode();
+        if ($episode && !$episode->isStandalone()) {
+            return $this->redirectToRoute('app_series_show', ['id' => $episode->getSeries()->getId(), 'episode' => $episode->getId(), '_fragment' => 'episode-'.$episode->getId()], 303);
+        }
+
+        return null;
     }
 
     /** @param array<string, mixed> $data */

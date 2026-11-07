@@ -11,7 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class VideoSeriesStudio
 {
-    public function __construct(private EntityManagerInterface $em)
+    public function __construct(private EntityManagerInterface $em, private SeriesPublicationSettings $publicationSettings, private PublicationCalendar $calendar)
     {
     }
 
@@ -23,11 +23,11 @@ final class VideoSeriesStudio
     /** @return list<VideoSeriesEpisode> */
     public function episodes(VideoSeries $series): array
     {
-        return $this->em->createQueryBuilder()->select('e', 'v')->from(VideoSeriesEpisode::class, 'e')->join('e.video', 'v')->where('e.series = :series')->andWhere('v.owner = :owner')->setParameter('series', $series)->setParameter('owner', $series->getOwner())->orderBy('e.position', 'ASC')->getQuery()->getResult();
+        return $this->em->createQueryBuilder()->select('e', 'v')->from(VideoSeriesEpisode::class, 'e')->join('e.video', 'v')->where('e.series = :series')->andWhere('e.active = true')->andWhere('v.owner = :owner')->setParameter('series', $series)->setParameter('owner', $series->getOwner())->orderBy('e.position', 'ASC')->getQuery()->getResult();
     }
 
     /** @param list<string> $selected */
-    public function save(User $owner, string $name, array $selected, string $order, int $revision, ?VideoSeries $series = null): VideoSeries
+    public function save(User $owner, string $name, array $selected, string $order, int $revision, ?VideoSeries $series = null, ?array $publication = null): VideoSeries
     {
         $name = trim($name);
         if ('' === $name || mb_strlen($name) > 120 || count($selected) < 1 || count($selected) > 100) {
@@ -48,7 +48,7 @@ final class VideoSeriesStudio
             }
         }
 
-        return $this->em->wrapInTransaction(function () use ($owner, $name, $ordered, $revision, $series): VideoSeries {
+        return $this->em->getConnection()->transactional(function () use ($owner, $name, $ordered, $revision, $series, $publication): VideoSeries {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
             if ($series) {
                 $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
@@ -56,6 +56,7 @@ final class VideoSeriesStudio
                     throw new \RuntimeException('Cette série a changé. Recharge-la avant d’enregistrer.');
                 }
             }
+            $normalizedPublication = null === $publication ? null : $this->publicationSettings->normalize($owner, $publication, $series?->getPublicationSettings() ?? []);
             $videos = [];
             foreach ($ordered as $id) {
                 $video = $this->em->getRepository(VideoAsset::class)->findOneBy(['id' => (int) $id, 'owner' => $owner]);
@@ -64,9 +65,20 @@ final class VideoSeriesStudio
                 }
                 $videos[] = $video;
             }
+            $existing = [];
             if ($series) {
-                foreach ($this->episodes($series) as $episode) {
-                    $this->em->remove($episode);
+                $all = $this->em->getRepository(VideoSeriesEpisode::class)->findBy(['series' => $series]);
+                foreach ($all as $episode) {
+                    $existing[(int) $episode->getVideo()->getId()] = $episode;
+                    if ($episode->isActive() && !in_array((string) $episode->getVideo()->getId(), $ordered, true)) {
+                        $drafts = $this->em->getRepository(\App\Entity\PublicationDraft::class)->findBy(['videoEpisode' => $episode, 'owner' => $owner]);
+                        if (array_diff($this->calendar->states($drafts), ['draft', 'cancelled', 'published'])) {
+                            throw new \RuntimeException('Cet épisode a une publication programmée ou à vérifier. Annule ou termine sa publication avant de le retirer de la série.');
+                        }
+                    }
+                }
+                foreach ($all as $episode) {
+                    $episode->place(-(int) $episode->getId(), false);
                 }
                 $this->em->flush();
                 $series->revise($name);
@@ -75,8 +87,16 @@ final class VideoSeriesStudio
                 $this->em->persist($series);
             }
             foreach ($videos as $index => $video) {
-                $this->em->persist(new VideoSeriesEpisode($series, $video, $index + 1));
+                if (isset($existing[$video->getId()])) {
+                    $existing[$video->getId()]->place($index + 1);
+                } else {
+                    $this->em->persist(new VideoSeriesEpisode($series, $video, $index + 1));
+                }
             }
+            if (null !== $normalizedPublication) {
+                $series->setPublicationSettings($normalizedPublication);
+            }
+            $this->em->flush();
 
             return $series;
         });

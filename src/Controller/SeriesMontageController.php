@@ -39,7 +39,7 @@ final class SeriesMontageController extends AbstractController
                     $series->configure($series->getName(), $series->getTheme(), $series->getStyle(), $series->getCharacters(), array_replace($series->getRecipe(), ['montage' => $settings]));
                     $em->flush();
                 });
-                $this->addFlash('success', 'Profil de montage enregistré pour les prochaines préparations. Les vidéos déjà préparées conservent leurs réglages.');
+                $this->addFlash('success', 'Réglages de montage enregistrés pour les prochaines préparations. Les vidéos déjà préparées conservent leurs réglages.');
 
                 return $this->redirectToRoute('app_series_montage', ['id' => $id], 303);
             } catch (\RuntimeException|\InvalidArgumentException $error) {

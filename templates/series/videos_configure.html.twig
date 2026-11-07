@@ -6,6 +6,7 @@
 <div class="series-config" data-controller="series-videos" data-action="change->series-videos#selection">
 {{ form_start(seriesForm,{attr:{class:'account-form','data-series-videos-target':'form','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}
 {{ form_errors(seriesForm) }}{{ form_row(seriesForm.name) }}
+{% include 'series/_publication_settings.html.twig' with {publicationForm:seriesForm.publication} %}
 <section class="series-config-section"><h2>Choisis tes vidéos</h2>
 <p><a class="account-secondary" href="#series-video-import" data-action="series-videos#openImport">Importer une vidéo depuis mon appareil +</a></p>
 <label for="series-video-search">Trouver une vidéo</label><input type="search" id="series-video-search" placeholder="Rechercher par nom…" data-series-videos-target="search" data-action="input->series-videos#search keydown.enter->series-videos#preventSubmit">
@@ -15,7 +16,7 @@
 <p class="library-note" data-series-videos-target="empty"{% if seriesForm.videos|length %} hidden{% endif %}>Aucune vidéo dans ta bibliothèque. Importe ta première vidéo ci-dessous.</p>
 <p class="library-note" data-series-videos-target="noResults" hidden>Aucune vidéo ne correspond à ta recherche.</p>
 </section>
-<section class="series-config-section"><h2>L’ordre des épisodes</h2><p class="library-note">Utilise Monter et Descendre pour organiser ta série. Retirer un épisode conserve sa vidéo dans ta bibliothèque.</p>
+<section class="series-config-section"><h2>L’ordre des épisodes</h2><p class="library-note">Utilise Monter et Descendre pour organiser ta série. Retirer un épisode conserve sa vidéo et ses brouillons. Une publication programmée ou à vérifier doit d’abord être annulée ou terminée.</p>
 <ol class="series-video-order" data-series-videos-target="list"></ol><p class="library-note" data-series-videos-target="prompt">Coche tes vidéos pour préparer les épisodes.</p>
 {{ form_widget(seriesForm.order,{attr:{'data-series-videos-target':'order'}}) }}{{ form_errors(seriesForm.order) }}</section>
 <button class="button" type="submit">{{ series ? 'Enregistrer les épisodes' : 'Créer ma série →' }}</button>

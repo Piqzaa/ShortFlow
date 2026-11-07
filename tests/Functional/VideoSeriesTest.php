@@ -105,7 +105,8 @@ final class VideoSeriesTest extends WebTestCase
         $this->client->request('POST', '/studio/series/videos/'.$series->getId().'/modifier', $values);
         self::assertResponseStatusCodeSame(303);
         self::assertSame(3, $this->em()->getRepository(VideoAsset::class)->count([]));
-        self::assertSame(1, $this->em()->getRepository(VideoSeriesEpisode::class)->count([]));
+        self::assertSame(1, $this->em()->getRepository(VideoSeriesEpisode::class)->count(['active' => true]));
+        self::assertSame(2, $this->em()->getRepository(VideoSeriesEpisode::class)->count([]));
         $this->client->request('GET', '/studio/series');
         self::assertSelectorTextContains('.series-item', 'Série renommée');
         self::assertSelectorTextContains('.series-item', 'Avec mes vidéos');
@@ -221,7 +222,7 @@ final class VideoSeriesTest extends WebTestCase
         $this->client->request('GET', '/studio/series/videos/'.$id);
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('.series-video-episode');
-        self::assertSelectorTextContains('.library-note', 'ne sont plus dans ta bibliothèque');
+        self::assertSelectorTextContains('.series-episodes', 'Aucun épisode disponible');
         self::assertSame(14, $this->em()->getRepository(VideoSeries::class)->count([]));
     }
 }

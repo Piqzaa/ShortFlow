@@ -58,7 +58,7 @@ final class AiSeriesController extends AbstractController
 
     #[Route('/studio/series/nouvelle', name: 'app_series_new', methods: ['GET', 'POST'])]
     #[Route('/studio/series/{id}/configuration', name: 'app_series_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function configure(Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, AiKeys $keys, AiCatalog $catalog, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, ?int $id = null): Response
+    public function configure(Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, AiKeys $keys, AiCatalog $catalog, \App\Service\SeriesPublicationSettings $publicationSettings, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, ?int $id = null): Response
     {
         $series = null === $id ? null : ($studio->owned($id, $user) ?? throw $this->createNotFoundException());
         $data = $series ? ['name' => $series->getName(), 'theme' => $series->getTheme(), 'style' => $series->getStyle(), 'characters' => $series->getCharacters(), 'revision' => (string) $series->getRevision()] + $series->getRecipe() : ['model' => 'kling-25', 'seconds' => 5, 'ratio' => '9:16', 'accessMode' => 'api', 'imageFit' => 'crop', 'revision' => '0'];
@@ -76,7 +76,8 @@ final class AiSeriesController extends AbstractController
         $connected['fal-mcp'] = $keys->hasAccess($user, 'fal', 'mcp');
         $connected['fal'] = $connected['fal-api'] || $connected['fal-mcp'];
         $data = $this->characterSelection->formData($data);
-        $form = $this->createForm(AiSeriesType::class, $data, ['character_choices' => $this->characterSelection->choices($user, $data['characterPool'] ?? []), 'creating' => null === $series, 'subjects' => $series?->getRecipe()['subjects'] ?? [], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites()]);
+        $data['publication'] = $series?->getPublicationSettings() ?? [];
+        $form = $this->createForm(AiSeriesType::class, $data, ['publication_accounts' => $publicationSettings->choices($user, $data['publication']['accounts'] ?? []), 'character_choices' => $this->characterSelection->choices($user, $data['characterPool'] ?? []), 'creating' => null === $series, 'subjects' => $series?->getRecipe()['subjects'] ?? [], 'connected_providers' => $connected, 'favorite_models' => $user->getAiFavorites()]);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             try {
@@ -162,6 +163,9 @@ final class AiSeriesController extends AbstractController
             $recurrenceError = $error->getMessage();
         }
         $settings = $recurrence?->getSettings() ?? [];
+        if (!$recurrence) {
+            $settings = array_replace($series->getPublicationSettings(), $settings);
+        }
         $accountChoices = $social->choices($user);
         $settings['accounts'] ??= $social->defaults($user);
         foreach ($settings['accounts'] as $network => $identity) {

@@ -431,12 +431,12 @@ final class ProductJourneyTest extends WebTestCase
         self::assertNull($episode->getApprovedVideo());
         $crawler = $this->client->request('GET', $url);
         $this->snapshot('series-result-unapproved');
-        self::assertSelectorNotExists('form[action$="/publication"]');
+        self::assertSelectorExists('form[action$="/publication"] input[name="video"][value="'.$output->getId().'"]');
         $this->client->submit($crawler->selectButton('Choisir cette version pour la publication →')->form());
         self::assertResponseStatusCodeSame(303);
         $crawler = $this->client->followRedirect();
         $this->snapshot('series-result-approved');
-        $this->client->submit($crawler->selectButton('Préparer et programmer la publication →')->form());
+        $this->client->submit($crawler->selectButton('Préparer la publication →')->form());
         self::assertResponseStatusCodeSame(303);
         $crawler = $this->client->followRedirect();
         if ($this->client->getResponse()->isRedirect()) {

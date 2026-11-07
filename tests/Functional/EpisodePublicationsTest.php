@@ -92,15 +92,15 @@ final class EpisodePublicationsTest extends WebTestCase
         $draft->edit('Saved destination', ['youtube'], ['youtube' => $id], new \DateTimeImmutable());
         $this->em->flush();
         $summary = $this->service()->summaries([$this->episode])[$this->episode->getId()][0];
-        self::assertSame('Saved channel <script> · '.$id, $summary['destinations'][0]['account']);
+        self::assertSame('Saved channel <script>', $summary['destinations'][0]['account']);
         $this->em->remove($saved);
         $this->em->flush();
         $summary = $this->service()->summaries([$this->episode])[$this->episode->getId()][0];
-        self::assertSame('Compte enregistré indisponible · '.$id, $summary['destinations'][0]['account']);
+        self::assertSame('Compte enregistré indisponible', $summary['destinations'][0]['account']);
         self::assertSame(['youtube' => $id], $draft->getAccounts());
         $this->client->request('GET', '/studio/series/'.$this->episode->getSeries()->getId());
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.episode-publications', 'Compte enregistré indisponible · '.$id);
+        self::assertSelectorTextContains('.episode-publications', 'Compte enregistré indisponible');
         self::assertSelectorTextNotContains('.episode-publications', 'New current channel');
         self::assertStringNotContainsString('Foreign private label', $this->client->getResponse()->getContent());
         self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
@@ -129,7 +129,7 @@ final class EpisodePublicationsTest extends WebTestCase
         $url = '/studio/series/episodes/'.$this->episode->getId();
         $crawler = $this->client->request('GET', $url);
         self::assertResponseIsSuccessful();
-        $form = $crawler->selectButton('Préparer et programmer la publication →')->form();
+        $form = $crawler->selectButton('Préparer la publication →')->form();
         $this->client->submit($form);
         self::assertResponseRedirects();
         $draft = $this->em->getRepository(PublicationDraft::class)->findOneBy(['episode' => $this->episode]);

@@ -1,0 +1,1 @@
+<p class="library-note series-destinations-summary">Destinations : {% for network in series.publicationSettings.networks|default([]) %}{{ {youtube:'YouTube',instagram:'Instagram',tiktok:'TikTok'}[network] }}{{ not loop.last ? ' · ' : '' }}{% else %}à choisir{% endfor %} · <a href="{{ path(seriesConfigurationRoute,{id:series.id}) }}">Modifier</a></p>

@@ -11,8 +11,29 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'publication_preparation_key', columns: ['preparation_key'])]
 #[ORM\Index(name: 'draft_owner_date', columns: ['owner_id', 'scheduled_at'])]
 #[ORM\Index(name: 'idx_draft_episode', columns: ['episode_id'])]
+#[ORM\Index(name: 'idx_draft_video_episode', columns: ['video_episode_id'])]
 class PublicationDraft
 {
+    #[ORM\ManyToOne, ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?VideoSeriesEpisode $videoEpisode = null;
+
+    public function getVideoEpisode(): ?VideoSeriesEpisode
+    {
+        return $this->videoEpisode;
+    }
+
+    public function hasEpisodeSource(): bool
+    {
+        return null !== $this->episode || null !== $this->videoEpisode;
+    }
+
+    public function attachVideoEpisode(VideoSeriesEpisode $episode): void
+    {
+        if ($this->hasEpisodeSource() || $episode->getSeries()->getOwner()->getId() !== $this->owner->getId() || $this->videoIds() !== [$episode->getVideo()->getId()]) {
+            throw new \LogicException('Invalid episode publication source.');
+        }
+        $this->videoEpisode = $episode;
+    }
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $preparationKey = null;
 
@@ -40,7 +61,7 @@ class PublicationDraft
 
     public function attachEpisode(AiEpisode $episode): void
     {
-        if ($this->episode || $episode->getOwner()->getId() !== $this->owner->getId() || $this->videoIds() !== [$episode->getApprovedVideo()?->getId()]) {
+        if ($this->hasEpisodeSource() || $episode->getOwner()->getId() !== $this->owner->getId() || $this->videoIds() !== [$episode->getApprovedVideo()?->getId()]) {
             throw new \LogicException('Invalid episode publication source.');
         }
         $this->episode = $episode;

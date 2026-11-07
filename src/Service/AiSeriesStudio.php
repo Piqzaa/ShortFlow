@@ -14,7 +14,7 @@ final class AiSeriesStudio
 {
     public const EPISODES_PER_PAGE = 12;
 
-    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiReferenceStorage $references, private AiCharacterSelection $characterSelection)
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiReferenceStorage $references, private AiCharacterSelection $characterSelection, private SeriesPublicationSettings $publicationSettings)
     {
     }
 
@@ -68,6 +68,7 @@ final class AiSeriesStudio
                 $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
                 $this->assertRevision($series->getRevision(), (int) $data['revision']);
             }
+            $publication = isset($data['publication']) ? $this->publicationSettings->normalize($owner, $data['publication'], $series?->getPublicationSettings() ?? []) : null;
             $model = $this->catalog->model($data['model']);
             $this->catalog->validate($data['model'], $data['seconds'], $data['ratio']);
             $previous = $series?->getRecipe();
@@ -172,6 +173,9 @@ final class AiSeriesStudio
                 }
             }
 
+            if (null !== $publication) {
+                $series->setPublicationSettings($publication);
+            }
             $this->em->flush();
 
             return $series;

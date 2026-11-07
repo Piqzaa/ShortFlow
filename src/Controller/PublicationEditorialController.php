@@ -39,7 +39,7 @@ final class PublicationEditorialController extends AbstractController
                     $series->configureEditorial($profile);
                     $em->flush();
                 });
-                $this->addFlash('success', 'Profil éditorial enregistré. Les textes existants restent à relire avant toute nouvelle application.');
+                $this->addFlash('success', 'Style des textes enregistré. Les textes existants restent à relire avant toute nouvelle application.');
 
                 return $this->redirectToRoute('app_series_editorial', ['id' => $id], 303);
             } catch (PublicationException $error) {

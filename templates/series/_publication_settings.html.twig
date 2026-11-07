@@ -1,0 +1,9 @@
+<section class="series-publication-settings" data-controller="series-destinations">
+<h2>Où publier tes épisodes ?</h2>
+<p class="library-note">Choisis les réseaux et les comptes de cette série. Tu pourras les modifier pour chaque épisode, avec ses propres textes et sa date de publication.</p>
+{{ form_errors(publicationForm) }}
+<div class="series-network-choices">{% for choice in publicationForm.networks %}<label>{{ form_widget(choice,{attr:{'data-action':'change->series-destinations#update'}}) }}<span>{{ choice.vars.label }}</span></label>{% endfor %}</div>{{ form_errors(publicationForm.networks) }}
+{% for account in publicationForm.accounts %}<div data-series-destinations-target="account" data-network="{{ account.vars.name }}">{{ form_row(account) }}{% if account.vars.choices|length == 0 %}<p class="library-note">Tu peux connecter ce compte plus tard depuis <a href="{{ path('app_connections') }}" target="_blank" rel="noopener">Connexions ↗</a>.</p>{% endif %}</div>{% endfor %}
+<p class="library-note">Ces choix préremplissent les nouvelles publications. Ils ne modifient pas les textes, comptes ou dates déjà enregistrés et ne déclenchent aucun envoi.</p>
+<a class="account-secondary" href="{{ path('app_connections') }}" target="_blank" rel="noopener">Gérer mes comptes connectés ↗</a>
+</section>
