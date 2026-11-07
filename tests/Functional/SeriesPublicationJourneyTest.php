@@ -263,6 +263,11 @@ final class SeriesPublicationJourneyTest extends WebTestCase
         $this->em()->persist($episode);
         $this->em()->flush();
         $id = $episode->getId();
+        $series->planCalendar([
+            'rules' => ['timezone' => 'Europe/Paris'],
+            'slots' => [['episode' => $id, 'number' => 1, 'title' => $episode->getTitle(), 'at' => '2026-11-09T17:30:00+00:00']],
+        ]);
+        $this->em()->flush();
         $crawler = $this->client->request('GET', '/studio/series/'.$series->getId());
         $this->client->submit($crawler->filter('#episode-'.$id)->selectButton('Préparer la publication →')->form());
         self::assertResponseStatusCodeSame(303);
@@ -271,6 +276,11 @@ final class SeriesPublicationJourneyTest extends WebTestCase
         $draft = $this->em()->getRepository(PublicationDraft::class)->findOneBy(['episode' => $episode]);
         self::assertInstanceOf(PublicationDraft::class, $draft);
         self::assertSame([$video->getId()], $draft->videoIds());
+        self::assertSame('draft', $draft->getStatus());
+        $this->client->request('GET', '/studio/composer?draft='.$draft->getId());
+        $this->client->followRedirect();
+        self::assertSelectorExists('input[name="publication_composer[mode]"][value="scheduled"][checked]');
+        self::assertSelectorExists('input[name="publication_composer[local]"][value="2026-11-09T18:30"]');
         $this->noPosts();
     }
 

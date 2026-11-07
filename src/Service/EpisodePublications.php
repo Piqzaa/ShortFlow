@@ -65,9 +65,22 @@ final class EpisodePublications
                 };
             }
             $draft = $this->drafts->save($owner, [(int) $video->getId()], $networks, $content, $accounts, mb_substr($title, 0, 120));
-            if ($occurrence) {
-                $at = $occurrence->getScheduledAt();
-                $zone = $occurrence->getTimezone();
+            $at = $occurrence?->getScheduledAt();
+            $zone = $occurrence?->getTimezone();
+            if (!$occurrence && !$episode->isStandalone()) {
+                $series = $episode->getSeries();
+                $this->em->refresh($series);
+                $plan = $series->getCalendarPlan();
+                foreach ($plan['slots'] ?? [] as $slot) {
+                    if ($slot['episode'] !== $episode->getId()) {
+                        continue;
+                    }
+                    $at = new \DateTimeImmutable($slot['at']);
+                    $zone = $plan['rules']['timezone'];
+                    break;
+                }
+            }
+            if ($at && $zone) {
                 // This is only a proposed date. Normal confirmation still rejects expired slots.
                 $draft->plan($at, $zone, $at->setTimezone(new \DateTimeZone($zone))->format('Y-m-d\TH:i'), $this->clock->now());
             }

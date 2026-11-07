@@ -4,7 +4,7 @@
 <a class="account-secondary composer-back" href="{{ path('app_series_show',{id:series.id}) }}">← {{ series.name }}</a>
 <div class="workspace-heading"><div><span class="eyebrow">LE CALENDRIER DE TA SÉRIE</span><h1>Choisis les dates de tes épisodes.</h1><p>Règle la date et l’heure de chaque épisode, puis vérifie l’aperçu.</p></div></div>
 {% include 'series/_destinations_summary.html.twig' with {seriesConfigurationRoute:'app_series_edit'} %}
-<p class="library-note">Ces dates restent des prévisions : la génération et la publication seront à confirmer séparément.</p>
+<p class="account-notice"><strong>Dates prévisionnelles.</strong> Enregistrer ici ne lance aucune génération et ne programme aucune publication. Pour un épisode existant, le créneau est repris dans sa nouvelle préparation de publication. Quand la vidéo est prête, ouvre « Préparer la publication », vérifie les réglages et confirme la programmation.</p>
 {{ form_start(form,{attr:{class:'account-form series-config series-calendar-form','data-controller':'unsaved','data-unsaved-initial':preview ? 'true':'false','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}{{ form_errors(form) }}
 <div class="series-two-columns">{{ form_row(form.count) }}{{ form_row(form.timezone) }}</div>
 <button class="account-secondary" name="intent" value="resize" type="submit">Afficher ce nombre d’épisodes</button>
@@ -19,6 +19,6 @@
 {{ form_end(form) }}
 {% set plan = preview ?: saved %}
 {% if plan.slots|default([]) %}<section class="story-context" aria-labelledby="series-dates-title"><h2 id="series-dates-title">{{ preview ? 'Aperçu des dates' : 'Dates prévues enregistrées' }}</h2><p class="library-note">{{ plan.rules.timezone }} · {{ plan.slots|length }} épisode{{ plan.slots|length > 1 ? 's' : '' }} · Prévisions à confirmer avant publication</p>
-{% if not preview %}<p class="library-note">Aperçu enregistré le {{ saved.savedAt|date('d/m/Y à H:i',plan.rules.timezone) }}. Si les épisodes ont changé, actualise les dates proposées.</p>{% endif %}
+{% if not preview %}<p class="library-note">Prévisions enregistrées le {{ saved.savedAt|date('d/m/Y à H:i',plan.rules.timezone) }}. Pour programmer une vidéo prête, retourne à la liste des épisodes.</p><a class="account-secondary" href="{{ path('app_series_show',{id:series.id}) }}#episodes-title">Voir les épisodes →</a>{% endif %}
 <ol class="series-episodes">{% for slot in plan.slots %}<li class="story-shot"><strong>Épisode {{ slot.number }} · {{ slot.at|date('d/m/Y à H:i',plan.rules.timezone) }}</strong><p>{{ slot.title }}</p><span class="library-note">{{ slot.episode ? 'Épisode existant · à vérifier avant publication' : 'Épisode à créer et à préparer' }}</span></li>{% endfor %}</ol></section>{% endif %}
 {% endblock %}
