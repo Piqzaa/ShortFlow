@@ -68,6 +68,74 @@ final class VideoSeriesController extends AbstractController
         return $this->render('series/videos_show.html.twig', ['series' => $series, 'episodes' => $episodes, 'publicationSummaries' => $publications->videoSummaries($episodes)], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
+    #[Route('/studio/series/videos/{id}/programmer', name: 'app_video_series_schedule', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function schedule(int $id, Request $request, #[CurrentUser] User $user, VideoSeriesStudio $studio, \App\Service\VideoSeriesSchedule $schedule, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter): Response
+    {
+        $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
+        $rows = $schedule->rows($series);
+        $defaults = [];
+        foreach ($rows as $row) {
+            if ('plan' !== $row['kind'] || null === $row['draft']) {
+                continue;
+            }
+            $episodeId = (string) $row['episode']->getId();
+            $draft = $row['draft'];
+            $defaults[$episodeId] = ['picked' => true, 'draft' => (string) $draft->getId(), 'revision' => (string) $draft->getRevision(), 'local' => $draft->getLocalTime() ?: '', 'zone' => $draft->getTimezone()];
+        }
+        $form = $this->createForm(\App\Form\VideoSeriesScheduleType::class, ['revision' => (string) $series->getRevision(), 'selection' => $defaults], ['revision' => (string) $series->getRevision(), 'episodes' => $defaults, 'csrf_token_id' => 'video_series_schedule_'.$id])->handleRequest($request);
+        $preview = null;
+        $snapshot = null;
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $picked = [];
+            foreach ($data['selection'] as $episodeId => $row) {
+                if (!$row['picked']) {
+                    continue;
+                }
+                $picked[(int) $episodeId] = ['draft' => (int) ($row['draft'] ?: 0), 'revision' => (int) ($row['revision'] ?: -1), 'local' => ($row['local'] ?: null), 'zone' => $row['zone']];
+            }
+            $intent = $request->request->getString('intent', 'preview');
+            if (!in_array($intent, ['preview', 'confirm'], true)) {
+                throw $this->createNotFoundException();
+            }
+            try {
+                $session = $request->getSession();
+                $revision = (int) $data['revision'];
+                if ('confirm' === $intent) {
+                    $reviewed = $session->get('video_series_schedule_preview');
+                    if (!$data['confirm'] || !is_array($reviewed) || $reviewed['series'] !== $id || $reviewed['revision'] !== $revision
+                        || !hash_equals($reviewed['token'], (string) $data['snapshot']) || $reviewed['picked'] !== $picked) {
+                        throw new \App\Service\PublicationException('Vérifie un nouvel aperçu et coche la confirmation avant de programmer les épisodes.');
+                    }
+                    if (!$limiter->create('publish-'.$user->getId())->consume()->isAccepted()) {
+                        throw new \App\Service\PublicationException('Trop de confirmations rapprochées.');
+                    }
+                    $session->remove('video_series_schedule_preview');
+                    $episodes = $schedule->confirm($user, $series, $revision, $reviewed['ready']);
+                    $count = count($episodes);
+                    $this->addFlash('success', $count.' épisode'.($count > 1 ? 's' : '').' programmé'.($count > 1 ? 's' : '').' : les envois démarreront aux créneaux choisis.');
+
+                    return $this->redirectToRoute('app_video_series_show', ['id' => $id, '_fragment' => 'video-episode-'.$episodes[0]], 303);
+                }
+                $session->remove('video_series_schedule_preview');
+                $preview = $schedule->preview($series, $revision, $picked);
+                if ($preview['ready']) {
+                    $ready = [];
+                    foreach ($preview['ready'] as $slot) {
+                        $episodeId = $slot['episode']->getId();
+                        $ready[$episodeId] = $picked[$episodeId];
+                    }
+                    $snapshot = bin2hex(random_bytes(32));
+                    $session->set('video_series_schedule_preview', ['token' => $snapshot, 'series' => $id, 'revision' => $revision, 'picked' => $picked, 'ready' => $ready]);
+                }
+            } catch (\App\Service\PublicationException $error) {
+                $form->addError(new FormError($error->getMessage()));
+            }
+        }
+
+        return $this->render('series/videos_schedule.html.twig', ['series' => $series, 'rows' => $rows, 'form' => $form, 'preview' => $preview, 'snapshot' => $snapshot], new Response(status: $form->isSubmitted() && !$form->isValid() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+    }
+
     #[Route('/studio/series/videos/episodes/{id}/publication', name: 'app_video_episode_publication', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function publication(int $id, Request $request, #[CurrentUser] User $user, \Doctrine\ORM\EntityManagerInterface $em, \App\Service\EpisodePublications $publications): Response
     {
