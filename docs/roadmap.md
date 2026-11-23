@@ -6,6 +6,8 @@
 
 **Pilote fermé.** Un premier clip synthétique a été publié sur YouTube depuis le PC, avec visibilité effective non répertoriée confirmée. La suite est de préparer un environnement hébergé pour la recette sur iPhone et Android, avec une origine OAuth stable et une restauration éprouvée sur la cible. Le deuxième lot servira à observer le retour pour un nouvel usage. Les prérequis d’accès, de restauration et les mesures à relever sont dans le [protocole du pilote](pilote-publication-20261123.md).
 
+**Avant de commander le serveur.** La programmation groupée des séries importées, l’inscription sur invitation et la configuration de l’expéditeur sont disponibles en local. Les liens de compte utilisent l’origine configurée par `APP_PUBLIC_URL`. La restauration isolée a couvert les 29 tables du schéma de test et une vidéo privée synthétique liée à son propriétaire. Prochain lot local : préparer un environnement de production isolé et y répéter l’installation, la migration, le démarrage et la restauration. La cible réelle servira ensuite à vérifier la délivrabilité des emails, HTTPS et OAuth sur le domaine bêta, puis à faire la recette sur téléphone.
+
 R7 reste ouvert. La promesse à tester auprès de créateurs qui ont déjà leurs fichiers est de préparer et suivre leur semaine de publications depuis un seul endroit. Le parcours principal devient **importer → choisir les comptes → adapter les textes → choisir les dates → relire et confirmer → suivre les envois**. Les points ci-dessous actualisent l'ordre des travaux du 7 novembre, conservés plus bas pour leur historique.
 
 | Ordre | Chantier | Critère de sortie |
