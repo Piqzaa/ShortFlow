@@ -5,8 +5,10 @@
 <div class="studio-heading creation-heading"><div><h1>{{ episode|default(null) ? episode.title : 'Créer une vidéo.' }}</h1></div><div class="workspace-heading-actions"><a class="account-secondary" href="{{ path('app_ai_history') }}">Historique {% include 'icons/_arrow_up_right.html.twig' %}</a><a class="account-secondary" href="{{ path('app_dashboard') }}">Mes vidéos {% include 'icons/_arrow_up_right.html.twig' %}</a></div></div>
 
 <div class="ai-workspace creation-workspace preparation-workspace"><section aria-labelledby="ai-idea-title" data-controller="creation preparation" data-action="shot-editor:count-changed->preparation#countFromCards submit->preparation#guardPending:capture image-reference:changed->creation#referenceChanged change->preparation#change input->preparation#input" data-creation-models-value="{{ models|json_encode|e('html_attr') }}" data-creation-providers-value="{{ providers|json_encode|e('html_attr') }}" data-creation-connected-value="{{ connected|json_encode|e('html_attr') }}"><h2 class="visually-hidden" id="ai-idea-title">Prépare ta vidéo</h2>
+<div class="video-setup-panel video-source-bar">
 <div class="account-form creation-source"><div class="source-help-heading">{{ form_label(ideaForm.source) }}{% include 'ai/_source_help.html.twig' %}</div>{{ form_widget(ideaForm.source,{attr:{form:'ai-idea-form','data-creation-target':'source','data-action':'change->creation#changeSource'}}) }}{{ form_errors(ideaForm.source) }}</div>
-<div class="account-form reference-origin" data-reference-origin-panel{% if ideaForm.source.vars.value != 'subject' %} hidden{% endif %}>{{ form_row(ideaForm.referenceOrigin,{attr:{form:'ai-idea-form','data-action':'change->creation#changeReferenceOrigin'}}) }}<p class="library-note">Importe une image pour cette vidéo, ou retrouve les personnages que tu as déjà enregistrés.</p></div>
+<div class="account-form reference-origin" data-reference-origin-panel{% if ideaForm.source.vars.value != 'subject' %} hidden{% endif %}>{{ form_row(ideaForm.referenceOrigin,{attr:{form:'ai-idea-form','data-action':'change->creation#changeReferenceOrigin'}}) }}</div>
+</div>
 <div class="creation-reference" data-creation-target="referencePanel"{% if ideaForm.source.vars.value == 'text' or (ideaForm.source.vars.value == 'subject' and ideaForm.referenceOrigin.vars.value == 'library') %} hidden{% endif %}>
 {% include 'ai/_reference_input.html.twig' with {slot:'start',referenceForm:referenceForm,referenceUrl:referenceUrl|default(null)} %}
 <div class="account-form creation-end-option" data-creation-target="endOption"{% if ideaForm.source.vars.value != 'image' and not ideaForm.useEnd.vars.checked %} hidden{% endif %}>{{ form_row(ideaForm.useEnd,{attr:{form:'ai-idea-form','data-creation-target':'useEnd','data-action':'change->creation#changeEnd'}}) }}</div>
@@ -17,11 +19,12 @@
 {{ form_errors(ideaForm) }}
 {% include 'ai/_character_pool.html.twig' with {poolForm:ideaForm} %}{{ form_widget(ideaForm.reference,{attr:{'data-creation-target':'reference'}}) }}{{ form_errors(ideaForm.reference) }}{{ form_widget(ideaForm.endReference,{attr:{'data-creation-target':'endReference'}}) }}{{ form_errors(ideaForm.endReference) }}
 <div class="studio-prompt-layout">
-<div class="studio-prompt-main">
+<div class="studio-prompt-main video-setup-panel">
 {% include 'ai/_preparation_plans.html.twig' %}
 <div class="ai-actions"><button class="button" type="submit" name="intent" value="compose" data-preparation-target="recap">Voir le récapitulatif →</button><button data-creation-target="connect" class="account-secondary" type="submit" name="intent" value="connect" formnovalidate>Connecter mon fournisseur</button></div>
 </div>
-<div class="studio-prompt-options">
+<section class="studio-prompt-options video-setup-panel" aria-labelledby="video-settings-title">
+<h2 id="video-settings-title">Réglages vidéo</h2>
 {% include 'ai/_timing.html.twig' %}
 <button type="submit" class="account-secondary" name="intent" value="replan" data-action="preparation#redistribute">Répartir la durée</button>
 {{ form_widget(ideaForm.writingMode) }}
@@ -29,17 +32,20 @@
 <p class="library-note" role="status" data-idea-save-target="status" hidden></p>
 <noscript><p class="library-note">Pour conserver ton idée sans JavaScript, ouvre le récapitulatif avant de quitter cette page.</p></noscript>
 <button type="button" class="account-secondary" data-idea-save-target="retry" data-action="idea-save#flush" hidden>Réessayer l’enregistrement</button>
+</section>
+</div>
+<section class="video-setup-panel video-model-panel" aria-label="Modèle vidéo">
 {% include 'ai/_recommendations.html.twig' with {compactRecommendations:true} %}
 <div class="creation-native" data-creation-target="native">{{ form_row(ideaForm.model,{attr:{'data-creation-target':'model','data-action':'change->creation#changeModel'}}) }}</div>
 {% set studioModelPicker %}{% include 'ai/_model_picker.html.twig' with {pickerPrefix:'creation',modelForm:ideaForm.model,accessForm:ideaForm.accessMode,modelChange:'change->creation#changeModel',externalNative:true,unifiedSearch:true} %}{% endset %}
 <div class="studio-model-actions"><button type="button" class="account-secondary" data-model-dialog-control data-action="creation#openModels" hidden>Voir tous les modèles</button>
 {% include 'ai/_video_connection.html.twig' with {pickerPrefix:'creation',modelForm:ideaForm.model,accessForm:ideaForm.accessMode,accessChange:'change->creation#estimate',compactConnection:true} %}</div>
 <div class="catalog-connect-notice" data-creation-target="connection" role="status" tabindex="-1" hidden><p data-creation-target="connectionMessage"></p><button class="account-secondary" type="submit" name="intent" value="connect" formnovalidate data-creation-target="connectionButton">Connecter le fournisseur</button></div>
+</section>
 <div hidden>{{ form_row(ideaForm.seconds,{attr:{'data-creation-target':'duration','data-action':'change->creation#estimate'}}) }}</div>
 {% include 'ai/_subjects.html.twig' with {subjectForm:ideaForm} %}
 {% if not ideaForm.title.vars.valid %}{{ form_row(ideaForm.title) }}{% else %}{{ form_widget(ideaForm.title,{type:'hidden'}) }}{% endif %}
 <div class="creation-estimate" hidden role="status" aria-live="polite"><strong data-creation-target="cost">Coût calculé au récapitulatif</strong><span data-creation-target="description">Une estimation avant toute génération.</span></div>
-</div></div>
 {{ form_end(ideaForm) }}
 
 <dialog open class="studio-model-dialog creation-models account-form" data-creation-target="catalog modelDetails" data-picker-invalid="{{ not ideaForm.model.vars.valid ? 'true' : 'false' }}" aria-labelledby="studio-model-dialog-title"><div class="studio-model-dialog-heading"><h2 id="studio-model-dialog-title">Tous les modèles</h2><button type="button" class="account-secondary" data-model-dialog-control data-action="creation#closeModels" hidden>Fermer ×</button></div>{{ form_errors(ideaForm.model) }}{{ studioModelPicker }}

@@ -66,6 +66,8 @@ export default class extends Controller {
 
   refresh() {
     this.noticeTarget.hidden = false;
+    this.element.classList?.remove('has-synced-single-duration');
+    if (this.hasSingleStatusTarget) this.singleStatusTarget.hidden = false;
     const model = this.model;
     if (this.hasPlanCountTarget) this.planCountTarget.disabled = this.continuityTarget.value === 'single';
     if (this.hasSingleCountTarget) this.singleCountTarget.disabled = this.continuityTarget.value !== 'single';
@@ -132,6 +134,9 @@ export default class extends Controller {
     this.editor.update();
     this.application?.getControllerForElementAndIdentifier(this.element, 'creation')?.updateRecommendations();
     const total = this.editor.rows().reduce((sum, row) => sum + Number(row.querySelector('select').value), 0);
+    if (this.editor.rows().length === 1 && this.desiredCount === 1 && total === desired && model.seconds.includes(total)) {
+      this.element.classList?.add('has-synced-single-duration');
+    }
     const allowed = model.seconds.every((seconds, i) => i === 0 || seconds === model.seconds[i - 1] + 1) && model.seconds.length > 2 ? `${Math.min(...model.seconds)} à ${Math.max(...model.seconds)} s` : `${model.seconds.join(' ou ')} s`;
     if (this.hasSingleActionTarget) {
       const native = model.seconds.includes(desired);
@@ -150,6 +155,10 @@ export default class extends Controller {
     const proposal = proposePlan(Number(this.totalTarget.value), model.seconds, this.desiredCount);
     this.noticeTarget.textContent = !proposal.parts ? `Ce modèle ne produit pas ce total exact en huit plans maximum. Totaux proches : ${proposal.nearby.join(' ou ')} s. Choisis explicitement la durée souhaitée.` : invalid ? 'Certaines durées ne sont pas compatibles avec ce modèle. Utilise « Répartir la durée » ou ajuste les plans ; tes textes sont conservés.' : total !== Number(this.totalTarget.value) ? `Tes plans totalisent ${total} s pour ${this.totalTarget.value} s souhaitées. Ajuste les plans ou utilise « Répartir la durée ».` : `${total} s réparties en ${this.editor.rows().length} plan(s). Le modèle et les références restent modifiables avant confirmation.`;
     if (singleMode) this.noticeTarget.textContent = `${model.name || 'Ce modèle'} · un seul clip : ${allowed} (maximum ${Math.max(...model.seconds)} s). Seules ces durées sont proposées. Tes scènes actuelles totalisent ${total} s.`;
+    if (singleMode && this.hasSingleActionTarget) {
+      this.noticeTarget.hidden = true;
+      this.singleStatusTarget.hidden = !this.singleButtonTarget.disabled && this.singleButtonTarget.hidden;
+    }
     if (this.hasPlanCountTarget && !singleMode) {
       const possibleCounts = [];
       for (const option of this.planCountTarget.options) {
