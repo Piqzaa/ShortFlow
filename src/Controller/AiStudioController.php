@@ -14,7 +14,6 @@ use App\Service\AiGenerations;
 use App\Service\AiKeys;
 use App\Service\AiReferenceStorage;
 use App\Service\FalOAuth;
-use App\Service\LocalStoryWriter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -35,14 +34,14 @@ final class AiStudioController extends AbstractController
 
     #[Route('/studio/creation', name: 'app_studio', methods: ['GET', 'POST'])]
     #[Route('/studio/ia', name: 'app_ai_studio', methods: ['GET', 'POST'])]
-    public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, LocalStoryWriter $writer, AiReferenceStorage $references, EntityManagerInterface $em, FormFactoryInterface $forms, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, AiEpisodeFlow $flow, \App\Service\EpisodeCovers $covers, ?int $preparingEpisode = null): Response
+    public function index(Request $request, #[CurrentUser] User $user, AiCatalog $catalog, AiKeys $keys, FalOAuth $falOAuth, AiReferenceStorage $references, EntityManagerInterface $em, FormFactoryInterface $forms, #[Autowire(service: 'limiter.publication')] RateLimiterFactory $limiter, AiEpisodeFlow $flow, \App\Service\EpisodeCovers $covers, ?int $preparingEpisode = null): Response
     {
         if (!$request->getSession()->has('ai_idea_revision')) {
             $request->getSession()->set('ai_idea_revision', bin2hex(random_bytes(16)));
         }
         $apiConnections = $keys->connectedProviders($user);
         $falConnection = $falOAuth->connection($user);
-        $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16']);
+        $idea = $request->getSession()->get('ai_idea', ['seconds' => 5, 'ratio' => '9:16', 'shots' => [['prompt' => '', 'seconds' => 5]]]);
         $idea += ['accessMode' => $apiConnections['fal'] ? 'api' : 'mcp', 'source' => 'text', 'reference' => '', 'endReference' => '', 'useEnd' => false, 'imageFit' => 'crop'];
         if ($request->isMethod('GET') && isset(AiCatalog::MODELS[$idea['model'] ?? ''])) {
             $idea['source'] = $catalog->referenceMode($idea['model']);
@@ -60,7 +59,9 @@ final class AiStudioController extends AbstractController
         }
         if (!$idea['shots'] && isset(AiCatalog::MODELS[$idea['model'] ?? ''])) {
             try {
-                $idea['shots'] = array_map(static fn (int $s): array => ['prompt' => '', 'seconds' => $s], $flow->durations($idea['model'], $idea['target']));
+                $idea['shots'] = 'single' === $idea['continuity']
+                    ? $flow->singlePlan($idea['model'], $idea['target'], [['prompt' => $episode ? '' : ($idea['prompt'] ?? '')]])
+                    : array_map(static fn (int $s): array => ['prompt' => '', 'seconds' => $s], $flow->durations($idea['model'], $idea['target']));
             } catch (\RuntimeException) {
                 // An incompatible total remains visible until explicitly adjusted.
             }
@@ -149,6 +150,9 @@ final class AiStudioController extends AbstractController
                                 [$rows[$index], $rows[$next]] = [$rows[$next], $rows[$index]];
                             }
                         }
+                        if (count($rows) > 1 && 'single' === $data['continuity']) {
+                            $data['continuity'] = 'independent';
+                        }
                         $data['shots'] = $rows;
                         $data['planCount'] = count($rows) > 1 ? count($rows) : null;
                         $data['target'] = array_sum(array_column($rows, 'seconds'));
@@ -162,6 +166,9 @@ final class AiStudioController extends AbstractController
                         $old = array_values($data['shots']);
                         if ($single) {
                             $data['shots'] = $flow->singlePlan($data['model'], (int) $data['target'], $old);
+                            if ('' === trim($data['shots'][0]['prompt'] ?? '') && !$episode) {
+                                $data['shots'][0]['prompt'] = $data['prompt'] ?? '';
+                            }
                             $data['continuity'] = 'single';
                             $data['planCount'] = null;
                             $singlePrepared = true;
@@ -279,7 +286,7 @@ final class AiStudioController extends AbstractController
             }
         }
 
-        return $this->render('ai/studio.html.twig', ['manualPromptReview' => $manualPromptReview, 'writerAvailable' => $writer->available(), 'layoutPrepared' => $layoutPrepared, 'singlePrepared' => $singlePrepared, 'projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::viewModels(), 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('ai/studio.html.twig', ['manualPromptReview' => $manualPromptReview, 'layoutPrepared' => $layoutPrepared, 'singlePrepared' => $singlePrepared, 'projectCovers' => $covers->episodes($user, $projects), 'episode' => $episode, 'ideaForm' => $form, 'referenceUrl' => $referenceUrl, 'endReferenceUrl' => $endReferenceUrl, 'endReferenceForm' => $forms->createNamed('ai_end_reference', AiReferenceType::class, null, ['action' => $this->generateUrl('app_ai_reference_upload', ['slot' => 'end']), 'label' => 'Image de fin']), 'referenceForm' => $this->createForm(AiReferenceType::class, options: ['action' => $this->generateUrl('app_ai_reference_upload')]), 'models' => AiCatalog::viewModels(), 'groups' => $catalog->groups(), 'providers' => AiCatalog::PROVIDERS, 'projects' => $projects, 'jobs' => $jobs, 'connected' => $connected], new Response(status: $form->isSubmitted() ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/studio/creation/idee', name: 'app_ai_save_idea', methods: ['POST'])]

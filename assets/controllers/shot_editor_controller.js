@@ -70,7 +70,8 @@ export default class extends Controller {
       if (prompt) {
         prompt.placeholder = english ? 'Décris en anglais l’action et le mouvement de caméra…' : 'Décris l’action et le mouvement de caméra…';
         const label = prompt.labels?.[0];
-        const caption = english ? 'Décris ton plan en anglais' : 'Décris ton plan';
+        const single = rows.length === 1;
+        const caption = (single ? 'Décris ta vidéo' : 'Décris ton plan') + (english ? ' en anglais' : '');
         if (label && label.textContent !== caption) label.textContent = caption;
       }
       if (help) {

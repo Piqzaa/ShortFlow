@@ -69,42 +69,16 @@ function setup(count = 3) {
   return { controller, rows };
 }
 
-test('writing paths preserve the idea and existing prompts when switching modes', () => {
-  const { controller, rows } = setup(1);
-  controller.hasWritingModeTarget = true;
-  controller.writingModeTarget = { value: 'ai' };
-  controller.writingChoiceTarget = {};
-  controller.writingHelpTarget = {};
-  const idea = { value: 'My original idea.' };
-  controller.ideaPanelTarget = { querySelector: () => idea };
-  controller.storyPanelTarget = {};
-  controller.hasPlanCountTarget = true;
-  controller.planCountTarget = { value: '2' };
-  controller.updateWritingMode();
-  assert.equal(controller.ideaPanelTarget.hidden, false);
-  assert.equal(controller.storyPanelTarget.hidden, false);
-  controller.writingModeTarget.value = 'manual';
-  controller.updateWritingMode();
-  assert.equal(controller.ideaPanelTarget.hidden, true);
-  assert.equal(controller.storyPanelTarget.hidden, true);
-  assert.equal(idea.value, 'My original idea.');
+test('adding a manual plan switches a single take to multiple plans and preserves text', () => {
+  const { controller, rows } = setup(2);
   controller.continuityTarget.value = 'single';
-  controller.updateWritingMode();
-  assert.equal(controller.writingChoiceTarget.hidden, true);
+  controller.hasPlanCountTarget = true;
+  controller.planCountTarget = { value: '1' };
+  controller.refresh = () => {};
+  controller.countFromCards();
+  assert.equal(controller.continuityTarget.value, 'independent');
+  assert.equal(controller.planCountTarget.value, '2');
   assert.equal(rows[0].querySelector('textarea').value, 'Scene 1.');
-  controller.wasSingleWriting = false;
-  const prompt = rows[0].querySelector('textarea');
-  Object.assign(prompt, { value: '', maxLength: 1500, dispatchEvent() {} });
-  controller.updateWritingMode();
-  assert.equal(prompt.value, idea.value);
-  prompt.value = '';
-  controller.updateWritingMode();
-  assert.equal(prompt.value, '');
-  controller.continuityTarget.value = 'independent';
-  controller.writingModeTarget.value = 'ai';
-  controller.updateWritingMode();
-  assert.equal(controller.storyPanelTarget.hidden, false);
-  assert.equal(idea.value, 'My original idea.');
 });
 
 test('single-plan mode locks the count and enables its submitted mirror', () => {
@@ -317,7 +291,7 @@ test('count guidance keeps the precise loss warning when a duration change canno
   assert.match(controller.noticeTarget.textContent,/plan déjà renseigné/);
   controller.refresh();
   assert.match(controller.countStatusTarget.textContent,/plans déjà renseignés/);
-  assert.equal(controller.prepareStory(),false);
+  assert.equal(controller.redistribute(),false);
 });
 
 test('a contain framing choice alone prevents deleting a plan', () => {

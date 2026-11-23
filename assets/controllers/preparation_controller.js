@@ -3,7 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'writingChoice', 'writingMode', 'writingHelp', 'ideaPanel', 'storyPanel', 'singleCount', 'continuityOptions'];
+  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'singleCount', 'continuityOptions'];
   static values = { models: Object };
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasImageModeButtonTarget) this.imageModeButtonTarget.hidden = false; if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
@@ -32,6 +32,7 @@ export default class extends Controller {
     if (this.continuityTarget.value === 'single' && event.target.matches('[data-preparation-target="continuity"]')) {
       if (this.hasPlanCountTarget) this.planCountChanged(event); else this.applySingle();
     }
+    if (this.continuityTarget.value === 'single' && event.target.matches('[data-creation-target="model"]') && this.editor?.rows().length === 0) this.redistribute();
     if (this.continuityTarget.value !== 'single' && event.target.matches('[data-creation-target="model"]') && this.editor?.rows().every(row => !row.querySelector('textarea').value.trim())) this.redistribute();
   }
   input(event) {
@@ -43,6 +44,7 @@ export default class extends Controller {
   duration(event) {
     if (this.continuityTarget.value === 'single') {
       const row = this.editor?.rows().length === 1 ? this.editor.rows()[0] : null;
+      if (!this.editor?.rows().length) { this.redistribute(event); return; }
       if (row && this.model?.seconds.includes(Number(this.totalTarget.value))) row.querySelector('select').value = this.totalTarget.value;
       this.refresh();
       this.applySingle();
@@ -62,28 +64,7 @@ export default class extends Controller {
     form.requestSubmit(this.singleButtonTarget);
   }
 
-  updateWritingMode() {
-    if (!this.hasWritingModeTarget) return;
-    const single = this.desiredCount === 1;
-    const ai = !single && this.writingModeTarget.value === 'ai';
-    this.writingChoiceTarget.hidden = single;
-    this.ideaPanelTarget.hidden = !ai;
-    this.storyPanelTarget.hidden = !ai;
-    this.writingHelpTarget.textContent = single ? 'Plan unique : décris directement ta vidéo dans le prompt du plan ci-dessous.' : ai ? 'Décris ton idée, puis demande une proposition de plans à l’IA.' : 'Écris directement les prompts de chaque plan ci-dessous.';
-    const idea = this.ideaPanelTarget.querySelector('textarea');
-    const enteringSingle = single && !this.wasSingleWriting;
-    this.wasSingleWriting = single && this.editor?.rows().length === 1;
-    if (enteringSingle && this.editor?.rows().length === 1) {
-      const prompt = this.editor.rows()[0].querySelector('textarea');
-      if (!prompt.value.trim() && idea.value.trim() && idea.value.length <= Number(prompt.maxLength || 0)) {
-        prompt.value = idea.value;
-        prompt.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    }
-  }
-
   refresh() {
-    this.updateWritingMode();
     this.noticeTarget.hidden = false;
     const model = this.model;
     if (this.hasPlanCountTarget) this.planCountTarget.disabled = this.continuityTarget.value === 'single';
@@ -180,7 +161,7 @@ export default class extends Controller {
       }
       const ready = this.desiredCount && this.editor.rows().length === this.desiredCount && total === desired && !invalid;
       const loss = proposal.parts && this.editor.rows().slice(proposal.parts.length).some(row => this.rowHasContent(row));
-      this.countStatusTarget.textContent = !this.desiredCount ? possibleCounts.length ? 'Choisis combien de plans préparer. La durée sera répartie avant la proposition de scénario ; tes scènes actuelles restent conservées.' : `Aucun découpage de ${desired} s en 1 à 8 plans n’est compatible avec ce modèle. Ajuste la durée totale ; tes scènes restent conservées.`
+      this.countStatusTarget.textContent = !this.desiredCount ? possibleCounts.length ? 'Choisis combien de plans préparer. La durée sera répartie entre les plans.' : `Aucun découpage de ${desired} s en 1 à 8 plans n’est compatible avec ce modèle. Ajuste la durée totale ; tes scènes restent conservées.`
         : !proposal.parts ? `Ce modèle ne répartit pas ${desired} s en ${this.desiredCount} plans. Choisis un autre nombre ou un total proche : ${proposal.nearby.join(' ou ')} s.`
           : loss ? 'Ce nombre retirerait des plans déjà renseignés. Conserve le nombre actuel ou reporte leurs textes et images dans les plans conservés avant de réduire. Rien n’a été effacé.'
           : ready ? `${this.desiredCount} plans · ${this.editor.rows().map(row => row.querySelector('select').value).join(' + ')} = ${desired} s.`
@@ -212,19 +193,9 @@ export default class extends Controller {
   }
 
   countFromCards() {
+    if (this.continuityTarget.value === 'single' && this.editor.rows().length > 1) this.continuityTarget.value = 'independent';
     if (this.hasPlanCountTarget) this.planCountTarget.value = this.editor.rows().length ? String(this.editor.rows().length) : '';
     this.refresh();
-  }
-
-  prepareStory() {
-    if (!this.model || !this.editor) return false;
-    const rows = this.editor.rows();
-    const total = rows.reduce((sum, row) => sum + Number(row.querySelector('select').value), 0);
-    const ready = rows.length === this.desiredCount && total === Number(this.totalTarget.value) && rows.every(row => this.model.seconds.includes(Number(row.querySelector('select').value)));
-    if (ready) return true;
-    if (this.continuityTarget.value === 'single') { this.singleButtonTarget.focus(); return false; }
-    if (!this.desiredCount) { this.refresh(); this.planCountTarget.focus(); return false; }
-    return this.redistribute();
   }
 
   usePlanTotal(event) {

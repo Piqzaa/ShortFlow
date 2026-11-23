@@ -37,11 +37,11 @@ test('prompt language follows model metadata while preserving the exact French d
   const query=row.querySelector.bind(row);
   row.querySelector=selector=>selector==='[data-shot-prompt]'?prompt:selector==='[data-shot-language-help]'?help:query(selector);
   editor.modelValue.promptLanguage='en'; editor.update();
-  assert.equal(label.textContent,'Décris ton plan en anglais');
+  assert.equal(label.textContent,'Décris ta vidéo en anglais');
   assert.match(prompt.placeholder,/en anglais/);
   assert.match(help.textContent,/dialogues.*leur langue/);
   delete editor.modelValue.promptLanguage; editor.update();
-  assert.equal(label.textContent,'Décris ton plan');
+  assert.equal(label.textContent,'Décris ta vidéo');
   assert.doesNotMatch(prompt.placeholder,/anglais/);
   assert.doesNotMatch(help.textContent,/anglais/);
   assert.equal(prompt.value,'Bendo says: « Retourne à la cité. »');

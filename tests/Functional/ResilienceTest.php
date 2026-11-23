@@ -60,10 +60,6 @@ final class ResilienceTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h3', 'Source synthétique');
 
-        $html = static::getContainer()->get('twig')->render('ai/_story_proposal.html.twig', ['writerAvailable' => true]);
-        $view = new \Symfony\Component\DomCrawler\Crawler($html);
-        self::assertCount(1, $view->filter('[data-story-writer-target="generate"][disabled]'));
-        self::assertStringContainsString('nécessite JavaScript', $view->filter('[data-story-writer-target="javascript"]')->text());
     }
 
     public function testNativePlanActionPreservesManualTextWithoutInferring(): void

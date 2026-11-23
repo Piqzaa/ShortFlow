@@ -90,7 +90,7 @@ final class AiEpisodeFlow
             throw new \RuntimeException('Le plan unique exige un seul clip de durée native. Utilise « Préparer un plan unique » ou choisis plusieurs scènes.');
         }
         if (1 === count($rows) && 'single' !== $continuity) {
-            $continuity = 'independent';
+            $continuity = null === $episode || $episode->isStandalone() ? 'single' : 'independent';
         }
         if ('linked' === $continuity && (!$image || ($model['subjectReference'] ?? false) || ($model['requiresEnd'] ?? false))) {
             throw new \RuntimeException('Pour les raccords, choisis ici un modèle image compatible et ajoute sa référence. Tes scènes restent conservées.');
@@ -120,7 +120,11 @@ final class AiEpisodeFlow
             if (null !== $pool) {
                 $recipe['characterPool'] = $pool;
             }
-            $recipe['visualContext'] = $episode->isStandalone() ? trim($data['prompt']) : $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle();
+            if ($episode->isStandalone()) {
+                $recipe['visualContext'] = 'single' === $continuity ? '' : trim($data['prompt']);
+            } else {
+                $recipe['visualContext'] = $episode->getSeries()->getCharacters().' '.$episode->getSeries()->getStyle();
+            }
             $recipe['montage'] = SeriesMontage::normalize($data['montage'] ?? $episode->getFlowRecipe()['montage'] ?? ($episode->isStandalone() ? [] : ($episode->getSeries()->getRecipe()['montage'] ?? [])));
             $episode->configurePreparation($recipe, $data['prompt'], $continuity, (bool) $data['mute'] || 0 === $recipe['montage']['sourceVolume']);
             $this->em->flush();

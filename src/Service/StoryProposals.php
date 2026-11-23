@@ -27,8 +27,11 @@ final class StoryProposals
     }
 
     /** @param array<string,mixed> $input */
-    public function create(User $owner, int $scope, string $fingerprint, array $input, string $kind = 'story'): StoryProposal
+    public function create(User $owner, int $scope, string $fingerprint, array $input, string $kind): StoryProposal
     {
+        if ('editorial' !== $kind) {
+            throw new \InvalidArgumentException('La proposition de scénarios a été retirée.');
+        }
         if (strlen($fingerprint) > 24000) {
             throw new \InvalidArgumentException('La préparation est trop longue. Raccourcis les textes des scènes.');
         }
@@ -42,7 +45,7 @@ final class StoryProposals
                 }
                 throw new \RuntimeException('Une rédaction est déjà en cours pour cette vidéo. Tu pourras demander une autre proposition après son résultat.');
             }
-            $pending = $this->em->getRepository(StoryProposal::class)->findBy(['owner' => $owner, 'status' => self::PENDING]);
+            $pending = $this->em->getRepository(StoryProposal::class)->findBy(['owner' => $owner, 'kind' => 'editorial', 'status' => self::PENDING]);
             foreach ($pending as $job) {
                 $this->expire($job);
                 if (in_array($job->getStatus(), self::PENDING, true)) {
@@ -50,7 +53,7 @@ final class StoryProposals
                 }
             }
             $this->admit();
-            $this->em->createQuery('DELETE FROM App\Entity\StoryProposal p WHERE p.owner = :owner AND p.status IN (:terminal) AND p.createdAt < :before')->setParameter('owner', $owner)->setParameter('terminal', ['ready', 'failed'])->setParameter('before', $this->clock->now()->modify('-1 day'))->execute();
+            $this->em->createQuery('DELETE FROM App\Entity\StoryProposal p WHERE p.owner = :owner AND p.kind = :kind AND p.status IN (:terminal) AND p.createdAt < :before')->setParameter('owner', $owner)->setParameter('kind', 'editorial')->setParameter('terminal', ['ready', 'failed'])->setParameter('before', $this->clock->now()->modify('-1 day'))->execute();
             $job = new StoryProposal($owner, $scope, $fingerprint, $input, $kind, $this->clock->now());
             $this->em->persist($job);
             $this->em->flush();
@@ -146,7 +149,7 @@ final class StoryProposals
         // serializes admission; the aggregate takes no other owners' row locks.
         $db->executeQuery('SELECT pg_advisory_xact_lock(1448698950, 1)')->free();
         $now = $this->clock->now();
-        $pending = $db->fetchFirstColumn("SELECT id FROM story_proposal WHERE (status = 'queued' AND created_at > :queued) OR (status IN ('story', 'shots', 'editorial') AND COALESCE(started_at, created_at) > :started AND COALESCE(phase_started_at, started_at, created_at) > :phase) LIMIT ".self::MAX_PENDING,
+        $pending = $db->fetchFirstColumn("SELECT id FROM story_proposal WHERE kind = 'editorial' AND ((status = 'queued' AND created_at > :queued) OR (status = 'editorial' AND COALESCE(started_at, created_at) > :started AND COALESCE(phase_started_at, started_at, created_at) > :phase)) LIMIT ".self::MAX_PENDING,
             ['queued' => $now->modify('-'.self::QUEUE_TIMEOUT.' seconds'), 'started' => $now->modify('-'.self::EXECUTION_TIMEOUT.' seconds'), 'phase' => $now->modify('-'.self::PHASE_TIMEOUT.' seconds')],
             ['queued' => Types::DATETIME_IMMUTABLE, 'started' => Types::DATETIME_IMMUTABLE, 'phase' => Types::DATETIME_IMMUTABLE]);
         if (count($pending) >= self::MAX_PENDING) {
@@ -185,7 +188,13 @@ final class StoryProposals
             if (!$this->refresh($job) || $this->failIfExpired($job) || 'queued' !== $job->getStatus()) {
                 return false;
             }
-            $job->phase('editorial' === $job->getKind() ? 'editorial' : 'story', $this->clock->now());
+            if ('editorial' !== $job->getKind()) {
+                $job->fail('La proposition de scénarios a été retirée.');
+                $this->em->flush();
+
+                return false;
+            }
+            $job->phase('editorial', $this->clock->now());
             $this->em->flush();
 
             return true;
@@ -197,22 +206,14 @@ final class StoryProposals
         $notice = null;
         try {
             $input = $job->getInput();
-            if ('editorial' === $job->getKind()) {
-                $texts = $this->writer->publication($input['source'], $input['profile'], $input['networks']);
-                $result = ['texts' => $texts, 'source' => $input['source'], 'profile' => $input['profile'], 'baseline' => $input['baseline'], 'version' => PublicationTexts::VERSION];
-            } else {
-                $result = $this->writer->propose($input['idea'], $input['durations'], $input['continuity'], $input['tone'], $input['context'], function (string $phase) use ($job): void {
-                    if (!$this->whileRunning($job, fn () => $job->phase($phase, $this->clock->now()))) {
-                        throw new StoryWritingException('obsolete');
-                    }
-                });
-            }
-        } catch (StoryWritingException $failure) {
-            $notice = 'editorial' === $job->getKind() ? 'Le rédacteur local est indisponible ou occupé. Tes textes restent conservés ; réessaie ou rédige-les directement.' : $failure->getMessage();
+            $texts = $this->writer->publication($input['source'], $input['profile'], $input['networks']);
+            $result = ['texts' => $texts, 'source' => $input['source'], 'profile' => $input['profile'], 'baseline' => $input['baseline'], 'version' => PublicationTexts::VERSION];
+        } catch (StoryWritingException) {
+            $notice = 'Le rédacteur local est indisponible ou occupé. Tes textes restent conservés ; réessaie ou rédige-les directement.';
         } catch (PublicationException $failure) {
             $notice = $failure->getMessage();
         } catch (\Throwable) {
-            $notice = 'editorial' === $job->getKind() ? 'Le rédacteur n’a pas fourni de textes exploitables. Tes textes restent conservés ; tu peux réessayer ou les rédiger directement.' : 'Le rédacteur n’a pas fourni de scénario exploitable. Tes scènes sont conservées. Tu peux réessayer ou les écrire toi-même.';
+            $notice = 'Le rédacteur n’a pas fourni de textes exploitables. Tes textes restent conservés ; tu peux réessayer ou les rédiger directement.';
         }
         $this->whileRunning($job, static function () use ($job, $result, $notice): void {
             if (isset($notice)) {

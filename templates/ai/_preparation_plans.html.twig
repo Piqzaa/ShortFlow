@@ -1,12 +1,9 @@
-<details class="creation-details" data-story-scenes open><summary>Personnaliser les scènes et les durées</summary>
 <section class="preparation-plans" aria-labelledby="preparation-plans-title">
-  <div class="series-episodes-heading"><h2 id="preparation-plans-title">Les plans de ta vidéo</h2><button type="submit" class="account-secondary" name="intent" value="replan" data-action="preparation#redistribute">Répartir la durée</button></div>
+  <div class="series-episodes-heading"><h2 id="preparation-plans-title">Description vidéo</h2></div>
   <p class="library-note" data-shot-editor-target="summary" role="status" aria-live="polite">Le coût total sera calculé à partir de tes plans.</p>
-  <p class="library-note">Chaque plan produit un clip. Les références aident à garder le personnage, sans le garantir.</p>
   <div data-shot-editor-target="list">{% for shotForm in ideaForm.shots %}{% include 'ai/_shot_card.html.twig' with {shotNumber:loop.index,shotIndex:loop.index0} %}{% endfor %}</div><template data-shot-editor-target="prototype">{% set shotForm = ideaForm.shots.vars.prototype %}{% include 'ai/_shot_card.html.twig' %}</template>
   <button type="submit" name="plan_action" class="account-secondary preparation-add" data-shot-editor-target="add" data-action="shot-editor#act" value="add">Ajouter un plan +</button>
-  {% if manualPromptReview|default(false) %}<div class="prompt-review-notice"><p class="library-note">Ton idée a changé ou cette ancienne préparation est incomplète. Relis tes plans : tu peux les conserver tels que tu les as corrigés, ou demander une nouvelle proposition à l’IA.</p><button type="submit" name="plan_action" value="manual_prompts:0" class="account-secondary">Utiliser mes prompts relus</button></div>{% endif %}
+  {% if manualPromptReview|default(false) %}<div class="prompt-review-notice"><p class="library-note">Ton idée a changé ou cette ancienne préparation est incomplète. Relis tes plans, puis confirme les prompts corrigés.</p><button type="submit" name="plan_action" value="manual_prompts:0" class="account-secondary">Utiliser mes prompts relus</button></div>{% endif %}
   <noscript><p class="library-note">« Répartir la durée » prépare les champs sur cette page. Les plans peuvent ensuite être modifiés et enregistrés sans JavaScript.</p></noscript>
 </section>
-</details>
-<div class="creation-audio">{{ form_row(ideaForm.mute) }}<p class="library-note" data-preparation-target="audioHelp" hidden></p></div>
+<details class="creation-audio creation-details"{% if ideaForm.mute.vars.checked or not ideaForm.mute.vars.valid %} open{% endif %}><summary>Audio du montage</summary>{{ form_row(ideaForm.mute) }}</details>

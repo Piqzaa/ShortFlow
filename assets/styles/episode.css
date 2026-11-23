@@ -25,6 +25,28 @@
 @media(max-width:650px){.episode-progress{padding:18px}.episode-progress-heading{gap:10px;flex-wrap:wrap}.episode-progress-heading h2{font-size:20px}.episode-progress-heading>strong{font-size:19px}.episode-progress-plans{grid-template-columns:1fr}.episode-progress-heading .eyebrow{font-size:9px}}
 
 .preparation-workspace { display:block; max-width:920px; }
+.studio-shell .preparation-workspace { max-width:1080px; }
+.studio-shell .creation-heading { margin:16px 0 20px; }
+.studio-shell .creation-heading h1 { margin:0; }
+.studio-prompt-layout { display:grid; gap:20px; }
+.studio-prompt-main,.studio-prompt-options { min-width:0; }
+.studio-prompt-main .preparation-plans { margin:0; padding:0; border:0; }
+.studio-prompt-main .preparation-plans h2 { margin:0; font-size:19px; }
+.studio-prompt-main:has([data-shot-editor-row]:only-child) .series-episodes-heading h2 { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.studio-prompt-main [data-shot-editor-target="list"] > [data-shot-editor-row]:only-child .story-row-actions { display:none; }
+.studio-prompt-main .preparation-plans .preparation-add { margin:12px 0; }
+.studio-shell .studio-prompt-main .creation-audio { margin:8px 0!important; padding:0; }
+.studio-prompt-main .creation-audio summary { padding:4px 0; }
+.studio-prompt-main .ai-actions { margin-top:12px; }
+.studio-prompt-options .studio-model-actions { margin:10px 0; }
+.studio-prompt-options .creation-recommendation { padding:8px; gap:4px; }
+.studio-shell .studio-prompt-options .creation-recommendations>div { grid-template-columns:repeat(3,minmax(0,1fr)); }
+@media(min-width:960px){
+  .studio-prompt-layout { grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); align-items:start; gap:24px; }
+}
+@media(max-width:390px){
+  .studio-shell .studio-prompt-options .creation-recommendations>div { grid-template-columns:1fr; }
+}
 .preparation-workspace .creation-form > div > textarea { min-height:120px; }
 .preparation-plans { margin:28px 0; padding-top:20px; border-top:1px solid var(--workspace-border); }
 .preparation-plans .story-shot textarea { min-height:100px; }

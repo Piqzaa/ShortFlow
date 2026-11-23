@@ -255,14 +255,14 @@ final class AiCharactersTest extends WebTestCase
         $this->snap('single-plan-resolution');
     }
 
-    public function testManualPlansNeedNoSeparateIdeaAndAiWritingRequiresOne(): void
+    public function testManualPlansNeedNoSeparateIdeaOrScenarioWriter(): void
     {
         foreach ([1, 2] as $count) {
             $crawler = $this->client->request('GET', '/studio/creation');
             $values = $crawler->filter('#ai-idea-form')->form()->getPhpValues();
             $values['intent'] = 'compose';
             $prompt = 'Bendo waves and says: « Bonjour tout le monde. »';
-            $values['ai_idea'] = array_replace($values['ai_idea'], ['writingMode' => 'manual', 'prompt' => '', 'model' => 'gemini-omni-12-text-720p', 'source' => 'text', 'seconds' => '5', 'target' => (string) (5 * $count), 'planCount' => (string) $count, 'continuity' => 1 === $count ? 'single' : 'independent', 'ratio' => '9:16', 'accessMode' => 'api', 'shots' => array_fill(0, $count, ['prompt' => $prompt, 'seconds' => '5', 'promptOnly' => 'manual'])]);
+            $values['ai_idea'] = array_replace($values['ai_idea'], ['writingMode' => 'manual', 'prompt' => '', 'model' => 'gemini-omni-12-text-720p', 'source' => 'text', 'seconds' => '5', 'target' => (string) (5 * $count), 'planCount' => (string) $count, 'continuity' => 'independent', 'ratio' => '9:16', 'accessMode' => 'api', 'shots' => array_fill(0, $count, ['prompt' => $prompt, 'seconds' => '5'])]);
             $this->client->request('POST', '/studio/creation', $values);
             self::assertResponseStatusCodeSame(303);
             $this->client->followRedirect();
@@ -271,13 +271,15 @@ final class AiCharactersTest extends WebTestCase
             $flow = static::getContainer()->get(\App\Service\AiEpisodeFlow::class);
             self::assertCount($count, $flow->shots($episode));
             self::assertSame($prompt, $flow->shots($episode)[0]->getPrompt());
+            if (1 === $count) {
+                self::assertSame('single', $episode->getContinuity());
+                self::assertSame(1, substr_count($flow->quote($episode)['references'][0]['prompt'], $prompt));
+            }
             self::assertSame('draft', $episode->getFlowState());
             self::assertNull($episode->getGeneration());
         }
-        $values['ai_idea']['writingMode'] = 'ai';
-        $this->client->request('POST', '/studio/creation', $values);
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('body', 'Décris ton idée pour que l’IA propose les plans');
+        $this->client->request('GET', '/studio/creation');
+        self::assertSelectorNotExists('[data-controller~="story-writer"]');
         self::assertSame(0, $this->http);
         $this->snap('writing-manual-ai');
     }
@@ -367,7 +369,7 @@ final class AiCharactersTest extends WebTestCase
         $this->client->request('POST', '/studio/creation/idee', $values);
         self::assertResponseIsSuccessful();
         $this->client->request('GET', '/studio/creation');
-        self::assertSelectorTextContains('label[for="ai_idea_shots_0_prompt"]', 'Décris ton plan en anglais');
+        self::assertSelectorTextContains('label[for="ai_idea_shots_0_prompt"]', 'Décris ta vidéo en anglais');
         self::assertSelectorTextContains('[data-shot-language-help]', 'consignes visuelles en anglais');
         self::assertSelectorTextContains('#ai_idea_shots_0_prompt', $dialogue);
         $this->snap('prompt-language-english');
@@ -377,7 +379,7 @@ final class AiCharactersTest extends WebTestCase
         $this->client->request('POST', '/studio/creation/idee', $values);
         self::assertResponseIsSuccessful();
         $this->client->request('GET', '/studio/creation');
-        self::assertSelectorTextContains('label[for="ai_idea_shots_0_prompt"]', 'Décris ton plan');
+        self::assertSelectorTextContains('label[for="ai_idea_shots_0_prompt"]', 'Décris ta vidéo');
         self::assertSelectorNotExists('#ai_idea_shots_0_prompt[placeholder*="anglais"]');
         self::assertSelectorTextNotContains('[data-shot-language-help]', 'anglais');
         self::assertSelectorTextContains('#ai_idea_shots_0_prompt', $dialogue);

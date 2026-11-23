@@ -59,7 +59,6 @@ final class StoryProposalLifecycleTest extends WebTestCase
     /** @return iterable<string, array{string}> */
     public static function kinds(): iterable
     {
-        yield 'scenario' => ['story'];
         yield 'publication texts' => ['editorial'];
     }
 
@@ -92,7 +91,7 @@ final class StoryProposalLifecycleTest extends WebTestCase
         return $this->calls;
     }
 
-    private function enqueue(string $kind = 'story', string $fingerprint = 'original', ?User $owner = null): StoryProposal
+    private function enqueue(string $kind = 'editorial', string $fingerprint = 'original', ?User $owner = null): StoryProposal
     {
         return $this->jobs()->create($owner ?? $this->owner, 42, $fingerprint, $this->input($kind), $kind);
     }
@@ -112,7 +111,7 @@ final class StoryProposalLifecycleTest extends WebTestCase
         self::assertEquals($created, $job->getCreatedAt());
         self::assertEquals($this->clock->now(), $job->getStartedAt());
         self::assertNotNull($job->getResult());
-        $expected = 'story' === $kind ? 2 : 1;
+        $expected = 1;
         self::assertSame($expected, $this->textRequests());
         $this->jobs()->process($job->getId());
         self::assertSame($expected, $this->http->getRequestsCount());
@@ -128,19 +127,6 @@ final class StoryProposalLifecycleTest extends WebTestCase
         self::assertStringContainsString('démarrer', $job->getError());
         self::assertNull($job->getStartedAt());
         self::assertSame(0, $this->calls);
-    }
-
-    public function testEachStageGetsItsOwnDeadlineWithoutResettingTheTotalStart(): void
-    {
-        $job = $this->enqueue();
-        $start = $this->clock->now();
-        $this->duringText = fn () => $this->clock->sleep(209);
-        $this->jobs()->process($job->getId());
-
-        self::assertSame('ready', $job->getStatus());
-        self::assertEquals($start, $job->getStartedAt());
-        self::assertEquals($start->modify('+209 seconds'), $job->getPhaseStartedAt());
-        self::assertSame(2, $this->calls);
     }
 
     #[DataProvider('kinds')]
@@ -222,14 +208,14 @@ final class StoryProposalLifecycleTest extends WebTestCase
         self::assertSame(0, $this->calls);
     }
 
-    public function testOneOwnerCannotSubmitAnotherKindWhileWaiting(): void
+    public function testOneOwnerCannotSubmitAnotherRequestWhileWaiting(): void
     {
         $original = $this->enqueue();
         try {
-            $this->enqueue('editorial');
+            $this->enqueue(fingerprint: 'another');
             self::fail('One owner must not occupy multiple queue slots.');
         } catch (\RuntimeException $error) {
-            self::assertStringContainsString('sur ton compte', $error->getMessage());
+            self::assertStringContainsString('déjà en cours', $error->getMessage());
         }
         self::assertSame('queued', $original->getStatus());
         self::assertSame(1, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM story_proposal'));
@@ -239,9 +225,9 @@ final class StoryProposalLifecycleTest extends WebTestCase
     public function testExpiredRowsDoNotPermanentlyFillAdmissionCapacity(): void
     {
         for ($i = 0; $i < StoryProposals::MAX_PENDING; ++$i) {
-            $job = new StoryProposal($this->user('expired-'.$i), 42, 'old', [], 'story', $this->clock->now()->modify('-1 hour'));
+            $job = new StoryProposal($this->user('expired-'.$i), 42, 'old', [], 'editorial', $this->clock->now()->modify('-1 hour'));
             if (1 === $i % 2) {
-                $job->phase('story', $this->clock->now()->modify('-420 seconds'));
+                $job->phase('editorial', $this->clock->now()->modify('-420 seconds'));
             }
             $this->em->persist($job);
         }

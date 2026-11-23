@@ -7,10 +7,11 @@
   <div class="shot-card-details" data-shot-details>
     {{ form_widget(shotForm.sceneDescription) }}{{ form_errors(shotForm.sceneDescription) }}
     {% set shotModel = ideaForm is defined ? models[ideaForm.model.vars.value]|default({}) : model|default({}) %}
+    {% set describe = ideaForm is defined and (ideaForm.shots|length == 1 or ideaForm.continuity.vars.value == 'single' or ideaForm.planCount.vars.value == '1') ? 'Décris ta vidéo' : 'Décris ton plan' %}
     {% set englishPrompt = shotModel.promptLanguage|default('') == 'en' %}
     {% set promptAttrs = {'data-shot-prompt':'',placeholder:englishPrompt ? 'Décris en anglais l’action et le mouvement de caméra…' : 'Décris l’action et le mouvement de caméra…'} %}
     {% if singlePrepared|default(false) and shotNumber|default(0) == 1 %}{% set promptAttrs = promptAttrs|merge({autofocus:true}) %}{% endif %}
-    {{ form_row(shotForm.prompt,{label:englishPrompt ? 'Décris ton plan en anglais' : 'Décris ton plan',attr:promptAttrs}) }}
+    {{ form_row(shotForm.prompt,{label:describe ~ (englishPrompt ? ' en anglais' : ''),attr:promptAttrs}) }}
     <details class="shot-prompt-help"><summary>Aide à la rédaction</summary><p class="library-note" data-shot-language-help>{{ englishPrompt ? 'Ce modèle documente des consignes visuelles en anglais. Garde les dialogues et textes souhaités dans leur langue.' : 'Décris l’action et le mouvement de caméra. Garde les dialogues et textes souhaités dans leur langue.' }}</p></details>
     <div data-character-scene{% if not shotForm.characterIds.vars.choices|length or (ideaForm is defined and ideaForm.source.vars.value != 'subject') or (ideaForm is not defined and not model.subjectReference|default(false)) %} hidden{% endif %}>{% include 'ai/_character_choices.html.twig' with {field:shotForm.characterIds} %}</div>{{ form_widget(shotForm.characterIdsManaged) }}
     {% include 'ai/_shot_references.html.twig' %}
