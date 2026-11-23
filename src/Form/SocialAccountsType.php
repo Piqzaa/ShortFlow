@@ -7,6 +7,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Count;
 
 final class SocialAccountsType extends AbstractType
 {
@@ -15,11 +16,21 @@ final class SocialAccountsType extends AbstractType
         foreach ($options['networks'] as $network) {
             $builder->add($network, ChoiceType::class, ['label' => 'Compte '.$options['labels'][$network], 'choices' => $options['choices_by_network'][$network] ?? [], 'placeholder' => 'Choisir un compte connecté', 'required' => false]);
         }
+        if ($options['youtube_multiple'] && in_array('youtube', $options['networks'], true)) {
+            $builder->add(MultiNetworkPublishing::YOUTUBE_ADDITIONAL, ChoiceType::class, [
+                'label' => 'Autres chaînes YouTube',
+                'choices' => $options['choices_by_network']['youtube'] ?? [],
+                'expanded' => true,
+                'multiple' => true,
+                'required' => false,
+                'constraints' => [new Count(max: MultiNetworkPublishing::MAX_YOUTUBE_ADDITIONAL, maxMessage: 'Choisis jusqu’à quatre chaînes supplémentaires.')],
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults(['networks' => array_keys(MultiNetworkPublishing::LABELS), 'choices_by_network' => [], 'labels' => MultiNetworkPublishing::LABELS, 'label' => false]);
-        $resolver->setAllowedTypes('networks', 'array')->setAllowedTypes('choices_by_network', 'array');
+        $resolver->setDefaults(['networks' => array_keys(MultiNetworkPublishing::LABELS), 'choices_by_network' => [], 'labels' => MultiNetworkPublishing::LABELS, 'label' => false, 'youtube_multiple' => false]);
+        $resolver->setAllowedTypes('networks', 'array')->setAllowedTypes('choices_by_network', 'array')->setAllowedTypes('youtube_multiple', 'bool');
     }
 }

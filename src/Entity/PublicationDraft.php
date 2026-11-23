@@ -109,7 +109,7 @@ class PublicationDraft
             }
         }
     }
-    /** @var array<string, ?string> */
+    /** @var array{youtube?: ?string, instagram?: ?string, tiktok?: ?string, youtube_additional?: list<string>} */
     #[ORM\Column(type: 'json')]
     private array $accounts = [];
     #[ORM\Column(length: 16)]
@@ -168,10 +168,15 @@ class PublicationDraft
         return $this->networks;
     }
 
-    /** @return array<string, ?string> */
+    /** @return array{youtube?: ?string, instagram?: ?string, tiktok?: ?string, youtube_additional?: list<string>} */
     public function getAccounts(): array
     {
         return $this->accounts;
+    }
+
+    public function getDestinationCount(): int
+    {
+        return count($this->networks) + count($this->accounts['youtube_additional'] ?? []);
     }
 
     public function getStatus(): string
@@ -230,7 +235,7 @@ class PublicationDraft
         return $this->items;
     }
 
-    /** @param list<string> $networks @param array<string, ?string> $accounts */
+    /** @param list<string> $networks @param array{youtube?: ?string, instagram?: ?string, tiktok?: ?string, youtube_additional?: list<string>} $accounts */
     public function edit(string $title, array $networks, array $accounts, \DateTimeImmutable $now): void
     {
         $this->title = $title;

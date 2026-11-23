@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\PublicationDraft;
+use App\Entity\YouTubePublication;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\PersistentCollection;
@@ -23,7 +24,7 @@ final class PublicationCalendar
     }
 
     /** @param list<PublicationDraft> $drafts
-     * @return array{states:array<int,string>,destinations:array<string,array<string,string>>}
+     * @return array{states:array<int,string>,destinations:array<string,array<string,string>>,youtubeChannels:array<string,array<string,string>>}
      */
     public function snapshot(array $drafts): array
     {
@@ -40,14 +41,21 @@ final class PublicationCalendar
             }
         }
         if (!$keys) {
-            return ['states' => $states, 'destinations' => []];
+            return ['states' => $states, 'destinations' => [], 'youtubeChannels' => []];
         }
-        $rows = $this->db->fetchAllAssociative("SELECT id, submission_key, status, 'youtube' AS network FROM youtube_publication WHERE owner_id = :owner AND submission_key IN (:keys) UNION ALL SELECT id, submission_key, status, 'instagram' AS network FROM instagram_publication WHERE owner_id = :owner AND submission_key IN (:keys) UNION ALL SELECT id, submission_key, status, 'tiktok' AS network FROM tiktok_publication WHERE owner_id = :owner AND submission_key IN (:keys) ORDER BY network, id", ['owner' => $drafts[0]->getOwner()->getId(), 'keys' => array_values(array_unique($keys))], ['keys' => ArrayParameterType::STRING]);
+        $rows = $this->db->fetchAllAssociative("SELECT id, submission_key, status, 'youtube' AS network, channel_id FROM youtube_publication WHERE owner_id = :owner AND submission_key IN (:keys) UNION ALL SELECT id, submission_key, status, 'instagram', NULL FROM instagram_publication WHERE owner_id = :owner AND submission_key IN (:keys) UNION ALL SELECT id, submission_key, status, 'tiktok', NULL FROM tiktok_publication WHERE owner_id = :owner AND submission_key IN (:keys) ORDER BY network, id", ['owner' => $drafts[0]->getOwner()->getId(), 'keys' => array_values(array_unique($keys))], ['keys' => ArrayParameterType::STRING]);
         $jobs = [];
         $destinations = [];
+        $youtubeChannels = [];
         foreach ($rows as $row) {
             $jobs[$row['submission_key']][] = $row['status'];
             $destinations[$row['submission_key']][$row['network']] ??= $row['status'];
+            if ('youtube' === $row['network']) {
+                $youtubeChannels[$row['submission_key']][$row['channel_id']] ??= $row['status'];
+                if (in_array($row['status'], YouTubePublication::ACTIVE, true)) {
+                    $destinations[$row['submission_key']]['youtube'] = $row['status'];
+                }
+            }
         }
         $counts = $missing = [];
         foreach ($drafts as $draft) {
@@ -72,10 +80,10 @@ final class PublicationCalendar
             $statuses = $jobs[$draft->getSubmissionKey()] ?? [];
             $published = count(array_filter($statuses, static fn (string $status): bool => 'published' === $status));
             $attention = array_intersect($statuses, ['failed', 'paused', 'review', 'cancelled']);
-            $expected = count($draft->getNetworks()) * ($counts[$draft->getId()] ?? 0);
+            $expected = $draft->getDestinationCount() * ($counts[$draft->getId()] ?? 0);
             $states[$draft->getId()] = count($statuses) !== $expected ? 'blocked' : ($published === $expected ? 'published' : ($published && $attention ? 'partial' : ($attention ? 'blocked' : 'active')));
         }
 
-        return ['states' => $states, 'destinations' => $destinations];
+        return ['states' => $states, 'destinations' => $destinations, 'youtubeChannels' => $youtubeChannels];
     }
 }

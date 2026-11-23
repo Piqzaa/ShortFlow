@@ -16,7 +16,7 @@ final class PublicationComposerType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add('accounts', SocialAccountsType::class, ['networks' => $options['networks'], 'choices_by_network' => $options['account_choices']]);
+        $builder->add('accounts', SocialAccountsType::class, ['networks' => $options['networks'], 'choices_by_network' => $options['account_choices'], 'youtube_multiple' => true]);
         $builder->add('revision', HiddenType::class, ['data' => $options['revision'], 'constraints' => [new Assert\EqualTo($options['revision'], message: 'La préparation a changé dans un autre onglet. Recharge-la avant de continuer.')]])
             ->add('networks', ChoiceType::class, ['label' => 'Où publier ?', 'choices' => array_flip(MultiNetworkPublishing::LABELS), 'expanded' => true, 'multiple' => true, 'constraints' => $options['partial'] ? [] : [new Assert\Count(min: 1, minMessage: 'Choisis au moins un réseau.')]])
             ->add('settings', MultiNetworkPrepareType::class, ['label' => false, 'videos' => $options['videos'], 'networks' => $options['networks'], 'creator' => $options['creator'], 'draft_key' => $options['revision'], 'draft_title' => $options['draft_title'], 'partial' => $options['partial']])

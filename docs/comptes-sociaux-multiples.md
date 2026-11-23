@@ -2,9 +2,9 @@
 
 ## Objectif
 
-Un utilisateur peut connecter plusieurs chaînes YouTube, comptes Instagram et comptes TikTok. Chaque préparation choisit un compte par réseau : une vidéo peut viser une chaîne YouTube et un profil Instagram, tandis que la suivante vise d’autres comptes, à une autre date. La confirmation habituelle reste obligatoire. Ce lot ne lance aucun essai social réel ni génération payante.
+Un utilisateur peut connecter plusieurs chaînes YouTube, comptes Instagram et comptes TikTok. Une préparation peut viser certains de ces comptes, tandis que la suivante vise d’autres comptes à une autre date. La confirmation habituelle reste obligatoire.
 
-Dans **Connexions**, « Ajouter un compte » conserve les autres accès. « Reconnecter » renouvelle uniquement l’identité demandée ; un retour OAuth correspondant à un autre compte est refusé. Chaque carte propose sa propre déconnexion. Les jetons restent chiffrés côté serveur.
+Dans le compositeur, jusqu’à cinq chaînes YouTube peuvent recevoir les mêmes vidéos, textes et réglages au même créneau, avec une seule confirmation. Chaque chaîne a son propre envoi et son propre suivi. La file et YouTube déterminent le moment de traitement effectif. Pour Instagram et TikTok, le compositeur cible un compte par réseau. Dans **Connexions**, « Ajouter un compte » conserve les autres accès. « Reconnecter » renouvelle uniquement l’identité demandée, et un retour OAuth correspondant à un autre compte est refusé. Chaque carte propose sa propre déconnexion. Les jetons restent chiffrés côté serveur.
 
 ## Fichiers et responsabilités
 

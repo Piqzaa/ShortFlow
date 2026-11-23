@@ -53,7 +53,7 @@ final class ValidationQueue
                 d.status IN ('draft','blocked') OR (d.status = 'scheduled' AND d.scheduled_at < :cutoff)
                 OR (d.status = 'dispatched' AND (
                     COALESCE(j.needs_attention, FALSE) OR COALESCE(j.total, 0) <>
-                    json_array_length(d.networks) * (SELECT COUNT(*) FROM publication_draft_item i WHERE i.draft_id = d.id)
+                    (json_array_length(d.networks) + COALESCE(json_array_length(d.accounts->'youtube_additional'), 0)) * (SELECT COUNT(*) FROM publication_draft_item i WHERE i.draft_id = d.id)
                 ))
             )
             UNION ALL

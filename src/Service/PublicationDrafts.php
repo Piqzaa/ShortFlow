@@ -35,7 +35,7 @@ final class PublicationDrafts
         return $em;
     }
 
-    /** @param list<int> $ids @param list<string> $networks @param array<string, array<string, mixed>> $content @param array<string, ?string> $accounts */
+    /** @param list<int> $ids @param list<string> $networks @param array<string, array<string, mixed>> $content @param array{youtube?: ?string, instagram?: ?string, tiktok?: ?string, youtube_additional?: list<string>} $accounts */
     public function save(User $owner, array $ids, array $networks, array $content, array $accounts, string $title, ?int $id = null, ?int $revision = null): PublicationDraft
     {
         if (!$this->limiter->create('draft-'.$owner->getId())->consume()->isAccepted()) {
@@ -66,7 +66,7 @@ final class PublicationDrafts
                     throw new PublicationException('Cette préparation est liée à une version validée de l’épisode. Valide une autre version depuis la série pour préparer sa publication.');
                 }
                 $previousContent = $draft->content();
-                $draft->edit($title ?: $selected[0]->getTitle(), $networks, array_intersect_key($accounts, array_flip($networks)), $this->clock->now());
+                $draft->edit($title ?: $selected[0]->getTitle(), $networks, array_intersect_key($accounts, array_flip(MultiNetworkPublishing::accountKeys($networks))), $this->clock->now());
                 $previous = [];
                 foreach ($draft->getItems() as $item) {
                     $previous[$item->getVideoId()] = $item->getContent();

@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'youtube_publication')]
-#[ORM\UniqueConstraint(name: 'uniq_youtube_submission_video', columns: ['submission_key', 'source_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_youtube_submission_video_channel', columns: ['submission_key', 'source_id', 'channel_id'])]
 class YouTubePublication
 {
     public const ACTIVE = ['queued', 'uploading', 'processing', 'paused'];

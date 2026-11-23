@@ -158,6 +158,65 @@ final class SocialAccountsTest extends WebTestCase
         $draft = $this->em->find(PublicationDraft::class, $draft->getId());
         self::assertSame($this->identity('youtube', 'b'), $draft->getAccounts()['youtube']);
         self::assertSame(0, $this->em->getRepository(YouTubePublication::class)->count([]));
+        $payload['publication_composer']['accounts']['youtube'] = $this->identity('youtube', 'b');
+        $payload['publication_composer']['accounts']['youtube_additional'] = [$foreign->getChannelId()];
+        $this->client->request('POST', $url, $payload);
+        self::assertResponseStatusCodeSame(422);
+        self::assertArrayNotHasKey('youtube_additional', $this->em->find(PublicationDraft::class, $draft->getId())->getAccounts());
+    }
+
+    public function testOneConfirmationQueuesTheSameVideoForBothSelectedYouTubeChannels(): void
+    {
+        $this->client->request('GET', '/studio/composer', ['videos' => [$this->video->getId()]]);
+        $crawler = $this->client->followRedirect();
+        $url = $this->client->getRequest()->getUri();
+        $payload = $crawler->selectButton('Enregistrer le brouillon')->form()->getPhpValues();
+        $payload['publication_composer']['networks'] = ['youtube'];
+        $payload['publication_composer']['accounts'] = ['youtube' => $this->identity('youtube', 'a'), 'youtube_additional' => [$this->identity('youtube', 'b')]];
+        $payload['intent'] = 'refresh';
+        $this->client->request('POST', $url, $payload);
+        self::assertResponseStatusCodeSame(303);
+        $crawler = $this->client->followRedirect();
+        $payload = $crawler->selectButton('Vérifier avant de confirmer')->form()->getPhpValues();
+        $payload['publication_composer']['settings']['youtube']['videos'][$this->video->getId()]['privacy'] = 'private';
+        $payload['intent'] = 'review';
+        $this->client->request('POST', $url, $payload);
+        self::assertResponseStatusCodeSame(303);
+        $crawler = $this->client->followRedirect();
+        self::assertSelectorTextContains('.batch-total strong', '2');
+        self::assertSelectorTextContains('.batch-review-grid', 'Chaîne a');
+        self::assertSelectorTextContains('.batch-review-grid', 'Chaîne b');
+        $db = $this->em->getConnection();
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
+        $this->client->submit($crawler->selectButton('Confirmer et publier')->form(['form[confirm]' => true]));
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame([$this->identity('youtube', 'a'), $this->identity('youtube', 'b')], $db->fetchFirstColumn('SELECT channel_id FROM youtube_publication ORDER BY channel_id'));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(DISTINCT submission_key) FROM youtube_publication'));
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+        $draft = $this->em->getRepository(PublicationDraft::class)->findOneBy(['owner' => $this->owner]);
+        self::assertNotNull($draft);
+        self::assertSame([$this->identity('youtube', 'b')], $draft->getAccounts()['youtube_additional'] ?? []);
+        self::assertSame('active', static::getContainer()->get(\App\Service\PublicationCalendar::class)->states([$draft])[$draft->getId()]);
+        static::getContainer()->get(\App\Service\MultiNetworkPublishing::class)->enqueue($draft->getOwner(), $draft->videoIds(), $draft->getNetworks(), $draft->content(), (string) $draft->getSubmissionKey(), $draft->getAccounts());
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
+    }
+
+    public function testScheduledYouTubeChannelsAreDispatchedTogetherAtTheConfirmedTime(): void
+    {
+        $drafts = static::getContainer()->get(PublicationDrafts::class);
+        $id = $this->video->getId();
+        $draft = $drafts->save($this->owner, [$id], ['youtube'], ['youtube' => ['videos' => [$id => ['title' => 'Ma vidéo', 'privacy' => 'private', 'audience' => 'no', 'synthetic' => false]]]], ['youtube' => $this->identity('youtube', 'a'), 'youtube_additional' => [$this->identity('youtube', 'b')]], 'Deux chaînes');
+        $drafts->plan($this->owner, $draft->getId(), $draft->getRevision(), '2026-10-26T08:10', 'UTC');
+        $drafts->confirm($this->owner, $draft->getId(), $draft->getRevision(), true);
+        $revision = $draft->getRevision();
+        $db = $this->em->getConnection();
+        $drafts->dispatchDue($draft->getId(), $revision);
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
+        static::getContainer()->get('app.publication_clock')->sleep(600);
+        $drafts->dispatchDue($draft->getId(), $revision);
+        $drafts->dispatchDue($draft->getId(), $revision);
+        self::assertSame([$this->identity('youtube', 'a'), $this->identity('youtube', 'b')], $db->fetchFirstColumn('SELECT channel_id FROM youtube_publication ORDER BY channel_id'));
     }
 
     public function testRemovingAnotherAccountDoesNotChangeAFrozenDraftAndMissingTargetNeverFallsBack(): void

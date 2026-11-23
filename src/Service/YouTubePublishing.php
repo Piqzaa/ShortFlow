@@ -39,7 +39,7 @@ final class YouTubePublishing
         $this->lock->run((int) $owner->getId(), function () use ($owner, $ids, $rows, $key, $expectedChannel): void {
             $this->em->wrapInTransaction(function () use ($owner, $ids, $rows, $key, $expectedChannel): void {
                 $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
-                if ($this->em->getRepository(YouTubePublication::class)->count(['owner' => $owner, 'submissionKey' => $key]) > 0) {
+                if ($this->em->getRepository(YouTubePublication::class)->count(['owner' => $owner, 'submissionKey' => $key, 'channelId' => $expectedChannel]) > 0) {
                     return;
                 }
                 $connection = $this->connection($owner, $expectedChannel) ?? throw new PublicationException('Connecte ta chaîne YouTube avant de publier.');

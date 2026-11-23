@@ -145,6 +145,7 @@ final class PublicationComposerController extends AbstractController
         $destinations = $publishing->destinations($user);
         $accountChoices = $social->choices($user);
         $accounts = $state['accounts'];
+        $accountKeys = array_flip(MultiNetworkPublishing::accountKeys($selected));
         foreach ($selected as $network) {
             if (!array_key_exists($network, $accounts)) {
                 $accounts[$network] = $destinations[$network]['account'];
@@ -156,6 +157,14 @@ final class PublicationComposerController extends AbstractController
             $previousAccount = $state['accounts'][$network] ?? null;
             if ($previousAccount && !in_array($previousAccount, $accountChoices[$network], true)) {
                 $accountChoices[$network]['Compte enregistré indisponible · '.$previousAccount] = $previousAccount;
+            }
+        }
+        $additionalKey = MultiNetworkPublishing::YOUTUBE_ADDITIONAL;
+        if (isset($accountKeys[$additionalKey])) {
+            foreach ($accounts[$additionalKey] ?? [] as $previousChannel) {
+                if (!in_array($previousChannel, $accountChoices['youtube'], true)) {
+                    $accountChoices['youtube']['Chaîne enregistrée indisponible · '.$previousChannel] = $previousChannel;
+                }
             }
         }
         try {
@@ -184,10 +193,10 @@ final class PublicationComposerController extends AbstractController
                 };
             }
         }
-        $form = $this->createForm(PublicationComposerType::class, ['accounts' => array_intersect_key($accounts, array_flip($selected)), 'networks' => $selected, 'settings' => $settings, 'mode' => $state['mode'], 'local' => $state['local'], 'timezone' => $state['timezone']], ['videos' => $context['videos'], 'networks' => $selected, 'creator' => $context['creator'], 'revision' => $state['revision'], 'draft_title' => $state['title'], 'account_choices' => $accountChoices, 'partial' => $partial, 'csrf_token_id' => 'composer_'.$key]);
+        $form = $this->createForm(PublicationComposerType::class, ['accounts' => array_intersect_key($accounts, $accountKeys), 'networks' => $selected, 'settings' => $settings, 'mode' => $state['mode'], 'local' => $state['local'], 'timezone' => $state['timezone']], ['videos' => $context['videos'], 'networks' => $selected, 'creator' => $context['creator'], 'revision' => $state['revision'], 'draft_title' => $state['title'], 'account_choices' => $accountChoices, 'partial' => $partial, 'csrf_token_id' => 'composer_'.$key]);
         $rawSettings = [];
         if ($submitted) {
-            $submitted['accounts'] = array_intersect_key(is_array($submitted['accounts'] ?? null) ? $submitted['accounts'] : [], array_flip($selected));
+            $submitted['accounts'] = array_intersect_key(is_array($submitted['accounts'] ?? null) ? $submitted['accounts'] : [], $accountKeys);
             $rawSettings = is_array($submitted['settings'] ?? null) ? $submitted['settings'] : [];
             $submitted['settings'] = array_intersect_key($rawSettings, array_flip(array_merge($selected, ['draft_key', 'draft_title'])));
             foreach ($selected as $network) {
@@ -196,6 +205,12 @@ final class PublicationComposerController extends AbstractController
                 }
             }
             $form->submit($submitted);
+            if ($form->get('accounts')->has($additionalKey)) {
+                $additional = $form->get('accounts')->get($additionalKey);
+                if ($additional->isSynchronized() && in_array($accounts['youtube'] ?? null, $additional->getData() ?? [], true)) {
+                    $additional->addError(new FormError('Cette chaîne est déjà choisie comme compte YouTube principal.'));
+                }
+            }
         }
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
@@ -210,7 +225,11 @@ final class PublicationComposerController extends AbstractController
                 }
             }
             $next['networks'] = $data['networks'];
-            $next['accounts'] = array_intersect_key($accounts, array_flip($next['networks']));
+            $next['accounts'] = array_intersect_key($accounts, $accountKeys);
+            unset($next['accounts'][$additionalKey]);
+            if (!empty($data['accounts'][$additionalKey])) {
+                $next['accounts'][$additionalKey] = array_values($data['accounts'][$additionalKey]);
+            }
             $next['content'] = array_replace($next['content'], $data['settings']);
             $next['title'] = $form->get('settings')->get('draft_title')->getData() ?? '';
             foreach (['mode', 'local', 'timezone'] as $field) {

@@ -12,16 +12,32 @@ use Doctrine\ORM\EntityManagerInterface;
 final class MultiNetworkPublishing
 {
     public const LABELS = ['youtube' => 'YouTube', 'instagram' => 'Instagram Reels', 'tiktok' => 'TikTok'];
+    public const YOUTUBE_ADDITIONAL = 'youtube_additional';
+    public const MAX_YOUTUBE_ADDITIONAL = 4;
     private const ENTITIES = ['youtube' => YouTubePublication::class, 'instagram' => InstagramPublication::class, 'tiktok' => TikTokPublication::class];
 
     public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private PublicationLock $lock, private YouTubePublishing $youtube, private YouTubeApi $youtubeApi, private InstagramPublishing $instagram, private TikTokPublishing $tiktok, private TikTokApi $tiktokApi)
     {
     }
 
+    /** @param list<string> $networks @return list<string> */
+    public static function accountKeys(array $networks): array
+    {
+        return in_array('youtube', $networks, true) ? [...$networks, self::YOUTUBE_ADDITIONAL] : $networks;
+    }
+
     /** @return array<string, array<string, mixed>> */
     public function destinations(User $owner, array $accounts = []): array
     {
         $youtube = $this->youtube->connection($owner, $accounts['youtube'] ?? null);
+        $additional = [];
+        foreach ($accounts[self::YOUTUBE_ADDITIONAL] ?? [] as $identity) {
+            $connection = $this->youtube->connection($owner, $identity);
+            if ($connection) {
+                $this->em->refresh($connection);
+            }
+            $additional[$identity] = $connection?->getChannelTitle();
+        }
         $instagram = $this->instagram->connection($owner, $accounts['instagram'] ?? null);
         $tiktok = $this->tiktok->connection($owner, $accounts['tiktok'] ?? null);
         foreach ([$youtube, $instagram, $tiktok] as $connection) {
@@ -32,13 +48,13 @@ final class MultiNetworkPublishing
         }
 
         return [
-            'youtube' => ['label' => self::LABELS['youtube'], 'account' => $youtube?->getChannelId(), 'name' => $youtube?->getChannelTitle(), 'ready' => $this->youtubeApi->isReady() && null !== $youtube],
+            'youtube' => ['label' => self::LABELS['youtube'], 'account' => $youtube?->getChannelId(), 'name' => $youtube?->getChannelTitle(), 'additional' => $additional, 'ready' => $this->youtubeApi->isReady() && null !== $youtube],
             'instagram' => ['label' => self::LABELS['instagram'], 'account' => $instagram?->getInstagramId(), 'name' => $instagram ? '@'.$instagram->getUsername() : null, 'ready' => $this->instagram->ready($owner, $accounts['instagram'] ?? null)],
             'tiktok' => ['label' => self::LABELS['tiktok'], 'account' => $tiktok?->getOpenId(), 'name' => $tiktok?->getDisplayName(), 'ready' => $this->tiktok->ready($owner, $accounts['tiktok'] ?? null)],
         ];
     }
 
-    /** @param list<int> $ids @param list<string> $networks @param array<string, ?string> $accounts @param array<string, array<string, mixed>> $content @return array<string, mixed> */
+    /** @param list<int> $ids @param list<string> $networks @param array<string, array<string, mixed>> $content @return array<string, mixed> */
     public function context(User $owner, array $ids, array $networks, array $accounts, array $content = []): array
     {
         $destinations = $this->destinations($owner, $accounts);
@@ -51,6 +67,15 @@ final class MultiNetworkPublishing
             }
             if (($accounts[$network] ?? null) !== $destinations[$network]['account']) {
                 $issues[$network][] = 'Le compte destinataire a changé. Reviens au choix des réseaux pour le vérifier.';
+            }
+        }
+        if (in_array('youtube', $networks, true)) {
+            $additional = $accounts[self::YOUTUBE_ADDITIONAL] ?? [];
+            if (count($additional) > self::MAX_YOUTUBE_ADDITIONAL || count(array_unique($additional)) !== count($additional) || in_array($accounts['youtube'] ?? null, $additional, true)) {
+                $issues['youtube'][] = 'Choisis jusqu’à cinq chaînes YouTube différentes.';
+            }
+            if (in_array(null, $destinations['youtube']['additional'], true)) {
+                $issues['youtube'][] = 'Une chaîne YouTube supplémentaire est indisponible. Reconnecte-la ou retire-la des destinations.';
             }
         }
         if (in_array('tiktok', $networks, true) && $destinations['tiktok']['ready'] && !isset($issues['tiktok'])) {
@@ -97,7 +122,7 @@ final class MultiNetworkPublishing
         return ['videos' => $selected, 'destinations' => $destinations, 'issues' => $issues, 'creator' => $creator, 'ready' => [] === $issues && [] !== $networks];
     }
 
-    /** @param list<int> $ids @param list<string> $networks @param array<string, array<string, mixed>> $content @param array<string, ?string> $accounts */
+    /** @param list<int> $ids @param list<string> $networks @param array<string, array<string, mixed>> $content */
     public function enqueue(User $owner, array $ids, array $networks, array $content, string $key, array $accounts, ?callable $beforeCommit = null): void
     {
         if (!$ids || count($ids) > 20 || count(array_unique($ids)) !== count($ids) || !$networks || count(array_unique($networks)) !== count($networks) || array_diff($networks, array_keys(self::LABELS))) {
@@ -109,7 +134,11 @@ final class MultiNetworkPublishing
                 $existing[$network] = $this->em->getRepository(self::ENTITIES[$network])->count(['owner' => $owner, 'submissionKey' => $key]);
             }
             if (array_sum($existing) > 0) {
-                if (count(array_filter($existing, static fn (int $count): bool => $count === count($ids))) === count($networks)) {
+                $expected = array_fill_keys($networks, count($ids));
+                if (isset($expected['youtube'])) {
+                    $expected['youtube'] *= 1 + count($accounts[self::YOUTUBE_ADDITIONAL] ?? []);
+                }
+                if ($existing === $expected) {
                     return;
                 }
                 throw new PublicationException('Ce lot a déjà été engagé. Consulte Publications avant toute nouvelle tentative.');
@@ -129,6 +158,11 @@ final class MultiNetworkPublishing
                         default => throw new PublicationException('Réseau indisponible.'),
                     };
                     $publisher->enqueue($owner, $ids, $content[$network]['videos'], $key, (string) $accounts[$network]);
+                    if ('youtube' === $network) {
+                        foreach ($accounts[self::YOUTUBE_ADDITIONAL] ?? [] as $channel) {
+                            $this->youtube->enqueue($owner, $ids, $content[$network]['videos'], $key, $channel);
+                        }
+                    }
                 }
                 if ($beforeCommit) {
                     $beforeCommit();

@@ -178,10 +178,17 @@ final class EpisodePublications
             }
             $destinations = [];
             foreach ($draft->getNetworks() as $network) {
-                $jobStatus = $snapshot['destinations'][$draft->getSubmissionKey()][$network] ?? null;
-                $status = $jobStatus ? ($labels[$jobStatus] ?? 'En cours') : PublicationCalendar::LABELS[$states[$draft->getId()]];
-                $identity = $draft->getAccounts()[$network] ?? null;
-                $destinations[] = ['name' => MultiNetworkPublishing::LABELS[$network], 'status' => $status, 'account' => $identity ? ($accountNames[$network][$identity] ?? 'Compte enregistré indisponible') : ('draft' === $draft->getStatus() ? 'Compte à choisir' : 'Compte non renseigné dans la préparation')];
+                $identities = [$draft->getAccounts()[$network] ?? null];
+                if ('youtube' === $network) {
+                    $identities = [...$identities, ...($draft->getAccounts()[MultiNetworkPublishing::YOUTUBE_ADDITIONAL] ?? [])];
+                }
+                foreach ($identities as $identity) {
+                    $jobStatus = 'youtube' === $network && $identity
+                        ? ($snapshot['youtubeChannels'][$draft->getSubmissionKey()][$identity] ?? null)
+                        : ($snapshot['destinations'][$draft->getSubmissionKey()][$network] ?? null);
+                    $status = $jobStatus ? ($labels[$jobStatus] ?? 'En cours') : PublicationCalendar::LABELS[$states[$draft->getId()]];
+                    $destinations[] = ['name' => MultiNetworkPublishing::LABELS[$network], 'status' => $status, 'account' => $identity ? ($accountNames[$network][$identity] ?? 'Compte enregistré indisponible') : ('draft' === $draft->getStatus() ? 'Compte à choisir' : 'Compte non renseigné dans la préparation')];
+                }
             }
             $source = $episode instanceof AiEpisode ? $episode->getApprovedVideo() : $episode->getVideo();
             $result[$episode->getId()][] = ['draft' => $draft, 'label' => PublicationCalendar::LABELS[$states[$draft->getId()]], 'current' => $draft->videoIds() === [$source?->getId()], 'destinations' => $destinations];
