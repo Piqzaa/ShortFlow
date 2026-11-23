@@ -8,6 +8,7 @@ use App\Entity\TikTokConnection;
 use App\Entity\User;
 use App\Entity\VideoAsset;
 use App\Entity\YouTubeConnection;
+use App\Entity\YouTubePublication;
 use App\Service\MultiNetworkPublishing;
 use App\Service\PublicationCalendar;
 use App\Service\PublicationDrafts;
@@ -256,6 +257,45 @@ final class PublicationScheduleTest extends WebTestCase
         $this->assertJobs(1, 1, 1);
         self::assertSame('dispatched', $this->reload($id)->getStatus());
         self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(DISTINCT submission_key) FROM (SELECT submission_key FROM youtube_publication UNION ALL SELECT submission_key FROM instagram_publication UNION ALL SELECT submission_key FROM tiktok_publication) j'));
+    }
+
+    public function testTwoLaterVideosDispatchAtTheirOwnSlotsAfterTheFirstPublication(): void
+    {
+        $this->connect();
+        $initial = $this->draft(['youtube']);
+        $this->service()->confirm($this->owner, $initial->getId(), $initial->getRevision(), false);
+        $initialJob = $this->em()->getRepository(YouTubePublication::class)->findOneBy(['source' => $initial->videoIds()[0]]);
+        self::assertInstanceOf(YouTubePublication::class, $initialJob);
+        $initialJob->uploaded('pilotfirst1');
+        $initialJob->complete('private');
+        $this->em()->flush();
+
+        $first = $this->draft(['youtube']);
+        $second = $this->draft(['youtube']);
+        $firstRevision = $this->arm($first);
+        $this->service()->plan($this->owner, $second->getId(), $second->getRevision(), '2026-10-18T06:00', 'America/Toronto');
+        $this->service()->confirm($this->owner, $second->getId(), $second->getRevision(), true);
+        $secondRevision = $second->getRevision();
+        self::assertSame('2026-10-18T10:00:00+00:00', $second->getScheduledAt()->format('c'));
+        $this->assertJobs(1);
+
+        $this->clock->sleep(3600);
+        $this->service()->dispatchDue($second->getId(), $secondRevision);
+        $this->service()->dispatchDue($first->getId(), $firstRevision);
+        $this->service()->dispatchDue($first->getId(), $firstRevision);
+        $this->assertJobs(2);
+        self::assertSame('scheduled', $second->getStatus());
+
+        $this->clock->sleep(3600);
+        $this->service()->dispatchDue($second->getId(), $secondRevision);
+        $this->service()->dispatchDue($second->getId(), $secondRevision);
+        $this->assertJobs(3);
+        self::assertSame('dispatched', $first->getStatus());
+        self::assertSame('dispatched', $second->getStatus());
+        self::assertSame('published', $initialJob->getStatus());
+        foreach ([$initial, $first, $second] as $draft) {
+            self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM youtube_publication WHERE source_id = ?', [$draft->videoIds()[0]]));
+        }
     }
 
     public function testCancelAndEditInvalidateOldScheduledMessages(): void

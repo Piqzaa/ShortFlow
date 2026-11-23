@@ -29,12 +29,16 @@ Une date locale valide ne démontre pas que l’autorisation est toujours accept
 
 **Prévol YouTube du 23 novembre.** Pour l’essai autorisé avec le MP4 portrait synthétique de 4 secondes en non répertorié, Google a refusé le renouvellement OAuth des deux connexions enregistrées avec `HTTP 400 invalid_grant`. Le clip est resté en dehors de la bibliothèque et aucun envoi n’a été créé. Reconnecter une chaîne depuis **Comptes**, vérifier son identité distante, puis reprendre le même essai.
 
+**Premier envoi YouTube réussi après reconnexion.** Le retour OAuth a été remis sur `localhost` et une chaîne a été reconnectée par le propriétaire. L’identité distante a été confirmée avant l’import et l’envoi. Un seul clip synthétique de 1 685 642 octets a été importé, confirmé depuis le moteur normal de brouillons et transmis par le worker. YouTube a terminé le traitement. VydFlow a enregistré `published`, avec visibilité demandée et effective `unlisted`. [Clip de test](https://www.youtube.com/watch?v=qSZSPAxoRkk)
+
 ## Déroulé du premier essai
 
 1. Sur un iPhone et un Android, importer chacun un export compatible et vérifier l’orientation, l’image et le son. Relever le réglage d’export exact et tout message qui bloque.
 2. Depuis **Tes vidéos**, ouvrir **Nouvelle publication**, choisir un compte et renseigner le texte. Relire la destination, la visibilité et le créneau avant la confirmation. Prendre un clip prévu pour cet essai et choisir une visibilité de test lorsque la plateforme la permet.
 3. Dans **Suivre mes envois**, attendre l’état publié et vérifier le résultat sur le compte de test. En cas de doute après un départ, vérifier l’état distant avant de retenter. Noter le statut et le temps d’assistance nécessaire.
 4. Lors d’une seconde session, utiliser **Préparer un lot**, choisir deux vidéos, régler leurs dates dans leurs brouillons, relire la sélection et suivre les deux départs. Relever les étapes où le créateur a besoin d’aide.
+
+**Répétition locale de la seconde session.** Trois tests fonctionnels sur `shortflow_test`, 100 assertions. Ils couvrent la confirmation du lot et les départs de deux préparations YouTube à leurs créneaux respectifs après un premier succès simulé. Une livraison précoce attend le créneau et les rejeux n’ajoutent aucun envoi. Les requêtes fournisseur sont simulées pour cette répétition.
 
 ## Restauration et ouverture du pilote
 
