@@ -1,8 +1,9 @@
 import { Controller } from '@hotwired/stimulus';
 import { GuidedModelPicker } from '../guided-model-picker.js';
+import { proposePlan } from '../preparation-plan.js';
 
 export default class extends GuidedModelPicker(Controller) {
-    static targets = ['model', 'seconds', 'ratio', 'hint', 'images', 'source', 'endPanel', 'fitPanel', 'role', 'card', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'pickerResults', 'pickerResult', 'access', 'billing', 'recommendations', 'recommendation', 'selectedModel', 'modelDetails'];
+    static targets = ['model', 'seconds', 'ratio', 'hint', 'modelRequired', 'duration', 'durationHint', 'images', 'source', 'endPanel', 'fitPanel', 'role', 'card', 'picker', 'native', 'group', 'resolution', 'pickerSearch', 'pickerCount', 'pickerResults', 'pickerResult', 'access', 'billing', 'recommendations', 'recommendation', 'selectedModel', 'modelDetails'];
     static values = { models: Object, connected: Object, providers: Object };
 
     connect() {
@@ -27,7 +28,6 @@ export default class extends GuidedModelPicker(Controller) {
         this.modelTarget.value = id;
         this.modelTarget.dispatchEvent(new Event('change', {bubbles:true}));
         if (this.hasModelDetailsTarget) this.modelDetailsTarget.open = false;
-        this.ratioTarget.focus();
     }
     accessChanged() {
         this.refreshPickerConnections();
@@ -43,6 +43,33 @@ export default class extends GuidedModelPicker(Controller) {
         this.hintTarget.focus();
     }
 
+    showModelRequirement() {
+        const missing = !this.modelsValue[this.modelTarget.value];
+        this.modelRequiredTarget.hidden = !missing;
+        return missing;
+    }
+
+    requireModel(event) {
+        if (!this.showModelRequirement()) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        this.modelRequiredTarget.focus();
+    }
+
+    durationChanged() {
+        this.showModelRequirement();
+        this.updateDurationHint(this.modelsValue[this.modelTarget.value]);
+    }
+
+    updateDurationHint(model) {
+        if (!this.hasDurationHintTarget) return;
+        const seconds = Number(this.durationTarget.value);
+        const plan = model && Number.isInteger(seconds) && seconds >= 1 && seconds <= 60 ? proposePlan(seconds, model.seconds) : null;
+        const alternatives = plan && !plan.parts ? plan.nearby.map(duration => `${duration} s`).join(' ou ') : '';
+        this.durationHintTarget.hidden = !alternatives;
+        this.durationHintTarget.textContent = alternatives ? `${seconds} s sont impossibles avec ce modèle. Durées possibles les plus proches : ${alternatives}.` : '';
+    }
+
     changeSource() {
         const mode = this.sourceTarget.value;
         for (const option of this.modelTarget.options) {
@@ -54,7 +81,7 @@ export default class extends GuidedModelPicker(Controller) {
         if (model && (model.subject ? 'subject' : model.image ? 'image' : 'text') !== mode) this.modelTarget.value = '';
         this.setupPicker();
         this.update(false);
-        if (this.hasPickerTarget) this.groupTarget.focus(); else this.modelTarget.focus();
+        if (!this.modelTarget.value && this.hasModelRequiredTarget) this.showModelRequirement();
     }
 
     update(reset) {
@@ -62,6 +89,7 @@ export default class extends GuidedModelPicker(Controller) {
         this.updateRecommendations();
         if (this.hasBillingTarget) this.billingTarget.textContent = this.connectionCaption();
         const model = this.modelsValue[this.modelTarget.value];
+        this.updateDurationHint(model);
         const mode = this.sourceMode();
         if (this.hasImagesTarget) {
             const stored = this.imagesTarget.querySelector('[data-series-reference-original-value]:not([data-series-reference-original-value=""])');
@@ -72,7 +100,14 @@ export default class extends GuidedModelPicker(Controller) {
         }
         if (this.hasEndPanelTarget) this.endPanelTarget.hidden = mode === 'subject';
         if (this.hasFitPanelTarget) this.fitPanelTarget.hidden = mode === 'subject';
-        if (!model) { this.hintTarget.textContent = 'Choisis explicitement un modèle compatible ci-dessus. Aucun fournisseur ni tarif n’est sélectionné automatiquement.'; return; }
+        if (!model) {
+            for (const select of [this.secondsTarget, this.ratioTarget]) {
+                for (const option of select?.options ?? []) option.disabled = false;
+            }
+            this.hintTarget.textContent = 'Choisis explicitement un modèle compatible avec ton point de départ.';
+            return;
+        }
+        if (this.hasModelRequiredTarget) this.modelRequiredTarget.hidden = true;
         if (this.hasAccessTarget) {
             for (const option of this.accessTarget.options) option.disabled = option.value === 'mcp' && model.provider !== 'fal';
             if (reset && model.provider !== 'fal') this.accessTarget.value = 'api';

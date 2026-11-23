@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {GuidedModelPicker} from '../../assets/guided-model-picker.js';
+import {proposePlan} from '../../assets/preparation-plan.js';
 
 test('selected model only shows concrete limitations and no generic audio disclaimer', () => {
   const Picker=GuidedModelPicker(class {});
@@ -32,8 +33,8 @@ test('selected model only shows concrete limitations and no generic audio discla
 });
 
 function picker(name) {
-  const source=readFileSync(new URL(`../../assets/controllers/${name}_controller.js`,import.meta.url),'utf8').replace("import { Controller } from '@hotwired/stimulus';",'').replace("import { GuidedModelPicker } from '../guided-model-picker.js';",'').replace('export default class','class Picker');
-  const Type=runInNewContext(`${source}\nPicker`,{Controller:class {},GuidedModelPicker});
+  const source=readFileSync(new URL(`../../assets/controllers/${name}_controller.js`,import.meta.url),'utf8').replace("import { Controller } from '@hotwired/stimulus';",'').replace("import { GuidedModelPicker } from '../guided-model-picker.js';",'').replace("import { proposePlan } from '../preparation-plan.js';",'').replace('export default class','class Picker');
+  const Type=runInNewContext(`${source}\nPicker`,{Controller:class {},GuidedModelPicker,proposePlan});
   const c=new Type();
   c.modelsValue={a:{name:'Alpha',provider:'fal',quality:'720p',seconds:[5],ratios:['9:16']},a1080:{name:'Alpha',provider:'fal',quality:'1080p',seconds:[5],ratios:['9:16']},b:{name:'Beta',provider:'replicate',quality:'720p',seconds:[5],ratios:['9:16']},image:{name:'Image',provider:'fal',quality:'720p',image:true},frames:{name:'Frames',provider:'fal',quality:'1080p',image:true,endImageField:'end_image_url',end:true}};
   c.connectedValue={'fal-api':true,'fal-mcp':false,fal:true,replicate:false}; c.providersValue={fal:'Fal',replicate:'Replicate'};
