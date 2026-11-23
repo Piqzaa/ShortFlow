@@ -193,11 +193,12 @@ final class InstagramPublicationTest extends WebTestCase
         $handler($message);
         self::assertSame('published', $job->getStatus());
         self::assertSame('222', $job->getRemoteId());
+        self::assertIsString($db->fetchOne('SELECT published_at FROM instagram_publication WHERE id = ?', [$job->getId()]));
         $handler($message);
         self::assertSame(3, $calls);
         self::assertSame([$job->getSource()->getId() => ['instagram']], static::getContainer()->get(VideoAssetRepository::class)->publishedPlatforms($this->owner, [$job->getSource()]));
         $this->client->loginUser($this->owner);
-        $this->client->request('GET', '/studio/bibliotheque');
+        $this->client->request('GET', '/studio');
         self::assertSelectorExists('svg[aria-label="Instagram"]');
         $this->client->loginUser($this->other);
         $this->client->request('GET', '/studio/publications');

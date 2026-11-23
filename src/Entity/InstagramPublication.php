@@ -47,6 +47,8 @@ class InstagramPublication
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
     #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $publishedAt = null;
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $containerCreatedAt = null;
 
     public function __construct(User $owner, VideoAsset $source, InstagramConnection $connection, string $submissionKey, string $caption, bool $shareToFeed, bool $synthetic)
@@ -155,6 +157,9 @@ class InstagramPublication
 
     public function change(string $status, ?string $notice = null): void
     {
+        if ('published' === $status && $this->status !== $status) {
+            $this->publishedAt = new \DateTimeImmutable();
+        }
         $this->status = $status;
         $this->notice = $notice;
     }

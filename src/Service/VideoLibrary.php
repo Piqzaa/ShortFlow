@@ -17,6 +17,7 @@ final class VideoLibrary
     public const MAX_BYTES = 104857600;
     public const BYTES_PER_GIB = 1073741824;
     public const MAX_VIDEOS = 100;
+    public const RETENTION_PERIOD = '+7 days';
 
     public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private VideoProbe $probe, private PrivateVideoStorage $storage, private EpisodeReservations $episodeReservations, #[Autowire('%env(int:VIDEO_LIBRARY_STORAGE_GIB)%')] private int $storageGib)
     {
@@ -27,7 +28,7 @@ final class VideoLibrary
         return $this->storageGib * self::BYTES_PER_GIB;
     }
 
-    public function import(User $owner, UploadedFile $file, ?string $title, ?AiEpisode $completingEpisode = null, ?AiGeneration $completingGeneration = null): VideoAsset
+    public function import(User $owner, UploadedFile $file, ?string $title, ?AiEpisode $completingEpisode = null, ?AiGeneration $completingGeneration = null, bool $temporary = false): VideoAsset
     {
         if (!$file->isValid() || $file->getSize() < 1 || $file->getSize() > self::MAX_BYTES) {
             throw new VideoLibraryException('Choisis une vidéo valide de 100 Mo maximum.');
@@ -48,6 +49,9 @@ final class VideoLibrary
         $title = mb_substr('' === $title ? 'Ma vidéo' : $title, 0, 120);
         $video = new VideoAsset($owner, $title, $name, $info['mime'], (int) $file->getSize(), $info['duration'], $info['width'], $info['height'], $info['codec']);
         $video->recordTechnicalMetadata($info['technical']);
+        if ($temporary) {
+            $video->markTemporary();
+        }
         try {
             $this->em->wrapInTransaction(function () use ($owner, $file, $name, $video, $completingEpisode, $completingGeneration): void {
                 $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
@@ -97,19 +101,42 @@ final class VideoLibrary
     /** @param list<VideoAsset> $videos */
     public function deleteMany(array $videos): void
     {
+        $this->remove($videos);
+    }
+
+    public function keep(VideoAsset $video): void
+    {
+        $this->em->wrapInTransaction(function () use ($video): void {
+            $this->em->lock($video->getOwner(), LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
+            $video->keep();
+        });
+    }
+
+    public function checkRetention(VideoAsset $video, \DateTimeImmutable $now): bool
+    {
+        return $this->remove([$video], $now);
+    }
+
+    /** @param list<VideoAsset> $videos */
+    private function remove(array $videos, ?\DateTimeImmutable $retentionCheck = null): bool
+    {
         if (!$videos || count($videos) > 20) {
             throw new VideoLibraryException('Sélectionne entre 1 et 20 vidéos.');
         }
         $owner = $videos[0]->getOwner();
         $staged = [];
         try {
-            $this->em->wrapInTransaction(function () use ($videos, $owner, &$staged): void {
+            $removed = $this->em->wrapInTransaction(function () use ($videos, $owner, &$staged, $retentionCheck): bool {
                 $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
                 foreach ($videos as $video) {
                     if ($video->getOwner()->getId() !== $owner->getId()) {
                         throw new VideoLibraryException('Sélection indisponible.');
                     }
                     $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
+                    if ($retentionCheck && !$this->retentionExpired($video, $retentionCheck)) {
+                        return false;
+                    }
                     $extensionUse = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM ai_generation WHERE owner_id = ? AND input_settings->'extension'->>'sourceId' = ? AND status IN ('prepared', 'queued', 'submitting', 'processing', 'waiting_key', 'review')", [$owner->getId(), (string) $video->getId()]);
                     if ($extensionUse) {
                         throw new VideoLibraryException('Cette vidéo est la source d’une extension préparée ou en cours. Retire sa préparation avant de supprimer la source. Aucune vidéo supprimée.');
@@ -142,6 +169,8 @@ final class VideoLibrary
                     }
                     $this->em->remove($video);
                 }
+
+                return true;
             });
         } catch (\Throwable $error) {
             foreach ($staged as $file) {
@@ -150,10 +179,33 @@ final class VideoLibrary
             if ($error instanceof VideoLibraryException) {
                 throw $error;
             }
-            throw new VideoLibraryException('La suppression n’a pas abouti. Réessaie plus tard.');
+            throw new VideoLibraryException('La suppression n’a pas abouti. Réessaie plus tard.', previous: $error);
         }
         foreach ($staged as $file) {
             $this->storage->purge($file['trash']);
         }
+
+        return $removed;
+    }
+
+    private function retentionExpired(VideoAsset $video, \DateTimeImmutable $now): bool
+    {
+        if (!$video->isTemporary()) {
+            return false;
+        }
+        $lastSuccess = $this->videos->lastSuccessfulPublicationIfUnprotected((int) $video->getId());
+        if (!$lastSuccess) {
+            $video->setRetentionDueAt(null);
+
+            return false;
+        }
+        $due = $video->getRetentionDueAt();
+        if (!$due || $due < $lastSuccess->modify(self::RETENTION_PERIOD)) {
+            $video->setRetentionDueAt(max($now, $lastSuccess)->modify(self::RETENTION_PERIOD));
+
+            return false;
+        }
+
+        return $due <= $now;
     }
 }

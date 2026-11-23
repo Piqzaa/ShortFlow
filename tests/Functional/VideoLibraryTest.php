@@ -486,7 +486,97 @@ final class VideoLibraryTest extends WebTestCase
         self::assertStringStartsWith('/studio/montage?', $this->client->getResponse()->headers->get('Location'));
         $this->client->followRedirect();
         self::assertSelectorExists('.edit-pick input[checked]');
+        self::assertFalse(static::getContainer()->get(VideoAssetRepository::class)->findOneBy([], ['id' => 'DESC'])->isTemporary());
         self::assertSame(0, static::getContainer()->get(EntityManagerInterface::class)->getRepository(\App\Entity\VideoEdit::class)->count([]));
+    }
+
+    public function testOnlyPublicationImportsAreTemporaryAndTheirOwnerCanKeepThem(): void
+    {
+        $this->asUser('alice@example.test');
+        $libraryVideo = $this->upload('tests/Fixtures/library-valid.mp4');
+        self::assertFalse($libraryVideo->isTemporary());
+        $url = '/studio/bibliotheque/importer?next=publication';
+        foreach ([false, true] as $keep) {
+            $crawler = $this->client->request('GET', $url);
+            self::assertSelectorTextContains('h1', 'Importer pour publier');
+            $form = $crawler->selectButton('Importer ma vidéo')->form();
+            if ($keep) {
+                $form['video_upload[keep]']->tick();
+            }
+            $this->client->request('POST', $url, $form->getPhpValues(), ['video_upload' => ['file' => $this->fixture('tests/Fixtures/library-valid.mp4')]]);
+            self::assertResponseRedirects('/studio', 303);
+            $video = static::getContainer()->get(VideoAssetRepository::class)->findOneBy([], ['id' => 'DESC']);
+            self::assertSame(!$keep, $video->isTemporary());
+            if (!$keep) {
+                $detail = '/studio/bibliotheque/'.$video->getId();
+                $crawler = $this->client->request('GET', $detail);
+                $keepForm = $crawler->selectButton('Conserver dans ma bibliothèque')->form();
+                $this->client->submit($keepForm);
+                self::assertResponseRedirects($detail, 303);
+                $this->client->followRedirect();
+                self::assertSelectorNotExists('form[action$="/conserver"]');
+            }
+        }
+    }
+
+    public function testRetentionRechecksEveryDestinationAndPreservesDependenciesAndHistory(): void
+    {
+        $this->asUser('alice@example.test');
+        $owner = static::getContainer()->get(UserRepository::class)->findByEmail('alice@example.test');
+        $library = static::getContainer()->get(VideoLibrary::class);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $video = $library->import($owner, $this->fixture('tests/Fixtures/library-valid.mp4'), 'À publier', temporary: true);
+        $permanent = $library->import($owner, $this->fixture('tests/Fixtures/library-valid.mp4'), 'À conserver');
+        $id = $video->getId();
+        $path = static::getContainer()->get(PrivateVideoStorage::class)->path($video->getStorageName());
+        $channel = new \App\Entity\YouTubeConnection($owner, 'UC'.str_repeat('a', 22), 'Chaîne de test', 'non-utilisé', 'non-utilisé', 3600);
+        $first = new \App\Entity\YouTubePublication($owner, $video, $channel, str_repeat('a', 64), 'Titre publié', 'Texte à conserver', 'private', false, false);
+        $first->uploaded('abcdefghijk');
+        $first->complete('private');
+        $second = new \App\Entity\YouTubePublication($owner, $video, $channel, str_repeat('b', 64), 'Autre envoi', '', 'private', false, false);
+        $second->change('failed');
+        $em->persist($first);
+        $em->persist($second);
+        $em->flush();
+        $now = new \DateTimeImmutable('tomorrow', new \DateTimeZone('UTC'));
+        self::assertFalse($library->checkRetention($video, $now));
+        self::assertNull($video->getRetentionDueAt());
+        $second->change('cancelled');
+        $series = new \App\Entity\VideoSeries($owner, 'Série active');
+        $episode = new \App\Entity\VideoSeriesEpisode($series, $video, 1);
+        $edit = new \App\Entity\VideoEdit($owner, 'Montage', [['id' => $id, 'start' => 0.0, 'end' => $video->getDuration()]]);
+        $em->persist($series);
+        $em->persist($episode);
+        $em->persist($edit);
+        $em->flush();
+        self::assertFalse($library->checkRetention($video, $now));
+        $em->remove($episode);
+        $em->flush();
+        self::assertFalse($library->checkRetention($video, $now));
+        self::assertNull($video->getRetentionDueAt());
+        $em->remove($edit);
+        $em->flush();
+        self::assertFalse($library->checkRetention($video, $now));
+        self::assertEquals($now->modify('+7 days'), $video->getRetentionDueAt());
+        self::assertFalse($library->checkRetention($video, $now->modify('+6 days')));
+        self::assertFileExists($path);
+        $draft = new \App\Entity\PublicationDraft($owner, 'Publication future', $now);
+        $draft->addItem(new \App\Entity\PublicationDraftItem($draft, $video, 0));
+        $draft->arm($now);
+        $em->persist($draft);
+        $em->flush();
+        self::assertFalse($library->checkRetention($video, $now->modify('+7 days')));
+        self::assertNull($video->getRetentionDueAt());
+        $draft->change('cancelled', null, $now->modify('+8 days'));
+        $em->flush();
+        self::assertFalse($library->checkRetention($video, $now->modify('+8 days')));
+        self::assertEquals($now->modify('+15 days'), $video->getRetentionDueAt());
+        self::assertFalse($library->checkRetention($permanent, $now->modify('+9 days')));
+        self::assertTrue($library->checkRetention($video, $now->modify('+15 days')));
+        self::assertFileDoesNotExist($path);
+        $db = $em->getConnection();
+        self::assertFalse($db->fetchOne('SELECT id FROM video_asset WHERE id = ?', [$id]));
+        self::assertSame(['status' => 'published', 'description' => 'Texte à conserver', 'remote_id' => 'abcdefghijk', 'source_id' => null], $db->fetchAssociative('SELECT status, description, remote_id, source_id FROM youtube_publication WHERE id = ?', [$first->getId()]));
     }
 
     private function upload(string $source, string $title = 'Ma vidéo', ?string $name = null): VideoAsset

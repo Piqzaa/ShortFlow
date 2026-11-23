@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: VideoAssetRepository::class)]
 #[ORM\Table(name: 'video_asset')]
+#[ORM\Index(name: 'idx_video_asset_temporary', columns: ['temporary', 'id'])]
 class VideoAsset
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
@@ -34,6 +35,36 @@ class VideoAsset
     private ?array $technicalMetadata = null;
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
+    #[ORM\Column(options: ['default' => false])]
+    private bool $temporary = false;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $retentionDueAt = null;
+
+    public function isTemporary(): bool
+    {
+        return $this->temporary;
+    }
+
+    public function markTemporary(): void
+    {
+        $this->temporary = true;
+    }
+
+    public function keep(): void
+    {
+        $this->temporary = false;
+        $this->retentionDueAt = null;
+    }
+
+    public function getRetentionDueAt(): ?\DateTimeImmutable
+    {
+        return $this->retentionDueAt;
+    }
+
+    public function setRetentionDueAt(?\DateTimeImmutable $due): void
+    {
+        $this->retentionDueAt = $due;
+    }
 
     public function __construct(User $owner, string $title, string $storageName, string $mimeType, int $byteSize, float $duration, int $width, int $height, string $codec)
     {

@@ -319,11 +319,12 @@ final class TikTokTest extends WebTestCase
         $handler($message);
         self::assertSame('published', $job->getStatus());
         self::assertNull($job->getRemoteId());
+        self::assertIsString($this->em()->getConnection()->fetchOne('SELECT published_at FROM tiktok_publication WHERE id = ?', [$job->getId()]));
         $handler($message);
         self::assertSame(3, $calls);
         self::assertSame([$job->getSource()->getId() => ['tiktok']], static::getContainer()->get(VideoAssetRepository::class)->publishedPlatforms($this->owner, [$job->getSource()]));
         $this->client->loginUser($this->owner);
-        $this->client->request('GET', '/studio/bibliotheque');
+        $this->client->request('GET', '/studio');
         self::assertSelectorExists('svg[aria-label="TikTok"]');
         $this->client->request('GET', '/studio/publications?network=tiktok');
         self::assertSelectorTextContains('.publication-result', 'Le lien public n’est pas disponible');

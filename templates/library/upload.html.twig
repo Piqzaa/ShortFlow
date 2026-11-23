@@ -6,20 +6,24 @@
 {% else %}
 <a class="account-secondary" href="{{ app.request.query.get('montage') ? path('app_edit_show',{id:app.request.query.getInt('montage')}) : (app.request.query.get('next') == 'compose' ? path('app_dashboard',{choose:1,date:app.request.query.get('date'),zone:app.request.query.get('zone',app.user.timezone)}) : path('app_library')) }}">← {{ app.request.query.get('montage') ? 'Revenir au montage' : 'Revenir aux vidéos' }}</a>
 {% endif %}
-<div class="studio-heading"><div><span class="eyebrow">UNE NOUVELLE CRÉATION</span><h1>Ajoute ton prochain flow.</h1><p>Ta vidéo rejoint ton espace privé, prête à être retrouvée.</p></div></div>
+<div class="studio-heading"><div><span class="eyebrow">UNE NOUVELLE CRÉATION</span><h1>{{ publicationImport ? 'Importer pour publier' : 'Ajoute ton prochain flow.' }}</h1><p>{{ publicationImport ? 'Prépare tes publications à partir de tes fichiers privés.' : 'Ta vidéo rejoint ta bibliothèque privée.' }}</p></div>{% if generalImport %}<a class="account-secondary" href="{{ path('app_video_upload',{next:'publication'}) }}">Importer pour publier ↗</a>{% endif %}</div>
 <div class="upload-layout"><section class="upload-panel" data-upload-panel aria-label="Importer une vidéo">
 {{ form_start(form, {attr: {class: 'account-form upload-form', 'data-controller': 'upload', 'data-action': 'submit->upload#submit'}}) }}
 {{ form_errors(form) }}
 <div class="upload-file-zone" data-upload-target="zone" data-action="dragover->upload#drag dragleave->upload#leave drop->upload#drop"><span class="upload-symbol" aria-hidden="true">↥</span>{{ form_row(form.file) }}<p>Glisse ta vidéo ici ou choisis un fichier.<br>MP4 ou WebM · 100 Mo maximum</p></div>
-{% if app.request.query.get('next') is empty and app.request.query.get('montage') is empty %}
+{% if bulkImport %}
 <p class="library-note" data-upload-target="batchHint" hidden>Tu peux sélectionner jusqu’à 10 vidéos.</p>
 {% endif %}
 <p class="library-note">Depuis ton téléphone, exporte en MP4 H.264 à 30 images/s. Si ta vidéo est en MOV ou HEVC, exporte une copie en MP4 H.264 avant l’import.</p>
 <section class="upload-preview" data-upload-target="preview" aria-label="Aperçu avant import" hidden><video controls playsinline muted preload="metadata" data-upload-target="player" data-action="loadedmetadata->upload#metadata error->upload#previewFailed" aria-label="Aperçu de la vidéo sélectionnée"></video><div class="upload-preview-heading"><strong data-upload-target="fileName"></strong><button type="button" class="account-secondary" data-action="upload#remove">Retirer</button></div><p class="library-note" data-upload-target="previewInfo" role="status" aria-live="polite"></p><p class="library-note" data-upload-target="previewError" hidden>Ce navigateur ne peut pas afficher l’aperçu. Tu peux importer la vidéo pour vérifier son format.</p><small>Rien n’est envoyé avant « Importer ma vidéo ».</small></section>
 <div data-upload-target="title">{{ form_row(form.title) }}</div>
+{% if publicationImport %}
+<p class="library-note">Après le dernier envoi réussi, le fichier reste disponible au moins 7 jours. Tu peux le conserver ici ou plus tard sur sa fiche. Les fichiers encore utilisés restent protégés.</p>
+{{ form_row(form.keep) }}
+{% endif %}
 <div class="upload-progress" data-upload-target="progressPanel" hidden><label for="upload-progress" data-upload-target="status" role="status" aria-live="polite">Préparation de l’import…</label><progress id="upload-progress" max="100" value="0" data-upload-target="progress">0 %</progress></div>
 <p class="upload-feedback" data-upload-target="error" role="alert" hidden></p>
-{% if app.request.query.get('next') is empty and app.request.query.get('montage') is empty %}<ul class="upload-batch-results" data-upload-target="batchResults" aria-label="Résultats de l’import" hidden></ul>{% endif %}
+{% if bulkImport %}<ul class="upload-batch-results" data-upload-target="batchResults" aria-label="Résultats de l’import" hidden></ul>{% endif %}
 <button class="button" type="submit" data-upload-target="button"><span data-upload-target="buttonLabel">Importer ma vidéo</span> <span aria-hidden="true">↗</span></button>
 {{ form_end(form) }}
 </section><aside class="upload-guidance"><span class="eyebrow">UN ESPACE À TOI</span><h2>Privée, dès le premier instant.</h2><p>Seul ton compte peut lire et gérer tes vidéos.</p><ul><li>Jusqu’à 3 minutes par vidéo.</li><li>MP4 H.264 8 bits, audio AAC facultatif.</li><li>WebM VP8, VP9 ou AV1 8 bits, audio Opus/Vorbis facultatif.</li><li>{{ video_library_storage_gib }} Gio de stockage, jusqu’à 100 vidéos.</li></ul><p class="library-note">Ton fichier est conservé sans modification. Pour Instagram Reels, importe un MP4 H.264. Après l’import, prépare tes textes et choisis quand publier.</p></aside></div>

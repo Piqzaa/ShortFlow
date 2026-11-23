@@ -43,6 +43,8 @@ class TikTokPublication
     private ?string $notice = null;
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $publishedAt = null;
 
     /** @param array<string, mixed> $options */
     public function __construct(User $owner, VideoAsset $source, TikTokConnection $connection, string $key, string $name, array $options)
@@ -130,6 +132,9 @@ class TikTokPublication
 
     public function change(string $status, ?string $notice = null): void
     {
+        if ('published' === $status && $this->status !== $status) {
+            $this->publishedAt = new \DateTimeImmutable();
+        }
         $this->status = $status;
         $this->notice = $notice;
     }

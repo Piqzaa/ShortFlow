@@ -50,7 +50,8 @@ final class VideoController extends AbstractController
         if ($editing && ($editing->isActive() || 'ready' === $editing->getStatus())) {
             return $this->redirectToRoute('app_edit_show', ['id' => $editing->getId()], 303);
         }
-        $form = $this->createForm(VideoUploadType::class)->handleRequest($request);
+        $publicationImport = in_array($next, ['publication', 'compose'], true) && !$editing;
+        $form = $this->createForm(VideoUploadType::class, options: ['publication_retention' => $publicationImport])->handleRequest($request);
         $status = $form->isSubmitted() ? 422 : 200;
         if ($form->isSubmitted() && !$limiter->create((string) $user->getId())->consume()->isAccepted()) {
             $form->addError(new FormError('Trop d’imports rapprochés. Réessaie dans 15 minutes.'));
@@ -58,7 +59,8 @@ final class VideoController extends AbstractController
         } elseif ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             try {
-                $video = $this->library->import($user, $data['file'], $data['title']);
+                $temporary = $publicationImport && empty($data['keep']) && 'edit' !== $request->request->getString('intent');
+                $video = $this->library->import($user, $data['file'], $data['title'], temporary: $temporary);
                 $this->addFlash('success', 'Ta vidéo a rejoint ta bibliothèque.');
 
                 $redirect = 'edit' === $request->request->getString('intent') || 'edit' === $request->query->getString('next')
@@ -117,7 +119,7 @@ final class VideoController extends AbstractController
             return new JsonResponse(['message' => implode(' ', array_unique($errors)) ?: 'L’import n’a pas abouti. Vérifie le fichier.'], $status, ['Cache-Control' => 'no-store, private']);
         }
 
-        return $this->page('library/upload.html.twig', ['form' => $form, 'appendSeries' => $appendToSeries ? $series : null], $status);
+        return $this->page('library/upload.html.twig', ['form' => $form, 'appendSeries' => $appendToSeries ? $series : null, 'publicationImport' => $publicationImport, 'bulkImport' => in_array($next, ['', 'publication'], true) && !$editing, 'generalImport' => '' === $next && !$editing], $status);
     }
 
     #[Route('/{id}', name: 'app_video_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
@@ -139,7 +141,29 @@ final class VideoController extends AbstractController
             }
         }
 
-        return $this->page('library/show.html.twig', ['video' => $video, 'form' => $form, 'seriesReturn' => $seriesReturn, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, [$video])], $form->isSubmitted() ? 422 : 200);
+        $deadline = $video->getRetentionDueAt();
+        if ($deadline && (null === ($lastSuccess = $this->videos->lastSuccessfulPublicationIfUnprotected($id)) || $deadline < $lastSuccess->modify(VideoLibrary::RETENTION_PERIOD))) {
+            $deadline = null;
+        }
+
+        return $this->page('library/show.html.twig', ['video' => $video, 'retentionDueAt' => $deadline, 'form' => $form, 'seriesReturn' => $seriesReturn, 'publishedPlatforms' => $this->videos->publishedPlatforms($user, [$video])], $form->isSubmitted() ? 422 : 200);
+    }
+
+    #[Route('/{id}/conserver', name: 'app_video_keep', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function keep(int $id, Request $request, #[CurrentUser] User $user): Response
+    {
+        $video = $this->owned($id, $user);
+        if (!$this->isCsrfTokenValid('keep_video_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        try {
+            $this->library->keep($video);
+        } catch (\Doctrine\ORM\EntityNotFoundException) {
+            throw $this->createNotFoundException('Vidéo indisponible.');
+        }
+        $this->addFlash('success', 'Ta vidéo est conservée dans ta bibliothèque.');
+
+        return $this->redirectToRoute('app_video_show', ['id' => $id], 303);
     }
 
     #[Route('/{id}/lecture', name: 'app_video_stream', requirements: ['id' => '\d+'], methods: ['GET', 'HEAD'])]

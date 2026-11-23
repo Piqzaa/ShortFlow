@@ -21,6 +21,49 @@ final class VideoAssetRepository extends ServiceEntityRepository
         return $this->findOneBy(['id' => $id, 'owner' => $owner]);
     }
 
+    /** @return list<int> */
+    public function temporaryIdsAfter(int $after, int $limit): array
+    {
+        return array_map('intval', $this->getEntityManager()->getConnection()->fetchFirstColumn(
+            'SELECT id FROM video_asset WHERE temporary = true AND id > ? ORDER BY id LIMIT ?',
+            [$after, $limit], [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER],
+        ));
+    }
+
+    public function lastSuccessfulPublicationIfUnprotected(int $id): ?\DateTimeImmutable
+    {
+        $at = $this->getEntityManager()->getConnection()->fetchOne(<<<'SQL'
+            WITH jobs AS (
+                SELECT status, updated_at FROM youtube_publication WHERE source_id = :id
+                UNION ALL SELECT status, COALESCE(published_at, created_at) FROM instagram_publication WHERE source_id = :id
+                UNION ALL SELECT status, COALESCE(published_at, created_at) FROM tiktok_publication WHERE source_id = :id
+            )
+            SELECT MAX(j.updated_at) FROM jobs j
+            WHERE j.status = 'published'
+              AND NOT EXISTS (SELECT 1 FROM jobs WHERE status NOT IN ('published', 'cancelled'))
+              AND NOT EXISTS (
+                SELECT 1 FROM publication_draft_item i JOIN publication_draft d ON d.id = i.draft_id
+                WHERE i.source_id = :id AND d.status NOT IN ('dispatched', 'cancelled')
+              )
+              AND NOT EXISTS (SELECT 1 FROM video_series_episode WHERE video_id = :id)
+              AND NOT EXISTS (SELECT 1 FROM ai_episode WHERE approved_video_id = :id)
+              AND NOT EXISTS (
+                SELECT 1 FROM ai_generation g JOIN video_asset v ON v.id = :id
+                WHERE g.video_id = v.id OR (g.owner_id = v.owner_id AND g.input_settings->'extension'->>'sourceId' = CAST(v.id AS text))
+              )
+              AND NOT EXISTS (
+                SELECT 1 FROM video_edit e JOIN video_asset v ON v.id = :id
+                WHERE e.owner_id = v.owner_id AND (
+                    e.output_id = v.id
+                    OR e.clips::jsonb @> jsonb_build_array(jsonb_build_object('id', v.id))
+                    OR e.audio_clips::jsonb @> jsonb_build_array(jsonb_build_object('kind', 'video', 'source', v.id))
+                )
+              )
+            SQL, ['id' => $id]);
+
+        return is_string($at) ? new \DateTimeImmutable($at, new \DateTimeZone('UTC')) : null;
+    }
+
     /** @return list<VideoAsset> */
     public function page(User $owner, int $page = 1, int $limit = 12): array
     {
