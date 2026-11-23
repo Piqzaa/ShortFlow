@@ -1,7 +1,17 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}Mes vidéos — VydFlow{% endblock %}
 {% block studio_content %}
-<div class="workspace-heading"><div><span class="eyebrow">TA BIBLIOTHÈQUE PRIVÉE</span><h1>Tes vidéos.</h1><p>{{ choosing ? 'Choisis tes vidéos, ou importe une nouvelle création.' : 'Tes vidéos. La suite à préparer.' }}</p></div><div class="workspace-heading-actions"><a class="account-secondary" href="{{ path('app_studio') }}">Ouvrir le Studio ✦</a><a class="button" href="{{ path('app_composer_start') }}">Nouvelle publication +</a></div></div>
+<div class="workspace-heading">
+  <div><span class="eyebrow">TA BIBLIOTHÈQUE PRIVÉE</span><h1>Tes vidéos.</h1><p>{{ choosing ? 'Choisis tes vidéos, ou importe une nouvelle création.' : 'Importe tes vidéos et programme leur diffusion.' }}</p></div>
+  <div class="workspace-heading-actions">
+    {% if not choosing %}<a class="button workspace-import-cta" href="{{ path('app_video_upload', {next:'compose',date:date,zone:zone}) }}">Importer une vidéo +</a>{% endif %}
+    {% if usage.count or choosing %}<a class="{{ choosing ? 'button' : 'account-secondary' }}" href="{{ path('app_composer_start') }}">Nouvelle publication +</a>{% endif %}
+  </div>
+</div>
+{% if not choosing %}<nav class="dashboard-actions dashboard-publication-links" aria-label="Publication vidéo">
+  <a class="account-secondary" href="{{ path('app_video_series_new') }}">Préparer un lot ↗</a>
+  <a class="account-secondary" href="{{ path('app_publications') }}">Suivre mes envois ↗</a>
+</nav>{% endif %}
 <div class="workspace-layout"><section class="workspace-library" aria-label="Vidéos et brouillons">
 <nav class="workspace-tabs" aria-label="Vues du studio"><a href="{{ path('app_dashboard') }}"{% if tab == 'videos' %} aria-current="page"{% endif %}>Vidéos <span>{{ usage.count }}</span></a><a href="{{ path('app_dashboard',{tab:'drafts'}) }}"{% if tab == 'drafts' %} aria-current="page"{% endif %}>Brouillons <span>{{ draftCount }}</span></a><a href="{{ path('app_activity') }}">Activité ↗</a></nav>
 {% if tab == 'videos' %}

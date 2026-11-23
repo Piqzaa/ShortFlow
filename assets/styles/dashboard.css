@@ -11,7 +11,8 @@
 .dashboard-intro{align-items:center;gap:24px;margin:24px 0}
 .dashboard-intro h1{font-size:32px;line-height:1.2;margin:0 0 8px}
 .dashboard-intro p{font-size:var(--studio-text);line-height:1.6;margin:0}
-.dashboard-actions{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.dashboard-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;flex-shrink:0}
+.dashboard-publication-links{margin:0 0 16px}
 .dashboard-actions .button{font-size:13px;min-height:var(--studio-control);padding:12px 18px;gap:16px;line-height:1.5;white-space:normal}
 .dashboard-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 28px}
 .dashboard-summary>a{display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--studio-panel);border:1px solid var(--line);border-radius:10px;min-width:0}
