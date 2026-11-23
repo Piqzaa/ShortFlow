@@ -4,7 +4,7 @@
 
 **Entrée publication et Studio simplifié.** Depuis « Tes vidéos », accès direct à l’import, à la préparation d’un lot et au suivi. La proposition de scénarios et la préparation narrative récurrente sont retirées. Les anciens épisodes et leur historique restent accessibles. Le Studio ouvre directement sur la description vidéo, avec une carte par plan et un récapitulatif avant confirmation du coût. Dans les séries IA, les références priment et les anciens champs Style et Personnages restent accessibles quand ils contiennent des données ou une erreur. La rédaction facultative des légendes reste disponible.
 
-**Prochain chantier.** Préparer le pilote fermé. Vérifier les formats de téléphone, la lecture des médias et les accès sociaux disponibles, puis observer le premier envoi réussi et la reprise d’un autre lot.
+**Pilote fermé.** La préparation locale couvre des fichiers synthétiques de type téléphone et le premier état des connexions. La prochaine étape est une recette sur iPhone et Android, suivie d’un envoi de test sur un réseau confirmé et d’un deuxième lot. Les prérequis d’accès, de restauration et les mesures à relever sont dans le [protocole du pilote](pilote-publication-20261123.md).
 
 R7 reste ouvert. La promesse à tester auprès de créateurs qui ont déjà leurs fichiers est de préparer et suivre leur semaine de publications depuis un seul endroit. Le parcours principal devient **importer → choisir les comptes → adapter les textes → choisir les dates → relire et confirmer → suivre les envois**. Les points ci-dessous actualisent l'ordre des travaux du 7 novembre, conservés plus bas pour leur historique.
 
