@@ -8,9 +8,9 @@ use App\Entity\VideoAsset;
 use App\Entity\VideoSeries;
 use App\Entity\VideoSeriesEpisode;
 use App\Entity\YouTubeConnection;
+use App\Entity\YouTubePublication;
 use App\Service\EpisodePublications;
 use App\Service\PublicationDrafts;
-use App\Service\PublicationException;
 use App\Service\TokenVault;
 use App\Service\VideoSeriesSchedule;
 use App\Service\VideoSeriesStudio;
@@ -99,12 +99,12 @@ final class SeriesScheduleBatchTest extends WebTestCase
     }
 
     /** @param list<int> $episodes @return array<int,array{draft:int,revision:int,local:string,zone:string}> */
-    private function prepareDrafts(array $episodes): array
+    private function prepareDrafts(array $episodes, bool $dated = true): array
     {
         $seriesRevision = $this->em()->find(VideoSeriesEpisode::class, $episodes[0])->getSeries()->getRevision();
         $publications = static::getContainer()->get(EpisodePublications::class);
         $picked = [];
-        foreach ($episodes as $id) {
+        foreach ($episodes as $index => $id) {
             $episode = $this->em()->find(VideoSeriesEpisode::class, $id);
             $video = $episode->getVideo();
             $draft = $publications->prepareVideo($this->owner(), $episode, $seriesRevision);
@@ -113,7 +113,12 @@ final class SeriesScheduleBatchTest extends WebTestCase
             /** @var PublicationDraft $stored */
             $stored = $this->em()->find(PublicationDraft::class, $draft->getId());
             self::assertSame($id, $stored->getVideoEpisode()?->getId());
-            $picked[$id] = ['draft' => (int) $stored->getId(), 'revision' => $stored->getRevision(), 'local' => '2026-11-10T18:00', 'zone' => 'Europe/Paris'];
+            $local = 0 === $index ? '2026-11-10T18:00' : '2026-11-11T09:00';
+            $zone = 0 === $index ? 'Europe/Paris' : 'America/Toronto';
+            if ($dated) {
+                static::getContainer()->get(PublicationDrafts::class)->plan($this->owner(), $stored->getId(), $stored->getRevision(), $local, $zone);
+            }
+            $picked[$id] = ['draft' => (int) $stored->getId(), 'revision' => $stored->getRevision(), 'local' => $local, 'zone' => $zone];
         }
 
         return $picked;
@@ -131,43 +136,22 @@ final class SeriesScheduleBatchTest extends WebTestCase
 
     private function path(int $seriesId): string
     {
-        return '/studio/series/videos/'.$seriesId.'/programmer';
+        return '/studio/series/videos/'.$seriesId;
     }
 
-    private function pickedValues(Crawler $crawler, array $picked): array
+    private function selection(Crawler $crawler, array $episodeIds): array
     {
-        $form = $crawler->selectButton('Vérifier l’aperçu ↗')->form();
-        $values = $form->getPhpValues();
-        foreach ($picked as $id => $choice) {
-            $values['video_series_schedule']['selection'][$id]['picked'] = '1';
-            $values['video_series_schedule']['selection'][$id]['local'] = $choice['local'];
-            $values['video_series_schedule']['selection'][$id]['zone'] = $choice['zone'];
-        }
+        $values = $crawler->selectButton('Vérifier la sélection →')->form()->getPhpValues();
+        $values['episodes'] = array_map('strval', $episodeIds);
 
         return $values;
     }
 
-    private function post(array $values): Crawler
+    private function confirmation(Crawler $crawler): array
     {
-        $this->client->request('POST', $this->path($this->seriesId()), $values);
-
-        return $this->client->getCrawler();
+        return $crawler->selectButton('Confirmer la programmation')->form(['confirm' => '1'])->getPhpValues();
     }
 
-    private int $setupId = 0;
-
-    private function seriesId(): int
-    {
-        return $this->setupId;
-    }
-
-    private function confirm(Crawler $crawler): void
-    {
-        $form = $crawler->selectButton('Confirmer la programmation')->form(['video_series_schedule[confirm]' => '1']);
-        $this->client->request('POST', $form->getUri(), $form->getPhpValues());
-    }
-
-    /** @param array<int,array{draft:int,revision:int,local:string,zone:string}> $picked */
     private function assertUntouched(array $picked): void
     {
         foreach ($picked as $choice) {
@@ -178,269 +162,211 @@ final class SeriesScheduleBatchTest extends WebTestCase
         self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
-    public function testPreviewThenConfirmProgramsEachChosenEpisodeOnce(): void
+    public function testTheSeriesReviewsAndConfirmsSavedDatesWithoutResubmittingThem(): void
     {
-        $setup = $this->seriesWith(2);
-        $this->setupId = $setup['series'];
-        $picked = $this->prepareDrafts($setup['episodes']);
-        $picked[$setup['episodes'][1]]['local'] = '2026-11-11T09:00';
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
+        $setup = $this->seriesWith(3);
+        $path = $this->path($setup['series']);
+        $picked = $this->prepareDrafts(array_slice($setup['episodes'], 0, 2));
+        $crawler = $this->client->request('GET', $path);
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.workspace-heading', 'Un créneau par épisode');
-        self::assertSelectorTextSame('#schedule-episode-'.$setup['episodes'][0].' .eyebrow', 'ÉPISODE 1');
-        self::assertSelectorExists('input[name="video_series_schedule[selection]['.$setup['episodes'][0].'][draft]"][value="'.$picked[$setup['episodes'][0]]['draft'].'"]');
-        self::assertSelectorExists('input[name="video_series_schedule[selection]['.$setup['episodes'][0].'][revision]"][value="'.$picked[$setup['episodes'][0]]['revision'].'"]');
-        self::assertSelectorExists('input[name="video_series_schedule[selection]['.$setup['episodes'][0].'][picked]"]');
-        self::assertSelectorExists('input[name="video_series_schedule[selection]['.$setup['episodes'][0].'][local]"]');
-        self::assertSelectorExists('select[name="video_series_schedule[selection]['.$setup['episodes'][0].'][zone]"]');
-        self::assertSelectorExists('input[name="video_series_schedule[revision]"]');
-        file_put_contents(dirname(__DIR__, 2).'/artifacts/series-schedule-batch.html', $this->client->getResponse()->getContent());
-
-        $values = $this->pickedValues($crawler, $picked);
-        $post = $this->post($values);
-        self::assertResponseStatusCodeSame(200);
-        $html = $this->client->getResponse()->getContent();
-        self::assertStringContainsString('Récapitulatif de la programmation', $html);
-        self::assertStringContainsString('2 épisodes prêts', $html);
-        self::assertSelectorTextContains('#series-schedule-preview article h3', 'Épisode 1 ·');
-        self::assertStringContainsString('départ le 10/11/2026 à 18:00 · Europe/Paris', $html);
-        self::assertStringContainsString('départ le 11/11/2026 à 09:00 · Europe/Paris', $html);
-        self::assertStringContainsString('Titre de la vidéo', $html);
-        self::assertStringNotContainsString('batch-issues', $html);
-        file_put_contents(dirname(__DIR__, 2).'/artifacts/series-schedule-preview.html', $html);
+        self::assertSelectorTextContains('#video-episode-'.$setup['episodes'][0], '10/11/2026 à 18:00');
+        self::assertSelectorExists('#video-episode-'.$setup['episodes'][0].' a[href^="/studio/composer?draft="]');
+        self::assertSelectorExists('#video-episode-'.$setup['episodes'][2].' form[action$="/publication"]');
+        self::assertSelectorCount(2, 'input[name="episodes[]"][form="series-batch-preview"]');
+        self::assertSelectorNotExists('input[type="datetime-local"]');
+        self::assertSelectorNotExists('a[href="'.$path.'/programmer"]');
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/video-series-batch-inline.html', (string) $this->client->getResponse()->getContent());
+        $values = $this->selection($crawler, array_keys($picked));
+        $preview = $this->client->request('POST', $path, $values);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#series-schedule-preview', '10/11/2026 à 18:00 · Europe/Paris');
+        self::assertSelectorTextContains('#series-schedule-preview', '11/11/2026 à 09:00 · America/Toronto');
+        self::assertSelectorTextContains('#series-schedule-preview', 'Texte de la préparation #VydFlow');
+        self::assertSelectorTextContains('#series-schedule-preview', 'Ma chaîne');
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/video-series-batch-review-inline.html', (string) $this->client->getResponse()->getContent());
         $this->assertUntouched($picked);
-
-        $replay = $post->selectButton('Confirmer la programmation')->form(['video_series_schedule[confirm]' => '1'])->getPhpValues();
-        $this->confirm($post);
-        self::assertResponseStatusCodeSame(303);
-        self::assertResponseRedirects('/studio/series/videos/'.$setup['series'].'#video-episode-'.$setup['episodes'][0]);
-        $this->client->followRedirect();
-        self::assertSelectorTextContains('.account-notice.success', '2 épisodes programmés : les envois démarreront aux créneaux choisis.');
-        $revisions = [];
+        $confirmation = $this->confirmation($preview);
+        self::assertArrayNotHasKey('episodes', $confirmation);
+        $this->client->request('POST', $path, $confirmation);
+        self::assertResponseRedirects($path.'#video-episode-'.$setup['episodes'][0], 303);
         foreach ($picked as $choice) {
             $draft = $this->em()->find(PublicationDraft::class, $choice['draft']);
             self::assertSame('scheduled', $draft->getStatus());
-            self::assertSame($choice['revision'] + 2, $draft->getRevision());
+            self::assertSame($choice['revision'] + 1, $draft->getRevision());
             self::assertSame($choice['local'], $draft->getLocalTime());
             self::assertSame($choice['zone'], $draft->getTimezone());
-            self::assertNotNull($draft->getScheduledAt());
-            $revisions[$choice['draft']] = $draft->getRevision();
         }
         $delays = $this->db()->fetchFirstColumn('SELECT EXTRACT(EPOCH FROM (available_at - created_at)) FROM messenger_messages ORDER BY id');
         self::assertCount(2, $delays);
-        foreach ($delays as $delay) {
-            self::assertGreaterThanOrEqual(273600, (int) $delay);
+        foreach ([291600, 367200] as $index => $expected) {
+            // Doctrine rounds a positive delay up to the next stored second.
+            self::assertGreaterThanOrEqual($expected, (int) $delays[$index]);
+            self::assertLessThanOrEqual($expected + 1, (int) $delays[$index]);
         }
         self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM youtube_publication'));
-
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
-        self::assertSelectorTextContains('#schedule-episode-'.$setup['episodes'][0], 'Programmé');
-        self::assertSelectorTextContains('#schedule-episode-'.$setup['episodes'][0], 'Départ prévu le 10/11/2026 à 18:00');
-        self::assertSelectorTextContains('#schedule-episode-'.$setup['episodes'][1], 'Départ prévu le 11/11/2026 à 09:00');
-        file_put_contents(dirname(__DIR__, 2).'/artifacts/series-schedule-scheduled.html', $this->client->getResponse()->getContent());
-
-        $this->post($replay);
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/video-series-batch-confirmed.html', (string) $this->client->getResponse()->getContent());
+        $this->client->request('POST', $path, $confirmation);
         self::assertResponseStatusCodeSame(422);
-        foreach ($picked as $choice) {
-            self::assertSame($revisions[$choice['draft']], $this->em()->find(PublicationDraft::class, $choice['draft'])->getRevision());
-        }
-        self::assertCount(2, $this->db()->fetchAllAssociative('SELECT id FROM messenger_messages'));
+        self::assertSame(2, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
-    public function testIssuesKeepEpisodesOutAndSubsetConfirmArmsOthersOnly(): void
+    public function testIncompleteDraftIsExcludedBeforeConfirmation(): void
     {
         $setup = $this->seriesWith(2);
-        $this->setupId = $setup['series'];
+        $path = $this->path($setup['series']);
         $picked = $this->prepareDrafts($setup['episodes']);
         $this->breakDraft($picked, $setup['episodes'][1]);
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
-        $values = $this->pickedValues($crawler, $picked);
-        $post = $this->post($values);
-        self::assertResponseStatusCodeSame(200);
-        $html = $this->client->getResponse()->getContent();
-        self::assertStringContainsString('1 épisode prêt', $html);
-        self::assertStringContainsString('Ces épisodes ne passent pas à la confirmation', $html);
-        self::assertStringContainsString('invalide ou incomplet', $html);
-        self::assertStringContainsString('Confirmer la programmation de 1 épisode ↗', $html);
-        file_put_contents(dirname(__DIR__, 2).'/artifacts/series-schedule-preview-issues.html', $html);
+        $page = $this->client->request('GET', $path);
+        $preview = $this->client->request('POST', $path, $this->selection($page, array_keys($picked)));
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#series-schedule-preview', 'Ces brouillons demandent une correction.');
+        self::assertSelectorTextContains('#series-schedule-preview button', 'Confirmer la programmation de 1 épisode');
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/video-series-batch-excluded.html', (string) $this->client->getResponse()->getContent());
         $this->assertUntouched($picked);
-
-        $replay = $post->selectButton('Confirmer la programmation')->form(['video_series_schedule[confirm]' => '1'])->getPhpValues();
-        $this->confirm($post);
+        $this->client->request('POST', $path, $this->confirmation($preview));
         self::assertResponseStatusCodeSame(303);
-        $this->client->followRedirect();
-        self::assertSelectorTextContains('.account-notice.success', '1 épisode programmé : les envois démarreront aux créneaux choisis.');
         self::assertSame('scheduled', $this->em()->find(PublicationDraft::class, $picked[$setup['episodes'][0]]['draft'])->getStatus());
-        $broken = $this->em()->find(PublicationDraft::class, $picked[$setup['episodes'][1]]['draft']);
-        self::assertSame('draft', $broken->getStatus());
-        self::assertSame($picked[$setup['episodes'][1]]['revision'], $broken->getRevision());
-        self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
-
-        $this->post($replay);
-        self::assertResponseStatusCodeSame(422);
-        self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
         self::assertSame('draft', $this->em()->find(PublicationDraft::class, $picked[$setup['episodes'][1]]['draft'])->getStatus());
+        self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
-    public function testDraftOrSeriesChangeBetweenPreviewAndConfirmRefusesTheWholeBatch(): void
+    public function testDraftChangeAfterReviewAndForgedConfirmationCannotScheduleAnything(): void
     {
         $setup = $this->seriesWith(2);
-        $this->setupId = $setup['series'];
+        $path = $this->path($setup['series']);
         $picked = $this->prepareDrafts($setup['episodes']);
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
-        $values = $this->pickedValues($crawler, $picked);
-        $post = $this->post($values);
-        self::assertResponseStatusCodeSame(200);
-        $confirmValues = $post->selectButton('Confirmer la programmation')->form(['video_series_schedule[confirm]' => '1'])->getPhpValues();
-
-        $broken = $this->em()->find(PublicationDraft::class, $picked[$setup['episodes'][1]]['draft']);
-        $videoId = (int) $broken->getItems()[0]->getVideoId();
-        static::getContainer()->get(PublicationDrafts::class)->save($this->owner(), [$videoId], ['youtube'], ['youtube' => ['videos' => [$videoId => ['title' => 'Titre changé', 'description' => 'Texte changé #VydFlow', 'privacy' => 'private', 'audience' => 'no', 'synthetic' => false]]]], ['youtube' => $this->identity], 'Prête changée', $broken->getId(), $broken->getRevision());
-        $this->em()->clear();
-
-        $this->post($confirmValues);
+        $page = $this->client->request('GET', $path);
+        $values = $this->selection($page, array_keys($picked));
+        $this->client->request('POST', $path, array_replace($values, ['intent' => 'confirm', 'confirm' => '1', 'snapshot' => 'forged']));
         self::assertResponseStatusCodeSame(422);
-        self::assertStringContainsString('Un épisode a changé depuis l’aperçu. Refais l’aperçu avant de confirmer.', $this->client->getResponse()->getContent());
-        foreach ($picked as $choice) {
-            self::assertSame('draft', $this->em()->find(PublicationDraft::class, $choice['draft'])->getStatus());
-        }
-        self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
-
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
-        $post = $this->post($this->pickedValues($crawler, $picked));
-        self::assertResponseStatusCodeSame(200);
-        self::assertSelectorExists('#series-schedule-preview-title');
-        $confirmValues = $post->selectButton('Confirmer la programmation')->form(['video_series_schedule[confirm]' => '1'])->getPhpValues();
-        $series = $this->em()->find(VideoSeries::class, $setup['series']);
-        $studio = static::getContainer()->get(VideoSeriesStudio::class);
-        $studio->save($this->owner(), 'Série renommée', array_map(static fn (VideoSeriesEpisode $episode): string => (string) $episode->getVideo()->getId(), $studio->episodes($series)), '', $series->getRevision(), $series);
-        $this->em()->clear();
-        $this->post($confirmValues);
-        self::assertResponseStatusCodeSame(422);
-        self::assertStringContainsString('La série a changé. Recharge ses épisodes avant de confirmer.', $this->client->getResponse()->getContent());
-        foreach ($picked as $choice) {
-            self::assertSame('draft', $this->em()->find(PublicationDraft::class, $choice['draft'])->getStatus());
-        }
-        self::assertSame(0, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
-    }
-
-    public function testGuardRailRejectionsStayScopedWithoutProgrammingAnything(): void
-    {
-        $setup = $this->seriesWith(2);
-        $this->setupId = $setup['series'];
-        $picked = $this->prepareDrafts($setup['episodes']);
-        $service = static::getContainer()->get(VideoSeriesSchedule::class);
-        $series = $this->em()->find(VideoSeries::class, $setup['series']);
-        $junk = [];
-        for ($i = 0; $i < VideoSeriesSchedule::LIMIT + 1; ++$i) {
-            $junk[] = ['draft' => 900000 + $i, 'revision' => 1, 'local' => '2026-11-10T18:00', 'zone' => 'Europe/Paris'];
-        }
-        try {
-            $service->preview($series, $series->getRevision(), $junk);
-            self::fail('Over-limit batch must be refused.');
-        } catch (PublicationException $error) {
-            self::assertSame('Choisis de 1 à '.VideoSeriesSchedule::LIMIT.' épisodes par préparation groupée.', $error->getMessage());
-        }
-        try {
-            $service->confirm($this->owner(), $series, $series->getRevision(), $junk);
-            self::fail('Over-limit batch must be refused.');
-        } catch (PublicationException $error) {
-            self::assertSame('Choisis de 1 à '.VideoSeriesSchedule::LIMIT.' épisodes par préparation groupée.', $error->getMessage());
-        }
-        try {
-            $service->preview($series, $series->getRevision(), []);
-            self::fail('Empty batch must be refused.');
-        } catch (PublicationException $error) {
-            self::assertSame('Coche au moins un épisode programmable.', $error->getMessage());
-        }
         $this->assertUntouched($picked);
+
+        $preview = $this->client->request('POST', $path, $values);
+        $confirmation = $this->confirmation($preview);
+        $this->client->request('POST', $path, array_diff_key($confirmation, ['confirm' => true]));
+        self::assertResponseStatusCodeSame(422);
+        $this->assertUntouched($picked);
+
+        $last = $setup['episodes'][1];
+        $service = static::getContainer()->get(PublicationDrafts::class);
+        $service->plan($this->owner(), $picked[$last]['draft'], $picked[$last]['revision'], '2026-11-12T18:00', $picked[$last]['zone']);
+        ++$picked[$last]['revision'];
+        $this->client->request('POST', $path, $confirmation);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('#series-publication-batch [role=alert]', 'a changé');
+        $this->assertUntouched($picked);
+
+        $preview = $this->client->request('POST', $path, $values);
+        $confirmation = $this->confirmation($preview);
+        $this->em()->find(VideoSeries::class, $setup['series'])->revise('Série renommée');
+        $this->em()->flush();
+        $this->client->request('POST', $path, $confirmation);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('#series-publication-batch [role=alert]', 'La série a changé');
+        $this->assertUntouched($picked);
+    }
+
+    public function testExpiredSlotAtConfirmationLeavesTheEntireBatchInDraft(): void
+    {
+        $setup = $this->seriesWith(2);
+        $path = $this->path($setup['series']);
+        $picked = $this->prepareDrafts($setup['episodes']);
+        $last = $setup['episodes'][1];
+        static::getContainer()->get(PublicationDrafts::class)->plan($this->owner(), $picked[$last]['draft'], $picked[$last]['revision'], '2026-11-07T09:03', 'Europe/Paris');
+        ++$picked[$last]['revision'];
+        $page = $this->client->request('GET', $path);
+        $preview = $this->client->request('POST', $path, $this->selection($page, array_keys($picked)));
+        self::assertSelectorTextContains('#series-schedule-preview button', 'Confirmer la programmation de 2 épisodes');
+        static::getContainer()->get('app.publication_clock')->sleep(180);
+        $this->client->request('POST', $path, $this->confirmation($preview));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('#series-publication-batch [role=alert]', 'deux minutes et 90 jours');
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/video-series-batch-expired.html', (string) $this->client->getResponse()->getContent());
+        $this->assertUntouched($picked);
+    }
+
+    public function testGroupShortcutRequiresSeveralDatedDraftsAndScopesTheSelection(): void
+    {
+        $setup = $this->seriesWith(2);
+        $path = $this->path($setup['series']);
+        $picked = $this->prepareDrafts([$setup['episodes'][0]]);
+        $this->prepareDrafts([$setup['episodes'][1]], false);
+        $this->client->request('GET', $path);
+        self::assertSelectorNotExists('#series-publication-batch');
+        $this->client->request('GET', $path.'/programmer');
+        self::assertResponseRedirects($path.'#series-publication-batch', 303);
+        $picked += $this->prepareDrafts([$setup['episodes'][1]]);
+        $page = $this->client->request('GET', $path);
+        $values = $this->selection($page, array_keys($picked));
+        $this->client->request('POST', $path, array_replace($values, ['episodes' => array_fill(0, VideoSeriesSchedule::LIMIT + 1, '1')]));
+        self::assertResponseStatusCodeSame(422);
+        $this->client->request('POST', $path, array_replace($values, ['episodes' => [$values['episodes'][0], '999999']]));
+        self::assertResponseStatusCodeSame(422);
+        $this->client->request('POST', $path, array_replace($values, ['_token' => 'forged']));
+        self::assertResponseStatusCodeSame(403);
+        $this->client->loginUser($this->other);
+        $this->client->request('POST', $path, $values);
+        self::assertResponseStatusCodeSame(404);
+        $this->assertUntouched($picked);
+    }
+
+    public function testDeletingTheSeriesPreservesVideosDraftsAndPublicationHistory(): void
+    {
+        $setup = $this->seriesWith(2);
+        $path = $this->path($setup['series']).'/supprimer';
+        $picked = $this->prepareDrafts($setup['episodes']);
+        $service = static::getContainer()->get(PublicationDrafts::class);
+        [$first, $second] = array_values($picked);
+        $page = $this->client->request('GET', $path);
+        self::assertResponseIsSuccessful();
+        file_put_contents(dirname(__DIR__, 2).'/artifacts/video-series-delete.html', (string) $this->client->getResponse()->getContent());
+        $confirmation = $page->selectButton('Supprimer la série')->form(['confirm' => '1'])->getPhpValues();
+        $this->client->request('POST', $path, array_diff_key($confirmation, ['confirm' => true]));
+        self::assertResponseStatusCodeSame(422);
+        $this->client->request('POST', $path, array_replace($confirmation, ['_token' => 'forged']));
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', $path, array_replace($confirmation, ['revision' => '0']));
+        self::assertResponseStatusCodeSame(422);
+
+        $service->confirm($this->owner(), $first['draft'], $first['revision'], true);
+        $this->client->request('POST', $path, $confirmation);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('a[href="/studio/brouillons/'.$first['draft'].'"]');
+        self::assertSelectorNotExists('.story-panel button[type="submit"]');
+        $service->transition($this->owner(), $first['draft'], $first['revision'] + 1, 'cancel');
+
+        $service->confirm($this->owner(), $second['draft'], $second['revision'], false);
+        $job = $this->em()->getRepository(YouTubePublication::class)->findOneBy(['owner' => $this->owner()]);
+        self::assertInstanceOf(YouTubePublication::class, $job);
+        $this->client->request('POST', $path, $confirmation);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('a[href="/studio/brouillons/'.$second['draft'].'"]');
+        $job = $this->em()->find(YouTubePublication::class, $job->getId());
+        self::assertInstanceOf(YouTubePublication::class, $job);
+        $job->complete('private');
+        $this->em()->flush();
 
         $this->client->loginUser($this->other);
-        $this->client->request('GET', $this->path($setup['series']));
-        self::assertResponseStatusCodeSame(404);
-        $this->client->request('POST', $this->path($setup['series']), ['intent' => 'preview']);
+        $this->client->request('POST', $path, $confirmation);
         self::assertResponseStatusCodeSame(404);
         $this->client->loginUser($this->owner);
-
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
-        $form = $crawler->selectButton('Vérifier l’aperçu ↗')->form();
-        $values = $form->getPhpValues();
-        $id = (string) $setup['episodes'][0];
-        $values['video_series_schedule']['selection'][$id]['picked'] = '1';
-        $values['video_series_schedule']['selection'][$id]['draft'] = '999999';
-        $values['video_series_schedule']['selection'][$id]['revision'] = '1';
-        $values['video_series_schedule']['selection'][$id]['local'] = '2026-11-10T18:00';
-        $values['video_series_schedule']['selection'][$id]['zone'] = 'Europe/Paris';
-        $this->client->request('POST', $form->getUri(), $values);
-        self::assertResponseStatusCodeSame(422);
-        self::assertStringContainsString('Cet épisode n’a plus de brouillon. Recharge ses épisodes.', $this->client->getResponse()->getContent());
-        $this->assertUntouched($picked);
-
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
-        $values = $this->pickedValues($crawler, [$setup['episodes'][0] => ['local' => '2020-01-01T00:00', 'zone' => 'Europe/Paris', 'draft' => $picked[$setup['episodes'][0]]['draft'], 'revision' => $picked[$setup['episodes'][0]]['revision']]]);
-        $this->post($values);
-        self::assertResponseStatusCodeSame(200);
-        $html = $this->client->getResponse()->getContent();
-        self::assertStringContainsString('Choisis un créneau entre deux minutes et 90 jours dans le futur.', $html);
-        $replay = $values;
-        $replay['intent'] = 'confirm';
-        $replay['video_series_schedule']['confirm'] = '1';
-        $this->post($replay);
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('.series-schedule-form', 'Vérifie un nouvel aperçu');
-        $this->assertUntouched($picked);
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
-        self::assertSelectorCount(1, 'form button[type="submit"][name="intent"][value="preview"]');
-        self::assertSelectorCount(1, 'form button[type="submit"][name="intent"][value="confirm"]');
-        self::assertSelectorExists('input[name="video_series_schedule[_token]"]');
-        file_put_contents(dirname(__DIR__, 2).'/artifacts/series-schedule-guardrails.html', $this->client->getResponse()->getContent());
-    }
-
-    public function testConfirmationRequiresTheReviewedSelectionAndExplicitConsent(): void
-    {
-        $setup = $this->seriesWith(2);
-        $this->setupId = $setup['series'];
-        $episodeId = $setup['episodes'][1];
-        $picked = $this->prepareDrafts([$episodeId]);
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
+        $page = $this->client->request('GET', $path);
+        $this->client->submit($page->selectButton('Supprimer la série')->form(['confirm' => '1']));
+        self::assertResponseRedirects('/studio/series', 303);
+        $this->em()->clear();
+        self::assertNull($this->em()->find(VideoSeries::class, $setup['series']));
+        self::assertSame(0, $this->em()->getRepository(VideoSeriesEpisode::class)->count([]));
+        self::assertSame(2, $this->em()->getRepository(VideoAsset::class)->count([]));
+        self::assertSame(1, $this->em()->getRepository(YouTubePublication::class)->count([]));
+        foreach ($picked as $choice) {
+            $draft = $this->em()->find(PublicationDraft::class, $choice['draft']);
+            self::assertNull($draft->getVideoEpisode());
+            self::assertNotEmpty($draft->videoIds());
+            self::assertSame('Texte de la préparation #VydFlow', $draft->content()['youtube']['videos'][$draft->videoIds()[0]]['description']);
+        }
+        $this->client->request('GET', '/studio/brouillons/'.$second['draft']);
         self::assertResponseIsSuccessful();
-        self::assertDoesNotMatchRegularExpression('~<form[^>]+series-schedule-form[^>]*>(?:(?!</form>).)*<form~s', (string) $this->client->getResponse()->getContent());
-        self::assertSelectorExists('.series-schedule-form a[href$="#video-episode-'.$setup['episodes'][0].'"]');
-        self::assertSelectorExists('.series-schedule-form input[name="video_series_schedule[_token]"]');
-        self::assertSelectorExists('.series-schedule-form button[value="preview"]');
-        $values = $this->pickedValues($crawler, $picked);
-        $this->post(array_replace($values, ['intent' => 'confirm']));
-        self::assertResponseStatusCodeSame(422);
-        $this->assertUntouched($picked);
-
-        $preview = $this->post($values);
-        self::assertResponseIsSuccessful();
-        $form = $preview->selectButton('Confirmer la programmation')->form();
-        $this->post($form->getPhpValues());
-        self::assertResponseStatusCodeSame(422);
-        $this->assertUntouched($picked);
-
-        $form['video_series_schedule[confirm]']->tick();
-        $values = $form->getPhpValues();
-        $values['video_series_schedule']['selection'][$episodeId]['local'] = '2026-11-12T18:00';
-        $this->post($values);
-        self::assertResponseStatusCodeSame(422);
-        $this->assertUntouched($picked);
-    }
-
-    public function testAnExpiredReviewedSlotLeavesTheEntireBatchUntouched(): void
-    {
-        $setup = $this->seriesWith(2);
-        $this->setupId = $setup['series'];
-        $picked = $this->prepareDrafts($setup['episodes']);
-        $picked[$setup['episodes'][1]]['local'] = '2026-11-07T09:03';
-        $crawler = $this->client->request('GET', $this->path($setup['series']));
-        $preview = $this->post($this->pickedValues($crawler, $picked));
-        self::assertSelectorTextContains('#series-schedule-preview', '2 épisodes prêts');
-        static::getContainer()->get('app.publication_clock')->sleep(180);
-        $this->confirm($preview);
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('.series-schedule-form', 'Choisis un créneau entre deux minutes et 90 jours dans le futur.');
-        $this->assertUntouched($picked);
     }
 }

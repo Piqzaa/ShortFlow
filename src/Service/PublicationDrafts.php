@@ -192,28 +192,6 @@ final class PublicationDrafts
         $this->validate($content, $context['videos'], $draft->getNetworks(), $context['creator'], false);
     }
 
-    /** Arm a validated slot. The caller owns the transaction, the flush and the wake-up. */
-    public function schedule(PublicationDraft $draft, \DateTimeImmutable $date, string $local, string $zone): void
-    {
-        $draft->plan($date, $zone, $local, $this->clock->now());
-        $draft->arm($this->clock->now());
-    }
-
-    /** Validation only: no entity change, usable from a read-only preview. */
-    public function resolved(?string $local, string $zone): \DateTimeImmutable
-    {
-        if (null === $local || '' === $local) {
-            throw new PublicationException('Choisis la date et l’heure de départ.');
-        }
-        if (!in_array($zone, \DateTimeZone::listIdentifiers(), true)) {
-            throw new PublicationException('Fuseau invalide.');
-        }
-        $date = $this->time->resolve($local, $zone);
-        $this->time->validateFuture($date);
-
-        return $date;
-    }
-
     private function engage(PublicationDraft $draft, bool $scheduled): void
     {
         $guard = function () use ($draft, $scheduled): void {

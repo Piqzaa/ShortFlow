@@ -6,179 +6,128 @@ use App\Entity\PublicationDraft;
 use App\Entity\User;
 use App\Entity\VideoSeries;
 use App\Entity\VideoSeriesEpisode;
-use App\Repository\PublicationDraftRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Clock\ClockInterface;
 
-/**
- * Grouped scheduling for a series of imported videos. Every confirmed episode
- * keeps its own slot; the whole confirmation happens in one owner-locked
- * transaction so a replay can never program a single episode twice.
- */
 final class VideoSeriesSchedule
 {
     public const LIMIT = 20;
 
-    public function __construct(private EntityManagerInterface $em, private PublicationLock $lock, private PublicationDraftRepository $drafts, private PublicationDrafts $service)
+    public function __construct(private EntityManagerInterface $em, private PublicationLock $lock, private PublicationDrafts $service, private PublicationTime $time, private ClockInterface $clock)
     {
     }
 
-    /** @return list<array{episode:VideoSeriesEpisode,minute:int,draft:?PublicationDraft,kind:string}> */
-    public function rows(VideoSeries $series): array
-    {
-        $episodes = $this->order($series);
-        $stored = [];
-        if ($episodes) {
-            $loaded = $this->em->createQueryBuilder()->select('d', 'items')->from(PublicationDraft::class, 'd')->leftJoin('d.items', 'items')->where('d.owner = :owner AND d.videoEpisode IN (:episodes)')->setParameter('owner', $series->getOwner())->setParameter('episodes', $episodes)->orderBy('d.id', 'DESC')->getQuery()->getResult();
-            foreach ($loaded as $draft) {
-                /** @var PublicationDraft $draft */
-                $episode = $draft->getVideoEpisode();
-                if ($episode) {
-                    $stored[$episode->getId()] ??= $draft;
-                }
-            }
-        }
-        $rows = [];
-        foreach ($episodes as $i => $episode) {
-            $draft = $stored[$episode->getId()] ?? null;
-            $rows[] = ['episode' => $episode, 'minute' => $i + 1, 'draft' => $draft, 'kind' => $this->kind($draft)];
-        }
-
-        return $rows;
-    }
-
-    /**
-     * Verify the reviewed selection against the current state. Structural problems abort the whole preview;
-     * a bad slot or an incomplete preparation only excludes its episode from the confirmable subset.
+    /** @param list<VideoSeriesEpisode> $episodes
+     * @param array<int,list<array<string,mixed>>> $summaries
      *
-     * @param array<int,array{draft:int,revision:int,local:?string,zone:string}> $picked
-     *
-     * @return array<string,mixed>
+     * @return array<int,PublicationDraft>
      */
-    public function preview(VideoSeries $series, int $seriesRevision, array $picked): array
+    public function candidates(array $episodes, array $summaries): array
     {
-        $owner = $series->getOwner();
-        if (!$picked) {
-            throw new PublicationException('Coche au moins un épisode programmable.');
-        }
-        if (count($picked) > self::LIMIT) {
-            throw new PublicationException('Choisis de 1 à '.self::LIMIT.' épisodes par préparation groupée.');
-        }
-        $byId = [];
-        foreach ($this->order($series) as $i => $episode) {
-            $byId[$episode->getId()] = $i + 1;
-        }
-        $ready = [];
-        $issues = [];
-        foreach ($picked as $episodeId => $choice) {
-            if (!isset($byId[$episodeId])) {
-                throw new PublicationException('Un épisode choisi n’appartient plus à cette série. Recharge ses épisodes.');
+        $candidates = [];
+        foreach ($episodes as $episode) {
+            $episodeId = $episode->getId();
+            foreach ($summaries[$episodeId] ?? [] as $publication) {
+                if (!$publication['current']) {
+                    continue;
+                }
+                $draft = $publication['draft'];
+                if ('draft' === $draft->getStatus() && $draft->getScheduledAt() && $draft->getNetworks()
+                    && !array_diff($draft->getNetworks(), array_keys(array_filter($draft->getAccounts())))) {
+                    try {
+                        $this->validateDate($draft);
+                        $candidates[$episodeId] = $draft;
+                    } catch (PublicationException) {
+                        // The composer is still available to update an expired or invalid slot.
+                    }
+                }
+                break;
             }
-            $episode = $this->em->find(VideoSeriesEpisode::class, $episodeId) ?? throw new PublicationException('Un épisode choisi n’est plus disponible.');
-            $draft = $this->drafts->owned($choice['draft'], $owner) ?? throw new PublicationException('Cet épisode n’a plus de brouillon. Recharge ses épisodes.');
-            if ($draft->getVideoEpisode()?->getId() !== $episodeId || $draft->getRevision() !== $choice['revision'] || 'draft' !== $draft->getStatus()) {
-                throw new PublicationException('Un épisode a changé depuis l’aperçu. Refais l’aperçu avant de confirmer.');
+        }
+
+        return $candidates;
+    }
+
+    /** @param array<int,PublicationDraft> $candidates
+     * @param array<mixed> $selected
+     *
+     * @return array{ready:array<int,array<string,mixed>>,issues:list<array{draft:PublicationDraft,messages:list<string>}>}
+     */
+    public function preview(array $candidates, array $selected): array
+    {
+        if (count($selected) < 2 || count($selected) > self::LIMIT) {
+            throw new PublicationException('Sélectionne de 2 à '.self::LIMIT.' épisodes datés.');
+        }
+        $ids = [];
+        foreach ($selected as $id) {
+            if (!is_string($id) || !ctype_digit($id) || !isset($candidates[(int) $id]) || isset($ids[(int) $id])) {
+                throw new PublicationException('La sélection a changé. Vérifie les brouillons et leurs créneaux.');
             }
-            $slot = ['episode' => $episode, 'minute' => $byId[$episodeId], 'draft' => $draft, 'local' => $choice['local'], 'zone' => $choice['zone'], 'videos' => array_map(static fn (\App\Entity\PublicationDraftItem $item): array => ['id' => $item->getVideoId(), 'title' => $item->getTitle(), 'source' => $item->getSource()], $draft->getItems()->toArray())];
-            try {
-                $slot['at'] = $this->service->resolved($choice['local'], $choice['zone']);
-            } catch (PublicationException $error) {
-                $slot['issue'] = $error->getMessage();
-            }
+            $ids[(int) $id] = true;
+        }
+        $ready = $issues = [];
+        foreach (array_intersect_key($candidates, $ids) as $episodeId => $draft) {
             $review = $this->service->review($draft);
-            $slot['review'] = $review;
-            if ($slot['issue'] ?? false) {
-                $issues[] = $slot;
+            if (!$review['ready']) {
+                $issues[] = ['draft' => $draft, 'messages' => array_merge([], ...array_values($review['issues'])) ?: ['Vérifie les comptes, les textes et les réglages.']];
                 continue;
             }
-            if ($review['ready']) {
-                $ready[] = $slot;
-            } else {
-                $issues[] = $slot + ['issue' => 'La préparation reste incomplète : vérifie les comptes, les textes et les réglages.'];
-            }
+            $ready[$episodeId] = ['draft' => $draft, 'destinations' => $review['destinations'], 'videos' => array_map(static fn ($item): array => ['id' => $item->getVideoId(), 'title' => $item->getTitle(), 'source' => $item->getSource()], $draft->getItems()->toArray())];
         }
 
         return ['ready' => $ready, 'issues' => $issues];
     }
 
-    /**
-     * Arm every reviewed and dated preparation of the subset in one owner-locked transaction.
-     * An invalid or changed preparation refuses the complete reviewed subset.
-     *
-     * @param array<int,array{draft:int,revision:int,local:?string,zone:string}> $picked
+    /** @param array<int,array{draft:int,revision:int}> $reviewed
      *
      * @return non-empty-list<int>
      */
-    public function confirm(User $owner, VideoSeries $series, int $seriesRevision, array $picked): array
+    public function confirm(User $owner, VideoSeries $series, int $seriesRevision, array $reviewed): array
     {
-        if (!$picked) {
-            throw new PublicationException('Coche au moins un épisode programmable.');
-        }
-        if (count($picked) > self::LIMIT) {
-            throw new PublicationException('Choisis de 1 à '.self::LIMIT.' épisodes par préparation groupée.');
+        if (!$reviewed || count($reviewed) > self::LIMIT) {
+            throw new PublicationException('Vérifie un nouvel aperçu avant de confirmer.');
         }
 
-        return $this->lock->run((int) $owner->getId(), fn (): array => $this->em->getConnection()->transactional(function () use ($owner, $series, $seriesRevision, $picked): array {
+        return $this->lock->run((int) $owner->getId(), fn (): array => $this->em->getConnection()->transactional(function () use ($owner, $series, $seriesRevision, $reviewed): array {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            $series = $this->em->getRepository(VideoSeries::class)->findOneBy(['id' => $series->getId(), 'owner' => $owner]) ?? throw new PublicationException('Cette série est indisponible.');
             $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
             if ($series->getOwner()->getId() !== $owner->getId() || $series->getRevision() !== $seriesRevision) {
                 throw new PublicationException('La série a changé. Refais l’aperçu avant de confirmer.');
             }
-            $slots = [];
-            foreach ($picked as $episodeId => $choice) {
+            $drafts = [];
+            foreach ($reviewed as $episodeId => $choice) {
                 $episode = $this->em->find(VideoSeriesEpisode::class, $episodeId) ?? throw new PublicationException('Un épisode confirmé n’est plus disponible.');
                 $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
-                if (!$episode->isActive() || $episode->getSeries()->getId() !== $series->getId() || $episode->getVideo()->getOwner()->getId() !== $series->getOwner()->getId()) {
+                if (!$episode->isActive() || $episode->getSeries()->getId() !== $series->getId() || $episode->getVideo()->getOwner()->getId() !== $owner->getId()) {
                     throw new PublicationException('Un épisode confirmé est indisponible. Refais l’aperçu.');
                 }
-                $draft = $this->drafts->owned($choice['draft'], $owner) ?? throw new PublicationException('Cet épisode n’a plus de brouillon. Refais l’aperçu.');
-                $this->em->refresh($draft, LockMode::PESSIMISTIC_WRITE);
+                $draft = $this->service->editable($owner, $choice['draft'], $choice['revision']);
                 if ($draft->getVideoEpisode()?->getId() !== $episodeId || $draft->videoIds() !== [$episode->getVideo()->getId()]) {
                     throw new PublicationException('Un brouillon confirmé n’est plus celui de son épisode. Refais l’aperçu.');
                 }
-                if ('scheduled' === $draft->getStatus()) {
-                    throw new PublicationException('Un épisode confirmé est déjà programmé. Le rejeu n’a rien modifié.');
-                }
-                if ('draft' !== $draft->getStatus() || $draft->getRevision() !== $choice['revision']) {
-                    throw new PublicationException('Un épisode a changé depuis l’aperçu. Refais l’aperçu avant de confirmer.');
-                }
                 $this->service->checkComplete($draft);
-                $slots[] = ['draft' => $draft, 'local' => $choice['local'], 'zone' => $choice['zone']];
+                $drafts[] = $draft;
             }
-            $dates = [];
-            foreach ($slots as $index => $slot) {
-                $dates[$index] = $this->service->resolved($slot['local'], $slot['zone']);
+            foreach ($drafts as $draft) {
+                $this->validateDate($draft);
             }
-            foreach ($slots as $index => $slot) {
-                $this->service->schedule($slot['draft'], $dates[$index], (string) $slot['local'], $slot['zone']);
+            foreach ($drafts as $draft) {
+                $draft->arm($this->clock->now());
             }
             $this->em->flush();
-            foreach ($slots as $slot) {
-                $this->service->wake($slot['draft']);
+            foreach ($drafts as $draft) {
+                $this->service->wake($draft);
             }
 
-            return array_keys($picked);
+            return array_keys($reviewed);
         }));
     }
 
-    private function kind(?PublicationDraft $draft): string
+    private function validateDate(PublicationDraft $draft): void
     {
-        if (!$draft) {
-            return 'to_prepare';
-        }
-
-        return match ($draft->getStatus()) {
-            'draft' => 'plan',
-            'scheduled' => 'scheduled',
-            'dispatched' => 'sent',
-            'blocked', 'missed' => 'attention',
-            default => 'history',
-        };
-    }
-
-    /** @return list<VideoSeriesEpisode> */
-    private function order(VideoSeries $series): array
-    {
-        return $this->em->createQueryBuilder()->select('e', 'v')->from(VideoSeriesEpisode::class, 'e')->join('e.video', 'v')->where('e.series = :series')->andWhere('e.active = true')->setParameter('series', $series)->orderBy('e.position', 'ASC')->getQuery()->getResult();
+        $date = $draft->getScheduledAt() ?? throw new PublicationException('Choisis un créneau dans le brouillon.');
+        $this->time->validateFuture($date);
     }
 }

@@ -2,16 +2,20 @@
 
 namespace App\Service;
 
+use App\Entity\InstagramPublication;
+use App\Entity\PublicationDraft;
+use App\Entity\TikTokPublication;
 use App\Entity\User;
 use App\Entity\VideoAsset;
 use App\Entity\VideoSeries;
 use App\Entity\VideoSeriesEpisode;
+use App\Entity\YouTubePublication;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class VideoSeriesStudio
 {
-    public function __construct(private EntityManagerInterface $em, private SeriesPublicationSettings $publicationSettings, private PublicationCalendar $calendar)
+    public function __construct(private EntityManagerInterface $em, private SeriesPublicationSettings $publicationSettings, private PublicationCalendar $calendar, private PublicationLock $lock)
     {
     }
 
@@ -33,10 +37,54 @@ final class VideoSeriesStudio
         return $episode?->getSeries()->getOwner()->getId() === $owner->getId() ? $episode : null;
     }
 
+    /** @return list<PublicationDraft> */
+    public function deletionBlockers(VideoSeries $series): array
+    {
+        $drafts = $this->em->createQueryBuilder()->select('d')->from(PublicationDraft::class, 'd')->join('d.videoEpisode', 'e')
+            ->where('e.series = :series AND d.owner = :owner')->setParameter('series', $series)->setParameter('owner', $series->getOwner())
+            ->orderBy('d.id', 'ASC')->getQuery()->getResult();
+        $snapshot = $this->calendar->snapshot($drafts);
+        $activeStates = ['youtube' => YouTubePublication::ACTIVE, 'instagram' => InstagramPublication::ACTIVE, 'tiktok' => TikTokPublication::ACTIVE];
+        $blockers = [];
+        foreach ($drafts as $draft) {
+            if ('scheduled' === $draft->getStatus() || 'active' === $snapshot['states'][$draft->getId()]) {
+                $blockers[] = $draft;
+                continue;
+            }
+            foreach ($snapshot['destinations'][$draft->getSubmissionKey()] ?? [] as $network => $status) {
+                if (in_array($status, $activeStates[$network], true)) {
+                    $blockers[] = $draft;
+                    break;
+                }
+            }
+        }
+
+        return $blockers;
+    }
+
+    public function delete(User $owner, int $id, int $revision): void
+    {
+        $this->lock->run((int) $owner->getId(), fn () => $this->em->getConnection()->transactional(function () use ($owner, $id, $revision): void {
+            $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            $series = $this->owned($id, $owner) ?? throw new PublicationException('Cette série est indisponible.');
+            $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
+            if ($series->getRevision() !== $revision) {
+                throw new PublicationException('La série a changé. Vérifie son contenu avant de la supprimer.');
+            }
+            if ($this->deletionBlockers($series)) {
+                throw new PublicationException('Annule les programmations ou termine les envois en cours avant de supprimer cette série.');
+            }
+            // The database removes only episode associations and clears draft links.
+            $this->em->remove($series);
+            $this->em->flush();
+        }));
+    }
+
     public function append(User $owner, VideoSeries $series, int $videoId): VideoSeriesEpisode
     {
         return $this->em->getConnection()->transactional(function () use ($owner, $series, $videoId): VideoSeriesEpisode {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            $series = $this->owned((int) $series->getId(), $owner) ?? throw new VideoLibraryException('Cette série est indisponible.');
             $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
             $video = $this->em->getRepository(VideoAsset::class)->findOneBy(['id' => $videoId, 'owner' => $owner]);
             if ($series->getOwner()->getId() !== $owner->getId() || !$video) {
@@ -87,6 +135,7 @@ final class VideoSeriesStudio
         return $this->em->getConnection()->transactional(function () use ($owner, $name, $ordered, $revision, $series, $publication): VideoSeries {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
             if ($series) {
+                $series = $this->owned((int) $series->getId(), $owner) ?? throw new \RuntimeException('Cette série est indisponible.');
                 $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
                 if ($series->getOwner()->getId() !== $owner->getId() || $revision !== $series->getRevision()) {
                     throw new \RuntimeException('Cette série a changé. Recharge-la avant d’enregistrer.');
@@ -107,7 +156,7 @@ final class VideoSeriesStudio
                 foreach ($all as $episode) {
                     $existing[(int) $episode->getVideo()->getId()] = $episode;
                     if ($episode->isActive() && !in_array((string) $episode->getVideo()->getId(), $ordered, true)) {
-                        $drafts = $this->em->getRepository(\App\Entity\PublicationDraft::class)->findBy(['videoEpisode' => $episode, 'owner' => $owner]);
+                        $drafts = $this->em->getRepository(PublicationDraft::class)->findBy(['videoEpisode' => $episode, 'owner' => $owner]);
                         if (array_diff($this->calendar->states($drafts), ['draft', 'cancelled', 'published'])) {
                             throw new \RuntimeException('Cet épisode a une publication programmée ou à vérifier. Annule ou termine sa publication avant de le retirer de la série.');
                         }

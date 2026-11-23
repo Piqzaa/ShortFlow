@@ -2,7 +2,85 @@
 {% block title %}{{ series.name }} — Mes séries{% endblock %}
 {% block studio_content %}
 <a class="account-secondary composer-back" href="{{ path('app_series') }}">← Mes séries</a>
-<div class="workspace-heading"><div><span class="eyebrow">AVEC TES VIDÉOS</span><h1>{{ series.name }}</h1><p>{{ episodes|length }} épisode{{ episodes|length > 1 ? 's' : '' }} · Dans l’ordre de ta série.</p></div><div class="series-actions series-video-heading-actions"><a class="button" href="{{ path('app_video_series_add',{id:series.id}) }}">Ajouter un épisode</a><a class="account-secondary" href="{{ path('app_video_series_schedule',{id:series.id}) }}">Programmer les épisodes</a><a class="account-secondary" href="{{ path('app_video_series_edit',{id:series.id}) }}">Organiser les épisodes</a></div></div>
+<div class="workspace-heading">
+<div><span class="eyebrow">AVEC TES VIDÉOS</span><h1>{{ series.name }}</h1><p>{{ episodes|length }} épisode{{ episodes|length > 1 ? 's' : '' }} · Dans l’ordre de ta série.</p></div>
+<div class="series-actions series-video-heading-actions"><a class="button" href="{{ path('app_video_series_add',{id:series.id}) }}">Ajouter un épisode</a><a class="account-secondary" href="{{ path('app_video_series_edit',{id:series.id}) }}">Organiser les épisodes</a></div>
+</div>
 {% include 'series/_destinations_summary.html.twig' with {seriesConfigurationRoute:'app_video_series_edit'} %}
-<div class="series-episodes" data-controller="video-thumbnails">{% for episode in episodes %}{% set summaries = publicationSummaries[episode.id]|default([]) %}{% set currentPublication = (summaries|filter(item => item.current))|first|default(null) %}<section class="series-episode series-video-episode" id="video-episode-{{ episode.id }}">{% include 'ai/_cover.html.twig' with {videoId:episode.video.id} %}<div><span class="eyebrow">ÉPISODE {{ loop.index }}</span><h2>{{ episode.video.title }}</h2><p class="library-note">{{ episode.video.duration|number_format(1,',') }} s · {{ currentPublication ? currentPublication.label : 'Publication à préparer' }}</p><div class="series-actions">{% include 'series/_publication_action.html.twig' with {publicationRoute:'app_video_episode_publication',publicationEpisodeId:episode.id,publicationToken:'video_episode_publication_' ~ episode.id,publicationRevision:series.revision,publicationVideo:null} %}<a class="account-secondary" href="{{ path('app_video_show',{id:episode.video.id,episode:episode.id}) }}">Voir la vidéo ↗</a></div>{% include 'series/_publications.html.twig' %}</div></section>{% else %}<p class="library-note">Aucun épisode disponible. Ajoute des vidéos pour continuer ta série.</p>{% endfor %}</div>
+{% set canBatch = candidates|length > 1 %}
+{% if canBatch or batchError or preview %}
+<section class="story-context series-config-section" id="series-publication-batch" aria-labelledby="series-publication-batch-title">
+<h2 id="series-publication-batch-title">Programmer plusieurs épisodes</h2>
+{% if batchError %}<p class="account-notice error" role="alert">{{ batchError }}</p>{% endif %}
+{% if canBatch %}
+<p>Choisis de 2 à {{ batchLimit }} épisodes ci-dessous. Le récapitulatif reprend les dates de tes brouillons.</p>
+<form id="series-batch-preview" method="post" action="{{ path('app_video_series_show',{id:series.id}) }}#series-publication-batch">
+<input type="hidden" name="_token" value="{{ csrf_token('video_series_schedule_' ~ series.id) }}">
+<button class="account-secondary" type="submit" name="intent" value="preview">Vérifier la sélection →</button>
+</form>
+{% endif %}
+{% if preview %}
+<div id="series-schedule-preview">
+<h3>Récapitulatif de la programmation</h3>
+{% for slot in preview.ready %}
+<p class="library-note">Départ prévu le {{ slot.draft.scheduledAt|date('d/m/Y à H:i',slot.draft.timezone) }} · {{ slot.draft.timezone }}</p>
+{% include 'publication/_batch_review.html.twig' with {videos:slot.videos,networks:slot.draft.networks,content:slot.draft.content(),destinations:slot.destinations} %}
+{% endfor %}
+{% if preview.issues %}
+<aside class="account-notice" role="status">
+<p>Ces brouillons demandent une correction.</p>
+<ul>{% for issue in preview.issues %}<li><a class="account-secondary" href="{{ path('app_composer_start',{draft:issue.draft.id}) }}">{{ issue.draft.title }}</a> · {{ issue.messages|join(' ') }}</li>{% endfor %}</ul>
+</aside>
+{% endif %}
+{% if snapshot %}
+<form class="account-form publication-confirm" method="post" action="{{ path('app_video_series_show',{id:series.id}) }}#series-publication-batch">
+<input type="hidden" name="_token" value="{{ csrf_token('video_series_schedule_' ~ series.id) }}">
+<input type="hidden" name="snapshot" value="{{ snapshot }}">
+<p>Les envois démarreront aux dates affichées. Les services de publication et les connexions aux réseaux doivent fonctionner.</p>
+<p class="library-note">Consulte les <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">conditions YouTube</a>, la <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener noreferrer">confirmation musicale TikTok</a> et la <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noopener noreferrer">politique relative aux contenus de marque</a> pour les destinations concernées.</p>
+<label class="publication-checkbox"><input type="checkbox" name="confirm" value="1" required> Je confirme les créneaux, les vidéos, les comptes, les textes et les réglages affichés. Je dispose des droits nécessaires et j’accepte les conditions TikTok ci-dessus si ce réseau est concerné.</label>
+<button class="button" type="submit" name="intent" value="confirm">Confirmer la programmation de {{ preview.ready|length }} épisode{{ preview.ready|length > 1 ? 's' : '' }}</button>
+</form>
+{% endif %}
+</div>
+{% endif %}
+</section>
+{% endif %}
+<div class="series-episodes" data-controller="video-thumbnails">
+{% for episode in episodes %}
+{% set summaries = publicationSummaries[episode.id]|default([]) %}
+{% set currentPublication = (summaries|filter(item => item.current))|first|default(null) %}
+<section class="series-episode series-video-episode" id="video-episode-{{ episode.id }}">
+{% include 'ai/_cover.html.twig' with {videoId:episode.video.id} %}
+<div>
+<span class="eyebrow">ÉPISODE {{ loop.index }}</span>
+<h2>{{ episode.video.title }}</h2>
+<p class="library-note">{{ episode.video.duration|number_format(1,',') }} s · {{ currentPublication ? currentPublication.label : 'Publication à préparer' }}</p>
+{% if currentPublication %}
+{% set draft = currentPublication.draft %}
+{% if draft.scheduledAt %}<p class="library-note">{{ draft.status == 'draft' ? 'Date du brouillon' : 'Créneau' }} · <time datetime="{{ draft.scheduledAt|date('c') }}">{{ draft.scheduledAt|date('d/m/Y à H:i',draft.timezone) }}</time> · {{ draft.timezone }}</p>{% endif %}
+{% if currentPublication.destinations %}
+<ul class="library-note">{% for destination in currentPublication.destinations %}<li>{{ destination.name }} · {{ destination.account }} · {{ destination.status }}</li>{% endfor %}</ul>
+{% endif %}
+{% endif %}
+{% if canBatch and candidates[episode.id] is defined %}
+<label class="publication-checkbox"><input type="checkbox" name="episodes[]" value="{{ episode.id }}" form="series-batch-preview" aria-label="Inclure l’épisode {{ loop.index }} dans le lot"{% if (episode.id ~ '') in selection %} checked{% endif %}> Inclure dans le lot</label>
+{% endif %}
+<div class="series-actions">
+{% if currentPublication and currentPublication.draft.status == 'draft' %}
+<a class="button" href="{{ path('app_composer_start',{draft:currentPublication.draft.id}) }}">Reprendre le brouillon →</a>
+{% else %}
+{% include 'series/_publication_action.html.twig' with {publicationRoute:'app_video_episode_publication',publicationEpisodeId:episode.id,publicationToken:'video_episode_publication_' ~ episode.id,publicationRevision:series.revision,publicationVideo:null} %}
+{% endif %}
+<a class="account-secondary" href="{{ path('app_video_show',{id:episode.video.id,episode:episode.id}) }}">Voir la vidéo ↗</a>
+</div>
+{% set older = summaries|filter(item => item != currentPublication) %}
+{% if older %}<details class="creation-details"><summary>Autres préparations</summary>{% include 'series/_publications.html.twig' with {summaries:older} %}</details>{% endif %}
+</div>
+</section>
+{% else %}
+<p class="library-note">Aucun épisode disponible. Ajoute des vidéos pour continuer ta série.</p>
+{% endfor %}
+</div>
+<p><a class="video-delete-link" href="{{ path('app_video_series_delete',{id:series.id}) }}">Supprimer la série</a></p>
 {% endblock %}

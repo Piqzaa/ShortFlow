@@ -1,5 +1,21 @@
 # Programmation groupée des publications d'une série de vidéos importées — 7 novembre 2026
 
+## Recette navigateur du 23 novembre 2026
+
+Neuf états Twig rendus par les tests ont été ouverts dans Chrome à 320, 390 et 1280 px, puis à 390 px sans JavaScript. Création, ajout par import, préparateur, sélection du lot, récapitulatif, épisode exclu, créneau expiré, suivi après confirmation et suppression. Les 36 vues passent sans défilement horizontal ni exception JavaScript. L'ouverture du formulaire d'import et la sélection clavier fonctionnent. Les captures du récapitulatif à 390 et 1280 px ont été relues, avec deux dates et fuseaux, le compte et la confirmation visibles.
+
+Le navigateur a chargé les pages de test et les assets locaux. Les médias et les destinations externes étaient simulés. La lecture des vidéos et les accès sociaux restent à vérifier dans le parcours pilote. Les formulaires ont été exercés côté serveur sur `shortflow_test` et le navigateur n'a émis aucun POST.
+
+## Parcours actuel depuis la page de série
+
+Les textes, les destinations et l’heure se règlent une seule fois dans le préparateur individuel. La série affiche l’état, le créneau et les destinations de chaque épisode. À partir de deux brouillons datés avec comptes choisis, le raccourci groupé apparaît sur la page de série. Il accepte de deux à vingt épisodes et vérifie leur préparation avant d’afficher le récapitulatif. Les anciens liens vers `/programmer` reviennent à la série.
+
+La confirmation utilise les révisions des brouillons relus et leurs créneaux enregistrés. Aucun champ de date n’est transmis par le formulaire groupé. Une révision ou un créneau invalide fait refuser tout le sous-ensemble confirmé. Les messages différés restent dans la même transaction que les programmations.
+
+**Supprimer la série** demande une confirmation et conserve les médias, les brouillons et l’historique. La vérification sous verrou couvre aussi les épisodes archivés. Elle bloque une programmation en attente et les envois actifs ou à reprendre. Le retrait des liens d’épisode repose sur les contraintes existantes de la base.
+
+Les sections ci-dessous documentent la première livraison et ses vérifications.
+
 ## Parcours livré
 
 Page privée **Séries → page d'une série importée → « Programmer les épisodes ↗ »**

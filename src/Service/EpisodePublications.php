@@ -100,6 +100,7 @@ final class EpisodePublications
     {
         return $this->lock->run((int) $owner->getId(), fn (): PublicationDraft => $this->em->getConnection()->transactional(function () use ($owner, $episode, $revision): PublicationDraft {
             $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
+            $episode = $this->em->getRepository(\App\Entity\VideoSeriesEpisode::class)->findOneBy(['id' => $episode->getId()]) ?? throw new PublicationException('Cet épisode est indisponible.');
             $this->em->refresh($episode, LockMode::PESSIMISTIC_WRITE);
             $series = $episode->getSeries();
             $this->em->refresh($series, LockMode::PESSIMISTIC_WRITE);
