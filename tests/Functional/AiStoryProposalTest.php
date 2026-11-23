@@ -30,6 +30,7 @@ final class AiStoryProposalTest extends WebTestCase
         $client->request('GET', '/studio/creation');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('[data-controller~="story-writer"]');
+        self::assertSelectorExists('#ai-idea-form[data-shot-editor-model-value="{}"]');
         file_put_contents(dirname(__DIR__, 2).'/artifacts/studio-direct-prompt.html', (string) $client->getResponse()->getContent());
         self::assertSelectorExists('[data-shot-editor-target="add"]');
 

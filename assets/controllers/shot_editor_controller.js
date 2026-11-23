@@ -40,6 +40,10 @@ export default class extends Controller {
   act(event) {
     event.preventDefault();
     const [action, value] = event.currentTarget.value.split(':');
+    if (['remove', 'up', 'down'].includes(action) && this.listTarget.querySelector('[data-plan-reference-busy="true"]')) {
+      this.summaryTarget.textContent = 'Attends la fin de l’import de l’image avant de réorganiser tes plans.';
+      return;
+    }
     const index = Number(value);
     const rows = this.rows();
     if (action === 'add' && rows.length < 8) {
@@ -62,6 +66,13 @@ export default class extends Controller {
 
   update() {
     const rows = this.rows();
+    const origin = this.modelValue.referenceMicros && Array.from(this.element.elements || [])
+      .find(field => field.name?.endsWith('[referenceOrigin]'))?.value;
+    // In upload mode the private references are common to all plans. In library
+    // mode each plan has its own selection of saved characters.
+    const importedReferences = origin === 'upload' ? new Set(Array.from(this.element.querySelectorAll(
+      '[data-creation-target="reference"], [data-subject-main] [data-reference-picker-target="value"]'
+    ), field => field.value).filter(Boolean)).size : null;
     let seconds = 0, cents = 0;
     rows.forEach((row, index) => {
       const prompt = row.querySelector('[data-shot-prompt]');
@@ -101,10 +112,12 @@ export default class extends Controller {
       });
       const duration = Number(row.querySelector('select').value);
       seconds += duration;
-      cents += !this.modelValue.seconds?.includes(duration) ? NaN : this.modelValue.pricesCents?.[duration] ?? Math.ceil(((this.modelValue.rateMicros || 0) * duration + (this.modelValue.fixedMicros || 0) + (this.modelValue.referenceMicros || 0) * selectedCharacters(row).length) / 10000);
+      const referenceCount = importedReferences ?? selectedCharacters(row).length;
+      cents += !this.modelValue.seconds?.includes(duration) ? NaN : this.modelValue.pricesCents?.[duration] ?? Math.ceil(((this.modelValue.rateMicros || 0) * duration + (this.modelValue.fixedMicros || 0) + (this.modelValue.referenceMicros || 0) * referenceCount) / 10000);
     });
     this.addTarget.disabled = rows.length >= 8;
-    this.summaryTarget.textContent = `${rows.length} plan(s) · ${seconds} s au total · ${Number.isFinite(cents) ? displayMoney(cents) + ' estimés' : 'estimation à vérifier après ajustement des durées'}. ${seconds > 60 ? 'Réduis la durée totale à 60 secondes maximum avant de continuer.' : 'Aucun lancement avant confirmation.'}`;
+    const estimate = !this.modelValue.seconds ? 'choisis un modèle pour estimer le coût' : Number.isFinite(cents) ? displayMoney(cents) + ' estimés' : 'durées à ajuster pour estimer le coût';
+    this.summaryTarget.textContent = `${rows.length} plan${rows.length === 1 ? '' : 's'} · ${seconds} s au total · ${estimate}. ${seconds > 60 ? 'Réduis la durée totale à 60 secondes maximum avant de continuer.' : 'Aucun lancement avant confirmation.'}`;
     this.summaryTarget.classList.toggle('error', seconds > 60);
   }
 }

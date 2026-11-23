@@ -12,6 +12,7 @@
   <button type="button" class="account-secondary" data-preparation-target="fixContinuity imageModeButton" data-action="preparation#imageMode" hidden>Choisir un modèle image et sa référence</button>
 </div>
 {% include 'ai/_plan_count_status.html.twig' %}
-<p class="library-note preparation-feedback" data-preparation-target="notice" role="status">Choisis un modèle pour préparer tes plans.</p>
+<p class="library-note preparation-feedback" data-preparation-target="notice" role="status">Choisis un modèle pour appliquer la durée et le nombre de plans.</p>
+<a class="account-secondary" href="#video-models" data-preparation-target="modelLink"{% if ideaForm.model.vars.value %} hidden{% endif %}>Aller au choix du modèle ↓</a>
 <p data-preparation-target="single" hidden></p>
 {% include 'ai/_single_plan.html.twig' %}

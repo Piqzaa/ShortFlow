@@ -15,7 +15,7 @@
 <div data-creation-target="endPanel"{% if ideaForm.source.vars.value != 'image' or not ideaForm.useEnd.vars.checked %} hidden{% endif %}>{% include 'ai/_reference_input.html.twig' with {slot:'end',referenceForm:endReferenceForm,referenceUrl:endReferenceUrl|default(null)} %}</div>
 <p class="library-note" role="status" data-creation-target="framingNotice">L’aperçu montre le cadrage qui sera envoyé au modèle.</p>
 </div>
-{{ form_start(ideaForm,{attr:{id:'ai-idea-form',class:'account-form creation-form','data-controller':episode|default(null) ? 'unsaved shot-editor character-picker' : 'idea-save shot-editor character-picker', 'data-unsaved-initial':(singlePrepared|default(false) or layoutPrepared|default(false) or ideaForm.vars.submitted) ? 'true' : 'false','data-character-picker-models-value':models|json_encode,'data-character-picker-url-value':path('app_character_choices'),'data-shot-editor-model-value':models[ideaForm.model.vars.value]|default({})|json_encode,'data-idea-save-url-value':path('app_ai_save_idea'),'data-idea-save-revision-value':app.session.get('ai_idea_revision'),'data-action':episode|default(null) ? 'input->unsaved#change change->unsaved#change submit->unsaved#submit' : 'input->idea-save#change change->idea-save#change submit->idea-save#submit pagehide@window->idea-save#flush'}}) }}
+{{ form_start(ideaForm,{attr:{id:'ai-idea-form',class:'account-form creation-form','data-controller':episode|default(null) ? 'unsaved shot-editor character-picker' : 'idea-save shot-editor character-picker', 'data-unsaved-initial':(singlePrepared|default(false) or layoutPrepared|default(false) or ideaForm.vars.submitted) ? 'true' : 'false','data-character-picker-models-value':models|json_encode,'data-character-picker-url-value':path('app_character_choices'),'data-shot-editor-model-value':(models[ideaForm.model.vars.value] is defined ? models[ideaForm.model.vars.value]|json_encode : '{}'),'data-idea-save-url-value':path('app_ai_save_idea'),'data-idea-save-revision-value':app.session.get('ai_idea_revision'),'data-action':episode|default(null) ? 'input->unsaved#change change->unsaved#change submit->unsaved#submit' : 'input->idea-save#change change->idea-save#change submit->idea-save#submit pagehide@window->idea-save#flush'}}) }}
 {{ form_errors(ideaForm) }}
 {% include 'ai/_character_pool.html.twig' with {poolForm:ideaForm} %}{{ form_widget(ideaForm.reference,{attr:{'data-creation-target':'reference'}}) }}{{ form_errors(ideaForm.reference) }}{{ form_widget(ideaForm.endReference,{attr:{'data-creation-target':'endReference'}}) }}{{ form_errors(ideaForm.endReference) }}
 <div class="studio-prompt-layout">
@@ -34,7 +34,7 @@
 <button type="button" class="account-secondary" data-idea-save-target="retry" data-action="idea-save#flush" hidden>Réessayer l’enregistrement</button>
 </section>
 </div>
-<section class="video-setup-panel video-model-panel" aria-label="Modèle vidéo">
+<section class="video-setup-panel video-model-panel" id="video-models" tabindex="-1" aria-label="Modèle vidéo">
 {% include 'ai/_recommendations.html.twig' with {compactRecommendations:true} %}
 <div class="creation-native" data-creation-target="native">{{ form_row(ideaForm.model,{attr:{'data-creation-target':'model','data-action':'change->creation#changeModel'}}) }}</div>
 {% set studioModelPicker %}{% include 'ai/_model_picker.html.twig' with {pickerPrefix:'creation',modelForm:ideaForm.model,accessForm:ideaForm.accessMode,modelChange:'change->creation#changeModel',externalNative:true,unifiedSearch:true} %}{% endset %}

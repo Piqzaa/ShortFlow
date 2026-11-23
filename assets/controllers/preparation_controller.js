@@ -3,7 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 import { proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
-  static targets = ['total', 'notice', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'singleCount', 'continuityOptions'];
+  static targets = ['total', 'notice', 'modelLink', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'singleCount', 'continuityOptions'];
   static values = { models: Object };
 
   connect() { queueMicrotask(() => { if (this.element.isConnected) { if (this.hasImageModeButtonTarget) this.imageModeButtonTarget.hidden = false; if (this.hasPlanCountTarget && !this.planCountTarget.value && this.editor?.rows().length > 1) this.planCountTarget.value = String(this.editor.rows().length); this.refresh(); } }); }
@@ -42,6 +42,7 @@ export default class extends Controller {
     this.refresh();
   }
   duration(event) {
+    if (!this.model) { this.refresh(); return; }
     if (this.continuityTarget.value === 'single') {
       const row = this.editor?.rows().length === 1 ? this.editor.rows()[0] : null;
       if (!this.editor?.rows().length) { this.redistribute(event); return; }
@@ -69,6 +70,7 @@ export default class extends Controller {
     this.element.classList?.remove('has-synced-single-duration');
     if (this.hasSingleStatusTarget) this.singleStatusTarget.hidden = false;
     const model = this.model;
+    if (this.hasModelLinkTarget) this.modelLinkTarget.hidden = Boolean(model);
     if (this.hasPlanCountTarget) this.planCountTarget.disabled = this.continuityTarget.value === 'single';
     if (this.hasSingleCountTarget) this.singleCountTarget.disabled = this.continuityTarget.value !== 'single';
     if (this.hasCountPanelTarget) this.countPanelTarget.hidden = false;
@@ -98,21 +100,27 @@ export default class extends Controller {
     if (this.hasSingleActionTarget) this.singleActionTarget.hidden = this.continuityTarget.value !== 'single' || !model;
     if (!model || !this.editor) {
       if (!model) {
-        this.showNotice('Choisis un modèle pour préparer tes plans.');
+        this.showNotice('Choisis un modèle pour appliquer la durée et le nombre de plans.');
         for (const option of this.totalTarget.options) { option.hidden = option.disabled = false; if (option.value) option.textContent = `${option.value} s`; }
+        if (this.editor?.modelValue?.seconds) {
+          this.editor.modelValue = {};
+          for (const row of this.editor.rows()) {
+            for (const option of row.querySelector('select').options) option.hidden = option.disabled = false;
+          }
+          this.editor.update();
+        }
         if (this.hasSingleActionTarget) {
           this.singleStatusTarget.textContent = 'Choisis un modèle pour connaître les durées possibles en un seul clip. Tes scènes restent conservées.';
           this.singleButtonTarget.disabled = true;
           this.useTotalTarget.hidden = true;
-          if (this.hasRecapTarget) this.recapTarget.disabled = this.continuityTarget.value === 'single';
         }
         if (this.hasPlanCountTarget) {
           this.countStatusTarget.textContent = 'Choisis un modèle avant de répartir la durée et le nombre de plans.';
           for (const option of this.planCountTarget.options) option.hidden = option.disabled = false;
           if (this.hasCountApplyTarget) this.countApplyTarget.disabled = true;
           if (this.hasCountApplyTarget) this.countApplyTarget.hidden = true;
-          if (this.hasRecapTarget) this.recapTarget.disabled = true;
         }
+        if (this.hasRecapTarget) this.recapTarget.disabled = true;
       }
       return;
     }
@@ -202,8 +210,15 @@ export default class extends Controller {
   }
 
   countFromCards() {
-    if (this.continuityTarget.value === 'single' && this.editor.rows().length > 1) this.continuityTarget.value = 'independent';
-    if (this.hasPlanCountTarget) this.planCountTarget.value = this.editor.rows().length ? String(this.editor.rows().length) : '';
+    const rows = this.editor.rows();
+    if (this.continuityTarget.value === 'single' && rows.length > 1) this.continuityTarget.value = 'independent';
+    if (this.hasPlanCountTarget) this.planCountTarget.value = rows.length ? String(rows.length) : '';
+    const durations = rows.map(row => Number(row.querySelector('select').value));
+    const total = durations.reduce((sum, seconds) => sum + seconds, 0);
+    const model = this.model;
+    if (model && total > 0 && total <= 60 && durations.every(seconds => model.seconds.includes(seconds))) {
+      this.totalTarget.value = String(total);
+    }
     this.refresh();
   }
 
@@ -228,7 +243,8 @@ export default class extends Controller {
 
   redistribute(event) {
     event?.preventDefault();
-    if (!this.editor || !this.model) return false;
+    if (!this.model) { this.refresh(); return false; }
+    if (!this.editor) return false;
     if (this.element.querySelector('[data-plan-reference-busy="true"]')) { this.showNotice('Attends la fin de l’import des images avant de modifier le découpage.'); return false; }
     if (this.hasPlanCountTarget && this.continuityTarget.value !== 'single' && !this.desiredCount) { this.refresh(); this.planCountTarget.focus(); return false; }
     const proposal = proposePlan(Number(this.totalTarget.value), this.model.seconds, this.desiredCount);
@@ -247,7 +263,6 @@ export default class extends Controller {
       row.querySelector('select').value = String(seconds);
       for (const [name,value] of Object.entries(inputs[index] || {})) { const input=row.querySelector(`[name$="[${name}]"]`); if (input) input.value=value; }
     });
-    if (prompts.length > proposal.parts.length) this.editor.rows().at(-1).querySelector('textarea').value += '\n' + prompts.slice(proposal.parts.length).join('\n');
     this.refresh();
     this.editor.element.dispatchEvent(new Event('input', { bubbles: true }));
     return true;

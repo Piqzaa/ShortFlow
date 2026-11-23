@@ -77,6 +77,36 @@ test('invalid fields reveal every enclosing detail before native focus', () => {
   assert.equal(outer.open, true);
 });
 
+test('moving or removing a plan waits for pending private frame uploads', () => {
+  const { editor, row } = setup();
+  row.remove = () => assert.fail('Pending uploads must not be aborted by removing a plan');
+  const other = { after: () => assert.fail('Pending uploads must not be aborted by moving a plan') };
+  editor.rows = () => [row, other];
+  editor.listTarget = { querySelector: selector => selector === '[data-plan-reference-busy="true"]' ? {} : null };
+
+  for (const action of ['remove:0', 'down:0']) {
+    let prevented = false;
+    editor.act({ currentTarget: { value: action }, preventDefault() { prevented = true; } });
+    assert.ok(prevented);
+    assert.match(editor.summaryTarget.textContent, /Attends la fin de l’import/);
+  }
+});
+
+test('estimates include unique uploaded references on each plan and ignore them in library mode', () => {
+  const { editor, row } = setup();
+  const origin = { name: 'ai_idea[referenceOrigin]', value: 'upload' };
+  editor.modelValue = { seconds: [5], rateMicros: 80000, referenceMicros: 10000 };
+  editor.rows = () => [row, row];
+  editor.element.elements = [origin];
+  editor.element.querySelectorAll = () => [{ value: 'main.jpg' }, { value: '' }, { value: 'other.jpg' }, { value: 'main.jpg' }];
+
+  editor.update();
+  assert.ok(editor.summaryTarget.textContent.includes(displayMoney(84)));
+  origin.value = 'library';
+  editor.update();
+  assert.ok(editor.summaryTarget.textContent.includes(displayMoney(80)));
+});
+
 test('refreshing cards preserves their archived context without adding it to the edited prompt', () => {
   const { editor, row, prompt } = setup();
   const query = row.querySelector.bind(row);

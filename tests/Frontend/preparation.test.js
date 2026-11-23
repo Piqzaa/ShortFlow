@@ -78,6 +78,7 @@ test('adding a manual plan switches a single take to multiple plans and preserve
   controller.countFromCards();
   assert.equal(controller.continuityTarget.value, 'independent');
   assert.equal(controller.planCountTarget.value, '2');
+  assert.equal(controller.totalTarget.value, '10');
   assert.equal(rows[0].querySelector('textarea').value, 'Scene 1.');
 });
 
@@ -105,10 +106,18 @@ test('the empty studio shows one model hint and an import refusal always becomes
   controller.hasCountInfoTarget=true; controller.countInfoTarget={};
   controller.hasPlanCountTarget=true; controller.planCountTarget={value:'',options:[]};
   controller.hasCountPanelTarget=true; controller.countPanelTarget={};
+  controller.hasModelLinkTarget=true; controller.modelLinkTarget={};
   controller.countStatusTarget={}; controller.hasCountApplyTarget=true; controller.countApplyTarget={};
-  controller.refresh();
+  controller.totalTarget.value = '20';
+  controller.planCountTarget.value = '2';
+  controller.duration();
+  controller.planCountChanged({preventDefault(){}});
   assert.equal(controller.noticeTarget.hidden,false);
-  assert.equal(controller.noticeTarget.textContent,'Choisis un modèle pour préparer tes plans.');
+  assert.equal(controller.noticeTarget.textContent,'Choisis un modèle pour appliquer la durée et le nombre de plans.');
+  assert.equal(controller.modelLinkTarget.hidden, false);
+  assert.equal(controller.recapTarget.disabled, true);
+  assert.equal(controller.totalTarget.value, '20');
+  assert.equal(controller.planCountTarget.value, '2');
   assert.equal(controller.singleTarget.hidden,true);
   assert.equal(controller.singleActionTarget.hidden,true);
   assert.equal(controller.countInfoTarget.hidden,true);
