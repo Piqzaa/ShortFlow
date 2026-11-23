@@ -216,6 +216,7 @@ export default class extends Controller {
       }
       const result = document.createElement('li');
       result.textContent = `${file.name} — ${issue || 'Importée'}`;
+      if (issue) result.className = 'upload-result-issue';
       this.batchResultsTarget.append(result);
       this.progressTarget.value = Math.round(100 * (index + 1) / files.length);
     }

@@ -19,7 +19,7 @@
 <div data-upload-target="title">{{ form_row(form.title) }}</div>
 <div class="upload-progress" data-upload-target="progressPanel" hidden><label for="upload-progress" data-upload-target="status" role="status" aria-live="polite">Préparation de l’import…</label><progress id="upload-progress" max="100" value="0" data-upload-target="progress">0 %</progress></div>
 <p class="upload-feedback" data-upload-target="error" role="alert" hidden></p>
-{% if app.request.query.get('next') is empty and app.request.query.get('montage') is empty %}<ul class="library-note" data-upload-target="batchResults" aria-label="Résultats de l’import" hidden></ul>{% endif %}
+{% if app.request.query.get('next') is empty and app.request.query.get('montage') is empty %}<ul class="upload-batch-results" data-upload-target="batchResults" aria-label="Résultats de l’import" hidden></ul>{% endif %}
 <button class="button" type="submit" data-upload-target="button"><span data-upload-target="buttonLabel">Importer ma vidéo</span> <span aria-hidden="true">↗</span></button>
 {{ form_end(form) }}
 </section><aside class="upload-guidance"><span class="eyebrow">UN ESPACE À TOI</span><h2>Privée, dès le premier instant.</h2><p>Seul ton compte peut lire et gérer tes vidéos.</p><ul><li>Jusqu’à 3 minutes par vidéo.</li><li>MP4 H.264 8 bits, audio AAC facultatif.</li><li>WebM VP8, VP9 ou AV1 8 bits, audio Opus/Vorbis facultatif.</li><li>{{ video_library_storage_gib }} Gio de stockage, jusqu’à 100 vidéos.</li></ul><p class="library-note">Ton fichier est conservé sans modification. Pour Instagram Reels, importe un MP4 H.264. Après l’import, prépare tes textes et choisis quand publier.</p></aside></div>
