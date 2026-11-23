@@ -10,7 +10,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'app:series:recover', description: 'Requeue the current wake-up of active series without replaying past episodes.')]
+#[AsCommand(name: 'app:series:recover', description: 'Retire active scenario recurrences and recover interrupted writing.')]
 final class RecoverSeriesRecurrencesCommand extends Command
 {
     public function __construct(private EntityManagerInterface $em, private SeriesRecurrences $recurrences)
@@ -22,10 +22,11 @@ final class RecoverSeriesRecurrencesCommand extends Command
     {
         $interrupted = $this->recurrences->recoverInterrupted();
         $rows = $this->em->getRepository(SeriesRecurrence::class)->findBy(['status' => 'active']);
+        $retired = 0;
         foreach ($rows as $row) {
-            $this->recurrences->wake($row);
+            $retired += (int) $this->recurrences->retire($row);
         }
-        $output->writeln(count($rows).' current series wake-ups queued. Duplicate deliveries do not create another episode.');
+        $output->writeln($retired.' active scenario recurrence(s) retired.');
         $output->writeln($interrupted.' interrupted writing occurrence(s) marked for review without generating a new video.');
 
         return Command::SUCCESS;

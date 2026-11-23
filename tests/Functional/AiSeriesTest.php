@@ -100,8 +100,7 @@ final class AiSeriesTest extends WebTestCase
         self::assertStringNotContainsString('synthetic-unread-credential', $this->client->getResponse()->getContent());
         self::assertStringNotContainsString('synthetic-other-key', $this->client->getResponse()->getContent());
         $this->open($series);
-        self::assertSelectorTextContains('.series-recurrence', 'Elle n’est pas nécessaire pour préparer les scénarios');
-        self::assertSelectorTextContains('.series-recurrence', 'clé API Fal');
+        self::assertSelectorNotExists('.series-recurrence');
         self::assertSame('api', $series->getRecipe()['accessMode']);
         $this->em()->persist(new \App\Entity\AiCredential($this->em()->find(User::class, $this->owner->getId()), 'synthetic-own-key', 'fal'));
         $this->em()->flush();

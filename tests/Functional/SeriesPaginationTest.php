@@ -193,13 +193,8 @@ final class SeriesPaginationTest extends WebTestCase
         self::assertSelectorExists('#occurrence-history[open]');
         self::assertSelectorExists('nav[aria-label="Pages des épisodes (haut)"] a[href*="occurrencePage=3"]');
         self::assertSelectorExists('nav[aria-label="Pages des créneaux"] a[href*="page=2"]');
-        $recurrenceFields = $crawler->selectButton('Activer la préparation des scénarios →')->form()->getPhpValues();
-        $recurrenceFields['series_recurrence']['_token'] = 'invalid';
-        $this->client->request('POST', '/studio/series/'.$series->getId().'?page=2&occurrencePage=3', $recurrenceFields);
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorExists('#episode-'.$episodes[12]->getId());
-        self::assertSelectorExists('[data-series-navigation-blocked="true"]');
-        self::assertSelectorCount(1, '#occurrence-history-content li');
+        $this->client->request('POST', '/studio/series/'.$series->getId().'?page=2&occurrencePage=3', ['series_recurrence' => ['consent' => '1']]);
+        self::assertResponseStatusCodeSame(410);
         self::assertSame('paused', $recurrence->getStatus());
         $this->client->click($crawler->selectLink('Retrouver l’épisode 1 ↗')->link());
         self::assertSelectorExists('#episode-'.$episodes[0]->getId());

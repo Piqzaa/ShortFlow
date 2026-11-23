@@ -137,7 +137,7 @@ final class AiSeriesController extends AbstractController
     }
 
     #[Route('/studio/series/{id}', name: 'app_series_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EntityManagerInterface $em, \App\Service\SeriesRecurrences $recurrences, EpisodePublications $publications, \App\Service\EpisodeCovers $covers, \App\Service\SocialAccounts $social, \App\Service\LocalStoryWriter $writer): Response
+    public function show(int $id, Request $request, #[CurrentUser] User $user, AiSeriesStudio $studio, FormFactoryInterface $forms, EntityManagerInterface $em, \App\Service\SeriesRecurrences $recurrences, EpisodePublications $publications, \App\Service\EpisodeCovers $covers, \App\Service\SocialAccounts $social): Response
     {
         $series = $studio->owned($id, $user) ?? throw $this->createNotFoundException();
         $legacyEpisode = null;
@@ -154,43 +154,11 @@ final class AiSeriesController extends AbstractController
         $pagination = $studio->episodePage($series, $this->positiveNumber($request->query->all()['page'] ?? null), $legacyEpisode?->getId() ?? $this->positiveNumber($request->query->all()['episode'] ?? null, 0));
         $episodes = $pagination['items'];
         $recurrence = $recurrences->find($series);
-        $recurrenceError = null;
-        $recurrencePreview = null;
+        if ($request->request->has('series_recurrence')) {
+            return new Response('La préparation automatique de scénarios a été retirée.', Response::HTTP_GONE);
+        }
         $invalid = false;
-        try {
-            $recurrencePreview = $recurrences->preview($series);
-        } catch (\RuntimeException|\InvalidArgumentException $error) {
-            $recurrenceError = $error->getMessage();
-        }
-        $settings = $recurrence?->getSettings() ?? [];
-        if (!$recurrence) {
-            $settings = array_replace($series->getPublicationSettings(), $settings);
-        }
         $accountChoices = $social->choices($user);
-        $settings['accounts'] ??= $social->defaults($user);
-        foreach ($settings['accounts'] as $network => $identity) {
-            if ($identity && !in_array($identity, $accountChoices[$network] ?? [], true)) {
-                $accountChoices[$network]['Compte enregistré indisponible · '.$identity] = $identity;
-            }
-        }
-        $data = array_intersect_key($settings, array_flip(['weekday', 'hour', 'timezone', 'networks', 'accounts', 'limit', 'tone', 'continuity'])) + ['weekday' => 2, 'hour' => '18:00', 'timezone' => $user->getTimezone(), 'networks' => [], 'limit' => 4, 'tone' => 'auto', 'continuity' => 'independent'];
-        $recurrenceForm = $this->createForm(\App\Form\SeriesRecurrenceType::class, $data + ['revision' => (string) ($recurrence?->getRevision() ?? 0), 'quote' => $recurrencePreview['hash'] ?? str_repeat('0', 64), 'consent' => false], ['csrf_token_id' => 'recurrence_'.$id, 'account_choices' => $accountChoices]);
-        if ($recurrencePreview) {
-            $recurrenceForm->handleRequest($request);
-            if ($recurrenceForm->isSubmitted()) {
-                $invalid = true;
-                if ($recurrenceForm->isValid()) {
-                    try {
-                        $recurrences->activate($series, $recurrenceForm->getData());
-                        $this->addFlash('success', 'Préparation des scénarios activée. Relis chaque épisode puis confirme séparément son coût pour générer la vidéo.');
-
-                        return $this->redirectToRoute('app_series_show', ['id' => $id], 303);
-                    } catch (\RuntimeException|\InvalidArgumentException $error) {
-                        $recurrenceForm->addError(new FormError($error->getMessage()));
-                    }
-                }
-            }
-        }
         $occurrences = $recurrence && $episodes ? $em->getRepository(\App\Entity\SeriesOccurrence::class)->findBy(['recurrence' => $recurrence, 'episode' => $episodes], ['scheduledAt' => 'DESC'], 12) : [];
         $occurrenceHistory = $recurrence ? $recurrences->historyPage($recurrence, $this->positiveNumber($request->query->all()['occurrencePage'] ?? null)) : ['items' => [], 'total' => 0, 'page' => 1, 'pages' => 1];
         $occurrenceByEpisode = [];
@@ -231,7 +199,7 @@ final class AiSeriesController extends AbstractController
         }
         $model = AiCatalog::MODELS[$series->getRecipe()['model']];
 
-        return $this->render('series/show.html.twig', ['writerAvailable' => $writer->available(), 'accountNames' => array_map('array_flip', $accountChoices), 'episodeCovers' => $covers->episodes($user, $episodes), 'recurrenceTotalCents' => ($recurrencePreview['cents'] ?? 0) * (is_int($recurrenceForm->get('limit')->getData()) ? $recurrenceForm->get('limit')->getData() : 0), 'recurrence' => $recurrence, 'recurrenceForm' => $recurrencePreview ? $recurrenceForm->createView() : null, 'recurrencePreview' => $recurrencePreview, 'recurrenceError' => $recurrenceError, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'pagination' => $pagination, 'navigationBlocked' => $invalid, 'occurrenceHistory' => $occurrenceHistory, 'historyOpen' => $request->query->has('occurrencePage'), 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::viewModels(), 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('series/show.html.twig', ['accountNames' => array_map('array_flip', $accountChoices), 'episodeCovers' => $covers->episodes($user, $episodes), 'recurrence' => $recurrence, 'recurrenceMissed' => $missed, 'occurrenceByEpisode' => $occurrenceByEpisode, 'publicationSummaries' => $publications->summaries($episodes), 'series' => $series, 'episodes' => $episodes, 'pagination' => $pagination, 'navigationBlocked' => $invalid, 'occurrenceHistory' => $occurrenceHistory, 'historyOpen' => $request->query->has('occurrencePage'), 'addEpisodesForm' => $this->createForm(AiEpisodeBatchType::class, ['count' => 1, 'revision' => (string) $series->getRevision()], ['csrf_token_id' => 'series_add_'.$id, 'action' => $this->generateUrl('app_series_add_episodes', ['id' => $id])]), 'episodeForms' => $episodeForms, 'model' => $model, 'models' => AiCatalog::viewModels(), 'provider' => AiCatalog::PROVIDERS[$model['provider']]], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }
 
     private function positiveNumber(mixed $value, int $fallback = 1): int
