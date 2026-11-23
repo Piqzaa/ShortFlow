@@ -90,6 +90,14 @@ services:
       MESSENGER_QUEUE: video_edits
     cpus: 2
     mem_limit: 2g
+  retention:
+    <<: *app
+    user: www-data
+    init: true
+    command: ['sh', '-c', 'trap "exit 0" TERM INT; while :; do php bin/console app:videos:retention --apply || exit; sleep 3600 & wait $$!; done']
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 5m
 
 networks:
   default:

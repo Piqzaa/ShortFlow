@@ -28,7 +28,7 @@ if ($status.state -ne 'maintenance') {
     try {
         $running = @(& docker compose @compose ps --status running --services)
         if ($LASTEXITCODE -ne 0) { throw 'État Docker Compose indisponible.' }
-        foreach ($service in 'database', 'web', 'ingress', 'publications', 'background', 'video-edits') {
+        foreach ($service in 'database', 'web', 'ingress', 'publications', 'background', 'video-edits', 'retention') {
             if ($service -notin $running) { $alerts.Add("Service arrêté : $service") }
         }
 

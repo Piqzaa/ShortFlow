@@ -30,7 +30,7 @@ La migration doit sortir avec le code zéro. L’accueil et `/build/app.js` doiv
 Sur la répétition, arrêter les processus qui écrivent avant de prendre la paire de sauvegardes. Un dump SQL transactionnel et un tar pris pendant des écritures peuvent représenter deux instants différents. Ici `web`, `publications`, `background` et `video-edits` sont les seuls services applicatifs démarrés.
 
 ```powershell
-docker compose @compose stop ingress publications background video-edits web
+docker compose @compose stop ingress publications background video-edits retention web
 docker compose @compose exec -T database sh -ec 'pg_dump -U vydflow -d vydflow -Fc --no-owner --no-privileges > /tmp/vydflow.dump'
 docker compose @compose cp database:/tmp/vydflow.dump artifacts/vydflow.dump
 docker compose @compose run --rm --no-deps -T -v "$((Get-Location).Path)/artifacts:/backup" web tar -C /app/var/storage -cf /backup/vydflow-media.tar .

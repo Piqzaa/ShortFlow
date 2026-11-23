@@ -29,7 +29,7 @@ try {
     $stage = Join-Path $backupRoot ".partial-$snapshotId"
     $destination = Join-Path $backupRoot "rehearsal-$snapshotId"
     $dump = "/tmp/vydflow-$snapshotId.dump"
-    $writers = @('ingress', 'publications', 'background', 'video-edits', 'web') | Where-Object { $_ -in $running }
+    $writers = @('ingress', 'publications', 'background', 'video-edits', 'retention', 'web') | Where-Object { $_ -in $running }
     [IO.Directory]::CreateDirectory($stage) | Out-Null
 
     try {
