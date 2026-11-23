@@ -828,7 +828,6 @@ final class AiEpisodeFlowTest extends WebTestCase
         self::assertSame(1, $quote['count']);
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?redo='.$shots[1]->getId());
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('#story-quote [data-speech-notice]', 'pas encore prises en charge');
         self::assertSelectorExists('#story-quote input[name="confirm"][required]');
         self::assertSelectorExists('#review-plans .review-plan-details');
         self::assertSelectorTextContains('.review-summary', '1 plan(s)');

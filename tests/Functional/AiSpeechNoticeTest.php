@@ -42,30 +42,12 @@ final class AiSpeechNoticeTest extends WebTestCase
         $this->client->loginUser($this->owner);
     }
 
-    private function assertNoticeBefore(string $action): void
-    {
-        self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('[data-speech-notice]', 'pas encore prises en charge');
-        self::assertSelectorTextContains('[data-speech-notice]', 'qui parle, les mots exacts et leur langue');
-        self::assertSelectorTextContains('[data-speech-notice]', 'synchronisation des lèvres');
-        $notice = $this->client->getCrawler()->filter('[data-speech-notice]')->first();
-        self::assertSame(0.0, $notice->evaluate('count(ancestor::*[@hidden or (self::details and not(@open))])')[0], 'The limitation must not be hidden in an optional panel.');
-        $ordered = $this->client->getCrawler()->filter('[data-speech-notice],'.$action);
-        self::assertGreaterThanOrEqual(2, $ordered->count());
-        self::assertSame('aside', $ordered->first()->nodeName(), 'The limitation must precede the action.');
-        self::assertSelectorTextContains('[data-quality-notice]', 'Même sans alerte');
-        self::assertSelectorTextContains('[data-quality-notice]', 'descriptions et les prompts');
-        $quality = $this->client->getCrawler()->filter('[data-quality-notice]')->first();
-        self::assertSame(0.0, $quality->evaluate('count(ancestor::*[@hidden or (self::details and not(@open))])')[0]);
-        self::assertSame('aside', $this->client->getCrawler()->filter('[data-quality-notice],'.$action)->first()->nodeName());
-        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
-    }
-
-    public function testStudioExplainsTheLimitationBeforeScenarioProposal(): void
+    public function testStudioKeepsTheGenerationFormFreeOfSpeechWarnings(): void
     {
         $this->client->request('GET', '/studio/creation');
-        $this->assertNoticeBefore('[data-story-writer-target="generate"]');
-        self::assertSelectorTextNotContains('[data-speech-notice]', 'Le modèle choisi produit des clips sans audio');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('[data-speech-notice], [data-quality-notice]');
+        self::assertSelectorExists('[data-preparation-target="recap"]');
     }
 
     /** @return iterable<string,array{string,string}> */
@@ -89,9 +71,12 @@ final class AiSpeechNoticeTest extends WebTestCase
         $this->em->persist($job);
         $this->em->flush();
         $this->client->request('GET', '/studio/ia/generations/'.$job->getId());
-        $this->assertNoticeBefore('input[name="confirm"]');
-        $text = $this->client->getCrawler()->filter('[data-speech-notice]')->text();
-        self::assertSame('kling-25' === $model, str_contains($text, 'clips sans audio'));
+        self::assertResponseIsSuccessful();
+        if ('kling-25' === $model) {
+            self::assertSelectorTextContains('[data-speech-notice]', 'Modèle sans audio.');
+        } else {
+            self::assertSelectorNotExists('[data-speech-notice]');
+        }
         self::assertSelectorExists('input[name="confirm"][required]');
         $this->em->refresh($job);
         self::assertSame($state, $job->getStatus());
@@ -133,27 +118,27 @@ final class AiSpeechNoticeTest extends WebTestCase
         $flow = static::getContainer()->get(AiEpisodeFlow::class);
         $before = $flow->quote($episode);
         $this->client->request('GET', '/studio/series/episodes/'.$episode->getId().'?review=1');
-        $this->assertNoticeBefore('#story-quote input[name="confirm"]');
-        $text = $this->client->getCrawler()->filter('#story-quote [data-speech-notice]')->text();
-        self::assertSame($mute, str_contains($text, 'couper le son des clips au montage'));
+        self::assertResponseIsSuccessful();
+        if ($mute) {
+            self::assertSelectorTextContains('#story-quote [data-speech-notice]', 'Montage sans le son des clips.');
+        } else {
+            self::assertSelectorNotExists('#story-quote [data-speech-notice]');
+        }
         self::assertSelectorExists('#story-quote input[name="confirm"][required]');
         self::assertSame($before, $flow->quote($episode));
         self::assertStringContainsString('« Bonjour Hugo ! »', $shot->getPrompt());
         self::assertNull($episode->getConsentHash());
     }
 
-    public function testRecurrenceExplainsSpeechOutsideTheCollapsedCostAuthorization(): void
+    public function testNewSeriesUsesManualEpisodePreparation(): void
     {
         $series = new AiSeries($this->owner, 'Deux amis', 'Deux amis se rencontrent.', 'Réaliste', '', $this->recipe('kling-25'));
         $this->em->persist($series);
         $this->em->flush();
         $this->client->request('GET', '/studio/series/'.$series->getId());
-        $this->assertNoticeBefore('.series-recurrence input[type="checkbox"]');
-        self::assertSelectorTextContains('.series-recurrence [data-speech-notice]', 'clips sans audio');
-        self::assertSelectorTextContains('.series-recurrence', 'n’autorise aucun appel vidéo payant');
-        self::assertSelectorTextContains('.series-recurrence [data-speech-notice]', 'Relis les prompts');
-        self::assertSelectorTextNotContains('.series-recurrence [data-speech-notice]', 'sans relecture intermédiaire du scénario');
-        self::assertSelectorExists('.series-recurrence input[name="series_recurrence[consent]"]');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('input[name^="series_recurrence"]');
+        self::assertSelectorExists('form#add-episodes button');
         self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM series_recurrence'));
     }
 }

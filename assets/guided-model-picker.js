@@ -64,8 +64,8 @@ export function GuidedModelPicker(Base) {
   }
 
   speechCaption(model, id = '') {
-    if (!model?.audio) return 'Sans audio : ce modèle ne génère ni voix ni dialogues.';
-    if (id === 'kling-3' || id === 'kling-3-image') return 'Voix annoncées en chinois ou anglais. Ce modèle ne convient pas à des dialogues français.';
+    if (!model?.audio) return 'Sans audio.';
+    if (id === 'kling-3' || id === 'kling-3-image') return 'Voix annoncées : chinois ou anglais.';
     if (id.startsWith('veo-31-subject-')) return 'Retrait de cet accès Fal annoncé le 17/11/2026.';
     return '';
   }
