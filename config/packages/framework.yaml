@@ -5,6 +5,15 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+when@prod:
+    framework:
+        trusted_hosts: '%env(TRUSTED_HOSTS)%'
+        trusted_proxies: '%env(TRUSTED_PROXIES)%'
+        trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port']
+        session:
+            cookie_secure: auto
+            cookie_samesite: lax
+
     #esi: true
     #fragments: true
 

@@ -4,6 +4,7 @@ namespace App\EventSubscriber;
 
 use App\Service\AiExchangeRateUpdater;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\Messenger\Event\WorkerRunningEvent;
 
@@ -12,13 +13,13 @@ final class AiExchangeRateListener
 {
     private int $nextCheck = 0;
 
-    public function __construct(private AiExchangeRateUpdater $updater, private LoggerInterface $logger)
+    public function __construct(private AiExchangeRateUpdater $updater, private LoggerInterface $logger, #[Autowire('%env(bool:AI_EXCHANGE_RATE_REFRESH_ENABLED)%')] private bool $enabled = true)
     {
     }
 
     public function __invoke(WorkerRunningEvent $event): void
     {
-        if (!$event->isWorkerIdle() || !in_array('background', $event->getWorker()->getMetadata()->getTransportNames(), true) || time() < $this->nextCheck) {
+        if (!$this->enabled || !$event->isWorkerIdle() || !in_array('background', $event->getWorker()->getMetadata()->getTransportNames(), true) || time() < $this->nextCheck) {
             return;
         }
         $this->nextCheck = time() + 300;

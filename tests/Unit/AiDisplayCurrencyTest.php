@@ -92,11 +92,14 @@ final class AiDisplayCurrencyTest extends TestCase
 
             return new MockResponse($this->xml());
         });
-        $listener = new AiExchangeRateListener(new AiExchangeRateUpdater($this->currency, $http, $this->clock), new NullLogger());
+        $updater = new AiExchangeRateUpdater($this->currency, $http, $this->clock);
+        $listener = new AiExchangeRateListener($updater, new NullLogger(), true);
         $other = new Worker(['video_edits' => new InMemoryTransport()], new MessageBus());
         $background = new Worker(['background' => new InMemoryTransport()], new MessageBus());
         $listener(new WorkerRunningEvent($other, true));
         $listener(new WorkerRunningEvent($background, false));
+        $disabled = new AiExchangeRateListener($updater, new NullLogger(), false);
+        $disabled(new WorkerRunningEvent($background, true));
         self::assertSame(0, $requests);
         $listener(new WorkerRunningEvent($background, true));
         self::assertSame(1, $requests);

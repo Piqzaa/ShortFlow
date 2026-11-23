@@ -1,0 +1,105 @@
+name: vydflow-prod-rehearsal
+
+x-app: &app
+  image: vydflow-prod-rehearsal:local
+  pull_policy: never
+  environment: &app-env
+    APP_ENV: prod
+    APP_DEBUG: '0'
+    APP_SECRET: '${VYDFLOW_REHEARSAL_SECRET:?Define a rehearsal secret}'
+    APP_PUBLIC_URL: 'http://127.0.0.1:${VYDFLOW_REHEARSAL_PORT:-8180}'
+    DEFAULT_URI: 'http://127.0.0.1:${VYDFLOW_REHEARSAL_PORT:-8180}'
+    TRUSTED_HOSTS: '^127\.0\.0\.1$'
+    DATABASE_URL: 'postgresql://vydflow:${VYDFLOW_REHEARSAL_PASSWORD:?Define a rehearsal database password}@database:5432/vydflow?serverVersion=16&charset=utf8'
+    ACCOUNT_REGISTRATION_OPEN: '0'
+    ACCOUNT_REGISTRATION_INVITES: ''
+    MAILER_DSN: 'null://null'
+    AI_EXCHANGE_RATE_REFRESH_ENABLED: '0'
+  volumes:
+    - media:/app/var/storage
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+
+x-worker: &worker
+  <<: *app
+  user: www-data
+  init: true
+  command: ['sh', 'docker/php/worker.sh']
+  restart: unless-stopped
+  stop_signal: SIGTERM
+  stop_grace_period: 5m
+
+services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: vydflow
+      POSTGRES_USER: vydflow
+      POSTGRES_PASSWORD: '${VYDFLOW_REHEARSAL_PASSWORD:?Define a rehearsal database password}'
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-U', 'vydflow', '-d', 'vydflow']
+      interval: 3s
+      timeout: 3s
+      retries: 25
+    volumes:
+      - postgres:/var/lib/postgresql/data
+  migrate:
+    image: vydflow-prod-rehearsal:local
+    pull_policy: never
+    user: www-data
+    environment: *app-env
+    command: ['php', 'bin/console', 'doctrine:migrations:migrate', '--no-interaction']
+    depends_on:
+      database:
+        condition: service_healthy
+  web:
+    <<: *app
+    build:
+      context: .
+      dockerfile: docker/production/Dockerfile
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'php', '-r', 'exit(file_get_contents("http://127.0.0.1/") === false ? 1 : 0);']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+  ingress:
+    image: nginx:alpine
+    configs:
+      - source: rehearsal-ingress
+        target: /etc/nginx/conf.d/default.conf
+    ports:
+      - '127.0.0.1:${VYDFLOW_REHEARSAL_PORT:-8180}:80'
+    networks: [default, ingress]
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+  publications:
+    <<: *worker
+  background:
+    <<: *worker
+    environment:
+      <<: *app-env
+      MESSENGER_QUEUE: background
+  video-edits:
+    <<: *worker
+    environment:
+      <<: *app-env
+      MESSENGER_QUEUE: video_edits
+    cpus: 2
+    mem_limit: 2g
+
+networks:
+  default:
+    internal: true
+  ingress: {}
+
+configs:
+  rehearsal-ingress:
+    file: docker/production/rehearsal-ingress.conf
+
+volumes:
+  postgres:
+  media:
