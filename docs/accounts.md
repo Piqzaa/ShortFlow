@@ -27,6 +27,12 @@ Un créateur crée son compte, confirme son email, puis se connecte à son espac
 
 **Pourquoi Messenger n’intervient pas encore** : ces emails sont envoyés au SMTP local pendant la requête. Le premier worker sera ajouté pour une véritable tâche longue, notamment la génération IA. Ne pas confondre service injecté et processus en arrière-plan.
 
+## Configuration du pilote fermé
+
+- `ACCOUNT_REGISTRATION_OPEN=0` active l’inscription sur invitation. Renseigner `ACCOUNT_REGISTRATION_INVITES` avec les adresses autorisées séparées par des virgules. Une liste vide ferme les nouvelles inscriptions. La comparaison ignore la casse et les espaces autour des adresses. Une adresse non invitée reçoit la réponse neutre habituelle et ne crée ni compte, ni jeton, ni email. Les comptes existants peuvent se connecter et récupérer leur accès.
+- `ACCOUNT_MAIL_FROM` définit l’adresse d’expédition pour la confirmation et la récupération, avec le nom affiché **VydFlow**. Le défaut local reste `bonjour@vydflow.test`. Sur la cible, le remplacer par une adresse autorisée par le transport configuré dans `MAILER_DSN`.
+- Définir `APP_PUBLIC_URL` sur l’origine HTTPS du pilote pour les liens de confirmation et de récupération. Rejouer ces deux parcours avec le transport réel de la cible avant d’inviter les participants.
+
 ## Tester en local
 1. `docker compose up -d`, puis `docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction` et `npm run build`.
 2. Ouvrir http://localhost:8000/inscription et créer un compte de test avec une adresse fictive du domaine example.test.

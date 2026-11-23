@@ -9,12 +9,14 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class AccountAccess
 {
+    /** @param list<string|null> $registrationInvites */
     public function __construct(
         private EntityManagerInterface $em,
         private UserRepository $users,
@@ -22,11 +24,17 @@ final class AccountAccess
         private MailerInterface $mailer,
         private UrlGeneratorInterface $urls,
         #[Autowire('%env(APP_PUBLIC_URL)%')] private string $publicUrl,
+        #[Autowire('%env(ACCOUNT_MAIL_FROM)%')] private string $mailFrom,
+        #[Autowire('%env(bool:ACCOUNT_REGISTRATION_OPEN)%')] private bool $registrationOpen,
+        #[Autowire('%env(csv:ACCOUNT_REGISTRATION_INVITES)%')] private array $registrationInvites,
     ) {
     }
 
     public function register(string $email, string $password): void
     {
+        if (!$this->registrationOpen && !in_array(mb_strtolower(trim($email)), array_map(static fn (?string $invite): string => mb_strtolower(trim($invite ?? '')), $this->registrationInvites), true)) {
+            return;
+        }
         if (null !== $this->users->findByEmail($email)) {
             return;
         }
@@ -70,7 +78,7 @@ final class AccountAccess
         $link = rtrim($this->publicUrl, '/').$this->urls->generate($reset ? 'app_reset_password' : 'app_verify_email').'#token='.$raw;
         $subject = $reset ? 'Choisis ton nouveau mot de passe VydFlow' : 'Confirme ton adresse email VydFlow';
         $text = $subject."\n\n".$link."\n\nCode à copier si nécessaire :\n".$raw."\n\n".($reset ? 'Ce lien est valable 30 minutes.' : 'Ce lien est valable 24 heures.')." Il ne fonctionne qu’une fois.\nSi tu n’es pas à l’origine de cette demande, ignore cet email.";
-        $this->mailer->send((new Email())->from('VydFlow <bonjour@vydflow.test>')->to($user->getEmail())->subject($subject)->text($text));
+        $this->mailer->send((new Email())->from(new Address($this->mailFrom, 'VydFlow'))->to($user->getEmail())->subject($subject)->text($text));
     }
 
     public function consumeToken(string $raw, string $purpose, ?string $password = null): bool

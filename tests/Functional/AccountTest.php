@@ -155,6 +155,35 @@ final class AccountTest extends WebTestCase
         self::assertSame(0, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM app_user'));
     }
 
+    public function testClosedRegistrationCreatesOnlyInvitedAccountsAndKeepsResponsesNeutral(): void
+    {
+        $environment = ['ACCOUNT_REGISTRATION_OPEN' => '0', 'ACCOUNT_REGISTRATION_INVITES' => ' Invited@example.fr , other@example.fr'];
+        $previousEnv = array_intersect_key($_ENV, $environment);
+        $previousServer = array_intersect_key($_SERVER, $environment);
+        $_ENV = array_replace($_ENV, $environment);
+        $_SERVER = array_replace($_SERVER, $environment);
+        try {
+            foreach (['unknown@example.fr' => 0, 'invited@example.fr' => 1] as $email => $expected) {
+                $page = $this->client->request('GET', '/inscription');
+                $this->client->submit($page->selectButton('Créer mon compte')->form([
+                    'registration[email]' => $email,
+                    'registration[password][first]' => 'une phrase vraiment longue',
+                    'registration[password][second]' => 'une phrase vraiment longue',
+                ]));
+                self::assertResponseRedirects('/connexion', 303);
+                self::assertEmailCount($expected);
+                $db = static::getContainer()->get(Connection::class);
+                self::assertSame($expected, (int) $db->fetchOne('SELECT COUNT(*) FROM app_user'));
+                self::assertSame($expected, (int) $db->fetchOne('SELECT COUNT(*) FROM account_token'));
+                $this->client->followRedirect();
+                self::assertSelectorTextContains('.account-notice.success', 'Si cette adresse');
+            }
+        } finally {
+            $_ENV = array_replace(array_diff_key($_ENV, $environment), $previousEnv);
+            $_SERVER = array_replace(array_diff_key($_SERVER, $environment), $previousServer);
+        }
+    }
+
     public function testLoginIsCaseInsensitiveAndLogoutRequiresCsrf(): void
     {
         $this->createUser('alice@example.fr');
@@ -265,6 +294,8 @@ final class AccountTest extends WebTestCase
         self::assertEmailCount(1);
         $email = self::getMailerMessage();
         self::assertNotNull($email);
+        self::assertSame('pilote@example.test', $email->getFrom()[0]->getAddress());
+        self::assertSame('VydFlow', $email->getFrom()[0]->getName());
         $body = $email->getTextBody();
         self::assertStringContainsString('http://localhost:8000/compte/nouveau-mot-de-passe#token=', $body);
         self::assertStringNotContainsString('malicious.example', $body);
