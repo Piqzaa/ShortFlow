@@ -27,6 +27,8 @@ Lecture des seuls compteurs locaux de `shortflow`, sans appel réseau ni lecture
 
 Une date locale valide ne démontre pas que l’autorisation est toujours acceptée par la plateforme. Commencer avec un réseau dont l’accès vient d’être confirmé et dont la visibilité convient au participant.
 
+**Prévol YouTube du 23 novembre.** Pour l’essai autorisé avec le MP4 portrait synthétique de 4 secondes en non répertorié, Google a refusé le renouvellement OAuth des deux connexions enregistrées avec `HTTP 400 invalid_grant`. Le clip est resté en dehors de la bibliothèque et aucun envoi n’a été créé. Reconnecter une chaîne depuis **Comptes**, vérifier son identité distante, puis reprendre le même essai.
+
 ## Déroulé du premier essai
 
 1. Sur un iPhone et un Android, importer chacun un export compatible et vérifier l’orientation, l’image et le son. Relever le réglage d’export exact et tout message qui bloque.
