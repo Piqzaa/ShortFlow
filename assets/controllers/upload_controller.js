@@ -1,9 +1,14 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['file', 'button', 'progressPanel', 'progress', 'status', 'error', 'zone', 'preview', 'player', 'fileName', 'previewInfo', 'previewError'];
+  static targets = ['file', 'button', 'buttonLabel', 'progressPanel', 'progress', 'status', 'error', 'zone', 'preview', 'player', 'fileName', 'previewInfo', 'previewError', 'batchHint', 'batchResults', 'title'];
 
   connect() {
+    this.batchEnabled = this.hasBatchResultsTarget && Boolean(window.fetch && window.FormData);
+    if (this.batchEnabled) {
+      this.fileTarget.multiple = true;
+      this.batchHintTarget.hidden = false;
+    }
     this.selected();
     this.hidePage = () => this.clearPreview();
     this.showPage = () => this.selected();
@@ -20,9 +25,19 @@ export default class extends Controller {
   }
 
   selected() {
-    if (this.request) return;
+    if (this.request || this.batch) return;
     this.clearPreview();
     this.errorTarget.hidden = true;
+    const count = this.fileTarget.files.length;
+    if (this.batchEnabled) {
+      this.titleTarget.hidden = count > 1;
+      this.buttonLabelTarget.textContent = count > 1 ? `Importer ${count} vidéos` : 'Importer ma vidéo';
+      this.batchHintTarget.textContent = count > 1 ? `${count} vidéos sélectionnées · 10 par lot maximum` : 'Tu peux sélectionner jusqu’à 10 vidéos.';
+    }
+    if (count > 1) {
+      if (count > 10) this.fail('Sélectionne 10 vidéos maximum par lot.');
+      return;
+    }
     const file = this.fileTarget.files[0];
     if (!file) return;
     const issue = this.fileIssue(file);
@@ -55,7 +70,7 @@ export default class extends Controller {
   drag(event) {
     if (!Array.from(event.dataTransfer?.types || []).includes('Files')) return;
     event.preventDefault();
-    if (this.request) { event.dataTransfer.dropEffect = 'none'; return; }
+    if (this.request || this.batch) { event.dataTransfer.dropEffect = 'none'; return; }
     event.dataTransfer.dropEffect = 'copy';
     this.zoneTarget.classList.add('is-dragging');
   }
@@ -67,16 +82,16 @@ export default class extends Controller {
   drop(event) {
     event.preventDefault();
     this.zoneTarget.classList.remove('is-dragging');
-    if (this.request) return;
+    if (this.request || this.batch) return;
     const files = event.dataTransfer?.files;
     if (!files?.length) return;
-    if (files.length !== 1) { this.fail('Dépose une seule vidéo à la fois.'); return; }
+    if (!this.batchEnabled && files.length !== 1) { this.fail('Dépose une seule vidéo à la fois.'); return; }
     this.fileTarget.files = files;
     this.fileTarget.dispatchEvent(new Event('change', {bubbles:true}));
   }
 
   remove() {
-    if (this.request) return;
+    if (this.request || this.batch) return;
     this.fileTarget.value = '';
     this.selected();
     this.fileTarget.focus();
@@ -95,7 +110,11 @@ export default class extends Controller {
   submit(event) {
     if (!window.XMLHttpRequest || !window.FormData) return;
     event.preventDefault();
-    if (this.request) return;
+    if (this.request || this.batch) return;
+    if (this.batchEnabled && this.fileTarget.files.length > 1) {
+      this.submitBatch(Array.from(this.fileTarget.files));
+      return;
+    }
     const file = this.fileTarget.files[0];
     const issue = this.fileIssue(file);
     if (issue) {
@@ -154,6 +173,60 @@ export default class extends Controller {
     request.send(data);
   }
 
+  async submitBatch(files) {
+    if (files.length > 10) {
+      this.fail('Sélectionne 10 vidéos maximum par lot.');
+      return;
+    }
+
+    const batch = new AbortController();
+    const data = new FormData(this.element);
+    data.delete('video_upload[title]');
+    this.batch = batch;
+    this.buttonTarget.disabled = this.fileTarget.disabled = true;
+    this.batchResultsTarget.replaceChildren();
+    this.batchResultsTarget.hidden = false;
+    this.progressPanelTarget.hidden = false;
+    this.errorTarget.hidden = true;
+    this.progressTarget.value = 0;
+    let successes = 0;
+    let stopped = false;
+    for (const [index, file] of files.entries()) {
+      this.statusTarget.textContent = `Import de la vidéo ${index + 1} sur ${files.length}…`;
+      let issue = this.fileIssue(file);
+      if (!issue && !stopped) {
+        data.set(this.fileTarget.name, file);
+        try {
+          const response = await fetch(this.element.action, {method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'}, body: data, signal: batch.signal});
+          if (response.status === 201) {
+            successes++;
+          } else if ([422, 429, 413].includes(response.status) && !response.redirected) {
+            issue = response.status === 413 ? 'Le fichier dépasse la limite d’envoi.' : ((await response.json()).message || 'Le serveur a refusé ce fichier.');
+            stopped = response.status === 429;
+          } else {
+            throw new Error('Unexpected upload response');
+          }
+        } catch {
+          if (batch.signal.aborted) return;
+          issue = 'État incertain. Vérifie ta bibliothèque avant de renvoyer ce fichier.';
+          stopped = true;
+        }
+      } else if (!issue) {
+        issue = 'Envoi interrompu avant ce fichier.';
+      }
+      const result = document.createElement('li');
+      result.textContent = `${file.name} — ${issue || 'Importée'}`;
+      this.batchResultsTarget.append(result);
+      this.progressTarget.value = Math.round(100 * (index + 1) / files.length);
+    }
+
+    this.batch = null;
+    this.buttonTarget.disabled = this.fileTarget.disabled = false;
+    this.fileTarget.value = '';
+    this.selected();
+    this.statusTarget.textContent = `${successes} vidéo${successes === 1 ? '' : 's'} importée${successes === 1 ? '' : 's'} sur ${files.length}.`;
+  }
+
   fail(message) {
     this.errorTarget.textContent = message;
     this.errorTarget.hidden = false;
@@ -164,6 +237,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.batch?.abort();
     window.removeEventListener('pagehide', this.hidePage);
     window.removeEventListener('pageshow', this.showPage);
     this.clearPreview();

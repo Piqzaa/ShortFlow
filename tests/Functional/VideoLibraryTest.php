@@ -236,12 +236,40 @@ final class VideoLibraryTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
         self::assertSame(0, static::getContainer()->get(VideoAssetRepository::class)->count([]));
         $video = $this->upload('tests/Fixtures/library-valid.mp4');
-        static::getContainer()->get(Connection::class)->executeStatement('UPDATE video_asset SET byte_size = ? WHERE id = ?', [VideoLibrary::MAX_STORAGE, $video->getId()]);
+        static::getContainer()->get(Connection::class)->executeStatement('UPDATE video_asset SET byte_size = ? WHERE id = ?', [VideoLibrary::BYTES_PER_GIB, $video->getId()]);
         $this->submitUpload($this->fixture('tests/Fixtures/library-valid.mp4'));
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.upload-form', 'a atteint sa limite');
         self::assertSame(1, static::getContainer()->get(VideoAssetRepository::class)->count([]));
         self::assertCount(1, glob(static::getContainer()->get(PrivateVideoStorage::class)->directory().'/*'));
+    }
+
+    public function testConfiguredQuotaLetsTheLibraryGrowPastOneGib(): void
+    {
+        $key = 'VIDEO_LIBRARY_STORAGE_GIB';
+        $previousEnv = $_ENV[$key] ?? null;
+        $previousServer = $_SERVER[$key] ?? null;
+        $_ENV[$key] = $_SERVER[$key] = '5';
+        try {
+            $this->asUser('alice@example.test');
+            $video = $this->upload('tests/Fixtures/library-valid.mp4');
+            $db = static::getContainer()->get(Connection::class);
+            $db->executeStatement('UPDATE video_asset SET byte_size = ? WHERE id = ?', [VideoLibrary::BYTES_PER_GIB, $video->getId()]);
+            $this->submitUpload($this->fixture('tests/Fixtures/library-valid.mp4'));
+            self::assertResponseStatusCodeSame(303);
+            self::assertSame(2, static::getContainer()->get(VideoAssetRepository::class)->count([]));
+            self::assertGreaterThan(VideoLibrary::BYTES_PER_GIB, (int) $db->fetchOne('SELECT SUM(byte_size) FROM video_asset'));
+            $this->client->request('GET', '/studio/bibliotheque/importer');
+            self::assertSelectorTextContains('.upload-guidance', '5 Gio de stockage');
+        } finally {
+            unset($_ENV[$key], $_SERVER[$key]);
+            if (null !== $previousEnv) {
+                $_ENV[$key] = $previousEnv;
+            }
+            if (null !== $previousServer) {
+                $_SERVER[$key] = $previousServer;
+            }
+        }
     }
 
     public function testTraversalStorageNameAndMissingFilesAreUnavailable(): void

@@ -9,16 +9,22 @@ use App\Entity\VideoAsset;
 use App\Repository\VideoAssetRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 final class VideoLibrary
 {
     public const MAX_BYTES = 104857600;
-    public const MAX_STORAGE = 1073741824;
+    public const BYTES_PER_GIB = 1073741824;
     public const MAX_VIDEOS = 100;
 
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private VideoProbe $probe, private PrivateVideoStorage $storage, private EpisodeReservations $episodeReservations)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private VideoProbe $probe, private PrivateVideoStorage $storage, private EpisodeReservations $episodeReservations, #[Autowire('%env(int:VIDEO_LIBRARY_STORAGE_GIB)%')] private int $storageGib)
     {
+    }
+
+    public function storageLimitBytes(): int
+    {
+        return $this->storageGib * self::BYTES_PER_GIB;
     }
 
     public function import(User $owner, UploadedFile $file, ?string $title, ?AiEpisode $completingEpisode = null, ?AiGeneration $completingGeneration = null): VideoAsset
@@ -53,8 +59,8 @@ final class VideoLibrary
                     throw new VideoLibraryException('Génération indisponible.');
                 }
                 $reserved = $this->episodeReservations->slots($owner, $completingEpisode, $completingGeneration, true);
-                if ($usage['count'] + $reserved >= self::MAX_VIDEOS || $usage['bytes'] + $reserved * self::MAX_BYTES + $video->getByteSize() > self::MAX_STORAGE) {
-                    throw new VideoLibraryException('Ta bibliothèque a atteint sa limite : 100 vidéos ou 1 Go. Supprime une vidéo pour libérer de la place.');
+                if ($usage['count'] + $reserved >= self::MAX_VIDEOS || $usage['bytes'] + $reserved * self::MAX_BYTES + $video->getByteSize() > $this->storageLimitBytes()) {
+                    throw new VideoLibraryException(sprintf('Ta bibliothèque a atteint sa limite (%d vidéos ou %d Gio). Supprime une vidéo pour libérer de la place.', self::MAX_VIDEOS, $this->storageGib));
                 }
                 $this->storage->store($file, $name);
                 $this->em->persist($video);

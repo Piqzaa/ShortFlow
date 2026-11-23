@@ -569,7 +569,7 @@ final class VideoEditTest extends WebTestCase
     public function testExportRequiresAvailableStorage(): void
     {
         $project = $this->project();
-        $full = new VideoAsset($this->owner, 'Occupation fictive', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', VideoLibrary::MAX_STORAGE, 1, 96, 64, 'h264');
+        $full = new VideoAsset($this->owner, 'Occupation fictive', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', VideoLibrary::BYTES_PER_GIB, 1, 96, 64, 'h264');
         $this->em()->persist($full);
         $this->em()->flush();
         try {

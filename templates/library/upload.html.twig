@@ -11,12 +11,16 @@
 {{ form_start(form, {attr: {class: 'account-form upload-form', 'data-controller': 'upload', 'data-action': 'submit->upload#submit'}}) }}
 {{ form_errors(form) }}
 <div class="upload-file-zone" data-upload-target="zone" data-action="dragover->upload#drag dragleave->upload#leave drop->upload#drop"><span class="upload-symbol" aria-hidden="true">↥</span>{{ form_row(form.file) }}<p>Glisse ta vidéo ici ou choisis un fichier.<br>MP4 ou WebM · 100 Mo maximum</p></div>
+{% if app.request.query.get('next') is empty and app.request.query.get('montage') is empty %}
+<p class="library-note" data-upload-target="batchHint" hidden>Tu peux sélectionner jusqu’à 10 vidéos.</p>
+{% endif %}
 <p class="library-note">Depuis ton téléphone, exporte en MP4 H.264 à 30 images/s. Si ta vidéo est en MOV ou HEVC, exporte une copie en MP4 H.264 avant l’import.</p>
 <section class="upload-preview" data-upload-target="preview" aria-label="Aperçu avant import" hidden><video controls playsinline muted preload="metadata" data-upload-target="player" data-action="loadedmetadata->upload#metadata error->upload#previewFailed" aria-label="Aperçu de la vidéo sélectionnée"></video><div class="upload-preview-heading"><strong data-upload-target="fileName"></strong><button type="button" class="account-secondary" data-action="upload#remove">Retirer</button></div><p class="library-note" data-upload-target="previewInfo" role="status" aria-live="polite"></p><p class="library-note" data-upload-target="previewError" hidden>Ce navigateur ne peut pas afficher l’aperçu. Tu peux importer la vidéo pour vérifier son format.</p><small>Rien n’est envoyé avant « Importer ma vidéo ».</small></section>
-{{ form_row(form.title) }}
+<div data-upload-target="title">{{ form_row(form.title) }}</div>
 <div class="upload-progress" data-upload-target="progressPanel" hidden><label for="upload-progress" data-upload-target="status" role="status" aria-live="polite">Préparation de l’import…</label><progress id="upload-progress" max="100" value="0" data-upload-target="progress">0 %</progress></div>
 <p class="upload-feedback" data-upload-target="error" role="alert" hidden></p>
-<button class="button" type="submit" data-upload-target="button">Importer ma vidéo <span aria-hidden="true">↗</span></button>
+{% if app.request.query.get('next') is empty and app.request.query.get('montage') is empty %}<ul class="library-note" data-upload-target="batchResults" aria-label="Résultats de l’import" hidden></ul>{% endif %}
+<button class="button" type="submit" data-upload-target="button"><span data-upload-target="buttonLabel">Importer ma vidéo</span> <span aria-hidden="true">↗</span></button>
 {{ form_end(form) }}
-</section><aside class="upload-guidance"><span class="eyebrow">UN ESPACE À TOI</span><h2>Privée, dès le premier instant.</h2><p>Seul ton compte peut lire et gérer tes vidéos.</p><ul><li>Jusqu’à 3 minutes par vidéo.</li><li>MP4 H.264 8 bits, audio AAC facultatif.</li><li>WebM VP8, VP9 ou AV1 8 bits, audio Opus/Vorbis facultatif.</li><li>1 Go de stockage, jusqu’à 100 vidéos.</li></ul><p class="library-note">Ton fichier est conservé sans modification. Pour Instagram Reels, importe un MP4 H.264. Après l’import, prépare tes textes et choisis quand publier.</p></aside></div>
+</section><aside class="upload-guidance"><span class="eyebrow">UN ESPACE À TOI</span><h2>Privée, dès le premier instant.</h2><p>Seul ton compte peut lire et gérer tes vidéos.</p><ul><li>Jusqu’à 3 minutes par vidéo.</li><li>MP4 H.264 8 bits, audio AAC facultatif.</li><li>WebM VP8, VP9 ou AV1 8 bits, audio Opus/Vorbis facultatif.</li><li>{{ video_library_storage_gib }} Gio de stockage, jusqu’à 100 vidéos.</li></ul><p class="library-note">Ton fichier est conservé sans modification. Pour Instagram Reels, importe un MP4 H.264. Après l’import, prépare tes textes et choisis quand publier.</p></aside></div>
 {% endblock %}

@@ -4,10 +4,10 @@
 Passer d’un compte vide à un parcours concret : inscription depuis la landing bêta, confirmation email, connexion, import, lecture, renommage et suppression de ses propres vidéos. La programmation, les réseaux et l’IA restent à venir. Aucun compte fournisseur, service cloud, worker ou paiement nécessaire.
 
 ## Limites explicites de la bêta
-- Un fichier par import, 100 Mo maximum (104 857 600 octets), jusqu’à 180 secondes.
+- Depuis l’import de la bibliothèque, jusqu’à 10 vidéos peuvent être sélectionnées ensemble. Elles sont envoyées une par une et leur résultat est affiché individuellement. Chaque fichier reste limité à 100 Mio (104 857 600 octets) et 180 secondes. Les imports depuis un brouillon, un montage ou une série gardent leur contexte et prennent un fichier à la fois.
 - MP4 avec vidéo H.264 8 bits et audio AAC facultatif ; WebM avec VP8/VP9/AV1 8 bits et audio Opus/Vorbis facultatif. Une piste vidéo, au maximum une piste audio. Pas de pièce jointe, sous-titre ou piste de données.
 - Dimensions entre 2 et 3 840 pixels par côté. Vertical, carré et horizontal acceptés. Ce sont des limites d’import VydFlow, pas une garantie de compatibilité avec chaque réseau ou navigateur.
-- 1 Go (1 073 741 824 octets) et 100 vidéos par compte ; 10 tentatives d’import par compte sur 15 minutes. Ces plafonds sont locaux, pas une offre commerciale ou un abonnement.
+- 5 Gio par défaut (`VIDEO_LIBRARY_STORAGE_GIB`) et 100 vidéos par compte. Le quota en octets s’applique aux imports, exports et réservations IA. Le volume de stockage doit être dimensionné pour la cohorte et surveillé indépendamment des quotas individuels. Les tests historiques de quota utilisent 1 Gio. L’import accepte 10 tentatives par compte sur 15 minutes.
 - Aucun transcodage, montage, génération de miniature ni analyse de toutes les images. La sonde vérifie les métadonnées réelles ; un fichier endommagé plus loin peut encore échouer à la lecture. Les codecs effectivement lisibles dépendent du navigateur.
 
 ## Fichiers et composants Symfony
@@ -31,6 +31,8 @@ Passer d’un compte vide à un parcours concret : inscription depuis la landing
 5. Renommer passe par un formulaire validé. Supprimer demande une confirmation séparée et un CSRF lié à l’id. Le fichier est d’abord déplacé dans une zone de suppression privée, le record supprimé en transaction, puis le fichier purgé. En cas d’échec de transaction, le déplacement est restauré.
 
 ## Nettoyage et exploitation locale
+
+Pour le pilote, stocker les fichiers privés sur un volume persistant. Dimensionner le volume au-dessus du total réellement consommé, avec de la place pour les transferts temporaires et les exports, puis prévoir une sauvegarde séparée et une alerte d’espace disque. À 5 Gio par personne, une cohorte de 50 comptes peut occuper jusqu’à 250 Gio de vidéos de bibliothèque. PostgreSQL continue de conserver uniquement les métadonnées de ces fichiers. Pour une cohorte plus grande, évaluer un stockage objet privé et prévoir la lecture, les téléchargements temporaires des workers, les liens de livraison à durée limitée, le trafic et la restauration avant de migrer les médias.
 Si la purge immédiate après suppression échoue, le fichier `.deleted-*` reste privé. La commande `docker compose exec php php bin/console app:videos:cleanup-trash` purge uniquement les fichiers de ce motif datant de plus de 24 h et **sans référence active en base**. Elle ne purge pas les fichiers d’import orphelins ni les vidéos actives. Une restauration échouée nécessite un rapprochement manuel ; conserver le fichier tant qu’une ligne le référence. Les fichiers temporaires PHP rejetés restent gérés par le cycle de requête PHP.
 
 Le serveur PHP intégré et le stockage bind-mounted restent réservés au local ; droits NTFS du propriétaire et droits Unix ne sont pas équivalents. La suppression future d’un compte devra supprimer les fichiers, pas seulement ses lignes Doctrine. Avant production : serveur HTTP adapté, limites d’upload cohérentes, HTTPS, sauvegarde conjointe base/fichiers, restauration et politique de conservation. Aucun déploiement réalisé dans ce lot.

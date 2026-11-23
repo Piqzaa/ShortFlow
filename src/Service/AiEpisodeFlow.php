@@ -17,7 +17,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 
 final class AiEpisodeFlow
 {
-    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent, private AiPlanInputs $inputs, private AiShotPrompts $prompts, private AiCharacterSelection $characterSelection)
+    public function __construct(private EntityManagerInterface $em, private AiCatalog $catalog, private AiGenerations $generations, private AiKeys $keys, private AiReferenceStorage $references, private AiFrameExtractor $frames, private VideoEdits $edits, private VideoAssetRepository $videos, private EpisodeReservations $reservations, private MessageBusInterface $bus, private SeriesGenerationConsent $seriesConsent, private AiPlanInputs $inputs, private AiShotPrompts $prompts, private AiCharacterSelection $characterSelection, private VideoLibrary $library)
     {
     }
 
@@ -766,7 +766,7 @@ final class AiEpisodeFlow
         $usage = $this->videos->usage($owner);
         $active = $this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]);
         $slots = $active + $this->reservations->slots($owner) + $additional;
-        if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > VideoLibrary::MAX_STORAGE) {
+        if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > $this->library->storageLimitBytes()) {
             throw new \RuntimeException('Place insuffisante : prévois 100 Mo et une place par plan restant, plus la vidéo assemblée.');
         }
     }

@@ -92,3 +92,48 @@ test('server import refusal stays visible and keeps the selected file and previe
   const request=requests[0];request.status=422;request.getResponseHeader=()=> 'application/json';request.responseText=JSON.stringify({message:'Cette vidéo dépasse 3 minutes.'});request.onload();
   assert.equal(c.errorTarget.hidden,false);assert.match(c.errorTarget.textContent,/3 minutes/);assert.equal(c.fileTarget.disabled,false);assert.equal(c.fileTarget.files[0],file);assert.equal(c.previewTarget.hidden,false);
 });
+
+function batchUpload(respond) {
+  const results = [];
+  const requests = [];
+  const source = readFileSync(new URL('../../assets/controllers/upload_controller.js', import.meta.url), 'utf8')
+    .replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Upload');
+  const Upload = runInNewContext(`${source}\nUpload`, {
+    AbortController,
+    Controller: class {},
+    FormData: class extends Map { constructor() { super(); } },
+    document: { createElement: () => ({}) },
+    fetch: async (url, options) => {
+      requests.push({url, file: options.body.get('video_upload[file]').name});
+      return respond(requests.length);
+    },
+  });
+  const controller = new Upload();
+  Object.assign(controller, {
+    element: {action: '/studio/bibliotheque/importer'},
+    fileTarget: {name: 'video_upload[file]'}, buttonTarget: {}, progressPanelTarget: {},
+    errorTarget: {}, progressTarget: {}, statusTarget: {}, selected() {},
+    batchResultsTarget: {replaceChildren() {}, append: item => results.push(item.textContent)},
+  });
+  return {controller, results, requests};
+}
+
+test('batch sends files independently and reports a rejection between successful files', async () => {
+  const {controller, results, requests} = batchUpload(index => index === 2
+    ? {status: 422, json: async () => ({message: 'Vidéo illisible.'})} : {status: 201});
+  const files = ['un.mp4', 'deux.webm', 'trois.mp4'].map(name => ({name, size: 20}));
+  await controller.submitBatch(files);
+  assert.deepEqual(requests.map(request => request.file), files.map(file => file.name));
+  assert.deepEqual(results, ['un.mp4 — Importée', 'deux.webm — Vidéo illisible.', 'trois.mp4 — Importée']);
+  assert.equal(controller.statusTarget.textContent, '2 vidéos importées sur 3.');
+  assert.equal(controller.fileTarget.value, '');
+});
+
+test('batch stops on an uncertain response and identifies files that were never sent', async () => {
+  const {controller, results, requests} = batchUpload(() => { throw new Error('network down'); });
+  await controller.submitBatch([{name: 'un.mp4', size: 20}, {name: 'deux.mp4', size: 20}]);
+  assert.equal(requests.length, 1);
+  assert.match(results[0], /État incertain/);
+  assert.match(results[1], /avant ce fichier/);
+  assert.equal(controller.buttonTarget.disabled, false);
+});

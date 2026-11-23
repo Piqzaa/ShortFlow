@@ -216,7 +216,7 @@ final class VideoEdits
         $usage = $this->videos->usage($owner);
         $episode = $edit ? $this->em->getRepository(AiEpisode::class)->findOneBy(['assembly' => $edit]) : null;
         $reserved = $this->episodeReservations->slots($owner, $episode, null, true);
-        if ($usage['count'] + $reserved >= VideoLibrary::MAX_VIDEOS || $usage['bytes'] + ($reserved + 1) * VideoLibrary::MAX_BYTES > VideoLibrary::MAX_STORAGE) {
+        if ($usage['count'] + $reserved >= VideoLibrary::MAX_VIDEOS || $usage['bytes'] + ($reserved + 1) * VideoLibrary::MAX_BYTES > $this->library->storageLimitBytes()) {
             throw new VideoLibraryException('Libère une place et 100 Mo dans ta bibliothèque avant l’export.');
         }
     }
