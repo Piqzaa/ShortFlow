@@ -1,0 +1,131 @@
+name: vydflow-production
+
+x-app: &app
+  image: ${VYDFLOW_IMAGE:-vydflow-production:local}
+  env_file: ${VYDFLOW_ENV_FILE:-.env.production.local}
+  environment: &app-env
+    APP_ENV: prod
+    APP_DEBUG: '0'
+    APP_SECRET: ${VYDFLOW_APP_SECRET:?Set VYDFLOW_APP_SECRET}
+    APP_PUBLIC_URL: https://${VYDFLOW_DOMAIN:?Set VYDFLOW_DOMAIN}
+    DEFAULT_URI: https://${VYDFLOW_DOMAIN:?Set VYDFLOW_DOMAIN}
+    SEO_PUBLIC_ORIGIN: https://${VYDFLOW_DOMAIN:?Set VYDFLOW_DOMAIN}
+    SEO_INDEXING_ENABLED: '0'
+    TRUSTED_HOSTS: ${VYDFLOW_TRUSTED_HOSTS:?Set the exact domain pattern}
+    TRUSTED_PROXIES: ${VYDFLOW_PROXY_IP:-172.30.242.10}
+    DATABASE_URL: 'postgresql://vydflow:${VYDFLOW_DATABASE_PASSWORD:?Set a hexadecimal database password}@database:5432/vydflow?serverVersion=16&charset=utf8'
+    ACCOUNT_REGISTRATION_OPEN: '0'
+    AI_EXCHANGE_RATE_REFRESH_ENABLED: '0'
+  volumes:
+    - media:/app/var/storage
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+
+x-worker: &worker
+  <<: *app
+  user: www-data
+  init: true
+  command: ['sh', 'docker/php/worker.sh']
+  restart: unless-stopped
+  stop_signal: SIGTERM
+  stop_grace_period: 5m
+
+services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: vydflow
+      POSTGRES_USER: vydflow
+      POSTGRES_PASSWORD: ${VYDFLOW_DATABASE_PASSWORD:?Set a hexadecimal database password}
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-U', 'vydflow', '-d', 'vydflow']
+      interval: 3s
+      timeout: 3s
+      retries: 25
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  migrate:
+    <<: *app
+    user: www-data
+    command: ['php', 'bin/console', 'doctrine:migrations:migrate', '--no-interaction']
+    depends_on:
+      database:
+        condition: service_healthy
+
+  web:
+    <<: *app
+    build:
+      context: .
+      dockerfile: docker/production/Dockerfile
+    environment:
+      <<: *app-env
+      VYDFLOW_DOMAIN: ${VYDFLOW_DOMAIN:?Set VYDFLOW_DOMAIN}
+    healthcheck:
+      test: ['CMD', 'php', '-r', 'exit(file_get_contents("http://127.0.0.1/", false, stream_context_create(["http" => ["header" => "Host: ".getenv("VYDFLOW_DOMAIN")]])) === false ? 1 : 0);']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks: [default, outbound]
+    restart: unless-stopped
+
+  ingress:
+    image: nginx:alpine
+    environment:
+      VYDFLOW_DOMAIN: ${VYDFLOW_DOMAIN:?Set VYDFLOW_DOMAIN}
+      NGINX_ENVSUBST_FILTER: '^VYDFLOW_DOMAIN$'
+    configs:
+      - source: production-ingress
+        target: /etc/nginx/templates/default.conf.template
+    volumes:
+      - "${VYDFLOW_TLS_DIR:?Set VYDFLOW_TLS_DIR}:/etc/nginx/tls:ro"
+      - "${VYDFLOW_ACME_DIR:?Set VYDFLOW_ACME_DIR}:/var/www/acme:ro"
+    ports:
+      - '${VYDFLOW_BIND:-0.0.0.0}:${VYDFLOW_HTTP_PORT:-80}:80'
+      - '${VYDFLOW_BIND:-0.0.0.0}:${VYDFLOW_HTTPS_PORT:-443}:443'
+    networks:
+      default:
+        ipv4_address: ${VYDFLOW_PROXY_IP:-172.30.242.10}
+      ingress: {}
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+
+  publications:
+    <<: *worker
+    networks: [default, outbound]
+  background:
+    <<: *worker
+    environment:
+      <<: *app-env
+      MESSENGER_QUEUE: background
+    networks: [default, outbound]
+  video-edits:
+    <<: *worker
+    environment:
+      <<: *app-env
+      MESSENGER_QUEUE: video_edits
+    cpus: 2
+    mem_limit: 2g
+  retention:
+    <<: *worker
+    command: ['sh', '-c', 'trap "exit 0" TERM INT; while :; do php bin/console app:videos:retention --apply || exit; sleep 3600 & wait $$!; done']
+
+networks:
+  default:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${VYDFLOW_INTERNAL_SUBNET:-172.30.242.0/24}
+  outbound: {}
+  ingress: {}
+
+configs:
+  production-ingress:
+    file: docker/production/ingress.conf.template
+
+volumes:
+  postgres:
+  media:

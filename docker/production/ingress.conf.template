@@ -1,0 +1,49 @@
+server {
+    listen 80 default_server;
+    return 400;
+}
+
+server {
+    listen 80;
+    server_name ${VYDFLOW_DOMAIN};
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/acme;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 308 https://${VYDFLOW_DOMAIN}$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl default_server;
+    ssl_reject_handshake on;
+    return 400;
+}
+
+server {
+    listen 443 ssl;
+    server_name ${VYDFLOW_DOMAIN};
+    ssl_certificate /etc/nginx/tls/fullchain.pem;
+    ssl_certificate_key /etc/nginx/tls/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    server_tokens off;
+    access_log off;
+    client_max_body_size 105m;
+
+    location / {
+        resolver 127.0.0.11 ipv6=off valid=10s;
+        set $backend web;
+        proxy_pass http://$backend:80;
+        proxy_set_header Host ${VYDFLOW_DOMAIN};
+        proxy_set_header Forwarded "";
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Host "";
+        proxy_set_header X-Forwarded-Port 443;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_request_buffering off;
+        proxy_read_timeout 180s;
+    }
+}
