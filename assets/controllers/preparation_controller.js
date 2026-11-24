@@ -1,6 +1,6 @@
 import { selectedCharacters, setCharacters } from '../character-choices.js';
 import { Controller } from '@hotwired/stimulus';
-import { proposePlan } from '../preparation-plan.js';
+import { possiblePlanTotals, proposePlan } from '../preparation-plan.js';
 
 export default class extends Controller {
   static targets = ['total', 'notice', 'modelLink', 'continuity', 'continuityHelp', 'continuityPanel', 'single', 'singleAction', 'singleStatus', 'singleButton', 'useTotal', 'recap', 'fixContinuity', 'audioHelp', 'countPanel', 'countInfo', 'planCount', 'countStatus', 'countApply', 'imageModeButton', 'singleCount', 'continuityOptions'];
@@ -43,6 +43,23 @@ export default class extends Controller {
   }
   duration(event) {
     if (!this.model) { this.refresh(); return; }
+    const desired = Number(this.totalTarget.value);
+    const max = Math.max(...this.model.seconds);
+    const currentCount = this.desiredCount ?? this.editor?.rows().length ?? 1;
+    if (this.editor && desired > max * currentCount) {
+      const { parts } = proposePlan(desired, this.model.seconds);
+      if (parts) {
+        const continuity = this.continuityTarget.value;
+        const count = this.hasPlanCountTarget ? this.planCountTarget.value : null;
+        if (continuity === 'single') this.continuityTarget.value = 'independent';
+        if (this.hasPlanCountTarget) this.planCountTarget.value = String(parts.length);
+        if (!this.redistribute(event)) {
+          this.continuityTarget.value = continuity;
+          if (this.hasPlanCountTarget) this.planCountTarget.value = count;
+        }
+        return;
+      }
+    }
     if (this.continuityTarget.value === 'single') {
       const row = this.editor?.rows().length === 1 ? this.editor.rows()[0] : null;
       if (!this.editor?.rows().length) { this.redistribute(event); return; }
@@ -126,12 +143,15 @@ export default class extends Controller {
     }
     const singleMode = this.continuityTarget.value === 'single';
     const desired = Number(this.totalTarget.value);
+    const max = Math.max(...model.seconds);
+    const reachable = singleMode ? possiblePlanTotals(model.seconds) : null;
     for (const option of this.totalTarget.options) {
       if (!option.value) continue;
-      const valid = !singleMode || model.seconds.includes(Number(option.value));
-      option.hidden = !valid && !option.selected;
-      option.disabled = !valid && !option.selected;
-      option.textContent = `${option.value} s${!valid && option.selected ? ' · à ajuster pour ce modèle' : ''}`;
+      const seconds = Number(option.value);
+      const split = singleMode && seconds > max && reachable.has(seconds);
+      const valid = !singleMode || model.seconds.includes(seconds);
+      option.hidden = option.disabled = !valid && !split && !option.selected;
+      option.textContent = `${option.value} s${!valid && option.selected ? ' · à ajuster pour ce modèle' : split ? ' · plusieurs plans' : ''}`;
     }
     this.editor.modelValue = model;
     for (const row of this.editor.rows()) for (const option of row.querySelector('select').options) {
@@ -162,7 +182,7 @@ export default class extends Controller {
     const invalid = this.editor.rows().some(row => !model.seconds.includes(Number(row.querySelector('select').value)));
     const proposal = proposePlan(Number(this.totalTarget.value), model.seconds, this.desiredCount);
     this.noticeTarget.textContent = !proposal.parts ? `Ce modèle ne produit pas ce total exact en huit plans maximum. Totaux proches : ${proposal.nearby.join(' ou ')} s. Choisis explicitement la durée souhaitée.` : invalid ? 'Certaines durées ne sont pas compatibles avec ce modèle. Utilise « Répartir la durée » ou ajuste les plans ; tes textes sont conservés.' : total !== Number(this.totalTarget.value) ? `Tes plans totalisent ${total} s pour ${this.totalTarget.value} s souhaitées. Ajuste les plans ou utilise « Répartir la durée ».` : `${total} s réparties en ${this.editor.rows().length} plan(s). Le modèle et les références restent modifiables avant confirmation.`;
-    if (singleMode) this.noticeTarget.textContent = `${model.name || 'Ce modèle'} · un seul clip : ${allowed} (maximum ${Math.max(...model.seconds)} s). Seules ces durées sont proposées. Tes scènes actuelles totalisent ${total} s.`;
+    if (singleMode) this.noticeTarget.textContent = `${model.name || 'Ce modèle'} · un seul clip : ${allowed} (maximum ${max} s). Une durée plus longue peut être répartie en plusieurs plans. Tes scènes actuelles totalisent ${total} s.`;
     if (singleMode && this.hasSingleActionTarget) {
       this.noticeTarget.hidden = true;
       this.singleStatusTarget.hidden = !this.singleButtonTarget.disabled && this.singleButtonTarget.hidden;

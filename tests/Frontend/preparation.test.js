@@ -3,14 +3,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { proposePlan } from '../../assets/preparation-plan.js';
+import { possiblePlanTotals, proposePlan } from '../../assets/preparation-plan.js';
 
 test('preparation reads the current shared catalog and supports older page attributes', () => {
   const source = readFileSync(new URL('../../assets/controllers/preparation_controller.js', import.meta.url), 'utf8')
     .replace("import { selectedCharacters, setCharacters } from '../character-choices.js';", '').replace("import { Controller } from '@hotwired/stimulus';", '')
-    .replace("import { proposePlan } from '../preparation-plan.js';", '')
+    .replace("import { possiblePlanTotals, proposePlan } from '../preparation-plan.js';", '')
     .replace('export default class', 'class Preparation');
-  const Preparation = runInNewContext(`${source}\nPreparation`, { selectedCharacters, setCharacters, Controller: class {}, proposePlan, Event });
+  const Preparation = runInNewContext(`${source}\nPreparation`, { selectedCharacters, setCharacters, Controller: class {}, possiblePlanTotals, proposePlan, Event });
   const controller = new Preparation();
   const model = { value: 'first' }, first = { seconds: [5] }, second = { seconds: [10] };
   const creation = { modelsValue: { first, second } };
@@ -39,9 +39,9 @@ test('preparation reads the current shared catalog and supports older page attri
 function setup(count = 3) {
   const source = readFileSync(new URL('../../assets/controllers/preparation_controller.js', import.meta.url), 'utf8')
     .replace("import { selectedCharacters, setCharacters } from '../character-choices.js';", '').replace("import { Controller } from '@hotwired/stimulus';", '')
-    .replace("import { proposePlan } from '../preparation-plan.js';", '')
+    .replace("import { possiblePlanTotals, proposePlan } from '../preparation-plan.js';", '')
     .replace('export default class', 'class Preparation');
-  const Preparation = runInNewContext(`${source}\nPreparation`, { selectedCharacters, setCharacters, Controller: class {}, proposePlan, Event });
+  const Preparation = runInNewContext(`${source}\nPreparation`, { selectedCharacters, setCharacters, Controller: class {}, possiblePlanTotals, proposePlan, Event });
   const controller = new Preparation();
   const rows = Array.from({ length: count }, (_, i) => {
     const duration = { value: '5', options: [{ value: '5' }] }, prompt = { value: `Scene ${i + 1}.` };
@@ -157,7 +157,8 @@ test('pending single conversion keeps the original cards until the server accept
   assert.equal(controller.singleActionTarget.hidden, false);
   assert.match(controller.singleStatusTarget.textContent, /Passage au plan unique à terminer/);
   assert.match(controller.continuityHelpTarget.textContent, /cartes restent conservées/);
-  assert.equal(controller.totalTarget.options.find(o=>o.value==='16').disabled, true);
+  assert.equal(controller.totalTarget.options.find(o=>o.value==='16').disabled, false);
+  assert.match(controller.totalTarget.options.find(o=>o.value==='16').textContent, /plusieurs plans/);
   assert.equal(controller.totalTarget.options.find(o=>o.value==='15').disabled, false);
   assert.equal(controller.singleButtonTarget.disabled, false);
   assert.equal(controller.recapTarget.disabled, true);
@@ -280,10 +281,39 @@ test('explicit final duration changes update the existing single clip without lo
   assert.equal(rows[0].querySelector('select').value,'10');
   assert.equal(rows[0].querySelector('textarea').value,'Scene 1.');
   assert.equal(controller.recapTarget.disabled,false);
-  controller.totalTarget.value='30';
+  controller.selectedModel = {name:'Modèle à durées fixes', seconds:[5,10,15]};
+  controller.totalTarget.value='29';
   controller.duration();
   assert.equal(rows[0].querySelector('select').value,'10');
   assert.equal(controller.singleButtonTarget.disabled,true);
+});
+
+test('selecting 30 seconds in single mode builds two 15 second plans without losing the first prompt', () => {
+  const {controller, rows} = setup(1);
+  controller.selectedModel = { name: 'Clip 15 s', seconds: [5, 10, 15] };
+  controller.continuityTarget.value = 'single';
+  controller.hasPlanCountTarget = true;
+  controller.planCountTarget = {value:'1', options:[{value:'1'}, {value:'2'}]};
+  controller.countStatusTarget = {};
+  controller.editor.prototypeTarget = { innerHTML: 'plan-__name__' };
+  controller.editor.element = { dispatchEvent() {} };
+  controller.editor.listTarget = {
+    replaceChildren() { rows.length = 0; },
+    insertAdjacentHTML() {
+      const duration = { value: '5', options: [] }, prompt = { value: '' };
+      rows.push({ querySelector(selector) { return selector === 'select' ? duration : selector === 'textarea' ? prompt : null; } });
+    },
+  };
+  controller.refresh();
+  assert.equal(controller.totalTarget.options.find(option => option.value === '30').disabled, false);
+  assert.equal(controller.totalTarget.options.find(option => option.value === '31').disabled, true);
+  controller.totalTarget.value = '30';
+  controller.duration();
+  assert.equal(controller.continuityTarget.value, 'independent');
+  assert.equal(controller.planCountTarget.value, '2');
+  assert.deepEqual(rows.map(row => row.querySelector('select').value), ['15', '15']);
+  assert.equal(rows[0].querySelector('textarea').value, 'Scene 1.');
+  assert.equal(controller.recapTarget.disabled, false);
 });
 
 test('count guidance keeps the precise loss warning when a duration change cannot remove written scenes', () => {

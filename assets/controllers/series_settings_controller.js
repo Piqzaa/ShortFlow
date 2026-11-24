@@ -66,8 +66,10 @@ export default class extends GuidedModelPicker(Controller) {
         const seconds = Number(this.durationTarget.value);
         const plan = model && Number.isInteger(seconds) && seconds >= 1 && seconds <= 60 ? proposePlan(seconds, model.seconds) : null;
         const alternatives = plan && !plan.parts ? plan.nearby.map(duration => `${duration} s`).join(' ou ') : '';
-        this.durationHintTarget.hidden = !alternatives;
-        this.durationHintTarget.textContent = alternatives ? `${seconds} s sont impossibles avec ce modèle. Durées possibles les plus proches : ${alternatives}.` : '';
+        const parts = plan?.parts;
+        this.durationHintTarget.hidden = !alternatives && !(parts?.length > 1);
+        this.durationHintTarget.textContent = alternatives ? `${seconds} s sont impossibles avec ce modèle. Durées possibles les plus proches : ${alternatives}.`
+            : parts?.length > 1 ? `${parts.length} plans par épisode · ${parts.map(part => `${part} s`).join(' + ')}` : '';
     }
 
     changeSource() {

@@ -43,7 +43,11 @@ test('changing a series model only retains supported duration and ratio and expl
     assert.match(controller.durationHintTarget.textContent, /7 s.*6 s ou 8 s/);
     controller.durationTarget.value = '14';
     controller.updateDurationHint(controller.modelsValue.image);
-    assert.equal(controller.durationHintTarget.hidden, true);
+    assert.equal(controller.durationHintTarget.hidden, false);
+    assert.match(controller.durationHintTarget.textContent, /2 plans par épisode · 8 s \+ 6 s/);
+    controller.durationTarget.value = '30';
+    controller.updateDurationHint({seconds:[5,10,15]});
+    assert.match(controller.durationHintTarget.textContent, /2 plans par épisode · 15 s \+ 15 s/);
     assert.equal(controller.imagesTarget.hidden, false);
     controller.modelTarget.value = 'text';
     controller.change();
