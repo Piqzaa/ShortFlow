@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b88fe48787d35c6c1870e8d612db8faf",
+    "content-hash": "485d3ccc9701505b7ca9bf5f0e1e09b3",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -2310,6 +2310,68 @@
                 "source": "https://github.com/php-fig/log/tree/3.0.2"
             },
             "time": "2024-09-11T13:17:53+00:00"
+        },
+        {
+            "name": "stripe/stripe-php",
+            "version": "v23.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/stripe/stripe-php.git",
+                "reference": "6694b4d8826927896c9a1e57a26a8dbffb69f732"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/6694b4d8826927896c9a1e57a26a8dbffb69f732",
+                "reference": "6694b4d8826927896c9a1e57a26a8dbffb69f732",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=7.4.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "3.94.0",
+                "phpstan/phpstan": "^1.2",
+                "phpunit/phpunit": "^8.0 || ^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "lib/version_check.php"
+                ],
+                "psr-4": {
+                    "Stripe\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stripe and contributors",
+                    "homepage": "https://github.com/stripe/stripe-php/contributors"
+                }
+            ],
+            "description": "Stripe PHP Library",
+            "homepage": "https://stripe.com/",
+            "keywords": [
+                "api",
+                "payment processing",
+                "stripe"
+            ],
+            "support": {
+                "issues": "https://github.com/stripe/stripe-php/issues",
+                "source": "https://github.com/stripe/stripe-php/tree/v23.1.0"
+            },
+            "time": "2026-11-19T03:46:04+00:00"
         },
         {
             "name": "symfony/cache",

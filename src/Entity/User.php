@@ -10,6 +10,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'app_user')]
 #[ORM\UniqueConstraint(name: 'uniq_app_user_email', fields: ['email'])]
+#[ORM\UniqueConstraint(name: 'uniq_app_user_stripe_customer', fields: ['stripeCustomerId'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
@@ -22,6 +23,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private bool $verified = false;
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $paidUntil = null;
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $stripeCustomerId = null;
+    #[ORM\Column(length: 24, nullable: true)]
+    private ?string $stripeSubscriptionStatus = null;
+    #[ORM\Column(options: ['default' => false])]
+    private bool $stripeCancellationScheduled = false;
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -105,6 +112,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPaidUntil(?\DateTimeImmutable $paidUntil): void
     {
         $this->paidUntil = $paidUntil;
+    }
+
+    public function getStripeCustomerId(): ?string
+    {
+        return $this->stripeCustomerId;
+    }
+
+    public function linkStripeCustomer(string $customerId): void
+    {
+        $this->stripeCustomerId = $customerId;
+    }
+
+    public function getStripeSubscriptionStatus(): ?string
+    {
+        return $this->stripeSubscriptionStatus;
+    }
+
+    public function isStripeCancellationScheduled(): bool
+    {
+        return $this->stripeCancellationScheduled;
+    }
+
+    public function reconcileStripeSubscription(string $status, bool $cancellationScheduled, ?\DateTimeImmutable $paidUntil): void
+    {
+        $this->stripeSubscriptionStatus = $status;
+        $this->stripeCancellationScheduled = $cancellationScheduled;
+        $this->setPaidUntil($paidUntil);
     }
 
     /** @return list<string> */

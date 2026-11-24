@@ -11,6 +11,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.7",
         "mcp/sdk": "^0.10",
+        "stripe/stripe-php": "^23.1",
         "symfony/console": "7.4.*",
         "symfony/doctrine-messenger": "7.4.*",
         "symfony/dotenv": "7.4.*",
