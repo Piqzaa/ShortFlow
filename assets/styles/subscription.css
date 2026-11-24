@@ -1,0 +1,143 @@
+.subscription-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.subscription-overview,
+.subscription-plan {
+  padding: clamp(18px, 4vw, 28px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--workspace-panel, #181722);
+}
+
+.subscription-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, .65fr);
+  gap: 20px;
+  align-items: center;
+}
+
+.subscription-overview h2,
+.subscription-plan h3 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.subscription-overview h2 {
+  font-size: clamp(22px, 2vw, 28px);
+  line-height: 1.2;
+}
+
+.subscription-overview p,
+.subscription-plan p {
+  margin: 10px 0 0;
+}
+
+.subscription-status {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.subscription-status.is-paid {
+  color: var(--accent);
+  background: #b59aff16;
+  border-color: #b59aff55;
+}
+
+.subscription-current > strong {
+  margin-left: 4px;
+}
+
+.subscription-usage {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.subscription-usage meter {
+  width: 100%;
+  height: 14px;
+  accent-color: var(--accent);
+}
+
+.subscription-plans {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.subscription-plan {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subscription-plan.is-current {
+  border-color: #b59aff85;
+}
+
+.subscription-plan-paid {
+  background: linear-gradient(155deg, #b59aff16, transparent 64%), var(--workspace-panel, #181722);
+}
+
+.subscription-plan-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.subscription-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.subscription-price strong {
+  color: var(--ink);
+  font-size: clamp(24px, 4vw, 36px);
+  font-variant-numeric: tabular-nums;
+}
+
+.subscription-feature {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.subscription-plan form {
+  margin-top: 10px;
+}
+
+.subscription-plan button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+}
+
+.subscription-detail {
+  color: var(--workspace-muted, var(--muted));
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .subscription-overview,
+  .subscription-plans {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .subscription-plan-paid {
+    order: -1;
+  }
+}

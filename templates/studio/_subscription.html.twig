@@ -1,0 +1,71 @@
+{% set status = app.user.stripeSubscriptionStatus %}
+{% set paymentIssue = status in ['past_due', 'unpaid', 'incomplete', 'paused'] %}
+{% set ending = usage.paid and app.user.stripeCancellationScheduled %}
+{% set currentPlan = usage.paid ? 'Abonné' : 'Free' %}
+{% set portalAvailable = billingEnabled and app.user.stripeCustomerId %}
+<section class="subscription-panel" aria-labelledby="subscription-title">
+  <div class="subscription-overview">
+    <div>
+      <h2 id="subscription-title">Ton offre</h2>
+      <p class="subscription-current">Offre actuelle <strong class="subscription-status{% if usage.paid %} is-paid{% endif %}">{{ currentPlan }}</strong></p>
+      {% if ending %}
+        <p>Ton abonnement prend fin le {{ app.user.paidUntil|date('d/m/Y', app.user.timezone) }}. Tu gardes tes 3 Go jusqu’à cette date.</p>
+      {% elseif paymentIssue %}
+        <p>Ton paiement demande une action. {% if usage.paid %}Tes 3 Go restent accessibles jusqu’au {{ app.user.paidUntil|date('d/m/Y', app.user.timezone) }}.{% endif %}</p>
+      {% elseif usage.paid %}
+        <p>{{ app.user.stripeCustomerId ? 'Période payée jusqu’au' : 'Quota abonné actif jusqu’au' }} {{ app.user.paidUntil|date('d/m/Y', app.user.timezone) }}.</p>
+      {% elseif billingReturn == 'checkout' %}
+        <p role="status">On attend la confirmation de Stripe. <a class="account-secondary" href="{{ path('app_profile', {section:'subscription', billing:'checkout'}) }}">Actualiser l’état →</a></p>
+      {% elseif billingReturn == 'cancelled' %}
+        <p role="status">Tu as quitté le paiement. Ton offre Free est toujours active.</p>
+      {% endif %}
+    </div>
+    <div class="subscription-usage">
+      <label for="subscription-storage">{{ (usage.bytes / 1000000)|number_format(0, ',', ' ') }} Mo utilisés sur {{ usage.label }}</label>
+      <meter id="subscription-storage" min="0" max="{{ usage.limit }}" value="{{ min(usage.bytes, usage.limit) }}"></meter>
+      <a class="account-secondary" href="{{ path('app_video_storage') }}">{{ usage.over ? 'Libérer de la place' : 'Gérer mon stockage' }} →</a>
+    </div>
+  </div>
+  {% if usage.over %}
+    <p class="account-notice">Libère {{ (usage.over / 1000000)|round(0, 'ceil')|number_format(0, ',', ' ') }} Mo pour ajouter de nouvelles vidéos à ta bibliothèque. Tu peux continuer à utiliser celles qui y sont déjà.</p>
+  {% endif %}
+  <div class="subscription-plans">
+    <article class="subscription-plan{% if not usage.paid %} is-current{% endif %}" aria-labelledby="subscription-free">
+      <div class="subscription-plan-heading">
+        <h3 id="subscription-free">Free</h3>
+        {% if not usage.paid %}<span class="subscription-status">Offre actuelle</span>{% endif %}
+      </div>
+      <p class="subscription-price"><strong>0 €</strong></p>
+      <p class="subscription-feature"><strong>500 Mo</strong> de bibliothèque privée</p>
+      {% if usage.paid %}<p class="subscription-detail">En cas d’annulation, l’offre Free prend le relais à la fin de la période payée.</p>{% endif %}
+    </article>
+    <article class="subscription-plan subscription-plan-paid{% if usage.paid %} is-current{% endif %}" aria-labelledby="subscription-paid">
+      <div class="subscription-plan-heading">
+        <h3 id="subscription-paid">Abonné</h3>
+        {% if usage.paid %}<span class="subscription-status is-paid">Offre actuelle</span>{% endif %}
+      </div>
+      <p class="subscription-price">{% if billingPrice is not null %}<strong>{{ (billingPrice / 100)|number_format(2, ',', ' ') }} €</strong> / mois{% else %}<span>Abonnement mensuel</span>{% endif %}</p>
+      <p class="subscription-feature"><strong>3 Go</strong> de bibliothèque privée</p>
+      {% if portalAvailable and (usage.paid or paymentIssue) %}
+        <form method="post" action="{{ path('app_billing_action', {action:'gerer'}) }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('billing-gerer') }}">
+          <button class="button" type="submit">{{ ending ? 'Gérer le renouvellement' : (paymentIssue ? 'Vérifier mon paiement' : 'Gérer mon abonnement') }} →</button>
+        </form>
+      {% elseif billingPrice is not null and not usage.paid %}
+        <form method="post" action="{{ path('app_billing_action', {action:'souscrire'}) }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('billing-souscrire') }}">
+          <button class="button" type="submit">{{ app.user.stripeSubscriptionStatus == 'canceled' ? 'Me réabonner en test' : 'Choisir l’abonnement de test' }} →</button>
+        </form>
+      {% elseif not usage.paid %}
+        <p class="subscription-detail">{{ billingEnabled ? 'Le prix de test est temporairement indisponible.' : 'La souscription de test sera disponible après configuration.' }}</p>
+      {% endif %}
+      {% if portalAvailable and not usage.paid and not paymentIssue %}
+        <form method="post" action="{{ path('app_billing_action', {action:'gerer'}) }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('billing-gerer') }}">
+          <button class="account-secondary" type="submit">Factures et moyens de paiement →</button>
+        </form>
+      {% endif %}
+    </article>
+  </div>
+  <p class="subscription-detail">Les deux offres incluent 10 places d’import temporaire pour publier depuis ton appareil.{% if billingEnabled %} Les paiements et les factures affichés ici sont en mode test.{% endif %}</p>
+</section>

@@ -1,7 +1,7 @@
 {% extends 'studio/base.html.twig' %}
 {% block title %}Mon compte — VydFlow{% endblock %}
 {% block studio_content %}
-<div class="studio-heading"><div><span class="eyebrow">TON ESPACE PERSONNEL</span><h1>Mon compte.</h1><p>Un profil à toi, des réglages utiles et un accès protégé.</p></div></div>
+<div class="studio-heading"><div><span class="eyebrow">TON ESPACE PERSONNEL</span><h1>{{ section == 'subscription' ? 'Abonnement et facturation' : 'Mon compte.' }}</h1>{% if section != 'subscription' %}<p>Un profil à toi, des réglages utiles et un accès protégé.</p>{% endif %}</div></div>
 <div class="account-workspace">
 <details class="account-mobile-sections">
 <summary>{{ {profile:'Profil',preferences:'Préférences',security:'Sécurité',subscription:'Abonnement'}[section] }} <span aria-hidden="true">⌄</span></summary>
@@ -14,6 +14,7 @@
 <a href="{{ path('app_connections') }}">Réseaux connectés ↗</a><a href="{{ path('app_profile',{section:'subscription'}) }}"{% if section == 'subscription' %} aria-current="page"{% endif %}>Abonnement</a>
 </nav>
 <div class="account-content">
+{% if section != 'subscription' %}
 <section class="profile-panel"{% if section != 'profile' %} hidden{% endif %} aria-labelledby="profile-details">
 <div class="profile-identity"><span class="studio-avatar profile-avatar" aria-hidden="true">{% if app.user.avatarName %}<img src="{{ path('app_avatar',{name:app.user.avatarName}) }}" alt="" width="80" height="80">{% else %}{{ (app.user.displayName ?: app.user.email)|first|upper }}{% endif %}</span><div><h2 id="profile-details">Ton profil</h2><p>{{ app.user.displayName ?: 'Personnalise ton espace.' }}</p></div></div>
 {{ form_start(profileForm,{attr:{class:'account-form','data-controller':'unsaved','data-action':'input->unsaved#change change->unsaved#change submit->unsaved#submit'}}) }}{{ form_errors(profileForm) }}{{ form_row(profileForm.displayName) }}{{ form_row(profileForm.avatar) }}{{ form_row(profileForm.removeAvatar) }}<button class="button" type="submit">Enregistrer mon profil</button>{{ form_end(profileForm) }}
@@ -21,11 +22,9 @@
 </section>
 <section class="profile-panel"{% if section != 'preferences' %} hidden{% endif %} aria-labelledby="preferences-title"><h2 id="preferences-title">Tes préférences</h2>{{ form_start(preferencesForm,{attr:{class:'account-form'}}) }}{{ form_errors(preferencesForm) }}{{ form_row(preferencesForm.timezone) }}<button class="button" type="submit">Enregistrer mes préférences</button>{{ form_end(preferencesForm) }}<p class="library-note">Langue de l’interface : français.</p></section>
 <section class="profile-panel"{% if section != 'security' %} hidden{% endif %} aria-labelledby="password-title"><h2 id="password-title">Sécurité</h2><p>Choisis un mot de passe unique. Après modification, tu devras te reconnecter.</p>{{ form_start(form,{attr:{class:'account-form'}}) }}{{ form_errors(form) }}{{ form_row(form.currentPassword) }}{{ form_row(form.newPassword) }}<button class="button" type="submit">Modifier mon mot de passe ↗</button>{{ form_end(form) }}<p class="library-note">La confirmation de ton adresse reste obligatoire. Les anciens liens de récupération sont invalidés après un changement de mot de passe.</p></section>
-<section class="profile-panel"{% if section != 'subscription' %} hidden{% endif %} aria-labelledby="subscription-title"><h2 id="subscription-title">Abonnement et facturation</h2><p>Offre actuelle · <strong>{{ usage.paid ? 'Abonné' : 'Free' }}</strong></p>
-{% include 'library/_storage_status.html.twig' %}
-{% if usage.paid %}<p>Accès au quota abonné jusqu’au {{ app.user.paidUntil|date('d/m/Y à H:i', app.user.timezone) }}.</p>{% endif %}
-<a class="account-secondary" href="{{ path('app_video_storage') }}">Libérer de la place →</a>
-<p class="library-note">Free inclut 500 Mo de stockage. L’abonnement inclut 3 Go. La souscription en ligne ouvrira prochainement.</p></section>
+{% else %}
+{% include 'studio/_subscription.html.twig' %}
+{% endif %}
 <section class="profile-legal" aria-labelledby="profile-help-title"><h2 id="profile-help-title">Besoin d’aide ?</h2><nav aria-label="Aide et contact"><a class="account-secondary" href="{{ path('app_guide') }}">Comment ça marche {% include 'icons/_arrow_up_right.html.twig' %}</a><a class="account-secondary" href="{{ path('app_contact') }}">Contact et suggestions {% include 'icons/_arrow_up_right.html.twig' %}</a></nav></section>
 <section class="profile-legal" aria-labelledby="profile-legal-title"><h2 id="profile-legal-title">Tes données</h2><nav aria-label="Documents du compte"><a class="account-secondary" href="{{ path('app_privacy') }}">Confidentialité ↗</a><a class="account-secondary" href="{{ path('app_legal') }}">Informations légales ↗</a><a class="account-secondary" href="{{ path('app_data_deletion') }}">Mes droits et la suppression de mes données ↗</a></nav></section>
 </div></div>

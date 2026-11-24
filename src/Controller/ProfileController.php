@@ -10,6 +10,8 @@ use App\Service\VideoLibrary;
 use App\Service\AccountAccess;
 use App\Service\ProfileAvatarStorage;
 use App\Service\ProfileSettings;
+use App\Service\StripeBillingGateway;
+use Stripe\Exception\ApiErrorException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -24,7 +26,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class ProfileController extends AbstractController
 {
     #[Route('/studio/mon-compte', name: 'app_profile', methods: ['GET', 'POST'])]
-    public function index(Request $request, #[CurrentUser] User $user, VideoLibrary $library, AccountAccess $accounts, Security $security, ProfileSettings $settings, #[Autowire(service: 'limiter.account')] RateLimiterFactory $limiter): Response
+    public function index(Request $request, #[CurrentUser] User $user, VideoLibrary $library, AccountAccess $accounts, Security $security, ProfileSettings $settings, StripeBillingGateway $stripe, #[Autowire(service: 'limiter.account')] RateLimiterFactory $limiter): Response
     {
         $section = $request->query->getString('section', 'profile');
         if (!in_array($section, ['profile', 'preferences', 'security', 'subscription'], true)) {
@@ -75,7 +77,20 @@ final class ProfileController extends AbstractController
             $form->get('currentPassword')->addError(new FormError('Le mot de passe actuel est incorrect.'));
         }
 
-        return $this->render('studio/account.html.twig', ['form' => $form, 'profileForm' => $profile, 'preferencesForm' => $preferences, 'section' => $section, 'usage' => $library->storageStatus($user)], new Response(status: $status, headers: ['Cache-Control' => 'no-store, private', 'Referrer-Policy' => 'no-referrer']));
+        $price = null;
+        if ('subscription' === $section && $stripe->enabled()) {
+            try {
+                $price = $stripe->monthlyPrice();
+            } catch (\DomainException|ApiErrorException) {
+                // Users can still view their plan and open the portal while the price is unavailable.
+            }
+        }
+
+        return $this->render('studio/account.html.twig', [
+            'form' => $form, 'profileForm' => $profile, 'preferencesForm' => $preferences,
+            'section' => $section, 'usage' => $library->storageStatus($user),
+            'billingEnabled' => $stripe->enabled(), 'billingPrice' => $price, 'billingReturn' => $request->query->getString('billing'),
+        ], new Response(status: $status, headers: ['Cache-Control' => 'no-store, private', 'Referrer-Policy' => 'no-referrer']));
     }
 
     #[Route('/studio/mon-compte/photo/{name}', name: 'app_avatar', requirements: ['name' => '[a-f0-9]{48}\.jpg'], methods: ['GET', 'HEAD'])]
