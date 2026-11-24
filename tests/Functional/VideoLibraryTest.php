@@ -244,32 +244,50 @@ final class VideoLibraryTest extends WebTestCase
         self::assertCount(1, glob(static::getContainer()->get(PrivateVideoStorage::class)->directory().'/*'));
     }
 
-    public function testConfiguredQuotaLetsTheLibraryGrowPastOneGib(): void
+    public function testPaidStorageFallsBackToFreeAndTemporaryPublishingStillWorks(): void
     {
-        $key = 'VIDEO_LIBRARY_STORAGE_GIB';
-        $previousEnv = $_ENV[$key] ?? null;
-        $previousServer = $_SERVER[$key] ?? null;
-        $_ENV[$key] = $_SERVER[$key] = '5';
-        try {
-            $this->asUser('alice@example.test');
-            $video = $this->upload('tests/Fixtures/library-valid.mp4');
-            $db = static::getContainer()->get(Connection::class);
-            $db->executeStatement('UPDATE video_asset SET byte_size = ? WHERE id = ?', [VideoLibrary::BYTES_PER_GIB, $video->getId()]);
-            $this->submitUpload($this->fixture('tests/Fixtures/library-valid.mp4'));
-            self::assertResponseStatusCodeSame(303);
-            self::assertSame(2, static::getContainer()->get(VideoAssetRepository::class)->count([]));
-            self::assertGreaterThan(VideoLibrary::BYTES_PER_GIB, (int) $db->fetchOne('SELECT SUM(byte_size) FROM video_asset'));
-            $this->client->request('GET', '/studio/bibliotheque/importer');
-            self::assertSelectorTextContains('.upload-guidance', '5 Gio de stockage');
-        } finally {
-            unset($_ENV[$key], $_SERVER[$key]);
-            if (null !== $previousEnv) {
-                $_ENV[$key] = $previousEnv;
-            }
-            if (null !== $previousServer) {
-                $_SERVER[$key] = $previousServer;
-            }
-        }
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = static::getContainer()->get(UserRepository::class)->findByEmail('alice@example.test');
+        $owner->setPaidUntil(new \DateTimeImmutable('+1 day'));
+        $em->flush();
+        $this->asUser('alice@example.test');
+        $video = $this->upload('tests/Fixtures/library-valid.mp4', 'Plus ancienne');
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement('UPDATE video_asset SET byte_size = ? WHERE id = ?', [1_800_000_000, $video->getId()]);
+        $this->submitUpload($this->fixture('tests/Fixtures/library-valid.mp4'), 'Récente');
+        self::assertResponseStatusCodeSame(303);
+        $this->client->request('GET', '/studio/mon-compte?section=subscription');
+        self::assertSelectorTextContains('#subscription-title ~ p', 'Abonné');
+        $db->executeStatement('UPDATE video_asset SET byte_size = ? WHERE owner_id = ? AND id <> ?', [700_000_000, $owner->getId(), $video->getId()]);
+        $this->client->request('GET', '/studio');
+        self::assertSelectorTextContains('.workspace-storage', 'approche de sa limite');
+        self::assertSelectorTextContains('.workspace-storage', '3 Go');
+
+        $db->executeStatement('UPDATE app_user SET paid_until = CURRENT_TIMESTAMP - INTERVAL \'1 day\' WHERE id = ?', [$owner->getId()]);
+        $this->client->request('GET', '/studio');
+        self::assertSelectorTextContains('.workspace-storage', '500 Mo');
+        self::assertSelectorTextContains('.workspace-storage', 'à libérer');
+        $this->client->request('GET', '/studio/bibliotheque/stockage');
+        $titles = $this->client->getCrawler()->filter('fieldset label')->each(static fn ($row): string => $row->text());
+        self::assertStringContainsString('Plus ancienne', $titles[0]);
+        self::assertStringContainsString('Récente', $titles[1]);
+        $this->client->request('GET', '/studio/bibliotheque/supprimer-selection?cleanup=1&videos%5B%5D='.$video->getId());
+        self::assertSelectorTextContains('.video-delete-panel', '1 800,00 Mo');
+        self::assertSame(2, static::getContainer()->get(VideoAssetRepository::class)->count([]));
+
+        $this->submitUpload($this->fixture('tests/Fixtures/library-valid.mp4'));
+        self::assertResponseStatusCodeSame(422);
+        $url = '/studio/bibliotheque/importer?next=compose';
+        $crawler = $this->client->request('GET', $url);
+        $form = $crawler->selectButton('Importer ma vidéo')->form();
+        $this->client->request('POST', $url, $form->getPhpValues(), ['video_upload' => ['file' => $this->fixture('tests/Fixtures/library-valid.mp4')]]);
+        self::assertResponseStatusCodeSame(303);
+        $temporary = static::getContainer()->get(VideoAssetRepository::class)->findOneBy(['temporary' => true]);
+        self::assertNotNull($temporary);
+        $crawler = $this->client->request('GET', '/studio/bibliotheque/'.$temporary->getId());
+        $this->client->submit($crawler->selectButton('Conserver dans ma bibliothèque')->form());
+        self::assertResponseRedirects('/studio/bibliotheque/stockage', 303);
+        self::assertTrue(static::getContainer()->get(VideoAssetRepository::class)->find($temporary->getId())->isTemporary());
     }
 
     public function testTraversalStorageNameAndMissingFilesAreUnavailable(): void

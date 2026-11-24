@@ -7,6 +7,7 @@ use App\Entity\PublishedVideoTrace;
 use App\Repository\PublicationDraftRepository;
 use App\Repository\VideoAssetRepository;
 use App\Service\PublicationCalendar;
+use App\Service\VideoLibrary;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
@@ -18,13 +19,13 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class WorkspaceController extends AbstractController
 {
     #[Route('/studio', name: 'app_dashboard', methods: ['GET'])]
-    public function index(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, PublicationDraftRepository $drafts, PublicationCalendar $calendar, ClockInterface $clock, EntityManagerInterface $em): Response
+    public function index(Request $request, #[CurrentUser] User $user, VideoAssetRepository $videos, PublicationDraftRepository $drafts, PublicationCalendar $calendar, ClockInterface $clock, EntityManagerInterface $em, VideoLibrary $library): Response
     {
         $tab = $request->query->getString('tab', 'videos');
         if (!in_array($tab, ['videos', 'drafts'], true)) {
             throw $this->createNotFoundException();
         }
-        $usage = $videos->usage($user);
+        $usage = $library->storageStatus($user);
         $draftCount = $drafts->count(['owner' => $user, 'status' => 'draft']);
         $query = 'videos' === $tab ? mb_substr(trim($request->query->getString('q')), 0, 120) : '';
         $results = 'videos' === $tab ? $videos->search($user, $query, $request->query->getInt('page', 1)) : null;

@@ -213,10 +213,10 @@ final class VideoEdits
 
     private function capacity(User $owner, ?VideoEdit $edit = null): void
     {
-        $usage = $this->videos->usage($owner);
+        $usage = $this->videos->usage($owner, false);
         $episode = $edit ? $this->em->getRepository(AiEpisode::class)->findOneBy(['assembly' => $edit]) : null;
         $reserved = $this->episodeReservations->slots($owner, $episode, null, true);
-        if ($usage['count'] + $reserved >= VideoLibrary::MAX_VIDEOS || $usage['bytes'] + ($reserved + 1) * VideoLibrary::MAX_BYTES > $this->library->storageLimitBytes()) {
+        if ($usage['count'] + $reserved >= VideoLibrary::MAX_VIDEOS || $usage['bytes'] + ($reserved + 1) * VideoLibrary::MAX_BYTES > $this->library->storageLimitBytes($owner)) {
             throw new VideoLibraryException('Libère une place et 100 Mo dans ta bibliothèque avant l’export.');
         }
     }

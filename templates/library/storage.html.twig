@@ -1,0 +1,25 @@
+{% extends 'studio/base.html.twig' %}
+{% block title %}Stockage de mes vidéos — VydFlow{% endblock %}
+{% block studio_content %}
+<a class="account-secondary" href="{{ path('app_dashboard') }}">← Mes vidéos</a>
+<div class="studio-heading"><div><h1>Libérer de la place</h1>{% include 'library/_storage_status.html.twig' %}</div></div>
+<form class="account-form profile-panel" method="get" action="{{ path('app_videos_delete') }}">
+  <input type="hidden" name="cleanup" value="1">
+  {% for temporary in [false, true] %}
+    {% set group = videos|filter(video => video.temporary == temporary) %}
+    {% if group %}
+      <fieldset>
+        <legend>{{ temporary ? 'Imports temporaires' : 'Bibliothèque · vidéos les plus anciennes en premier' }}</legend>
+        {% for video in group %}
+          <div>
+            <label><input type="checkbox" name="videos[]" value="{{ video.id }}"{% if video.id in scheduled %} disabled{% endif %}> {{ video.title }} · {{ (video.byteSize / 1000000)|number_format(2, ',', ' ') }} Mo</label>
+            {% if video.id in scheduled %}<small>Publication programmée</small>{% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+    {% endif %}
+  {% endfor %}
+  {% if videos %}<button class="button" type="submit">Relire la sélection →</button>
+  {% else %}<p>Tu n’as encore aucune vidéo à retirer.</p>{% endif %}
+</form>
+{% endblock %}

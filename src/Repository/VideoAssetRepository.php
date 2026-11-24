@@ -22,6 +22,15 @@ final class VideoAssetRepository extends ServiceEntityRepository
     }
 
     /** @return list<int> */
+    public function scheduledSourceIds(User $owner): array
+    {
+        return array_map('intval', $this->getEntityManager()->getConnection()->fetchFirstColumn(
+            "SELECT DISTINCT i.source_id FROM publication_draft_item i JOIN publication_draft d ON d.id = i.draft_id WHERE d.owner_id = ? AND d.status = 'scheduled' AND i.source_id IS NOT NULL",
+            [$owner->getId()],
+        ));
+    }
+
+    /** @return list<int> */
     public function temporaryIdsAfter(int $after, int $limit): array
     {
         return array_map('intval', $this->getEntityManager()->getConnection()->fetchFirstColumn(
@@ -133,9 +142,13 @@ final class VideoAssetRepository extends ServiceEntityRepository
     }
 
     /** @return array{count: int, bytes: int} */
-    public function usage(User $owner): array
+    public function usage(User $owner, ?bool $temporary = null): array
     {
-        $row = $this->createQueryBuilder('v')->select('COUNT(v.id) AS count, COALESCE(SUM(v.byteSize), 0) AS bytes')->where('v.owner = :owner')->setParameter('owner', $owner)->getQuery()->getSingleResult();
+        $query = $this->createQueryBuilder('v')->select('COUNT(v.id) AS count, COALESCE(SUM(v.byteSize), 0) AS bytes')->where('v.owner = :owner')->setParameter('owner', $owner);
+        if (null !== $temporary) {
+            $query->andWhere('v.temporary = :temporary')->setParameter('temporary', $temporary);
+        }
+        $row = $query->getQuery()->getSingleResult();
 
         return ['count' => (int) $row['count'], 'bytes' => (int) $row['bytes']];
     }

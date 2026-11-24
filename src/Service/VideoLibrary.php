@@ -10,7 +10,7 @@ use App\Entity\VideoAsset;
 use App\Repository\VideoAssetRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ExceptionInterface;
@@ -20,15 +20,35 @@ final class VideoLibrary
     public const MAX_BYTES = 104857600;
     public const BYTES_PER_GIB = 1073741824;
     public const MAX_VIDEOS = 100;
+    public const FREE_BYTES = 500_000_000;
+    public const PAID_BYTES = 3_000_000_000;
+    public const TEMPORARY_VIDEOS = 10;
     public const RETENTION_PERIOD = '+7 days';
 
-    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private VideoProbe $probe, private PrivateVideoStorage $storage, private EpisodeReservations $episodeReservations, #[Autowire('%env(int:VIDEO_LIBRARY_STORAGE_GIB)%')] private int $storageGib)
+    public function __construct(private EntityManagerInterface $em, private VideoAssetRepository $videos, private VideoProbe $probe, private PrivateVideoStorage $storage, private EpisodeReservations $episodeReservations, private ClockInterface $clock)
     {
     }
 
-    public function storageLimitBytes(): int
+    public function storageLimitBytes(User $owner): int
     {
-        return $this->storageGib * self::BYTES_PER_GIB;
+        $paidUntil = $owner->getPaidUntil();
+
+        return $paidUntil && $paidUntil > $this->clock->now() ? self::PAID_BYTES : self::FREE_BYTES;
+    }
+
+    /** @return array{count: int, bytes: int, limit: int, label: string, paid: bool, warning: bool, full: bool, over: int} */
+    public function storageStatus(User $owner): array
+    {
+        $usage = $this->videos->usage($owner, false);
+        $limit = $this->storageLimitBytes($owner);
+        $paid = self::PAID_BYTES === $limit;
+
+        return $usage + [
+            'limit' => $limit, 'label' => $paid ? '3 Go' : '500 Mo', 'paid' => $paid,
+            'warning' => $usage['bytes'] >= ($paid ? 2_500_000_000 : 400_000_000) || $usage['count'] >= 90,
+            'full' => $usage['bytes'] >= $limit || $usage['count'] >= self::MAX_VIDEOS,
+            'over' => max(0, $usage['bytes'] - $limit),
+        ];
     }
 
     public function import(User $owner, UploadedFile $file, ?string $title, ?AiEpisode $completingEpisode = null, ?AiGeneration $completingGeneration = null, bool $temporary = false): VideoAsset
@@ -57,17 +77,19 @@ final class VideoLibrary
         }
         try {
             $this->em->wrapInTransaction(function () use ($owner, $file, $name, $video, $completingEpisode, $completingGeneration): void {
-                $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
-                $usage = $this->videos->usage($owner);
+                $this->em->refresh($owner, LockMode::PESSIMISTIC_WRITE);
                 if ($completingEpisode && $completingEpisode->getOwner()->getId() !== $owner->getId()) {
                     throw new VideoLibraryException('Résultat indisponible.');
                 }
                 if ($completingGeneration && $completingGeneration->getOwner()->getId() !== $owner->getId()) {
                     throw new VideoLibraryException('Génération indisponible.');
                 }
-                $reserved = $this->episodeReservations->slots($owner, $completingEpisode, $completingGeneration, true);
-                if ($usage['count'] + $reserved >= self::MAX_VIDEOS || $usage['bytes'] + $reserved * self::MAX_BYTES + $video->getByteSize() > $this->storageLimitBytes()) {
-                    throw new VideoLibraryException(sprintf('Ta bibliothèque a atteint sa limite (%d vidéos ou %d Gio). Supprime une vidéo pour libérer de la place.', self::MAX_VIDEOS, $this->storageGib));
+                if ($video->isTemporary()) {
+                    if ($this->videos->usage($owner, true)['count'] >= self::TEMPORARY_VIDEOS) {
+                        throw new VideoLibraryException('Tes 10 places d’import temporaire sont occupées. Supprime un fichier temporaire dont tu n’as plus besoin avant de réessayer.');
+                    }
+                } else {
+                    $this->assertLibraryCapacity($owner, $video->getByteSize(), $completingEpisode, $completingGeneration);
                 }
                 $this->storage->store($file, $name);
                 $this->em->persist($video);
@@ -109,11 +131,25 @@ final class VideoLibrary
 
     public function keep(VideoAsset $video): void
     {
-        $this->em->wrapInTransaction(function () use ($video): void {
-            $this->em->lock($video->getOwner(), LockMode::PESSIMISTIC_WRITE);
+        $this->em->getConnection()->transactional(function () use ($video): void {
+            $this->em->refresh($video->getOwner(), LockMode::PESSIMISTIC_WRITE);
             $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
-            $video->keep();
+            if ($video->isTemporary()) {
+                $this->assertLibraryCapacity($video->getOwner(), $video->getByteSize());
+                $video->keep();
+                $this->em->flush();
+            }
         });
+    }
+
+    private function assertLibraryCapacity(User $owner, int $bytes, ?AiEpisode $episode = null, ?AiGeneration $generation = null): void
+    {
+        $usage = $this->videos->usage($owner, false);
+        $reserved = $this->episodeReservations->slots($owner, $episode, $generation, true);
+        $limit = ($episode || $generation) && $owner->getPaidUntil() ? self::PAID_BYTES : $this->storageLimitBytes($owner);
+        if ($usage['count'] + $reserved >= self::MAX_VIDEOS || $usage['bytes'] + $reserved * self::MAX_BYTES + $bytes > $limit) {
+            throw new VideoLibraryException('Ta bibliothèque a atteint sa limite ou n’a plus assez de place pour ce fichier. Libère de la place pour continuer.');
+        }
     }
 
     public function checkRetention(VideoAsset $video, \DateTimeImmutable $now): bool

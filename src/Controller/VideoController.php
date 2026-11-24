@@ -132,7 +132,7 @@ final class VideoController extends AbstractController
             return new JsonResponse(['message' => implode(' ', array_unique($errors)) ?: 'L’import n’a pas abouti. Vérifie le fichier.'], $status, ['Cache-Control' => 'no-store, private']);
         }
 
-        return $this->page('library/upload.html.twig', ['form' => $form, 'appendSeries' => $appendToSeries ? $series : null, 'publicationImport' => $publicationImport, 'bulkImport' => ('' === $next || $publicationImport) && !$editing, 'generalImport' => '' === $next && !$editing, 'batchPublicationUrl' => $batchPublicationUrl], $status);
+        return $this->page('library/upload.html.twig', ['form' => $form, 'appendSeries' => $appendToSeries ? $series : null, 'publicationImport' => $publicationImport, 'bulkImport' => ('' === $next || $publicationImport) && !$editing, 'generalImport' => '' === $next && !$editing, 'batchPublicationUrl' => $batchPublicationUrl, 'quota' => $this->library->storageStatus($user)], $status);
     }
 
     #[Route('/{id}', name: 'app_video_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
@@ -173,6 +173,10 @@ final class VideoController extends AbstractController
             $this->library->keep($video);
         } catch (\Doctrine\ORM\EntityNotFoundException) {
             throw $this->createNotFoundException('Vidéo indisponible.');
+        } catch (VideoLibraryException $error) {
+            $this->addFlash('error', $error->getMessage());
+
+            return $this->redirectToRoute('app_video_storage', status: 303);
         }
         $this->addFlash('success', 'Ta vidéo est conservée dans ta bibliothèque.');
 
@@ -233,15 +237,27 @@ final class VideoController extends AbstractController
         return $this->page('library/delete.html.twig', ['video' => $video]);
     }
 
+    #[Route('/stockage', name: 'app_video_storage', methods: ['GET'])]
+    public function storage(#[CurrentUser] User $user): Response
+    {
+        return $this->page('library/storage.html.twig', [
+            'usage' => $this->library->storageStatus($user),
+            'videos' => $this->videos->findBy(['owner' => $user], ['temporary' => 'ASC', 'createdAt' => 'ASC', 'id' => 'ASC']),
+            'scheduled' => $this->videos->scheduledSourceIds($user),
+        ]);
+    }
+
     #[Route('/supprimer-selection', name: 'app_videos_delete', methods: ['GET', 'POST'])]
     public function deleteSelection(Request $request, #[CurrentUser] User $user): Response
     {
         $parameters = $request->isMethod('POST') ? $request->request : $request->query;
+        $cleanup = $parameters->getBoolean('cleanup');
+        $returnRoute = $cleanup ? 'app_video_storage' : 'app_dashboard';
         $values = $parameters->all('videos');
         if (!$values || count($values) > 20) {
             $this->addFlash('error', 'Sélectionne entre 1 et 20 vidéos.');
 
-            return $this->redirectToRoute('app_dashboard', status: 303);
+            return $this->redirectToRoute($returnRoute, status: 303);
         }
         $ids = [];
         foreach ($values as $value) {
@@ -262,15 +278,15 @@ final class VideoController extends AbstractController
                 $this->library->deleteMany($videos);
                 $this->addFlash('success', count($videos).' vidéo(s) supprimée(s).');
 
-                return $this->redirectToRoute('app_dashboard', status: 303);
+                return $this->redirectToRoute($returnRoute, status: 303);
             } catch (VideoLibraryException $error) {
                 $this->addFlash('error', $error->getMessage());
 
-                return $this->page('library/delete_selection.html.twig', ['videos' => $videos, 'tokenId' => $tokenId], 409);
+                return $this->page('library/delete_selection.html.twig', ['videos' => $videos, 'tokenId' => $tokenId, 'cleanup' => $cleanup], 409);
             }
         }
 
-        return $this->page('library/delete_selection.html.twig', ['videos' => $videos, 'tokenId' => $tokenId]);
+        return $this->page('library/delete_selection.html.twig', ['videos' => $videos, 'tokenId' => $tokenId, 'cleanup' => $cleanup]);
     }
 
     private function owned(int $id, User $user): VideoAsset

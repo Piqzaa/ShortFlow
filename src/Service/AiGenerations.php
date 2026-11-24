@@ -364,10 +364,10 @@ final class AiGenerations
 
     private function assertCapacity(AiGeneration $job): void
     {
-        $usage = $this->videos->usage($job->getOwner());
+        $usage = $this->videos->usage($job->getOwner(), false);
         $active = $this->em->getRepository(AiGeneration::class)->count(['owner' => $job->getOwner(), 'status' => ['queued', 'submitting', 'processing']]);
         $slots = $active + $this->episodeReservations->slots($job->getOwner(), null, $job) + (in_array($job->getStatus(), ['queued', 'submitting', 'processing'], true) ? 0 : 1);
-        if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > $this->library->storageLimitBytes()) {
+        if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > $this->library->storageLimitBytes($job->getOwner())) {
             throw new \RuntimeException('Place insuffisante dans ta bibliothèque. Prévois une place et 100 Mo libres par génération en attente ou en cours, puis confirme à nouveau. Aucune nouvelle génération n’a été envoyée.');
         }
     }

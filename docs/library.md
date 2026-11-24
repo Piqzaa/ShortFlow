@@ -7,7 +7,7 @@ Passer d’un compte vide à un parcours concret : inscription depuis la landing
 - Depuis l’import de la bibliothèque, jusqu’à 10 vidéos peuvent être sélectionnées ensemble. Elles sont envoyées une par une et leur résultat est affiché individuellement. Chaque fichier reste limité à 100 Mio (104 857 600 octets) et 180 secondes. Les imports depuis un brouillon, un montage ou une série gardent leur contexte et prennent un fichier à la fois.
 - MP4 avec vidéo H.264 8 bits et audio AAC facultatif ; WebM avec VP8/VP9/AV1 8 bits et audio Opus/Vorbis facultatif. Une piste vidéo, au maximum une piste audio. Pas de pièce jointe, sous-titre ou piste de données.
 - Dimensions entre 2 et 3 840 pixels par côté. Vertical, carré et horizontal acceptés. Ce sont des limites d’import VydFlow, pas une garantie de compatibilité avec chaque réseau ou navigateur.
-- 5 Gio par défaut (`VIDEO_LIBRARY_STORAGE_GIB`) et 100 vidéos par compte. Le quota en octets s’applique aux imports, exports et réservations IA. Le volume de stockage doit être dimensionné pour la cohorte et surveillé indépendamment des quotas individuels. Les tests historiques de quota utilisent 1 Gio. L’import accepte 10 tentatives par compte sur 15 minutes.
+- La bibliothèque est limitée à 500 Mo en Free et à 3 Go durant la période d’abonnement, et à 100 vidéos. L’avertissement apparaît à 400 Mo ou 2,5 Go selon l’offre. Le quota en octets s’applique aux imports permanents, exports et réservations IA. Dix fichiers temporaires par compte disposent de places séparées. L’import accepte 10 tentatives par compte sur 15 minutes.
 - Aucun transcodage, montage, génération de miniature ni analyse de toutes les images. La sonde vérifie les métadonnées réelles ; un fichier endommagé plus loin peut encore échouer à la lecture. Les codecs effectivement lisibles dépendent du navigateur.
 
 ## Fichiers et composants Symfony
@@ -31,6 +31,10 @@ Passer d’un compte vide à un parcours concret : inscription depuis la landing
 5. Renommer passe par un formulaire validé. Supprimer demande une confirmation séparée et un CSRF lié à l’id. Le fichier est d’abord déplacé dans une zone de suppression privée, le record supprimé en transaction, puis le fichier purgé. En cas d’échec de transaction, le déplacement est restauré.
 
 ## Nettoyage et exploitation locale
+
+Dans **Mes vidéos → Libérer de la place**, les vidéos permanentes les plus anciennes sont proposées en premier, avec leur taille. Les fichiers temporaires ont leur propre liste. Le récapitulatif calcule l’espace de bibliothèque récupérable avant confirmation, et une programmation existante protège son fichier. À l’expiration de la période d’abonnement, la limite Free prend effet. Le compte conserve l’accès à ses vidéos existantes et peut publier depuis son appareil en utilisant ses places temporaires disponibles.
+
+Pour tester le passage d’une offre à l’autre sur un compte fictif en développement, utiliser `docker compose exec -T php php bin/console app:subscription:simulate pilote@example.test paid`, puis la même commande avec `free`. L’écran Abonnement reflète l’offre et la date de fin. La facturation reste à connecter en mode test, avec confirmation des renouvellements et annulations par événements authentifiés côté serveur.
 
 L’entrée **Importer pour publier** marque les téléversements comme temporaires. L’option **Conserver dans ma bibliothèque** au formulaire ou sur la fiche les rend permanents. Les vidéos existantes, les générations IA, les exports de montage, les imports ordinaires et les imports propres à un montage ou une série sont permanents par défaut. Une publication d’un fichier déjà permanent ne modifie pas ce statut.
 

@@ -796,6 +796,8 @@ final class AiEpisodeFlowTest extends WebTestCase
 
     public function testOneMinuteEpisodeUsesSixClipsAndTheExistingRenderer(): void
     {
+        $this->owner->setPaidUntil(new \DateTimeImmutable('+1 day'));
+        $this->em()->flush();
         $episode = $this->finished(60);
         self::assertCount(6, $this->flow()->shots($episode));
         self::assertEqualsWithDelta(60, $episode->getAssembly()->getOutput()->getDuration(), 0.3);
@@ -1077,7 +1079,8 @@ final class AiEpisodeFlowTest extends WebTestCase
     public function testCapacityIncludesAllFuturePlansAndExportAndProtectsOtherGenerations(): void
     {
         $episode = $this->planned();
-        $full = new VideoAsset($this->owner, 'Synthetic storage', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', 600 * 1048576, 10, 360, 640, 'h264');
+        $occupied = \App\Service\VideoLibrary::FREE_BYTES - 4 * \App\Service\VideoLibrary::MAX_BYTES;
+        $full = new VideoAsset($this->owner, 'Synthetic storage', bin2hex(random_bytes(24)).'.mp4', 'video/mp4', $occupied, 10, 360, 640, 'h264');
         $this->em()->persist($full);
         $this->em()->flush();
         $this->flow()->confirm($episode, $this->flow()->quote($episode)['hash']);

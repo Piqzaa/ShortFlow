@@ -763,10 +763,10 @@ final class AiEpisodeFlow
     private function capacity(AiEpisode $episode, int $additional = 0): void
     {
         $owner = $episode->getOwner();
-        $usage = $this->videos->usage($owner);
+        $usage = $this->videos->usage($owner, false);
         $active = $this->em->getRepository(AiGeneration::class)->count(['owner' => $owner, 'status' => ['queued', 'submitting', 'processing']]);
         $slots = $active + $this->reservations->slots($owner) + $additional;
-        if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > $this->library->storageLimitBytes()) {
+        if ($usage['count'] + $slots > VideoLibrary::MAX_VIDEOS || $usage['bytes'] + $slots * VideoLibrary::MAX_BYTES > $this->library->storageLimitBytes($owner)) {
             throw new \RuntimeException('Place insuffisante : prévois 100 Mo et une place par plan restant, plus la vidéo assemblée.');
         }
     }

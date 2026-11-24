@@ -20,6 +20,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $password = '';
     #[ORM\Column]
     private bool $verified = false;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $paidUntil = null;
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -93,6 +95,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getPaidUntil(): ?\DateTimeImmutable
+    {
+        return $this->paidUntil;
+    }
+
+    public function setPaidUntil(?\DateTimeImmutable $paidUntil): void
+    {
+        $this->paidUntil = $paidUntil;
     }
 
     /** @return list<string> */

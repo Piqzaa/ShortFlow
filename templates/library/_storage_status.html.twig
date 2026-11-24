@@ -1,0 +1,4 @@
+<p class="workspace-storage">{{ (usage.bytes / 1000000)|number_format(1, ',', ' ') }} Mo utilisés sur {{ usage.label }}{% if usage.over > 0 %} · {{ (usage.over / 1000000)|round(0, 'ceil')|number_format(0, ',', ' ') }} Mo à libérer{% endif %}.</p>
+{% if usage.full or usage.warning %}
+  <p>{{ usage.full ? 'Ta bibliothèque a atteint sa limite.' : 'Ta bibliothèque approche de sa limite.' }}{% if usage.full %} Tu peux toujours lire, télécharger ou publier les vidéos déjà importées.{% endif %}</p>
+{% endif %}

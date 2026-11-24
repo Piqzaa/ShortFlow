@@ -10,6 +10,7 @@
 <div class="upload-layout"><section class="upload-panel" data-upload-panel aria-label="Importer une vidéo">
 {{ form_start(form, {attr: {class: 'account-form upload-form', 'data-controller': 'upload', 'data-action': 'submit->upload#submit'}|merge(batchPublicationUrl ? {'data-upload-batch-publication-url-value': batchPublicationUrl} : {})}) }}
 {{ form_errors(form) }}
+{% if quota.full %}<p class="library-note">Ta bibliothèque a atteint sa limite. {% if publicationImport %}Tu peux importer pour publier avec le stockage temporaire.{% endif %} <a class="account-secondary" href="{{ path('app_video_storage') }}">Libérer de la place →</a></p>{% endif %}
 <div class="upload-file-zone" data-upload-target="zone" data-action="dragover->upload#drag dragleave->upload#leave drop->upload#drop"><span class="upload-symbol" aria-hidden="true">↥</span>{{ bulkImport ? form_row(form.file, {label:'Tes vidéos'}) : form_row(form.file) }}<p>{{ bulkImport ? 'Glisse tes fichiers ici ou sélectionne-les.' : 'Glisse ta vidéo ici ou choisis un fichier.' }}<br>MP4 ou WebM · 100 Mo maximum par fichier</p></div>
 {% if bulkImport %}
 <p class="library-note" data-upload-target="batchHint" hidden>Tu peux sélectionner jusqu’à 10 vidéos.</p>
@@ -27,5 +28,5 @@
 {% if batchPublicationUrl %}<a class="button" data-upload-target="batchContinue" hidden>Préparer les vidéos importées →</a>{% endif %}
 <button class="button" type="submit" data-upload-target="button"><span data-upload-target="buttonLabel">Importer ma vidéo</span> <span aria-hidden="true">↗</span></button>
 {{ form_end(form) }}
-</section><aside class="upload-guidance"><span class="eyebrow">UN ESPACE À TOI</span><h2>Privée, dès le premier instant.</h2><p>Seul ton compte peut lire et gérer tes vidéos.</p><ul><li>Jusqu’à 3 minutes par vidéo.</li><li>MP4 H.264 8 bits, audio AAC facultatif.</li><li>WebM VP8, VP9 ou AV1 8 bits, audio Opus/Vorbis facultatif.</li><li>{{ video_library_storage_gib }} Gio de stockage, jusqu’à 100 vidéos.</li></ul><p class="library-note">Ton fichier est conservé sans modification. Pour Instagram Reels, importe un MP4 H.264. Après l’import, prépare tes textes et choisis quand publier.</p></aside></div>
+</section><aside class="upload-guidance"><span class="eyebrow">UN ESPACE À TOI</span><h2>Privée, dès le premier instant.</h2><p>Seul ton compte peut lire et gérer tes vidéos.</p><ul><li>Jusqu’à 3 minutes par vidéo.</li><li>MP4 H.264 8 bits, audio AAC facultatif.</li><li>WebM VP8, VP9 ou AV1 8 bits, audio Opus/Vorbis facultatif.</li>{% if publicationImport %}<li>Jusqu’à 10 fichiers temporaires en attente.</li>{% else %}<li>{{ quota.label }} dans ta bibliothèque, jusqu’à 100 vidéos.</li>{% endif %}</ul><p class="library-note">Ton fichier est conservé sans modification. Pour Instagram Reels, importe un MP4 H.264. Après l’import, prépare tes textes et choisis quand publier.</p></aside></div>
 {% endblock %}
