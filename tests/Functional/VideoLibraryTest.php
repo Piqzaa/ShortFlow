@@ -75,7 +75,7 @@ final class VideoLibraryTest extends WebTestCase
         $this->client->request('GET', '/studio/bibliotheque');
         self::assertResponseRedirects('/studio');
         $this->client->followRedirect();
-        self::assertSelectorTextContains('h2', 'Ta première vidéo');
+        self::assertSelectorTextContains('h2', 'Prêt à publier');
         self::assertSelectorExists('a[href^="/studio/bibliotheque/importer"]');
     }
 
@@ -437,17 +437,40 @@ final class VideoLibraryTest extends WebTestCase
         $messagesBefore = (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages');
         $url = '/studio/bibliotheque/importer?next=compose&date=2026-10-20&zone=America%2FToronto';
         $crawler = $this->client->request('GET', $url);
+        self::assertSelectorTextContains('.studio-heading p', 'une ou plusieurs vidéos');
+        self::assertSelectorExists('[data-upload-target="batchResults"]');
+        $batchPublicationUrl = $crawler->filter('[data-upload-batch-publication-url-value]')->attr('data-upload-batch-publication-url-value');
         $form = $crawler->selectButton('Importer ma vidéo')->form(['video_upload[title]' => 'À préparer']);
         $this->client->request('POST', $url, $form->getPhpValues(), ['video_upload' => ['file' => $this->fixture('tests/Fixtures/library-valid.mp4')]], ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
         self::assertResponseStatusCodeSame(201);
         $data = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         self::assertStringStartsWith('/studio/composer?', $data['redirect']);
+        self::assertIsInt($data['videoId']);
         $this->client->request('GET', $data['redirect']);
         self::assertResponseStatusCodeSame(303);
         $this->client->followRedirect();
         self::assertInputValueSame('publication_composer[local]', '2026-10-20T12:00');
         self::assertSelectorExists('option[value="America/Toronto"][selected]');
         self::assertSelectorTextContains('.composer-preview', 'À préparer');
+
+        $this->client->request('POST', $url, $form->getPhpValues(), ['video_upload' => ['file' => $this->fixture('tests/Fixtures/library-valid.mp4')]], ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+        self::assertResponseStatusCodeSame(201);
+        $second = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsInt($second['videoId']);
+        self::assertNotSame($data['videoId'], $second['videoId']);
+        $this->client->request('GET', $batchPublicationUrl.'&videos%5B%5D='.$data['videoId'].'&videos%5B%5D='.$second['videoId']);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertCount(2, $this->client->getCrawler()->filter('.publication-selection-row video'));
+        self::assertCount(2, $this->client->getCrawler()->filter('input[name$="[local]"][value="2026-10-20T12:00"]'));
+
+        $crawler = $this->client->request('GET', '/studio/bibliotheque/importer?next=compose');
+        $directBatchUrl = $crawler->filter('[data-upload-batch-publication-url-value]')->attr('data-upload-batch-publication-url-value');
+        self::assertSame('/studio/publications/preparer', $directBatchUrl);
+        $this->client->request('GET', $directBatchUrl.'?videos%5B%5D='.$data['videoId'].'&videos%5B%5D='.$second['videoId']);
+        self::assertResponseStatusCodeSame(303);
+        $this->client->followRedirect();
+        self::assertCount(2, $this->client->getCrawler()->filter('.batch-selection li'));
         self::assertSame($messagesBefore, (int) static::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
     }
 
@@ -494,7 +517,8 @@ final class VideoLibraryTest extends WebTestCase
     {
         $this->asUser('alice@example.test');
         $this->client->request('GET', '/studio');
-        self::assertSelectorTextContains('.workspace-import-cta', 'Publier une vidéo');
+        self::assertSelectorTextContains('.workspace-import-cta', 'Publier des vidéos');
+        self::assertSelectorTextContains('.workspace-heading p', 'une ou plusieurs vidéos d’un coup');
         self::assertSelectorExists('.workspace-import-cta[href*="next=compose"]');
         $libraryVideo = $this->upload('tests/Fixtures/library-valid.mp4');
         self::assertFalse($libraryVideo->isTemporary());

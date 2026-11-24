@@ -51,6 +51,14 @@ final class VideoController extends AbstractController
             return $this->redirectToRoute('app_edit_show', ['id' => $editing->getId()], 303);
         }
         $publicationImport = in_array($next, ['publication', 'compose'], true) && !$editing;
+        $directPublication = 'compose' === $next && $publicationImport;
+        $publicationTiming = $directPublication ? array_filter(['date' => $request->query->getString('date'), 'zone' => $request->query->getString('zone', $user->getTimezone())]) : [];
+        $batchPublicationUrl = null;
+        if ($directPublication) {
+            $batchPublicationUrl = isset($publicationTiming['date'])
+                ? $this->generateUrl('app_composer_start', $publicationTiming)
+                : $this->generateUrl('app_publication_prepare');
+        }
         $form = $this->createForm(VideoUploadType::class, options: ['publication_retention' => $publicationImport])->handleRequest($request);
         $status = $form->isSubmitted() ? 422 : 200;
         if ($form->isSubmitted() && !$limiter->create((string) $user->getId())->consume()->isAccepted()) {
@@ -61,12 +69,14 @@ final class VideoController extends AbstractController
             try {
                 $temporary = $publicationImport && empty($data['keep']) && 'edit' !== $request->request->getString('intent');
                 $video = $this->library->import($user, $data['file'], $data['title'], temporary: $temporary);
-                $this->addFlash('success', 'Ta vidéo a rejoint ta bibliothèque.');
+                if (!$directPublication) {
+                    $this->addFlash('success', 'Ta vidéo a rejoint ta bibliothèque.');
+                }
 
                 $redirect = 'edit' === $request->request->getString('intent') || 'edit' === $request->query->getString('next')
                     ? $this->generateUrl('app_edit_index', ['videos' => [$video->getId()]])
-                    : ('compose' === $request->query->getString('next')
-                    ? $this->generateUrl('app_composer_start', array_filter(['videos' => [$video->getId()], 'date' => $request->query->getString('date'), 'zone' => $request->query->getString('zone', $user->getTimezone())]))
+                    : ($directPublication
+                    ? $this->generateUrl('app_composer_start', ['videos' => [$video->getId()]] + $publicationTiming)
                     : $this->generateUrl('app_dashboard'));
 
                 if ($editing) {
@@ -91,6 +101,9 @@ final class VideoController extends AbstractController
                 }
                 if ($request->isXmlHttpRequest()) {
                     $result = ['redirect' => $redirect];
+                    if ($directPublication) {
+                        $result['videoId'] = $video->getId();
+                    }
                     if ($seriesContext) {
                         $result['redirect'] = $this->generateUrl($series ? 'app_video_series_edit' : 'app_video_series_new', array_filter(['id' => $series?->getId(), 'video' => $video->getId()]));
                         $result['video'] = ['id' => $video->getId(), 'title' => $video->getTitle(), 'preview' => $this->generateUrl('app_video_stream', ['id' => $video->getId()]).'#t=0.1'];
@@ -119,7 +132,7 @@ final class VideoController extends AbstractController
             return new JsonResponse(['message' => implode(' ', array_unique($errors)) ?: 'L’import n’a pas abouti. Vérifie le fichier.'], $status, ['Cache-Control' => 'no-store, private']);
         }
 
-        return $this->page('library/upload.html.twig', ['form' => $form, 'appendSeries' => $appendToSeries ? $series : null, 'publicationImport' => $publicationImport, 'bulkImport' => in_array($next, ['', 'publication'], true) && !$editing, 'generalImport' => '' === $next && !$editing], $status);
+        return $this->page('library/upload.html.twig', ['form' => $form, 'appendSeries' => $appendToSeries ? $series : null, 'publicationImport' => $publicationImport, 'bulkImport' => ('' === $next || $publicationImport) && !$editing, 'generalImport' => '' === $next && !$editing, 'batchPublicationUrl' => $batchPublicationUrl], $status);
     }
 
     #[Route('/{id}', name: 'app_video_show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]

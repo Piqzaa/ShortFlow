@@ -1,7 +1,8 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['file', 'button', 'buttonLabel', 'progressPanel', 'progress', 'status', 'error', 'zone', 'preview', 'player', 'fileName', 'previewInfo', 'previewError', 'batchHint', 'batchResults', 'title'];
+  static targets = ['file', 'button', 'buttonLabel', 'progressPanel', 'progress', 'status', 'error', 'zone', 'preview', 'player', 'fileName', 'previewInfo', 'previewError', 'batchHint', 'batchResults', 'batchContinue', 'title'];
+  static values = {batchPublicationUrl: String};
 
   connect() {
     this.batchEnabled = this.hasBatchResultsTarget && Boolean(window.fetch && window.FormData);
@@ -180,12 +181,15 @@ export default class extends Controller {
     }
 
     const batch = new AbortController();
+    const destination = this.hasBatchPublicationUrlValue ? new URL(this.batchPublicationUrlValue, window.location.origin) : null;
+    const imported = [];
     const data = new FormData(this.element);
     data.delete('video_upload[title]');
     this.batch = batch;
     this.buttonTarget.disabled = this.fileTarget.disabled = true;
     this.batchResultsTarget.replaceChildren();
     this.batchResultsTarget.hidden = false;
+    if (this.hasBatchContinueTarget) this.batchContinueTarget.hidden = true;
     this.progressPanelTarget.hidden = false;
     this.errorTarget.hidden = true;
     this.progressTarget.value = 0;
@@ -199,6 +203,11 @@ export default class extends Controller {
         try {
           const response = await fetch(this.element.action, {method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'}, body: data, signal: batch.signal});
           if (response.status === 201) {
+            if (destination) {
+              const {videoId} = await response.json();
+              if (!Number.isSafeInteger(videoId) || videoId < 1) throw new Error('Invalid video ID');
+              imported.push(videoId);
+            }
             successes++;
           } else if ([422, 429, 413].includes(response.status) && !response.redirected) {
             issue = response.status === 413 ? 'Le fichier dépasse la limite d’envoi.' : ((await response.json()).message || 'Le serveur a refusé ce fichier.');
@@ -226,6 +235,15 @@ export default class extends Controller {
     this.fileTarget.value = '';
     this.selected();
     this.statusTarget.textContent = `${successes} vidéo${successes === 1 ? '' : 's'} importée${successes === 1 ? '' : 's'} sur ${files.length}.`;
+    if (imported.length && destination?.origin === window.location.origin) {
+      for (const videoId of imported) destination.searchParams.append('videos[]', videoId);
+      if (successes === files.length) {
+        window.location.assign(destination.href);
+      } else if (this.hasBatchContinueTarget) {
+        this.batchContinueTarget.href = destination.href;
+        this.batchContinueTarget.hidden = false;
+      }
+    }
   }
 
   fail(message) {

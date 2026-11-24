@@ -93,15 +93,18 @@ test('server import refusal stays visible and keeps the selected file and previe
   assert.equal(c.errorTarget.hidden,false);assert.match(c.errorTarget.textContent,/3 minutes/);assert.equal(c.fileTarget.disabled,false);assert.equal(c.fileTarget.files[0],file);assert.equal(c.previewTarget.hidden,false);
 });
 
-function batchUpload(respond) {
+function batchUpload(respond, batchPublicationUrl = null) {
   const results = [];
   const requests = [];
+  const navigations = [];
   const source = readFileSync(new URL('../../assets/controllers/upload_controller.js', import.meta.url), 'utf8')
     .replace("import { Controller } from '@hotwired/stimulus';", '').replace('export default class', 'class Upload');
   const Upload = runInNewContext(`${source}\nUpload`, {
     AbortController,
     Controller: class {},
     FormData: class extends Map { constructor() { super(); } },
+    URL,
+    window: {location: {origin: 'http://localhost', assign: href => navigations.push(href)}},
     document: { createElement: () => ({}) },
     fetch: async (url, options) => {
       requests.push({url, file: options.body.get('video_upload[file]').name});
@@ -113,9 +116,11 @@ function batchUpload(respond) {
     element: {action: '/studio/bibliotheque/importer'},
     fileTarget: {name: 'video_upload[file]'}, buttonTarget: {}, progressPanelTarget: {},
     errorTarget: {}, progressTarget: {}, statusTarget: {}, selected() {},
+    hasBatchPublicationUrlValue: Boolean(batchPublicationUrl), batchPublicationUrlValue: batchPublicationUrl,
+    hasBatchContinueTarget: Boolean(batchPublicationUrl), batchContinueTarget: {},
     batchResultsTarget: {replaceChildren() {}, append: item => results.push(item.textContent)},
   });
-  return {controller, results, requests};
+  return {controller, results, requests, navigations};
 }
 
 test('batch sends files independently and reports a rejection between successful files', async () => {
@@ -136,4 +141,39 @@ test('batch stops on an uncertain response and identifies files that were never 
   assert.match(results[0], /État incertain/);
   assert.match(results[1], /avant ce fichier/);
   assert.equal(controller.buttonTarget.disabled, false);
+});
+
+test('direct batch opens the grouped publication flow with the imported videos', async () => {
+  const {controller, navigations} = batchUpload(index => ({
+    status: 201, json: async () => ({videoId: 10 + index}),
+  }), '/studio/publications/preparer');
+  await controller.submitBatch([{name: 'un.mp4', size: 20}, {name: 'deux.mp4', size: 20}]);
+  assert.equal(navigations.length, 1);
+  const destination = new URL(navigations[0]);
+  assert.equal(destination.pathname, '/studio/publications/preparer');
+  assert.deepEqual(destination.searchParams.getAll('videos[]'), ['11', '12']);
+});
+
+test('batch import from the calendar keeps the scheduled date and time zone', async () => {
+  const {controller, navigations} = batchUpload(index => ({
+    status: 201, json: async () => ({videoId: 10 + index}),
+  }), '/studio/composer?date=2026-12-01&zone=Europe%2FParis');
+  await controller.submitBatch([{name: 'un.mp4', size: 20}, {name: 'deux.mp4', size: 20}]);
+  assert.equal(navigations.length, 1);
+  const destination = new URL(navigations[0]);
+  assert.equal(destination.pathname, '/studio/composer');
+  assert.deepEqual(destination.searchParams.getAll('videos[]'), ['11', '12']);
+  assert.equal(destination.searchParams.get('date'), '2026-12-01');
+  assert.equal(destination.searchParams.get('zone'), 'Europe/Paris');
+});
+
+test('direct batch keeps rejected files visible and lets the user prepare the successful uploads', async () => {
+  const {controller, navigations, results} = batchUpload(index => index === 2
+    ? {status: 422, json: async () => ({message: 'Vidéo illisible.'})}
+    : {status: 201, json: async () => ({videoId: 10 + index})}, '/studio/composer');
+  await controller.submitBatch(['un.mp4', 'deux.webm', 'trois.mp4'].map(name => ({name, size: 20})));
+  assert.deepEqual(navigations, []);
+  assert.match(results[1], /Vidéo illisible/);
+  assert.equal(controller.batchContinueTarget.hidden, false);
+  assert.deepEqual(new URL(controller.batchContinueTarget.href).searchParams.getAll('videos[]'), ['11', '13']);
 });
