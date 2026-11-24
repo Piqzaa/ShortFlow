@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\AiEpisode;
 use App\Entity\AiGeneration;
+use App\Entity\PublishedVideoTrace;
 use App\Entity\User;
 use App\Entity\VideoAsset;
 use App\Repository\VideoAssetRepository;
@@ -11,6 +12,8 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ExceptionInterface;
 
 final class VideoLibrary
 {
@@ -163,6 +166,9 @@ final class VideoLibrary
                     }
                 }
                 foreach ($videos as $video) {
+                    if ($retentionCheck) {
+                        $this->em->persist(new PublishedVideoTrace($video, $this->publicationPoster($video), $retentionCheck));
+                    }
                     $trash = $this->storage->stageDeletion($video->getStorageName());
                     if (null !== $trash) {
                         $staged[] = ['trash' => $trash, 'name' => $video->getStorageName()];
@@ -186,6 +192,21 @@ final class VideoLibrary
         }
 
         return $removed;
+    }
+
+    private function publicationPoster(VideoAsset $video): ?string
+    {
+        try {
+            $path = $this->storage->path($video->getStorageName());
+            $process = new Process(['ffmpeg', '-nostdin', '-v', 'error', '-max_alloc', '67108864', '-protocol_whitelist', 'file,pipe', '-threads', '1', '-i', $path, '-map', '0:v:0', '-frames:v', '1', '-vf', 'scale=320:320:force_original_aspect_ratio=decrease', '-map_metadata', '-1', '-c:v', 'mjpeg', '-q:v', '5', '-threads', '1', '-f', 'image2pipe', 'pipe:1'], timeout: 5);
+            if (0 === $process->run() && '' !== ($poster = $process->getOutput()) && strlen($poster) <= 49152) {
+                return base64_encode($poster);
+            }
+        } catch (ExceptionInterface|VideoLibraryException) {
+            // The title still identifies the publication when the source cannot be decoded.
+        }
+
+        return null;
     }
 
     private function retentionExpired(VideoAsset $video, \DateTimeImmutable $now): bool

@@ -493,6 +493,9 @@ final class VideoLibraryTest extends WebTestCase
     public function testOnlyPublicationImportsAreTemporaryAndTheirOwnerCanKeepThem(): void
     {
         $this->asUser('alice@example.test');
+        $this->client->request('GET', '/studio');
+        self::assertSelectorTextContains('.workspace-import-cta', 'Publier une vidéo');
+        self::assertSelectorExists('.workspace-import-cta[href*="next=compose"]');
         $libraryVideo = $this->upload('tests/Fixtures/library-valid.mp4');
         self::assertFalse($libraryVideo->isTemporary());
         $url = '/studio/bibliotheque/importer?next=publication';
@@ -577,6 +580,18 @@ final class VideoLibraryTest extends WebTestCase
         $db = $em->getConnection();
         self::assertFalse($db->fetchOne('SELECT id FROM video_asset WHERE id = ?', [$id]));
         self::assertSame(['status' => 'published', 'description' => 'Texte à conserver', 'remote_id' => 'abcdefghijk', 'source_id' => null], $db->fetchAssociative('SELECT status, description, remote_id, source_id FROM youtube_publication WHERE id = ?', [$first->getId()]));
+        $this->client->request('GET', '/studio');
+        self::assertSelectorTextContains('.workspace-published-traces', 'À publier');
+        $poster = '/studio/videos-publiees/'.$id.'/apercu';
+        $this->client->request('GET', $poster);
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'image/jpeg');
+        self::assertStringStartsWith("\xFF\xD8", $this->client->getResponse()->getContent());
+        $this->asUser('bob@example.test');
+        $this->client->request('GET', $poster);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/studio');
+        self::assertSelectorNotExists('.workspace-published-traces');
     }
 
     private function upload(string $source, string $title = 'Ma vidéo', ?string $name = null): VideoAsset
