@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-final class StripeBillingEvent
+class StripeBillingEvent
 {
     #[ORM\Id]
     #[ORM\Column(length: 96)]
