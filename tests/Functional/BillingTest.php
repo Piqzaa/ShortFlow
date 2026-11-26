@@ -33,7 +33,12 @@ final class BillingTest extends WebTestCase
     {
         $this->previousEnv = $_ENV;
         $this->previousServer = $_SERVER;
-        foreach (['STRIPE_TEST_SECRET_KEY' => 'sk_test_Synthetic', 'STRIPE_TEST_PRICE_ID' => self::PRICE, 'STRIPE_TEST_WEBHOOK_SECRET' => self::SECRET] as $key => $value) {
+        foreach ([
+            'STRIPE_TEST_SECRET_KEY' => 'sk_test_Synthetic',
+            'STRIPE_TEST_PRICE_ID' => self::PRICE,
+            'STRIPE_TEST_WEBHOOK_SECRET' => self::SECRET,
+            'STRIPE_TEST_PORTAL_CONFIGURATION_ID' => 'bpc_Fixture',
+        ] as $key => $value) {
             $_ENV[$key] = $_SERVER[$key] = $value;
         }
         $this->eventPrefix = 'evt_VydTest_'.bin2hex(random_bytes(4)).'_';
@@ -185,10 +190,10 @@ final class BillingTest extends WebTestCase
             'get /v1/checkout/sessions' => ['object' => 'list', 'data' => $this->openCheckout ? [$checkout] : []],
             'post /v1/checkout/sessions' => $this->createCheckout($params, $checkout),
             'get /v1/subscriptions' => $this->listSubscriptions(),
-            'get /v1/billing_portal/configurations' => ['object' => 'list', 'data' => [[
-                'id' => 'bpc_Fixture', 'object' => 'billing_portal.configuration', 'livemode' => false,
+            'get /v1/billing_portal/configurations/bpc_Fixture' => [
+                'id' => 'bpc_Fixture', 'object' => 'billing_portal.configuration', 'livemode' => false, 'active' => true,
                 'features' => ['subscription_cancel' => ['enabled' => true, 'mode' => 'at_period_end']],
-            ]]],
+            ],
             'post /v1/billing_portal/sessions' => ['object' => 'billing_portal.session', 'url' => 'https://billing.stripe.com/p/session/test_Fixture'],
             default => self::fail('Unexpected Stripe request '.$method.' '.$path),
         };

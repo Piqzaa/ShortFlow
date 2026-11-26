@@ -15,6 +15,7 @@ final class StripeBillingGateway
         #[Autowire('%env(STRIPE_TEST_SECRET_KEY)%')] private string $testKey,
         #[Autowire('%env(STRIPE_TEST_PRICE_ID)%')] private string $priceId,
         #[Autowire('%env(STRIPE_TEST_WEBHOOK_SECRET)%')] private string $webhookSecret,
+        #[Autowire('%env(STRIPE_TEST_PORTAL_CONFIGURATION_ID)%')] private string $portalConfigurationId,
         #[Autowire('%env(APP_PUBLIC_URL)%')] private string $origin,
         #[Autowire('%kernel.secret%')] private string $appSecret,
     ) {
@@ -78,8 +79,10 @@ final class StripeBillingGateway
     public function portal(string $customer): string
     {
         $portal = $this->client()->billingPortal;
-        $configuration = $portal->configurations->all(['active' => true, 'is_default' => true, 'limit' => 1])->data[0] ?? null;
-        if (!$configuration || false !== $configuration->livemode || !($configuration->features->subscription_cancel->enabled ?? false)
+        $configuration = '' === $this->portalConfigurationId
+            ? ($portal->configurations->all(['active' => true, 'is_default' => true, 'limit' => 1])->data[0] ?? null)
+            : $portal->configurations->retrieve($this->portalConfigurationId);
+        if (!$configuration || !$configuration->active || false !== $configuration->livemode || !($configuration->features->subscription_cancel->enabled ?? false)
             || 'at_period_end' !== ($configuration->features->subscription_cancel->mode ?? null)) {
             throw new \DomainException('Configure le portail de test avec une annulation en fin de période.');
         }
