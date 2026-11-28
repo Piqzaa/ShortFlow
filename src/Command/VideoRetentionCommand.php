@@ -12,7 +12,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'app:videos:retention', description: 'Examiner la conservation des vidéos importées pour publier.')]
+#[AsCommand(name: 'app:videos:retention', description: 'Examiner les fichiers temporaires de publication et les plans déjà assemblés.')]
 final class VideoRetentionCommand extends Command
 {
     public function __construct(private VideoAssetRepository $videos, private VideoLibrary $library, private EntityManagerInterface $em, private ClockInterface $clock)
@@ -49,6 +49,21 @@ final class VideoRetentionCommand extends Command
         $output->writeln($apply
             ? sprintf('%d vidéo(s) temporaire(s) examinée(s), %d fichier(s) retiré(s).', $examined, $removed)
             : sprintf('Simulation sans écriture. %d vidéo(s) examinée(s), %d sans protection après une publication réussie.', $examined, $eligible));
+
+        $cursor = $clips = 0;
+        while ($ids = $this->videos->assembledClipIdsAfter($cursor, 100)) {
+            foreach ($ids as $id) {
+                $cursor = $id;
+                if ($apply) {
+                    $clip = $this->videos->find($id);
+                    $clips += (int) ($clip && $this->library->removeAssembledClip($clip));
+                    $this->em->clear();
+                } else {
+                    $clips += (int) (null !== $this->videos->assembledClipOutput($id));
+                }
+            }
+        }
+        $output->writeln(sprintf('%d plan(s) intermédiaire(s) %s.', $clips, $apply ? 'retiré(s)' : 'éligible(s) au retrait'));
 
         return Command::SUCCESS;
     }

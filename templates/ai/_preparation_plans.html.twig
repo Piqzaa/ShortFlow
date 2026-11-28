@@ -6,4 +6,4 @@
   {% if manualPromptReview|default(false) %}<div class="prompt-review-notice"><p class="library-note">Ton idée a changé ou cette ancienne préparation est incomplète. Relis tes plans, puis confirme les prompts corrigés.</p><button type="submit" name="plan_action" value="manual_prompts:0" class="account-secondary">Utiliser mes prompts relus</button></div>{% endif %}
   <noscript><p class="library-note">« Répartir la durée » prépare les champs sur cette page. Les plans peuvent ensuite être modifiés et enregistrés sans JavaScript.</p></noscript>
 </section>
-<details class="creation-audio creation-details"{% if ideaForm.mute.vars.checked or not ideaForm.mute.vars.valid %} open{% endif %}><summary>Audio du montage</summary>{{ form_row(ideaForm.mute) }}</details>
+{% do ideaForm.mute.setRendered %}

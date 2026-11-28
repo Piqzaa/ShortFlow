@@ -365,8 +365,13 @@ final class VideoEdits
             });
             $path = $this->renderer->render($project);
             $this->em->wrapInTransaction(function () use ($project, $path, &$video): void {
-                $video = $this->library->import($project->getOwner(), new UploadedFile($path, 'montage.mp4', null, null, true), $project->getTitle(), $this->em->getRepository(AiEpisode::class)->findOneBy(['assembly' => $project]));
-                $project->complete($video);
+                $episode = $this->em->getRepository(AiEpisode::class)->findOneBy(['assembly' => $project]);
+                $video = $this->library->import($project->getOwner(), new UploadedFile($path, 'montage.mp4', null, null, true), $project->getTitle(), $episode);
+                if ($episode?->keepsOnlyFinalVideo() && !$project->getOutput() && count($project->getClips()) > 1) {
+                    $project->useCompletedAssemblyAsSource($video);
+                } else {
+                    $project->complete($video);
+                }
             });
         } catch (\Throwable $error) {
             if ($video) {

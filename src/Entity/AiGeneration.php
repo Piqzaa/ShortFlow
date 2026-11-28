@@ -309,6 +309,11 @@ class AiGeneration
         return $this->video;
     }
 
+    public function detachAssembledClip(): void
+    {
+        $this->video = null;
+    }
+
     /** @param array<string,string>|null $remote */
     public function progress(string $status, ?string $issue = null, ?array $remote = null): void
     {

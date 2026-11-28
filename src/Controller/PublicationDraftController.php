@@ -93,7 +93,7 @@ final class PublicationDraftController extends AbstractController
             $days[$entry['at']->setTimezone($timezone)->format('Y-m-d')]['production'][] = $entry;
         }
 
-        return $this->page('draft/calendar.html.twig', ['production' => $productionItems, 'productionLabels' => ProductionCalendar::LABELS, 'libraryVideos' => $videos->page($user), 'libraryTotal' => $videos->count(['owner' => $user]), 'weeks' => (int) ($dayCount / 7), 'days' => $days, 'month' => $first, 'previous' => $first->modify('-1 month')->format('Y-m'), 'next' => $first->modify('+1 month')->format('Y-m'), 'zone' => $zone, 'network' => $network, 'state' => $state, 'states' => $states, 'labels' => $labels, 'networks' => MultiNetworkPublishing::LABELS, 'undated' => $repository->count(['owner' => $user, 'scheduledAt' => null, 'status' => 'draft'])]);
+        return $this->page('draft/calendar.html.twig', ['production' => $productionItems, 'productionLabels' => ProductionCalendar::LABELS, 'libraryVideos' => $videos->page($user), 'libraryTotal' => $videos->count(['owner' => $user, 'assemblyEpisode' => null]), 'weeks' => (int) ($dayCount / 7), 'days' => $days, 'month' => $first, 'previous' => $first->modify('-1 month')->format('Y-m'), 'next' => $first->modify('+1 month')->format('Y-m'), 'zone' => $zone, 'network' => $network, 'state' => $state, 'states' => $states, 'labels' => $labels, 'networks' => MultiNetworkPublishing::LABELS, 'undated' => $repository->count(['owner' => $user, 'scheduledAt' => null, 'status' => 'draft'])]);
     }
 
     #[Route('/studio/calendrier/videos', name: 'app_calendar_videos', methods: ['GET'])]
@@ -239,7 +239,7 @@ final class PublicationDraftController extends AbstractController
             return $this->redirectToRoute('app_video_series_show', ['id' => $draft->getVideoEpisode()->getSeries()->getId()], 303);
         }
         $choices = [];
-        foreach ($videos->findBy(['owner' => $user], ['id' => 'DESC']) as $video) {
+        foreach ($videos->findBy(['owner' => $user, 'assemblyEpisode' => null], ['id' => 'DESC']) as $video) {
             $choices[$video->getTitle().' · #'.$video->getId()] = $video->getId();
         }
         $selected = array_values(array_intersect($draft->videoIds(), array_values($choices)));

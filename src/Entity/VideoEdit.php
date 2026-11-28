@@ -250,4 +250,11 @@ class VideoEdit
         $this->output = $video;
         $this->progress('ready');
     }
+
+    public function useCompletedAssemblyAsSource(VideoAsset $video): void
+    {
+        $this->clips = [['id' => (int) $video->getId(), 'start' => 0.0, 'end' => round($video->getDuration(), 3)]];
+        $this->settings = ['fit' => 'contain', 'captionStyle' => 'off', 'intro' => false, 'language' => 'fr'];
+        $this->complete($video);
+    }
 }

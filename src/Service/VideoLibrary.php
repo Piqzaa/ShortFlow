@@ -51,7 +51,7 @@ final class VideoLibrary
         ];
     }
 
-    public function import(User $owner, UploadedFile $file, ?string $title, ?AiEpisode $completingEpisode = null, ?AiGeneration $completingGeneration = null, bool $temporary = false): VideoAsset
+    public function import(User $owner, UploadedFile $file, ?string $title, ?AiEpisode $completingEpisode = null, ?AiGeneration $completingGeneration = null, bool $temporary = false, ?AiEpisode $assemblyEpisode = null): VideoAsset
     {
         if (!$file->isValid() || $file->getSize() < 1 || $file->getSize() > self::MAX_BYTES) {
             throw new VideoLibraryException('Choisis une vidéo valide de 100 Mo maximum.');
@@ -74,6 +74,12 @@ final class VideoLibrary
         $video->recordTechnicalMetadata($info['technical']);
         if ($temporary) {
             $video->markTemporary();
+        }
+        if ($assemblyEpisode) {
+            if ($assemblyEpisode->getOwner()->getId() !== $owner->getId()) {
+                throw new VideoLibraryException('Plan indisponible.');
+            }
+            $video->useForAssembly($assemblyEpisode);
         }
         try {
             $this->em->wrapInTransaction(function () use ($owner, $file, $name, $video, $completingEpisode, $completingGeneration): void {
@@ -157,8 +163,13 @@ final class VideoLibrary
         return $this->remove([$video], $now);
     }
 
+    public function removeAssembledClip(VideoAsset $video): bool
+    {
+        return $this->remove([$video], assembledClip: true);
+    }
+
     /** @param list<VideoAsset> $videos */
-    private function remove(array $videos, ?\DateTimeImmutable $retentionCheck = null): bool
+    private function remove(array $videos, ?\DateTimeImmutable $retentionCheck = null, bool $assembledClip = false): bool
     {
         if (!$videos || count($videos) > 20) {
             throw new VideoLibraryException('Sélectionne entre 1 et 20 vidéos.');
@@ -166,7 +177,7 @@ final class VideoLibrary
         $owner = $videos[0]->getOwner();
         $staged = [];
         try {
-            $removed = $this->em->wrapInTransaction(function () use ($videos, $owner, &$staged, $retentionCheck): bool {
+            $removed = $this->em->wrapInTransaction(function () use ($videos, $owner, &$staged, $retentionCheck, $assembledClip): bool {
                 $this->em->lock($owner, LockMode::PESSIMISTIC_WRITE);
                 foreach ($videos as $video) {
                     if ($video->getOwner()->getId() !== $owner->getId()) {
@@ -175,6 +186,12 @@ final class VideoLibrary
                     $this->em->refresh($video, LockMode::PESSIMISTIC_WRITE);
                     if ($retentionCheck && !$this->retentionExpired($video, $retentionCheck)) {
                         return false;
+                    }
+                    if ($assembledClip) {
+                        $output = $this->videos->assembledClipOutput((int) $video->getId());
+                        if (null === $output || !is_file($this->storage->path($output))) {
+                            return false;
+                        }
                     }
                     $extensionUse = $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM ai_generation WHERE owner_id = ? AND input_settings->'extension'->>'sourceId' = ? AND status IN ('prepared', 'queued', 'submitting', 'processing', 'waiting_key', 'review')", [$owner->getId(), (string) $video->getId()]);
                     if ($extensionUse) {
@@ -204,6 +221,11 @@ final class VideoLibrary
                 foreach ($videos as $video) {
                     if ($retentionCheck) {
                         $this->em->persist(new PublishedVideoTrace($video, $this->publicationPoster($video), $retentionCheck));
+                    }
+                    if ($assembledClip) {
+                        foreach ($this->em->getRepository(AiGeneration::class)->findBy(['video' => $video]) as $generation) {
+                            $generation->detachAssembledClip();
+                        }
                     }
                     $trash = $this->storage->stageDeletion($video->getStorageName());
                     if (null !== $trash) {

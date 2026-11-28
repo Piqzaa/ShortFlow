@@ -209,7 +209,7 @@ final class AiEpisodeController extends AbstractController
         }
         $recipe = $episode->getPreparationRecipe();
         $model = AiCatalog::MODELS[$recipe['model']];
-        $library = 'ready' === $episode->getFlowState() ? $videos->findBy(['owner' => $user], ['createdAt' => 'DESC'], 100) : [];
+        $library = 'ready' === $episode->getFlowState() ? $videos->page($user, 1, 100) : [];
 
         return $this->render('series/episode.html.twig', ['publicationSummaries' => $publications->summaries([$episode])[$id] ?? [], 'layouts' => $layouts, 'episode' => $episode, 'shots' => $flow->shots($episode), 'storyForm' => $form?->createView(), 'quote' => $quote, 'repairRequested' => $redo, 'error' => $error, 'rejectedCorrection' => $rejectedCorrection, 'providerName' => AiCatalog::PROVIDERS[$model['provider']], 'hasKey' => $keys->hasAccess($user, $model['provider'], $recipe['accessMode']), 'model' => AiCatalog::viewModels()[$recipe['model']], 'recipe' => $recipe, 'enabled' => $generations->enabled(), 'library' => $library, 'automaticOccurrence' => $em->getRepository(\App\Entity\SeriesOccurrence::class)->findOneBy(['episode' => $episode])?->isAutomatic() ?? false, 'watchRevision' => $flow->revisionHash($episode)], new Response(status: $invalid ? 422 : 200, headers: ['Cache-Control' => 'private, no-store']));
     }

@@ -116,6 +116,9 @@ final class AiEpisodeFlow
             if (!$episode->isStandalone()) {
                 $this->em->refresh($episode->getSeries());
             }
+            if (!$episode->getFlowState() || $episode->keepsOnlyFinalVideo()) {
+                $recipe['keepOnlyFinalVideo'] = true;
+            }
             $pool = $this->characterSelection->resolve($owner, $data, $episode->getPreparationRecipe() + array_intersect_key($data, ['characterPool' => true]));
             if (null !== $pool) {
                 $recipe['characterPool'] = $pool;
@@ -374,6 +377,9 @@ final class AiEpisodeFlow
         }
         if ($redo) {
             $shot = $this->em->find(AiShot::class, $redo);
+            if ('ready' === $episode->getFlowState() && $episode->keepsOnlyFinalVideo() && count($shots) > 1) {
+                throw new \RuntimeException('Les plans ont été assemblés. Tu peux modifier la vidéo finale dans le montage.');
+            }
             if ('linked' === $episode->getContinuity() && $shot && $shot->getPosition() < count($shots) && !isset($this->catalog->model($recipe['model'])['endImageField'])) {
                 throw new \RuntimeException('Ce plan alimente le suivant et ce modèle ne fixe pas l’image de fin. Prépare une nouvelle vidéo pour modifier cet enchaînement ; aucun plan suivant ne sera régénéré sans accord.');
             }

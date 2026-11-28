@@ -242,7 +242,7 @@ final class VideoController extends AbstractController
     {
         return $this->page('library/storage.html.twig', [
             'usage' => $this->library->storageStatus($user),
-            'videos' => $this->videos->findBy(['owner' => $user], ['temporary' => 'ASC', 'createdAt' => 'ASC', 'id' => 'ASC']),
+            'videos' => $this->videos->findBy(['owner' => $user, 'assemblyEpisode' => null], ['temporary' => 'ASC', 'createdAt' => 'ASC', 'id' => 'ASC']),
             'scheduled' => $this->videos->scheduledSourceIds($user),
         ]);
     }

@@ -1208,6 +1208,7 @@ final class AiEpisodeFlowTest extends WebTestCase
     public function testStudioCreatesPrivateReusableProjectWithoutSeriesAndCompletesTwentyFiveSeconds(): void
     {
         $crawler = $this->client->request('GET', '/studio/creation');
+        self::assertSelectorNotExists('input[name="ai_idea[mute]"]');
         $crawler = $this->client->submit($crawler->selectButton('Répartir la durée')->form(['ai_idea[prompt]' => 'Milo in space', 'ai_idea[model]' => 'kling-25', 'ai_idea[seconds]' => '5', 'ai_idea[target]' => 25, 'ai_idea[ratio]' => '9:16', 'ai_idea[accessMode]' => 'api']));
         self::assertResponseIsSuccessful();
         $form = $crawler->selectButton('Voir le récapitulatif →')->form(['ai_idea[shots][0][prompt]' => 'Scene one with Milo', 'ai_idea[shots][1][prompt]' => 'Scene two with Milo', 'ai_idea[shots][2][prompt]' => 'Scene three with Milo']);
@@ -1234,13 +1235,33 @@ final class AiEpisodeFlowTest extends WebTestCase
             $this->flow()->advance($episode->getId());
             $this->completeShot($shot);
         }
+        $clips = array_map(static fn (AiShot $shot): VideoAsset => $shot->getGeneration()->getVideo(), $this->flow()->shots($episode));
+        $videos = $this->em()->getRepository(VideoAsset::class);
+        $library = static::getContainer()->get(\App\Service\VideoLibrary::class);
+        self::assertSame([], $videos->page($this->owner));
+        self::assertFalse($library->removeAssembledClip($clips[0]));
+        $clipIds = array_map(static fn (VideoAsset $clip): int => $clip->getId(), $clips);
+        $storage = static::getContainer()->get(\App\Service\PrivateVideoStorage::class);
+        $paths = array_map(static fn (VideoAsset $clip): string => $storage->path($clip->getStorageName()), $clips);
         $this->flow()->advance($episode->getId());
         self::assertSame('assembling', $episode->getFlowState());
         self::assertSame(100, $episode->getAssembly()->getSettings()['sourceVolume']);
         static::getContainer()->get(VideoEdits::class)->process($episode->getAssembly()->getId());
         $this->flow()->advance($episode->getId());
         self::assertSame('ready', $episode->getFlowState());
-        self::assertEqualsWithDelta(25, $episode->getAssembly()->getOutput()->getDuration(), .3);
+        $final = $episode->getAssembly()->getOutput();
+        self::assertEqualsWithDelta(25, $final->getDuration(), .3);
+        self::assertSame([$final->getId()], array_column($episode->getAssembly()->getClips(), 'id'));
+        self::assertSame([$final->getId()], array_map(static fn (VideoAsset $video): int => $video->getId(), $videos->page($this->owner)));
+        self::assertSame($clipIds, $videos->assembledClipIdsAfter(0, 10));
+        foreach ($clips as $clip) {
+            self::assertTrue($library->removeAssembledClip($clip));
+        }
+        foreach ($paths as $path) {
+            self::assertFileDoesNotExist($path);
+        }
+        self::assertSame([], $videos->assembledClipIdsAfter(0, 10));
+        self::assertFileExists($storage->path($final->getStorageName()));
         $this->client->request('GET', '/studio/creation/historique');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href="/studio/series/episodes/'.$episode->getId().'"]');

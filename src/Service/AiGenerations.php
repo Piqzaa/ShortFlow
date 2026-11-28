@@ -268,7 +268,10 @@ final class AiGenerations
                 $path = $this->api->download($job, $result['url']);
                 // The job result and imported asset commit together, including on message redelivery.
                 $this->em->wrapInTransaction(function () use ($job, $path, &$video): void {
-                    $video = $this->library->import($job->getOwner(), new UploadedFile($path, 'generation.mp4', null, null, true), $job->getTitle(), null, $job);
+                    $shots = $this->em->getRepository(\App\Entity\AiShot::class);
+                    $episode = $shots->findOneBy(['generation' => $job])?->getEpisode();
+                    $assemblyEpisode = $episode?->keepsOnlyFinalVideo() && $shots->count(['episode' => $episode]) > 1 ? $episode : null;
+                    $video = $this->library->import($job->getOwner(), new UploadedFile($path, 'generation.mp4', null, null, true), $job->getTitle(), null, $job, assemblyEpisode: $assemblyEpisode);
                     $job->complete($video);
                 });
             } catch (\Throwable) {

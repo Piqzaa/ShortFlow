@@ -39,6 +39,46 @@ final class VideoAssetRepository extends ServiceEntityRepository
         ));
     }
 
+    /** @return list<int> */
+    public function assembledClipIdsAfter(int $after, int $limit): array
+    {
+        return array_map('intval', $this->getEntityManager()->getConnection()->fetchFirstColumn(
+            "SELECT v.id FROM video_asset v JOIN ai_episode e ON e.id = v.assembly_episode_id WHERE e.flow_state = 'ready' AND v.id > ? ORDER BY v.id LIMIT ?",
+            [$after, $limit], [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER],
+        ));
+    }
+
+    public function assembledClipOutput(int $id): ?string
+    {
+        $name = $this->getEntityManager()->getConnection()->fetchOne(<<<'SQL'
+            SELECT final.storage_name FROM video_asset v
+            JOIN ai_episode e ON e.id = v.assembly_episode_id
+            JOIN video_edit assembly ON assembly.id = e.assembly_id
+            JOIN video_asset final ON final.id = assembly.output_id AND final.owner_id = v.owner_id
+            WHERE v.id = :id AND e.flow_state = 'ready' AND final.id <> v.id
+              AND NOT EXISTS (SELECT 1 FROM ai_episode WHERE approved_video_id = v.id)
+              AND NOT EXISTS (SELECT 1 FROM video_series_episode WHERE video_id = v.id)
+              AND NOT EXISTS (SELECT 1 FROM publication_draft_item WHERE source_id = v.id)
+              AND NOT EXISTS (SELECT 1 FROM youtube_publication WHERE source_id = v.id)
+              AND NOT EXISTS (SELECT 1 FROM instagram_publication WHERE source_id = v.id)
+              AND NOT EXISTS (SELECT 1 FROM tiktok_publication WHERE source_id = v.id)
+              AND NOT EXISTS (
+                SELECT 1 FROM ai_generation g
+                WHERE g.owner_id = v.owner_id AND g.input_settings->'extension'->>'sourceId' = CAST(v.id AS text)
+              )
+              AND NOT EXISTS (
+                SELECT 1 FROM video_edit other
+                WHERE other.owner_id = v.owner_id AND (
+                    other.output_id = v.id
+                    OR other.clips::jsonb @> jsonb_build_array(jsonb_build_object('id', v.id))
+                    OR other.audio_clips::jsonb @> jsonb_build_array(jsonb_build_object('kind', 'video', 'source', v.id))
+                )
+              )
+            SQL, ['id' => $id]);
+
+        return is_string($name) ? $name : null;
+    }
+
     public function lastSuccessfulPublicationIfUnprotected(int $id): ?\DateTimeImmutable
     {
         $at = $this->getEntityManager()->getConnection()->fetchOne(<<<'SQL'
@@ -76,13 +116,13 @@ final class VideoAssetRepository extends ServiceEntityRepository
     /** @return list<VideoAsset> */
     public function page(User $owner, int $page = 1, int $limit = 12): array
     {
-        return $this->findBy(['owner' => $owner], ['createdAt' => 'DESC', 'id' => 'DESC'], $limit, ($page - 1) * $limit);
+        return $this->findBy(['owner' => $owner, 'assemblyEpisode' => null], ['createdAt' => 'DESC', 'id' => 'DESC'], $limit, ($page - 1) * $limit);
     }
 
     /** @return array{items: list<VideoAsset>, total: int, page: int, pages: int} */
     public function search(User $owner, string $query, int $page = 1): array
     {
-        $builder = $this->createQueryBuilder('v')->where('v.owner = :owner')->setParameter('owner', $owner);
+        $builder = $this->createQueryBuilder('v')->where('v.owner = :owner')->andWhere('v.assemblyEpisode IS NULL')->setParameter('owner', $owner);
         if ('' !== $query) {
             $pattern = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($query));
             $builder->andWhere('LOWER(v.title) LIKE :query')->setParameter('query', '%'.$pattern.'%');

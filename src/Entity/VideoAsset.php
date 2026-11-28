@@ -40,6 +40,20 @@ class VideoAsset
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $retentionDueAt = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?AiEpisode $assemblyEpisode = null;
+
+    public function getAssemblyEpisode(): ?AiEpisode
+    {
+        return $this->assemblyEpisode;
+    }
+
+    public function useForAssembly(AiEpisode $episode): void
+    {
+        $this->assemblyEpisode = $episode;
+    }
+
     public function isTemporary(): bool
     {
         return $this->temporary;
