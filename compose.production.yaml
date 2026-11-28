@@ -14,7 +14,7 @@ x-app: &app
     TRUSTED_HOSTS: ${VYDFLOW_TRUSTED_HOSTS:?Set the exact domain pattern}
     TRUSTED_PROXIES: ${VYDFLOW_PROXY_IP:-172.30.242.10}
     DATABASE_URL: 'postgresql://vydflow:${VYDFLOW_DATABASE_PASSWORD:?Set a hexadecimal database password}@database:5432/vydflow?serverVersion=16&charset=utf8'
-    ACCOUNT_REGISTRATION_OPEN: '0'
+    ACCOUNT_REGISTRATION_OPEN: '${ACCOUNT_REGISTRATION_OPEN:-0}'
     AI_EXCHANGE_RATE_REFRESH_ENABLED: '0'
   volumes:
     - media:/app/var/storage

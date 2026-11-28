@@ -55,6 +55,30 @@ age -d -i "$identity" "$recovery_dir/media.tar.age" |
 
 Contrôler le propriétaire, l’empreinte d’un média, sa lecture authentifiée, les files et les publications déjà confirmées avant toute reprise. En cas d’échec de restauration, reprendre sur deux volumes vierges.
 
+## Recette sur la cible
+
+| Contrôle | Résultat attendu |
+| --- | --- |
+| Web et accès | Redirection HTTPS, certificat valide et renouvellement vérifié, cookie de session sécurisé et accès réservé aux invités. |
+| Emails et comptes | Confirmation et récupération reçues dans une boîte de test, liens sur le domaine du pilote, retour OAuth sur une chaîne autorisée. |
+| Sauvegarde et alerte | Restauration isolée de PostgreSQL et d’un média de test depuis la copie chiffrée hors machine, empreinte identique et lecture privée. Relever la durée de la copie et de la restauration, puis vérifier la réception d’une alerte de test. |
+| Import et publication | Depuis un iPhone et un Android, vérifier image, son et orientation. Suivre un envoi autorisé jusqu’à confirmation sur la chaîne, puis programmer et retrouver les deux résultats du second lot. [Protocole du pilote](pilote-publication-20261123.md) |
+| Conservation | Sur un échantillon synthétique en environnement isolé, vérifier le lecteur et le badge « Déjà publiée » avant retrait, puis la trace sous « Publiées récemment » et l’envoi confirmé dans l’historique après retrait. Garder l’échéance normale sur le pilote. |
+
+## Premier démarrage sur le VPS du 28 novembre
+
+La révision `917cdd5` a été construite sur le VPS Debian 13 à Marseille. La base PostgreSQL et le volume médias ont été créés sur le serveur. Les migrations et la validation du schéma sont passées. En HTTPS sur le serveur, l’accueil, la connexion et l’inscription répondent 200. La page Studio redirige un visiteur anonyme vers la connexion. Les trois workers consomment leurs files, qui étaient vides à la vérification. Le disque disposait de 71 Gio libres après installation.
+
+La configuration du pilote se trouve dans `/etc/vydflow/pilot.env`. Pour les commandes Compose, définir `VYDFLOW_ENV_FILE` avec ce chemin et le passer aussi à `--env-file`. Les premiers contrôles ont été effectués sur les ports de boucle locale avec un certificat de test.
+
+Après l’ajout de l’enregistrement A dans Cloudflare, le proxy est passé aux ports publics 80 et 443 avec un certificat Let’s Encrypt. Depuis le PC, la page d’accueil et la connexion répondent 200, HTTP redirige vers HTTPS et le Studio exige une connexion. Les inscriptions libres et l’indexation sont désactivées. Le test de renouvellement Certbot par webroot a réussi. Le timer est actif et le script `/etc/letsencrypt/renewal-hooks/deploy/vydflow-nginx` a rechargé Nginx après validation de la configuration. Ce script pointe vers la révision installée et son chemin doit être actualisé si la prochaine version est installée ailleurs. Le SMTP, OAuth YouTube et la sauvegarde externe restent à configurer avant la recette avec des invités.
+
+### Configuration actuelle des inscriptions
+
+À la demande du propriétaire, `ACCOUNT_REGISTRATION_OPEN=1` sur le VPS. La valeur par défaut de Compose reste `0`. Le compte préparé manuellement a été supprimé pour permettre un essai depuis le formulaire. Le relais Brevo est configuré sur le port 587 avec TLS obligatoire. Le relais a accepté l’authentification, les deux entrées DKIM Brevo sont visibles et la page d’inscription répond 200.
+
+Le propriétaire a confirmé avoir reçu le message et terminé l’inscription. L’image web active est `vydflow-production:pilot-20261128-media`, construite à partir des fichiers transférés par SSH dans `/opt/vydflow/releases/pilot-20261128-media`. La base `vydflow` est persistée dans le volume Docker `vydflow-production_postgres`. Les vidéos sont dans le volume `vydflow-production_media`. Une sauvegarde PostgreSQL avant mise à jour est présente sous `/var/backups/vydflow`. La sauvegarde hors serveur reste à configurer.
+
 ## Répétition locale du 24 novembre
 
 - Image de production reconstruite. Projet Linux isolé accessible en HTTPS sur le loopback avec un certificat de test. Accueil et JavaScript servis, redirection HTTP 308, hôte inattendu refusé, connexion du compte fictif réussie et cookie de session `Secure`.
